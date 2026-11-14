@@ -1,0 +1,1 @@
+ALTER TABLE `activity` ADD `source` text DEFAULT 'watch' NOT NULL;

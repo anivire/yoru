@@ -5,6 +5,7 @@ import { RiArrowLeftSFill, RiArrowRightSFill } from '@remixicon/react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
+import { AnimeHoverCard } from '../components/anime-hover'
 import { Page, PageHeader } from '../components/app-shell'
 import { ScheduleSkeleton } from '../components/skeletons'
 import { api } from '../lib/api'
@@ -70,28 +71,46 @@ function EntryRow({ item }: { item: ScheduleItem }) {
   const time = new Date(item.airingAt).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })
   const state = item.available ? t('schedule.availableHint') : item.aired ? t('schedule.awaitingHint') : null
   const tone = statusTone(item)
-  return (
-    <Link
-      to={`/anime/${item.anime.malId}${item.available ? `?episode=${item.episode}` : ''}`}
-      title={[item.anime.title, state, item.estimated ? t('schedule.estimatedHint') : null].filter(Boolean).join(' · ')}
-      className={cn('group flex items-stretch gap-2 rounded-lg p-1 pl-1 transition-colors', tone.row)}
+  const day = new Date(item.airingAt).toLocaleDateString(i18n.language, { weekday: 'short', day: 'numeric', month: 'short' })
+  const footer = (
+    <div
+      className={cn(
+        'flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs',
+        item.available ? 'bg-success-soft text-success' : item.aired ? 'bg-warning-soft text-warning' : 'bg-field text-muted-foreground',
+      )}
     >
-      <span className={cn('w-1 shrink-0 rounded-full', tone.bar)} />
-      <div className="aspect-[2/3] w-7 shrink-0 self-center overflow-hidden rounded-md bg-muted">
-        {item.anime.imageUrl ? <Image src={item.anime.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" /> : null}
-      </div>
-      <div className="min-w-0 flex-1 self-center leading-tight">
-        <div className={cn('truncate text-xs', item.listStatus ? 'font-semibold text-accent' : 'font-medium group-hover:text-accent')}>{item.anime.title}</div>
-        <div className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
-          <span className="font-mono">
-            {item.estimated ? '~' : ''}
-            {time}
-          </span>
-          <span>·</span>
-          <span className="truncate">{t('schedule.episodeShort', { episode: item.episode })}</span>
+      <span className={cn('h-4 w-1 shrink-0 rounded-full', item.available ? 'bg-success' : item.aired ? 'bg-warning' : 'bg-subtle-foreground')} />
+      <span className="font-semibold">{t('schedule.episodeShort', { episode: item.episode })}</span>
+      <span className="opacity-80">
+        {day}, {item.estimated ? '~' : ''}
+        {time}
+      </span>
+      {state ? <span className="ml-auto text-right font-medium">{state}</span> : null}
+    </div>
+  )
+  return (
+    <AnimeHoverCard anime={item.anime} footer={footer}>
+      <Link
+        to={`/anime/${item.anime.malId}${item.available ? `?episode=${item.episode}` : ''}`}
+        className={cn('group flex items-stretch gap-2 rounded-lg p-1 pl-1 transition-colors', tone.row)}
+      >
+        <span className={cn('w-1 shrink-0 rounded-full', tone.bar)} />
+        <div className="aspect-[2/3] w-7 shrink-0 self-center overflow-hidden rounded-md bg-muted">
+          {item.anime.imageUrl ? <Image src={item.anime.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" /> : null}
         </div>
-      </div>
-    </Link>
+        <div className="min-w-0 flex-1 self-center leading-tight">
+          <div className={cn('truncate text-xs', item.listStatus ? 'font-semibold text-accent' : 'font-medium group-hover:text-accent')}>{item.anime.title}</div>
+          <div className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+            <span className="font-mono">
+              {item.estimated ? '~' : ''}
+              {time}
+            </span>
+            <span>·</span>
+            <span className="truncate">{t('schedule.episodeShort', { episode: item.episode })}</span>
+          </div>
+        </div>
+      </Link>
+    </AnimeHoverCard>
   )
 }
 

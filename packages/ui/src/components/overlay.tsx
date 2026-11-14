@@ -1,5 +1,5 @@
 import { RiArrowDownSFill, RiCheckFill, RiCloseFill } from '@remixicon/react'
-import { Dialog as D, DropdownMenu as M, Popover as P, Select as S, Switch as Sw, Tooltip as T } from 'radix-ui'
+import { Dialog as D, DropdownMenu as M, HoverCard as H, Popover as P, Select as S, Switch as Sw, Tooltip as T } from 'radix-ui'
 import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '../lib/cn'
 
@@ -16,6 +16,17 @@ export function PopoverContent({ className, align = 'end', sideOffset = 8, ...pr
     <P.Portal>
       <P.Content align={align} sideOffset={sideOffset} className={cn(panel, 'w-80 overflow-hidden', className)} {...props} />
     </P.Portal>
+  )
+}
+
+export const HoverCard = H.Root
+export const HoverCardTrigger = H.Trigger
+
+export function HoverCardContent({ className, align = 'start', sideOffset = 8, ...props }: ComponentProps<typeof H.Content>) {
+  return (
+    <H.Portal>
+      <H.Content align={align} sideOffset={sideOffset} collisionPadding={12} className={cn(panel, 'w-80 overflow-hidden', className)} {...props} />
+    </H.Portal>
   )
 }
 

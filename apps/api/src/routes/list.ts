@@ -16,7 +16,7 @@ import { badRequest } from '../lib/http'
 import { intParam, parseBody } from '../lib/validate'
 import { airedEpisodes, ensureAnime, getAnimeRow } from '../services/anime'
 import { exportList } from '../services/export'
-import { activityData, logEpisodes } from '../services/activity'
+import { activityData, logEpisodes, syncListActivity } from '../services/activity'
 import { homeData } from '../services/home'
 import { type ListFilters, allEntries, deleteEntry, filterEntries, listCounts, markWatched, saveEntry } from '../services/lists'
 
@@ -96,3 +96,4 @@ export const homeRoutes = new Hono<AppEnv>()
   .use(requireAuth)
   .get('/', async (c) => c.json(await homeData(c.get('user').id)))
   .get('/activity', (c) => c.json(activityData(c.get('user').id, c.req.query('tz'))))
+  .post('/activity/sync', (c) => c.json({ episodes: syncListActivity(c.get('user').id) }))

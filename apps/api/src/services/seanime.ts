@@ -21,6 +21,8 @@ interface SeanimeEntry {
   score?: number | null
   startedAt?: SeanimeDate | null
   completedAt?: SeanimeDate | null
+  createdAt?: number | string | null
+  updatedAt?: number | string | null
   media?: {
     idMal?: number | null
     format?: string | null
@@ -64,6 +66,12 @@ function collectionsFromDatabase(buffer: Buffer): unknown[] {
   }
 }
 
+function stamp(value: number | string | null | undefined): string | null {
+  if (value === null || value === undefined || value === '' || value === 0) return null
+  const time = typeof value === 'number' ? (value < 1e12 ? value * 1000 : value) : Date.parse(value)
+  return Number.isFinite(time) && time > 0 ? new Date(time).toISOString().slice(0, 10) : null
+}
+
 function toItem(e: SeanimeEntry): ImportItem {
   const media = e.media ?? {}
   const title = media.title ?? {}
@@ -82,8 +90,8 @@ function toItem(e: SeanimeEntry): ImportItem {
     score: score > 0 ? score : null,
     rewatches: e.repeat ?? 0,
     notes: e.notes || null,
-    startedAt: isoDate(e.startedAt),
-    completedAt: isoDate(e.completedAt),
+    startedAt: isoDate(e.startedAt) ?? stamp(e.createdAt),
+    completedAt: isoDate(e.completedAt) ?? (e.status === 'COMPLETED' ? stamp(e.updatedAt) : null),
   }
 }
 

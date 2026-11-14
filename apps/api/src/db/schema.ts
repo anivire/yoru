@@ -101,6 +101,7 @@ export const activity = sqliteTable('activity', {
   userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   malId: integer('mal_id').notNull(),
   episode: integer('episode').notNull(),
+  source: text('source', { enum: ['watch', 'list'] }).notNull().default('watch'),
   createdAt: text('created_at').notNull(),
 }, (t) => [index('activity_user_created_idx').on(t.userId, t.createdAt)])
 

@@ -9,6 +9,7 @@ import { oauthConfig, sourceEnabled, sourceUrl } from '../lib/sources'
 import { isoDate } from '../lib/time'
 import { upsertAnime } from './anime'
 import { getEntry } from './lists'
+import { syncListActivity } from './activity'
 
 export interface ImportItem {
   malId: number | null
@@ -380,5 +381,6 @@ export function applyImport(userId: number, provider: ImportSource, items: Impor
     }
     db.insert(imports).values({ ...result, userId, createdAt: now() }).run()
   })
+  syncListActivity(userId)
   return result
 }
