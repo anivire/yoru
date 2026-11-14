@@ -129,12 +129,15 @@ export function Footer({ scope, compact, className }: { scope: 'app' | 'public';
                 <Logo />
               </TLink>
               <p className="max-w-xs text-sm text-muted-foreground">{t('footer.tagline')}</p>
-              {repoUrl ? (
-                <a href={repoUrl} target="_blank" rel="noreferrer" className={cn(linkClass, 'w-fit text-sm')}>
-                  <RiGithubFill className="size-4" />
-                  {t('footer.openSource')}
-                </a>
-              ) : null}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
+                {repoUrl ? (
+                  <a href={repoUrl} target="_blank" rel="noreferrer" className={linkClass}>
+                    <RiGithubFill className="size-4" />
+                    Open Source
+                  </a>
+                ) : null}
+                <VersionBadge scope={scope} />
+              </div>
             </div>
             {scope === 'app' ? <AppColumns /> : null}
             <Column title={t('footer.sources')}>
@@ -154,12 +157,6 @@ export function Footer({ scope, compact, className }: { scope: 'app' | 'public';
                 </>
               ) : null}
             </Column>
-          </div>
-          <div className="mt-10 flex flex-col gap-3 border-t border-border pt-6 text-xs text-subtle-foreground sm:flex-row sm:items-center sm:justify-between">
-            <p className="max-w-2xl">{t('footer.disclaimer')}</p>
-            <div className="flex shrink-0 items-center gap-2 text-sm text-muted-foreground">
-              <VersionBadge scope={scope} />
-            </div>
           </div>
         </div>
       </div>
