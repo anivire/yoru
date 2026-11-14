@@ -37,6 +37,12 @@ export interface User {
   createdAt: string
 }
 
+export interface AccountInfo {
+  invitedBy: string | null
+  lastLoginAt: string | null
+  activeSessions: number
+}
+
 export interface AnimeSummary {
   malId: number
   title: string

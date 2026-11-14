@@ -61,7 +61,7 @@ function AppearanceTab() {
       </Block>
       <Block title={t('settings.layout')}>
         <Card className="py-1">
-          <div className="flex flex-col gap-3 px-5 py-4">
+          <div className="hidden flex-col gap-3 px-5 py-4 lg:flex">
             <span>
               <span className="block text-sm">{t('settings.pageWidth')}</span>
               <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.pageWidthHint')}</span>
@@ -98,6 +98,36 @@ function AppearanceTab() {
   )
 }
 
+function AccountInfoCard() {
+  const { t } = useTranslation()
+  const user = useUser()
+  const info = useQuery({ queryKey: ['account-info'], queryFn: api.account })
+  const none = <span className="text-subtle-foreground">{t('settings.accountInfo.none')}</span>
+  const rows: [string, ReactNode][] = [
+    [t('settings.accountInfo.role'), user.role === 'admin' ? t('nav.roleAdmin') : t('nav.roleUser')],
+    [t('settings.accountInfo.id'), <span className="font-mono">#{user.id}</span>],
+    [t('settings.accountInfo.createdAt'), formatDate(user.createdAt, { dateStyle: 'long', timeStyle: 'short' })],
+    [t('settings.accountInfo.invitedBy'), info.data ? (info.data.invitedBy ?? none) : '…'],
+    [t('settings.accountInfo.lastLogin'), info.data ? (info.data.lastLoginAt ? formatDate(info.data.lastLoginAt, { dateStyle: 'long', timeStyle: 'short' }) : none) : '…'],
+    [t('settings.accountInfo.sessions'), info.data ? info.data.activeSessions : '…'],
+  ]
+  return (
+    <Card className="flex flex-col gap-4 p-4">
+      <Field label={t('settings.accountInfo.username')}>
+        <Input value={user.username} readOnly className="cursor-default font-medium" />
+      </Field>
+      <dl className="grid gap-x-6 gap-y-2.5 text-sm sm:grid-cols-2">
+        {rows.map(([label, value]) => (
+          <div key={label} className="flex items-center justify-between gap-3">
+            <dt className="text-muted-foreground">{label}</dt>
+            <dd className="text-right">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </Card>
+  )
+}
+
 function AccountTab() {
   const { t } = useTranslation()
   const user = useUser()
@@ -116,6 +146,9 @@ function AccountTab() {
 
   return (
     <>
+      <Block title={t('settings.accountInfo.title')}>
+        <AccountInfoCard />
+      </Block>
       <Block title={t('settings.token')} description={<Trans i18nKey="settings.tokenHint" components={{ code: <Code /> }} />}>
         <div className="grid gap-3 sm:grid-cols-2">
           <Card className="flex flex-col gap-4 p-4">

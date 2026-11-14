@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Skeleton, cn } from '@yoru/ui'
 import { RiPulseFill } from '@remixicon/react'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Section } from './app-shell'
 import { api } from '../lib/api'
@@ -32,6 +32,8 @@ export function ActivityHeatmap() {
   const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
   const { data } = useQuery({ queryKey: ['activity', zone], queryFn: () => api.activity(zone) })
   const scroller = useRef<HTMLDivElement>(null)
+  const box = useRef<HTMLDivElement>(null)
+  const [tip, setTip] = useState<{ count: string; date: string; x: number; y: number } | null>(null)
 
   const grid = useMemo(() => {
     if (!data) return null
@@ -69,13 +71,12 @@ export function ActivityHeatmap() {
       title={t('home.activity')}
       icon={<RiPulseFill />}
       hint={data ? t('home.activityHint', { count: data.total }) : undefined}
-      action={data && data.total ? <span className="text-[0.8125rem] text-muted-foreground">{t('home.streak', { current: data.currentStreak, longest: data.longestStreak })}</span> : null}
     >
       {!grid ? (
         <Skeleton className="h-32 w-full rounded-xl" />
       ) : (
-        <div className="rounded-xl bg-surface p-4">
-          <div ref={scroller} className="overflow-x-auto scrollbar-none">
+        <div ref={box} className="relative rounded-xl bg-surface p-4">
+          <div ref={scroller} className="overflow-x-auto scrollbar-none" onScroll={() => setTip(null)} onMouseLeave={() => setTip(null)}>
             <div className="grid min-w-[44rem] grid-cols-[auto_1fr] gap-x-2">
               <div />
               <div className="relative mb-1.5 h-4 text-[0.6875rem] text-muted-foreground">
@@ -96,20 +97,32 @@ export function ActivityHeatmap() {
                 {grid.weeks.flat().map((cell) => (
                   <span
                     key={cell.date}
-                    title={
-                      cell.future
-                        ? undefined
-                        : t('home.activityTip', {
-                            count: t('home.episodes', { count: cell.count }),
-                            date: parse(cell.date).toLocaleDateString(i18n.language, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }),
-                          })
-                    }
-                    className={cn('aspect-square rounded-[0.1875rem]', cell.future ? 'opacity-0' : LEVELS[level(cell.count)])}
+                    onMouseEnter={(e) => {
+                      if (cell.future || !box.current) return
+                      const outer = box.current.getBoundingClientRect()
+                      const r = e.currentTarget.getBoundingClientRect()
+                      setTip({
+                        count: cell.count ? t('home.episodes', { count: cell.count }) : t('home.noEpisodes'),
+                        date: parse(cell.date).toLocaleDateString(i18n.language, { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }),
+                        x: r.left - outer.left + r.width / 2,
+                        y: r.top - outer.top,
+                      })
+                    }}
+                    className={cn('aspect-square rounded-[0.1875rem] transition-shadow', cell.future ? 'opacity-0' : cn(LEVELS[level(cell.count)], 'hover:ring-2 hover:ring-foreground/40'))}
                   />
                 ))}
               </div>
             </div>
           </div>
+          {tip ? (
+            <div
+              className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md bg-raised px-2.5 py-1.5 text-xs shadow-xl shadow-black/30 [--muted:var(--raised-muted)]"
+              style={{ left: tip.x, top: tip.y - 6 }}
+            >
+              <div className="font-semibold">{tip.count}</div>
+              <div className="text-muted-foreground">{tip.date}</div>
+            </div>
+          ) : null}
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-[0.6875rem] text-muted-foreground">
             <span>{data && !data.total ? t('home.activityEmpty') : null}</span>
             <span className="flex items-center gap-1.5">

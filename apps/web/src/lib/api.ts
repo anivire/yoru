@@ -1,4 +1,5 @@
 import type {
+  AccountInfo,
   AnimeLink,
   ActivityData,
   AdminSettings,
@@ -66,6 +67,7 @@ function qs(params: Record<string, string | number | undefined | null>) {
 
 export const api = {
   me: () => get<User>('/auth/me'),
+  account: () => get<AccountInfo>('/me/account'),
   login: (username: string, password: string) => request<User>('POST', '/auth/login', { username, password }),
   logout: () => request<{ ok: true }>('POST', '/auth/logout'),
   invite: (code: string) => get<{ valid: boolean; role: string | null }>(`/auth/invite/${encodeURIComponent(code)}`),

@@ -28,8 +28,8 @@ function NavItem({ to, children, end }: { to: string; children: ReactNode; end?:
       end={end}
       className={({ isActive }) =>
         cn(
-          'inline-flex h-9 items-center rounded-lg px-3.5 text-sm font-medium transition-colors',
-          isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground',
+          'inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors [&_svg]:size-4 [&_svg]:shrink-0',
+          isActive ? 'bg-muted text-foreground [&_svg]:text-accent' : 'text-muted-foreground hover:text-foreground',
         )
       }
     >
@@ -50,6 +50,7 @@ function NavItems() {
     <>
       {nav.map((n) => (
         <NavItem key={n.to} to={n.to} end={n.end}>
+          <n.icon />
           {t(`nav.${n.key}`)}
         </NavItem>
       ))}
