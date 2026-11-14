@@ -11,6 +11,7 @@ import { db, now } from '../db/client'
 import { anime, listEntries } from '../db/schema'
 import { toSummary } from './anime'
 import { logEpisodes } from './activity'
+import { airedEpisode } from './aired'
 
 type EntryRow = typeof listEntries.$inferSelect
 
@@ -43,7 +44,7 @@ export function allEntries(userId: number): ListEntryWithAnime[] {
     .innerJoin(anime, eq(anime.malId, listEntries.malId))
     .where(eq(listEntries.userId, userId))
     .all()
-    .map(({ entry, anime: a }) => ({ ...toEntry(entry), anime: toSummary(a), latestEpisode: a.latestEpisode }))
+    .map(({ entry, anime: a }) => ({ ...toEntry(entry), anime: toSummary(a), latestEpisode: airedEpisode(a.malId, a.latestEpisode) }))
 }
 
 export function listCounts(userId: number): ListCounts {

@@ -5,6 +5,7 @@ import { anime, listEntries, providerReleases, watchProgress } from '../db/schem
 import { cacheGet } from '../lib/http'
 import { ensureAnime, nextAiringAt, toSummary } from './anime'
 import type { JikanEpisodeVideo, JikanList } from './jikan'
+import { airedEpisode } from './aired'
 import { allEntries } from './lists'
 import { cachedBanner, shikimori, warmBanners } from './shikimori'
 
@@ -31,6 +32,16 @@ export async function homeData(userId: number): Promise<HomeData> {
   const calendar = new Map((await shikimori.calendar().catch(() => [])).map((e) => [e.anime.id, e]))
   const entries = allEntries(userId)
   const byMal = new Map(entries.map((e) => [e.malId, e]))
+  const available = new Map(
+    entries.length
+      ? db
+          .select({ malId: anime.malId, latest: anime.latestEpisode })
+          .from(anime)
+          .where(inArray(anime.malId, entries.map((e) => e.malId)))
+          .all()
+          .map((r) => [r.malId, r.latest ?? 0])
+      : [],
+  )
 
   const progressRows = db
     .select({ progress: watchProgress, anime })
@@ -57,8 +68,9 @@ export async function homeData(userId: number): Promise<HomeData> {
       position = 0
       duration = 0
     }
-    const limit = a.status === 'finished' ? a.episodes : (a.latestEpisode ?? a.episodes)
+    const limit = a.status === 'finished' ? a.episodes : (airedEpisode(a.malId, a.latestEpisode) ?? a.episodes)
     if (limit && episode > limit) continue
+    const pendingTranslation = a.status !== 'finished' && (a.latestEpisode ?? 0) < episode
     continueWatching.push({
       anime: toSummary(a),
       episode,
@@ -68,6 +80,7 @@ export async function homeData(userId: number): Promise<HomeData> {
       duration,
       updatedAt: p.updatedAt,
       fresh: false,
+      pending: pendingTranslation,
     })
   }
 
@@ -76,6 +89,7 @@ export async function homeData(userId: number): Promise<HomeData> {
     if (!e.latestEpisode || e.latestEpisode <= e.progress) continue
     seen.add(e.malId)
     const episode = e.progress + 1
+    const pending = (available.get(e.malId) ?? 0) < episode
     continueWatching.push({
       anime: e.anime,
       episode,
@@ -85,6 +99,7 @@ export async function homeData(userId: number): Promise<HomeData> {
       duration: 0,
       updatedAt: e.updatedAt,
       fresh: false,
+      pending,
     })
   }
 

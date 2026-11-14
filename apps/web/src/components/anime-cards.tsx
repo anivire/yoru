@@ -150,7 +150,12 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
             <Play className="ml-0.5 size-5 fill-current" />
           </span>
         </div>
-        {item.fresh ? (
+        {item.pending ? (
+          <Badge size="sm" variant="solid" className="absolute left-2 top-2.5 bg-black/60 text-white backdrop-blur-md">
+            <span className="size-1.5 rounded-full bg-warning" />
+            {t('home.awaitingTranslation')}
+          </Badge>
+        ) : item.fresh ? (
           <Badge size="sm" variant="solid" className="absolute left-2 top-2.5 bg-accent text-accent-foreground">
             {t('home.newEpisode')}
           </Badge>

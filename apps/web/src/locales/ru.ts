@@ -62,6 +62,7 @@ export const ru = {
     usernameTaken: 'Это имя уже занято',
   },
   home: {
+    awaitingTranslation: 'Вышла · ждём перевод',
     newEpisode: 'Новая серия',
     activity: 'Активность',
     activityHint_one: '{{count}} серия за год',

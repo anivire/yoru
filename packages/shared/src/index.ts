@@ -183,6 +183,7 @@ export interface ContinueItem {
   duration: number
   updatedAt: string
   fresh: boolean
+  pending: boolean
 }
 
 export interface UpcomingItem {

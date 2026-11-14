@@ -5,6 +5,7 @@ import { anime } from '../db/schema'
 import { UpstreamError } from '../lib/http'
 import { metadataSource } from '../lib/settings'
 import { nextBroadcast } from '../lib/time'
+import { airedEpisode } from './aired'
 import { type A365Series, absoluteA365Url, anime365 } from './anime365'
 import { type JikanAnime, jikan, jikanImage, normalizeStatus, normalizeType } from './jikan'
 
@@ -49,7 +50,7 @@ export function toDetails(row: AnimeRow): AnimeDetails {
     airedTo: row.airedTo,
     broadcast: { day: row.broadcastDay, time: row.broadcastTime, timezone: row.broadcastTimezone },
     trailerUrl: row.trailerUrl,
-    latestEpisode: row.latestEpisode,
+    latestEpisode: airedEpisode(row.malId, row.latestEpisode),
     nextAiringAt: nextAiringAt(row)?.toISOString() ?? null,
   }
 }
@@ -132,7 +133,7 @@ export function upsertJikanSummaries(items: JikanAnime[]): AnimeSummary[] {
 export function airedEpisodes(row: AnimeRow): number | null {
   if (row.status === 'finished') return row.episodes
   if (row.status === 'upcoming') return 0
-  return row.latestEpisode
+  return airedEpisode(row.malId, row.latestEpisode)
 }
 
 export function getAnimeRow(malId: number): AnimeRow | undefined {

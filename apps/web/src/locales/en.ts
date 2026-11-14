@@ -64,6 +64,7 @@ export const en: Messages = {
     usernameTaken: 'Username is taken',
   },
   home: {
+    awaitingTranslation: 'Aired · awaiting translation',
     newEpisode: 'New episode',
     activity: 'Activity',
     activityHint_one: '{{count}} episode in the last year',
