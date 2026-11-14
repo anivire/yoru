@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { type AdminSettings, type AdminSettingsInput, type DataSourceId, type DataSourceInfo, IMPORT_PROVIDERS, type ImportProvider } from '@yoru/shared'
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Code, Field, Input, Skeleton, Spinner, StatusDot, Switch, toast } from '@yoru/ui'
-import { Check, KeyRound } from 'lucide-react'
+import { KeyRound } from 'lucide-react'
 import { type FormEvent, type ReactNode, useEffect, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
@@ -98,9 +98,43 @@ function UrlField({ info }: { info: DataSourceInfo }) {
   )
 }
 
-function SecretForm({ placeholder, isSet, onSave, onClear, pending }: { placeholder: string; isSet: boolean; onSave: (v: string) => void; onClear: () => void; pending: boolean }) {
+function SecretForm({
+  placeholder,
+  isSet,
+  fromEnv = false,
+  onSave,
+  onClear,
+  pending,
+}: {
+  placeholder: string
+  isSet: boolean
+  fromEnv?: boolean
+  onSave: (v: string) => void
+  onClear: () => void
+  pending: boolean
+}) {
   const { t } = useTranslation()
   const [value, setValue] = useState('')
+  const [editing, setEditing] = useState(false)
+  if (isSet && !editing) {
+    return (
+      <div className="flex gap-2">
+        <div className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg bg-success-soft px-3 text-[13px] text-success">
+          <KeyRound className="size-3.5 shrink-0" />
+          <span className="shrink-0 font-medium">{fromEnv ? t('admin.secret.setEnv') : t('admin.secret.set')}</span>
+          <span className="truncate font-mono tracking-[0.2em] opacity-60">••••••••••••</span>
+        </div>
+        <Button type="button" size="sm" variant="secondary" onClick={() => setEditing(true)}>
+          {t('admin.secret.replace')}
+        </Button>
+        {fromEnv ? null : (
+          <Button type="button" size="sm" variant="ghost" onClick={onClear} loading={pending}>
+            {t('common.delete')}
+          </Button>
+        )}
+      </div>
+    )
+  }
   return (
     <form
       className="flex gap-2"
@@ -108,15 +142,32 @@ function SecretForm({ placeholder, isSet, onSave, onClear, pending }: { placehol
         e.preventDefault()
         onSave(value.trim())
         setValue('')
+        setEditing(false)
       }}
     >
-      <Input type="password" value={value} onChange={(e) => setValue(e.target.value)} placeholder={placeholder} autoComplete="new-password" className="h-8 text-[13px]" />
+      <Input
+        type="password"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder={placeholder}
+        autoComplete="new-password"
+        autoFocus={editing}
+        className="h-8 text-[13px]"
+      />
       <Button type="submit" size="sm" variant="secondary" disabled={!value.trim()} loading={pending}>
         {t('common.save')}
       </Button>
-      {isSet ? (
-        <Button type="button" size="sm" variant="ghost" onClick={onClear}>
-          {t('common.delete')}
+      {editing ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          onClick={() => {
+            setValue('')
+            setEditing(false)
+          }}
+        >
+          {t('common.cancel')}
         </Button>
       ) : null}
     </form>
@@ -128,12 +179,7 @@ function Anime365Extras({ settings }: { settings: AdminSettings }) {
   const save = useSaveSettings()
   return (
     <Field
-      label={
-        <span className="flex items-center gap-2">
-          {t('admin.globalToken')}
-          {settings.hasAnime365Token ? <Check className="size-3.5 text-success" /> : null}
-        </span>
-      }
+      label={t('admin.globalToken')}
       hint={<Trans i18nKey="admin.globalTokenHint" components={{ code: <Code /> }} />}
     >
       <SecretForm
@@ -182,12 +228,7 @@ function GithubExtras({ settings }: { settings: AdminSettings }) {
         </Button>
       </form>
       <Field
-        label={
-          <span className="flex items-center gap-2">
-            {t('admin.sources.token')}
-            {settings.github.hasToken ? <Check className="size-3.5 text-success" /> : null}
-          </span>
-        }
+        label={t('admin.sources.token')}
         hint={t('admin.sources.tokenHint')}
       >
         <SecretForm
@@ -311,10 +352,11 @@ function OAuthProvider({ provider, settings }: { provider: ImportProvider; setti
           </div>
         </Field>
       </form>
-      <Field label={t('admin.oauthKeys.clientSecret')} hint={info.hasSecret ? t('admin.oauthKeys.secretSet') : undefined}>
+      <Field label={t('admin.oauthKeys.clientSecret')}>
         <SecretForm
-          placeholder={info.hasSecret ? '••••••••' : 'client_secret'}
-          isSet={info.hasSecret && !info.fromEnv}
+          placeholder="client_secret"
+          isSet={info.hasSecret}
+          fromEnv={info.fromEnv}
           pending={save.isPending}
           onSave={(v) => save.mutate({ oauth: { [provider]: { clientSecret: v } } })}
           onClear={() => save.mutate({ oauth: { [provider]: { clientSecret: null } } })}
