@@ -363,9 +363,12 @@
 }
 
 ::view-transition-group(site-header),
-::view-transition-old(site-header),
 ::view-transition-new(site-header) {
   animation: none;
+}
+
+::view-transition-old(site-header) {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
