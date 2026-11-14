@@ -200,11 +200,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-dvh flex-col">
       <header
         ref={header.ref}
-        className="sticky top-0 z-40 px-2 pt-2 [view-transition-name:site-header] sm:px-3"
+        className="sticky top-0 z-40 px-2 pt-2 sm:px-3"
       >
         <div
           className={cn(
-            'mx-auto flex h-14 max-w-(--page-max) items-center gap-4 rounded-2xl px-2 transition-[background-color,box-shadow,backdrop-filter] duration-300 sm:px-3',
+            'mx-auto flex h-14 max-w-(--page-max) items-center gap-4 rounded-2xl px-2 transition-[background-color,backdrop-filter] duration-300 [view-transition-name:site-header] sm:px-3',
             header.scrolled ? 'bg-background/55 backdrop-blur-2xl backdrop-saturate-150' : 'bg-transparent',
           )}
         >
