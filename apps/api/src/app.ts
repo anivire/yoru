@@ -14,6 +14,7 @@ import { animeRoutes } from './routes/anime'
 import { authRoutes } from './routes/auth'
 import { discoverRoutes, scheduleRoutes } from './routes/discover'
 import { importRoutes } from './routes/import'
+import { publicRoutes } from './routes/public'
 import { homeRoutes, listRoutes, progressRoutes } from './routes/list'
 import { meRoutes } from './routes/me'
 import { notificationRoutes } from './routes/notifications'
@@ -39,6 +40,7 @@ app.route('/api/notifications', notificationRoutes)
 app.route('/api/import', importRoutes)
 app.route('/api/discover', discoverRoutes)
 app.route('/api/schedule', scheduleRoutes)
+app.route('/api/public', publicRoutes)
 app.all('/api/*', (c) => c.json({ error: 'Not found' }, 404))
 
 if (env.webDist && fs.existsSync(env.webDist)) {

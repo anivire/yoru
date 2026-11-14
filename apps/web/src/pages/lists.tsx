@@ -8,6 +8,7 @@ import { Link, useSearchParams } from 'react-router'
 import { AnimeCard, EpisodeCount, PosterGrid, Score } from '../components/anime-cards'
 import { ListTableSkeleton, PosterGridSkeleton } from '../components/skeletons'
 import { Page, PageHeader } from '../components/app-shell'
+import { ShareListButton } from '../components/share-list'
 import { api } from '../lib/api'
 import { exportFormatName, formatDate, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
@@ -139,6 +140,7 @@ export function ListsPage() {
         title={t('lists.title')}
         actions={
           <>
+            <ShareListButton />
             <Button asChild variant="secondary" size="sm">
               <Link viewTransition to="/settings/import">
                 <RiDownload2Fill />

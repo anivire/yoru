@@ -24,36 +24,36 @@ const SORTS = ['updated', 'title', 'score', 'progress', 'year', 'added'] as cons
 const DEFAULT_PAGE = 48
 const MAX_PAGE = 200
 
+export function listPage(userId: number, query: (key: string) => string | undefined): ListResponse {
+  const status = query('status') as ListStatus | undefined
+  const sort = query('sort') as ListFilters['sort']
+  const filters: ListFilters = {
+    status: status && LIST_STATUSES.includes(status) ? status : undefined,
+    q: query('q') || undefined,
+    type: query('type') || undefined,
+    genre: query('genre') || undefined,
+    year: Number(query('year')) || undefined,
+    sort: sort && SORTS.includes(sort) ? sort : 'score',
+  }
+  const all = allEntries(userId)
+  const filtered = filterEntries(all, filters)
+  const offset = Math.max(0, Number(query('offset')) || 0)
+  const limit = Math.min(MAX_PAGE, Math.max(1, Number(query('limit')) || DEFAULT_PAGE))
+  return {
+    items: filtered.slice(offset, offset + limit),
+    counts: listCounts(userId),
+    total: filtered.length,
+    offset,
+    facets: {
+      years: [...new Set(all.map((e) => e.anime.year).filter((y): y is number => Boolean(y)))].sort((a, b) => b - a),
+      types: [...new Set(all.map((e) => e.anime.type).filter((v): v is string => Boolean(v)))],
+    },
+  }
+}
+
 export const listRoutes = new Hono<AppEnv>()
   .use(requireAuth)
-  .get('/', (c) => {
-    const userId = c.get('user').id
-    const status = c.req.query('status') as ListStatus | undefined
-    const sort = c.req.query('sort') as ListFilters['sort']
-    const filters: ListFilters = {
-      status: status && LIST_STATUSES.includes(status) ? status : undefined,
-      q: c.req.query('q') || undefined,
-      type: c.req.query('type') || undefined,
-      genre: c.req.query('genre') || undefined,
-      year: Number(c.req.query('year')) || undefined,
-      sort: sort && SORTS.includes(sort) ? sort : 'score',
-    }
-    const all = allEntries(userId)
-    const filtered = filterEntries(all, filters)
-    const offset = Math.max(0, Number(c.req.query('offset')) || 0)
-    const limit = Math.min(MAX_PAGE, Math.max(1, Number(c.req.query('limit')) || DEFAULT_PAGE))
-    const body: ListResponse = {
-      items: filtered.slice(offset, offset + limit),
-      counts: listCounts(userId),
-      total: filtered.length,
-      offset,
-      facets: {
-        years: [...new Set(all.map((e) => e.anime.year).filter((y): y is number => Boolean(y)))].sort((a, b) => b - a),
-        types: [...new Set(all.map((e) => e.anime.type).filter((v): v is string => Boolean(v)))],
-      },
-    }
-    return c.json(body)
-  })
+  .get('/', (c) => c.json(listPage(c.get('user').id, (key) => c.req.query(key))))
   .get('/export', (c) => {
     const format = c.req.query('format') as ExportFormat
     if (!EXPORT_FORMATS.includes(format)) badRequest('Unknown format')

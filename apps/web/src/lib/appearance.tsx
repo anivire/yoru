@@ -1,4 +1,4 @@
-import { type ColorScheme, DEFAULT_SCHEME, DEFAULT_THEME, THEME_PRESETS, type ThemePreset, applyTheme } from '@yoru/ui'
+import { type ColorScheme, DEFAULT_SCHEME, DEFAULT_THEME, THEME_PRESETS, type ThemePreset, applyTheme, logoSvg } from '@yoru/ui'
 import { type ReactNode, createContext, useContext, useEffect, useState } from 'react'
 import { HOME_SECTIONS, type HomeSectionId, NAV, type NavKey } from './navigation'
 
@@ -99,16 +99,35 @@ function widthIndex(width: PageWidth) {
   return PAGE_WIDTHS.findIndex((w) => w.value === width)
 }
 
+function updateFavicon() {
+  const css = getComputedStyle(document.documentElement)
+  const body = css.getPropertyValue('--logo').trim()
+  const ink = css.getPropertyValue('--logo-ink').trim()
+  if (!body || !ink) return
+  let link = document.querySelector<HTMLLinkElement>('link[rel~="icon"]')
+  if (!link) {
+    link = document.createElement('link')
+    link.rel = 'icon'
+    document.head.append(link)
+  }
+  link.type = 'image/svg+xml'
+  link.href = `data:image/svg+xml,${encodeURIComponent(logoSvg(body, ink))}`
+}
+
 export function AppearanceProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState(load)
   const stretch = widthIndex(state.pageWidth) > widthIndex(DEFAULT_WIDTH)
 
   useEffect(() => {
     applyTheme(state.theme, state.scheme)
+    updateFavicon()
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
     if (state.scheme !== 'system') return
     const media = window.matchMedia('(prefers-color-scheme: dark)')
-    const onChange = () => applyTheme(state.theme, state.scheme)
+    const onChange = () => {
+      applyTheme(state.theme, state.scheme)
+      updateFavicon()
+    }
     media.addEventListener('change', onChange)
     return () => media.removeEventListener('change', onChange)
   }, [state])

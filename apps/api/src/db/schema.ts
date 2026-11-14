@@ -10,8 +10,9 @@ export const users = sqliteTable('users', {
   notifyVoice: integer('notify_voice', { mode: 'boolean' }).notNull().default(true),
   notifyPremieres: integer('notify_premieres', { mode: 'boolean' }).notNull().default(true),
   anime365Token: text('anime365_token'),
+  shareToken: text('share_token'),
   createdAt: text('created_at').notNull(),
-}, (t) => [uniqueIndex('users_username_idx').on(t.username)])
+}, (t) => [uniqueIndex('users_username_idx').on(t.username), uniqueIndex('users_share_token_idx').on(t.shareToken)])
 
 export const sessions = sqliteTable('sessions', {
   id: text('id').primaryKey(),

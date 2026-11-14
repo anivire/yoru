@@ -178,7 +178,23 @@ export const en: Messages = {
     paused: 'Paused',
     dropped: 'Dropped',
   },
+  share: {
+    title: "{{name}}'s list",
+    hint: 'Anime this user is watching, has finished and plans to watch',
+    notFound: 'List unavailable',
+    notFoundHint: 'The link is wrong or its owner turned it off',
+  },
   lists: {
+    share: {
+      button: 'Share',
+      title: 'Public list link',
+      hint: 'Anyone with the link can see your lists without signing in: statuses, progress, scores and rewatches. Notes stay private.',
+      create: 'Create link',
+      regenerate: 'New link',
+      disable: 'Turn off',
+      regenerateHint: 'A new link turns off the old one.',
+      disabled: 'Link sharing turned off',
+    },
     name: 'Title',
     title: 'My lists',
     sortBy: 'Sort by',
@@ -347,7 +363,7 @@ export const en: Messages = {
     fileImportHint: 'Lists from apps that are not tied to an online account',
     yoruFile: {
       hint: 'JSON export from yoru, e.g. from another server',
-      note: 'Use a file downloaded via Export → yoru, episode progress included. Existing entries are updated.',
+      note: 'Use a yoru file from the Export section, episode progress included. Existing entries are updated.',
       invalid: 'Not a yoru export: a yoru-list JSON file is required',
     },
     seanime: {

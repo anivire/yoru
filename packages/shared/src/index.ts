@@ -338,6 +338,14 @@ export interface ListResponse {
   facets: { years: number[]; types: string[] }
 }
 
+export interface ShareInfo {
+  token: string | null
+}
+
+export interface PublicListResponse extends ListResponse {
+  username: string
+}
+
 export const loginSchema = z.object({
   username: z.string().trim().min(1).max(64),
   password: z.string().min(1).max(256),

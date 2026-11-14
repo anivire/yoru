@@ -133,6 +133,16 @@ export function Mascot({
   )
 }
 
+export function logoSvg(body: string, ink: string): string {
+  return [
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">',
+    `<g fill="${body}" stroke="${body}" stroke-width="4" stroke-linejoin="round"><path d="M15 25L16.5 7.5L29 14Z"/><path d="M49 25L47.5 7.5L35 14Z"/></g>`,
+    `<path fill="${body}" d="${MARK_BODY}"/>`,
+    `<g fill="${ink}"><rect x="20.5" y="27" width="7" height="12" rx="3.5"/><rect x="36.5" y="27" width="7" height="12" rx="3.5"/></g>`,
+    '</svg>',
+  ].join('')
+}
+
 export function LogoMark({ size = 28, className }: { size?: number; className?: string }) {
   return (
     <svg width={`${size / 16}rem`} height={`${size / 16}rem`} viewBox="0 0 64 64" className={cn('shrink-0', className)} aria-hidden>

@@ -16,6 +16,7 @@ import { NotFoundPage } from './pages/not-found'
 import { SchedulePage } from './pages/schedule'
 import { SearchPage } from './pages/search'
 import { SettingsPage } from './pages/settings'
+import { SharedListPage } from './pages/shared-list'
 
 function Splash() {
   return (
@@ -76,6 +77,7 @@ export const router = createBrowserRouter([
     children: [
       { path: '/login', element: <LoginPage /> },
       { path: '/invite/:code', element: <InvitePage /> },
+      { path: '/share/:token', element: <SharedListPage /> },
       {
         element: <RequireAuth />,
         children: [

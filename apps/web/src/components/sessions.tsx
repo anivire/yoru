@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { SessionInfo } from '@yoru/shared'
-import { Badge, Button, Card, Skeleton, toast } from '@yoru/ui'
+import { Badge, Button, Card, Skeleton, cn, toast } from '@yoru/ui'
 import { RiComputerFill, RiLogoutBoxRFill, RiSmartphoneFill, RiTabletFill } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
@@ -49,32 +49,37 @@ function SessionRow({ session, onRevoke, pending }: { session: SessionInfo; onRe
     t('settings.sessions.signedIn', { date: formatDate(session.createdAt, { dateStyle: 'medium' }) }),
   ].filter(Boolean)
   return (
-    <div className="flex items-center gap-3 rounded-lg px-3 py-2.5">
-      <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-field text-muted-foreground [&_svg]:size-5">
-        <Icon />
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="truncate text-sm font-medium">{device.name ?? t('settings.sessions.unknownDevice')}</span>
-          {session.current ? (
-            <Badge size="sm" variant="success">
-              {t('settings.sessions.current')}
-            </Badge>
-          ) : null}
+    <div className="flex flex-col gap-3 rounded-lg px-3 py-2.5 sm:flex-row sm:items-center">
+      <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
+        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-field text-muted-foreground [&_svg]:size-5">
+          <Icon />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="truncate text-sm font-medium">{device.name ?? t('settings.sessions.unknownDevice')}</span>
+            {session.current ? (
+              <Badge size="sm" variant="success">
+                {t('settings.sessions.current')}
+              </Badge>
+            ) : null}
+          </div>
+          <div className="mt-0.5 text-xs text-muted-foreground sm:truncate">{meta.join(' · ')}</div>
         </div>
-        <div className="truncate text-xs text-muted-foreground">{meta.join(' · ')}</div>
       </div>
       <Button
         variant="ghost"
-        size={session.current ? 'sm' : 'icon-sm'}
+        size="sm"
         loading={pending}
         onClick={onRevoke}
         aria-label={session.current ? t('settings.sessions.signOut') : t('settings.sessions.revoke')}
         title={session.current ? t('settings.sessions.signOut') : t('settings.sessions.revoke')}
-        className="shrink-0 hover:bg-danger-soft hover:text-danger"
+        className={cn(
+          'w-full shrink-0 bg-field hover:bg-danger-soft hover:text-danger sm:w-auto sm:bg-transparent',
+          !session.current && 'sm:size-8 sm:px-0',
+        )}
       >
         <RiLogoutBoxRFill />
-        {session.current ? t('settings.sessions.signOut') : null}
+        <span className={cn(!session.current && 'sm:hidden')}>{session.current ? t('settings.sessions.signOut') : t('settings.sessions.revoke')}</span>
       </Button>
     </div>
   )

@@ -203,7 +203,7 @@
   }
 
   html {
-    font-size: 120%;
+    font-size: 108%;
     scrollbar-gutter: stable;
     background: var(--background);
     color: var(--foreground);
@@ -211,6 +211,12 @@
     font-feature-settings: 'cv11', 'ss01';
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  @media (min-width: 40rem) {
+    html {
+      font-size: 120%;
+    }
   }
 
   ::selection {

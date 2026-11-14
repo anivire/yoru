@@ -191,12 +191,12 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
   }
 
   return (
-    <section id="watch" className="scroll-mt-20">
-      <div className="mb-3 grid grid-cols-[1fr_1fr_auto] gap-2 sm:flex sm:flex-wrap sm:items-center">
-        <Select size="sm" className="w-full sm:w-36" value="anime365" onValueChange={() => undefined} icon={<img src="/anime365.webp" alt="" className="size-4 rounded-sm bg-white object-contain" />} options={[{ value: 'anime365', label: 'Anime365' }]} />
+    <section id="watch" className="min-w-0 scroll-mt-20">
+      <div className="mb-3 grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_auto] gap-2 sm:flex sm:flex-wrap sm:items-center">
+        <Select size="sm" className="w-full min-w-0 sm:w-36" value="anime365" onValueChange={() => undefined} icon={<img src="/anime365.webp" alt="" className="size-4 rounded-sm bg-white object-contain" />} options={[{ value: 'anime365', label: 'Anime365' }]} />
         <Select
           size="sm"
-          className="w-full sm:w-52"
+          className="w-full min-w-0 sm:w-52"
           value={kind}
           icon={(() => {
             const Icon = KIND_ICONS[kind]
@@ -213,7 +213,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
         </div>
         <Select
           size="sm"
-          className="col-span-3 w-full sm:w-64"
+          className="col-span-3 w-full min-w-0 sm:w-64"
           disabled={!translations.data?.length}
           placeholder={t('player.author')}
           value={translationId ? String(translationId) : undefined}

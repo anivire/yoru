@@ -101,6 +101,7 @@ export function AnimeCard({
   rewatches,
   userScore,
   coloredScore,
+  href,
 }: {
   anime: AnimeSummary
   progress?: number
@@ -111,13 +112,14 @@ export function AnimeCard({
   rewatches?: number
   userScore?: number | null
   coloredScore?: boolean
+  href?: string
 }) {
   const { t } = useTranslation()
   const total = anime.episodes
   const details = [typeLabel(anime.type), seasonLabel(anime), total ? `${total} ${t('common.episodes')}` : null].filter(Boolean).join(' · ')
   return (
     <div className="group relative">
-      <Link viewTransition to={`/anime/${anime.malId}`} className="flex flex-col gap-2">
+      <CardLink href={href} to={`/anime/${anime.malId}`}>
       <div className="relative isolate aspect-[2/3] overflow-hidden rounded-xl bg-muted shadow-sm transition-shadow duration-300 group-hover:shadow-xl group-hover:shadow-black/40 transform-gpu">
         {anime.imageUrl ? (
           <Image
@@ -186,11 +188,28 @@ export function AnimeCard({
           {status ? <span className="truncate">· {t(`status.${status}`)}</span> : null}
         </div>
       </div>
-      </Link>
-      <div className="pointer-events-none absolute inset-x-0 top-0 aspect-[2/3]">
-        <QuickEdit malId={anime.malId} className="pointer-events-auto absolute bottom-2.5 right-2.5 [@media(hover:none)]:bottom-6" />
-      </div>
+      </CardLink>
+      {href ? null : (
+        <div className="pointer-events-none absolute inset-x-0 top-0 aspect-[2/3]">
+          <QuickEdit malId={anime.malId} className="pointer-events-auto absolute bottom-2.5 right-2.5 [@media(hover:none)]:bottom-6" />
+        </div>
+      )}
     </div>
+  )
+}
+
+function CardLink({ href, to, children }: { href?: string; to: string; children: ReactNode }) {
+  if (href) {
+    return (
+      <a href={href} target="_blank" rel="noreferrer" className="flex flex-col gap-2">
+        {children}
+      </a>
+    )
+  }
+  return (
+    <Link viewTransition to={to} className="flex flex-col gap-2">
+      {children}
+    </Link>
   )
 }
 

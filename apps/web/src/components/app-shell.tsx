@@ -204,15 +204,15 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         <div
           className={cn(
-            'mx-auto flex h-14 max-w-(--page-max) items-center gap-4 rounded-2xl px-2 transition-[background-color,backdrop-filter] duration-300 [view-transition-name:site-header] sm:px-3',
+            'mx-auto flex h-12 max-w-(--page-max) items-center gap-3 rounded-2xl pl-3.5 pr-1.5 transition-[background-color,backdrop-filter] duration-300 [view-transition-name:site-header] sm:h-14 sm:gap-4 sm:px-3',
             header.scrolled ? 'bg-background/55 backdrop-blur-2xl backdrop-saturate-150' : 'bg-transparent',
           )}
         >
-          <Link viewTransition to="/" className="shrink-0">
-            <Logo />
+          <Link viewTransition to="/" className="flex shrink-0 items-center">
+            <Logo className="[&>span]:text-[0.9375rem] [&_svg]:size-6 sm:[&>span]:text-[17px] sm:[&_svg]:size-7" />
           </Link>
           <DesktopNav />
-          <div className="ml-auto flex items-center gap-2 md:ml-0">
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-2 md:ml-0">
             <Button asChild variant="ghost" size="icon" className="md:hidden">
               <Link viewTransition to="/search" aria-label={t('nav.search')}>
                 <RiSearchFill />
