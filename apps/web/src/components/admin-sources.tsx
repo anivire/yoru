@@ -122,8 +122,8 @@ export function SecretForm({
         <div className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg bg-success-soft px-3 text-[0.8125rem] text-success">
           <RiKey2Fill className="size-3.5 shrink-0" />
           {fromEnv ? <span className="shrink-0 font-medium">{t('admin.secret.setEnv')}</span> : null}
-          <span className="truncate font-mono text-lg leading-none tracking-[0.15em]" title={t('admin.secret.set')}>
-            ••••••••••••
+          <span className="min-w-0 flex-1 overflow-hidden whitespace-nowrap font-mono text-lg leading-none tracking-[0.15em]" title={t('admin.secret.set')}>
+            {"•".repeat(128)}
           </span>
         </div>
         <Button type="button" size="sm" variant="secondary" onClick={() => setEditing(true)}>
