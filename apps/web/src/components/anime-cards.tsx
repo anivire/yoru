@@ -148,7 +148,7 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
           />
         ) : null}
         {item.pending ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-b from-warning/45 to-warning/25 px-4 text-center text-white backdrop-blur-[6px] [text-shadow:0_1px_6px_rgb(0_0_0/0.45)]">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/65 bg-[linear-gradient(to_bottom,color-mix(in_oklab,var(--warning)_30%,transparent),transparent_70%)] px-4 text-center text-white backdrop-blur-[6px]">
             <span className="grid size-11 place-items-center rounded-full bg-warning text-black shadow-lg [text-shadow:none]">
               <Clock className="size-5" />
             </span>
