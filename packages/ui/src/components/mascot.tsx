@@ -96,7 +96,7 @@ function Extras({ mood, animated }: { mood: MascotMood; animated: boolean }) {
         </g>
       )
     case 'error':
-      return <path d="M57 15C59.2 18 60.5 19.9 60.5 21.5A3.5 3.5 0 0 1 53.5 21.5C53.5 19.9 54.8 18 57 15Z" fill={BODY_FILL} />
+      return <path d="M61.5 25C63.5 27.8 64.7 29.6 64.7 31.1A3.2 3.2 0 0 1 58.3 31.1C58.3 29.6 59.5 27.8 61.5 25Z" fill={BODY_FILL} />
     default:
       return null
   }

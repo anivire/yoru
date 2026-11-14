@@ -84,7 +84,7 @@ function MobileMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" size="icon" aria-label={t('nav.menu')}>
+        <Button variant="secondary" size="icon" aria-label={t('nav.menu')} className="rounded-full">
           <RiMenuFill />
         </Button>
       </DropdownMenuTrigger>
@@ -163,7 +163,7 @@ function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" size="icon" aria-label={t('nav.account')}>
+        <Button variant="secondary" size="icon" aria-label={t('nav.account')} className="rounded-full">
           <span className="text-[0.8125rem] font-semibold uppercase">{user.username.slice(0, 1)}</span>
         </Button>
       </DropdownMenuTrigger>
@@ -207,7 +207,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto max-w-(--page-max) px-4 sm:px-6">
           <div
             className={cn(
-              'flex h-12 items-center gap-3 rounded-2xl pl-2.5 pr-1.5 transition-[background-color,backdrop-filter] duration-300 [view-transition-name:site-header] sm:h-14 sm:gap-4 sm:pl-3 sm:pr-2',
+              'flex h-12 items-center gap-3 rounded-full pl-3.5 pr-1.5 transition-[background-color,backdrop-filter] duration-300 [view-transition-name:site-header] sm:h-14 sm:gap-4 sm:pl-4 sm:pr-2.5',
               header.scrolled ? 'bg-background/55 backdrop-blur-2xl backdrop-saturate-150' : 'bg-transparent',
             )}
           >
@@ -216,7 +216,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </TLink>
             <DesktopNav />
             <div className="ml-auto flex items-center gap-1.5 sm:gap-2 md:ml-0">
-              <Button asChild variant="ghost" size="icon" className="md:hidden">
+              <Button asChild variant="ghost" size="icon" className="rounded-full md:hidden">
                 <TLink to="/search" aria-label={t('nav.search')}>
                   <RiSearchFill />
                 </TLink>

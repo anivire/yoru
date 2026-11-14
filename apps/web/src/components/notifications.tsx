@@ -20,7 +20,7 @@ export function NotificationsPopover() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="secondary" size="icon" aria-label={t('notifications.title')} className="relative">
+        <Button variant="secondary" size="icon" aria-label={t('notifications.title')} className="relative rounded-full">
           <RiNotification3Fill />
           {unread ? (
             <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-accent px-1 font-mono text-[0.625rem] font-semibold leading-4 text-accent-foreground">
