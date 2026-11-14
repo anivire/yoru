@@ -33,7 +33,7 @@ export const listRoutes = new Hono<AppEnv>()
       type: c.req.query('type') || undefined,
       genre: c.req.query('genre') || undefined,
       year: Number(c.req.query('year')) || undefined,
-      sort: sort && SORTS.includes(sort) ? sort : 'updated',
+      sort: sort && SORTS.includes(sort) ? sort : 'score',
     }
     const body: ListResponse = { items: filterEntries(allEntries(userId), filters), counts: listCounts(userId) }
     return c.json(body)

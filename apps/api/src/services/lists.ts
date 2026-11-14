@@ -137,12 +137,12 @@ export function filterEntries(items: ListEntryWithAnime[], f: ListFilters): List
     }
     return true
   })
-  const by = f.sort ?? 'updated'
+  const by = f.sort ?? 'score'
   const cmp: Record<NonNullable<ListFilters['sort']>, (a: ListEntryWithAnime, b: ListEntryWithAnime) => number> = {
     updated: (a, b) => b.updatedAt.localeCompare(a.updatedAt),
     added: (a, b) => (b.startedAt ?? '').localeCompare(a.startedAt ?? ''),
     title: (a, b) => a.anime.title.localeCompare(b.anime.title),
-    score: (a, b) => (b.score ?? -1) - (a.score ?? -1),
+    score: (a, b) => (b.score ?? -1) - (a.score ?? -1) || b.updatedAt.localeCompare(a.updatedAt),
     progress: (a, b) => b.progress - a.progress,
     year: (a, b) => (b.anime.year ?? 0) - (a.anime.year ?? 0),
   }

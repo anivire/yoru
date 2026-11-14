@@ -13,7 +13,7 @@ import { formatDate, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
 
 const ANY = '__any'
-const SORTS = ['updated', 'title', 'score', 'progress', 'year', 'added'] as const
+const SORTS = ['score', 'updated', 'title', 'progress', 'year', 'added'] as const
 const STATUS_TONE: Record<ListStatus, 'accent' | 'info' | 'success' | 'warning' | 'danger' | 'neutral'> = {
   watching: 'accent',
   rewatching: 'accent',
@@ -94,7 +94,7 @@ export function ListsPage() {
     q: params.get('q') ?? undefined,
     type: params.get('type') ?? undefined,
     year: params.get('year') ?? undefined,
-    sort: params.get('sort') ?? 'updated',
+    sort: params.get('sort') ?? 'score',
   }
   const set = (key: string, value: string | undefined) => {
     const next = new URLSearchParams(params)
@@ -180,7 +180,7 @@ export function ListsPage() {
           size="sm"
           className="w-52"
           value={filters.sort}
-          onValueChange={(v) => set('sort', v === 'updated' ? undefined : v)}
+          onValueChange={(v) => set('sort', v === 'score' ? undefined : v)}
           options={SORTS.map((s) => ({ value: s, label: t(`order.${s}`) }))}
         />
         <div className="flex rounded-lg bg-inset p-0.5">
