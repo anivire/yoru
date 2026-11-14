@@ -143,7 +143,6 @@ export function HomePage() {
               key={e.malId}
               anime={e.anime}
               progress={e.progress}
-              newEpisodes={e.latestEpisode && e.latestEpisode > e.progress ? e.latestEpisode - e.progress : undefined}
             />
           ))}
         </PosterGrid>

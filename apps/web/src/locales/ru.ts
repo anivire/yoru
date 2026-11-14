@@ -107,7 +107,6 @@ export const ru = {
     emptyText: 'Найдите аниме или импортируйте список из AniList, Shikimori или MAL',
     find: 'Найти аниме',
     import: 'Импортировать',
-    newEpisodes: 'Новых: {{count}}',
   },
   discover: {
     trending: 'Популярное в этом сезоне',

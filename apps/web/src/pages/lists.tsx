@@ -118,7 +118,6 @@ export function ListsPage() {
               rewatches={e.rewatches}
               userScore={e.score}
               coloredScore
-              newEpisodes={(e.status === 'watching' || e.status === 'rewatching') && e.latestEpisode && e.latestEpisode > e.progress ? e.latestEpisode - e.progress : undefined}
             />
           ))}
         </PosterGrid>

@@ -109,7 +109,6 @@ export const en: Messages = {
     emptyText: 'Find an anime or import your list from AniList, Shikimori or MAL',
     find: 'Find anime',
     import: 'Import',
-    newEpisodes: '{{count}} new',
   },
   discover: {
     trending: 'Trending this season',

@@ -95,7 +95,6 @@ export function AnimeCard({
   anime,
   progress,
   status,
-  newEpisodes,
   badge,
   subtitle,
   rewatches,
@@ -106,7 +105,6 @@ export function AnimeCard({
   anime: AnimeSummary
   progress?: number
   status?: ListStatus
-  newEpisodes?: number
   badge?: ReactNode
   subtitle?: ReactNode
   rewatches?: number
@@ -150,11 +148,6 @@ export function AnimeCard({
         ) : null}
         <div className="absolute inset-x-2 top-2.5 flex items-start justify-between gap-1">
           <div className="flex flex-wrap gap-1">
-            {newEpisodes ? (
-              <Badge size="sm" variant="solid" className="bg-accent text-accent-foreground">
-                {t('home.newEpisodes', { count: newEpisodes })}
-              </Badge>
-            ) : null}
             {rewatches ? (
               <Badge size="sm" variant="solid" className="bg-info text-white" title={t('anime.rewatchedTimes', { count: rewatches })}>
                 <RiRepeatFill className="size-3" />×{rewatches}
