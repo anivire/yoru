@@ -73,6 +73,8 @@ export const ru = {
     inviteInvalid: 'Приглашение недействительно или уже использовано',
     register: 'Создать аккаунт',
     usernameHint: 'Латиница, цифры, точка, дефис, подчёркивание',
+    passwordConfirm: 'Повторите пароль',
+    passwordMismatch: 'Пароли не совпадают',
     passwordHint: 'Минимум 8 символов',
     usernameTaken: 'Это имя уже занято',
   },

@@ -75,6 +75,8 @@ export const en: Messages = {
     inviteInvalid: 'This invite is invalid or already used',
     register: 'Create account',
     usernameHint: 'Latin letters, digits, dot, dash, underscore',
+    passwordConfirm: 'Confirm password',
+    passwordMismatch: 'Passwords do not match',
     passwordHint: 'At least 8 characters',
     usernameTaken: 'Username is taken',
   },

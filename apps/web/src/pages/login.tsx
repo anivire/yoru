@@ -75,6 +75,8 @@ export function InviteForm({ code, role }: { code: string; role: string | null }
   const client = useQueryClient()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const mismatch = confirm.length > 0 && confirm !== password
   const register = useMutation({
     mutationFn: () => api.register(code, username, password),
     onSuccess: (user) => {
@@ -86,6 +88,7 @@ export function InviteForm({ code, role }: { code: string; role: string | null }
     <form
       onSubmit={(e) => {
         e.preventDefault()
+        if (password !== confirm) return
         register.mutate()
       }}
       className="flex flex-col gap-4"
@@ -109,7 +112,10 @@ export function InviteForm({ code, role }: { code: string; role: string | null }
       <Field label={t('auth.password')} hint={t('auth.passwordHint')} htmlFor="password" error={register.error ? errorMessage(register.error, t) : undefined}>
         <Input id="password" type="password" autoComplete="new-password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} required />
       </Field>
-      <Button type="submit" variant="accent" loading={register.isPending} className="mt-1">
+      <Field label={t('auth.passwordConfirm')} htmlFor="password-confirm" error={mismatch ? t('auth.passwordMismatch') : undefined}>
+        <Input id="password-confirm" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} aria-invalid={mismatch || undefined} required />
+      </Field>
+      <Button type="submit" variant="accent" loading={register.isPending} disabled={mismatch} className="mt-1">
         {t('auth.register')}
       </Button>
     </form>
