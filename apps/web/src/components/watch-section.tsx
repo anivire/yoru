@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { AnimeDetails, Episode, ListEntry, StreamKind } from '@yoru/shared'
 import { Button, Mascot, Select, Spinner } from '@yoru/ui'
-import { Captions, Mic, Settings } from 'lucide-react'
+import { RiClosedCaptioningFill, RiMicFill, RiSettings3Fill } from '@remixicon/react'
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router'
@@ -146,7 +146,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
           tokenProblem ? (
             <Button asChild size="sm" variant="secondary">
               <Link to="/settings/account">
-                <Settings />
+                <RiSettings3Fill />
                 {t('nav.settings')}
               </Link>
             </Button>
@@ -186,7 +186,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
           size="sm"
           className="w-full sm:w-40"
           value={kind}
-          icon={kind === 'sub' ? <Captions /> : <Mic />}
+          icon={kind === 'sub' ? <RiClosedCaptioningFill /> : <RiMicFill />}
           onValueChange={(v) => {
             localStorage.setItem(KIND_KEY, v)
             setParam({ kind: v })

@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { EXPORT_FORMATS, LIST_STATUSES, type ListEntryWithAnime, type ListStatus } from '@yoru/shared'
 import { Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, EmptyState, Image, Input, Segmented, Select, cn } from '@yoru/ui'
-import { Download, FileDown, LayoutGrid, Repeat, Rows3, Search, Star } from 'lucide-react'
+import { RiDownload2Fill, RiFileDownloadFill, RiLayoutGridFill, RiLayoutRowFill, RiRepeatFill, RiSearchFill, RiStarFill } from '@remixicon/react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router'
@@ -49,7 +49,7 @@ function ListTable({ items }: { items: ListEntryWithAnime[] }) {
                       {[typeLabel(e.anime.type), e.anime.year].filter(Boolean).join(' · ')}
                       {e.rewatches ? (
                         <span className="inline-flex items-center gap-0.5" title={t('anime.rewatches')}>
-                          · <Repeat className="size-3" />
+                          · <RiRepeatFill className="size-3" />
                           {e.rewatches}
                         </span>
                       ) : null}
@@ -68,7 +68,7 @@ function ListTable({ items }: { items: ListEntryWithAnime[] }) {
               <td className="hidden px-4 py-2.5 sm:table-cell">
                 {e.score ? (
                   <span className="inline-flex items-center gap-1 font-mono text-[13px]">
-                    <Star className="size-3 fill-warning text-warning" />
+                    <RiStarFill className="size-3 fill-warning text-warning" />
                     {e.score}
                   </span>
                 ) : (
@@ -123,14 +123,14 @@ export function ListsPage() {
           <>
             <Button asChild variant="secondary" size="sm">
               <Link to="/settings/import">
-                <Download />
+                <RiDownload2Fill />
                 {t('lists.import')}
               </Link>
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="sm">
-                  <FileDown />
+                  <RiFileDownloadFill />
                   {t('lists.export')}
                 </Button>
               </DropdownMenuTrigger>
@@ -159,7 +159,7 @@ export function ListsPage() {
 
       <div className="mb-6 mt-4 flex flex-wrap items-center gap-2">
         <div className="relative min-w-56 flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
+          <RiSearchFill className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
           <Input defaultValue={filters.q} onChange={(e) => set('q', e.target.value)} placeholder={t('lists.filter')} className="h-8 pl-9 text-[13px]" />
         </div>
         <Select
@@ -192,7 +192,7 @@ export function ListsPage() {
               onClick={() => switchView(v)}
               className={cn('cursor-pointer rounded-md p-1.5', view === v ? 'bg-raised text-foreground shadow-sm shadow-black/20' : 'text-muted-foreground')}
             >
-              {v === 'grid' ? <LayoutGrid className="size-4" /> : <Rows3 className="size-4" />}
+              {v === 'grid' ? <RiLayoutGridFill className="size-4" /> : <RiLayoutRowFill className="size-4" />}
             </button>
           ))}
         </div>

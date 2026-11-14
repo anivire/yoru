@@ -1,5 +1,5 @@
 import { type ColorScheme, THEME_PRESETS, cn } from '@yoru/ui'
-import { Check, Moon, Sun } from 'lucide-react'
+import { RiCheckFill, RiMoonFill, RiSunFill } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
 import { useAppearance } from '../lib/appearance'
 
@@ -73,7 +73,7 @@ export function SchemePicker({ compact }: { compact?: boolean }) {
             )}
           </div>
           <div className={cn(compact ? 'pt-1.5 text-[13px]' : 'flex-1 text-sm sm:pt-1.5 sm:text-[13px]', scheme === o.value ? 'font-medium text-foreground' : 'text-muted-foreground')}>{o.label}</div>
-          {!compact && scheme === o.value ? <Check className="mr-2 size-4 text-accent sm:hidden" /> : null}
+          {!compact && scheme === o.value ? <RiCheckFill className="mr-2 size-4 text-accent sm:hidden" /> : null}
         </button>
       ))}
     </div>
@@ -92,7 +92,7 @@ function Orb({ colors, active, mode }: { colors: readonly [string, string]; acti
     >
       {active ? (
         <span className="absolute -bottom-0.5 -right-0.5 grid size-4 place-items-center rounded-full bg-raised text-foreground shadow">
-          {mode === 'light' ? <Sun className="size-2.5" /> : <Moon className="size-2.5" />}
+          {mode === 'light' ? <RiSunFill className="size-2.5" /> : <RiMoonFill className="size-2.5" />}
         </span>
       ) : null}
     </span>

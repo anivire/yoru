@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AnimeLink, AnimeService } from '@yoru/shared'
 import { Button } from '@yoru/ui'
-import { ExternalLink } from 'lucide-react'
+import { RiExternalLinkFill } from '@remixicon/react'
 import type { ReactNode } from 'react'
 import { api } from '../lib/api'
 import { keys } from '../lib/queries'
@@ -42,7 +42,7 @@ export function LinkButton({ href, icon, children }: { href: string; icon: React
       <a href={href} target="_blank" rel="noreferrer">
         {icon}
         <span className="flex-1 truncate">{children}</span>
-        <ExternalLink className="text-subtle-foreground" />
+        <RiExternalLinkFill className="text-subtle-foreground" />
       </a>
     </Button>
   )

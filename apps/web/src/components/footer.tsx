@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '@yoru/ui'
-import { ArrowUpCircle } from 'lucide-react'
+import { RiArrowUpCircleFill } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 
@@ -36,7 +36,7 @@ export function Footer({ scope, className }: { scope: 'app' | 'public'; classNam
           title={data.latest?.message}
           className="inline-flex h-6 items-center gap-1.5 rounded-full bg-accent-soft px-2.5 text-xs font-medium text-accent hover:bg-accent hover:text-accent-foreground"
         >
-          <ArrowUpCircle className="size-3.5" />
+          <RiArrowUpCircleFill className="size-3.5" />
           {data.behindBy ? t('version.updateCount', { count: data.behindBy }) : t('version.update')}
         </a>
       ) : null}

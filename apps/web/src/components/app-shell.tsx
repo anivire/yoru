@@ -9,7 +9,7 @@ import {
   Logo,
   cn,
 } from '@yoru/ui'
-import { CalendarDays, Check, Compass, House, LibraryBig, LogOut, Menu, Search, Settings, Shield } from 'lucide-react'
+import { RiBookShelfFill, RiCalendar2Fill, RiCheckFill, RiCompass3Fill, RiHome5Fill, RiLogoutBoxRFill, RiMenuFill, RiSearchFill, RiSettings3Fill, RiShieldFill } from '@remixicon/react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink, matchPath, useLocation, useNavigate } from 'react-router'
@@ -52,11 +52,11 @@ function NavItems() {
 }
 
 const NAV = [
-  { to: '/', key: 'home', icon: House, end: true },
-  { to: '/discover', key: 'discover', icon: Compass },
-  { to: '/schedule', key: 'schedule', icon: CalendarDays },
-  { to: '/search', key: 'search', icon: Search },
-  { to: '/lists', key: 'lists', icon: LibraryBig },
+  { to: '/', key: 'home', icon: RiHome5Fill, end: true },
+  { to: '/discover', key: 'discover', icon: RiCompass3Fill },
+  { to: '/schedule', key: 'schedule', icon: RiCalendar2Fill },
+  { to: '/search', key: 'search', icon: RiSearchFill },
+  { to: '/lists', key: 'lists', icon: RiBookShelfFill },
 ] as const
 
 function MobileMenu() {
@@ -67,7 +67,7 @@ function MobileMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="secondary" size="icon" aria-label={t('nav.menu')} className="rounded-full">
-          <Menu />
+          <RiMenuFill />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="max-h-[calc(100dvh-5rem)] w-64 overflow-y-auto">
@@ -105,7 +105,7 @@ function LanguageItems() {
         <DropdownMenuItem key={l.value} onSelect={() => change(l.value)}>
           <Flag locale={l.value} className="h-3 w-4 rounded-[2px]" />
           <span className="flex-1">{l.label}</span>
-          {l.value === user.locale ? <Check className="text-accent!" /> : null}
+          {l.value === user.locale ? <RiCheckFill className="text-accent!" /> : null}
         </DropdownMenuItem>
       ))}
     </>
@@ -140,17 +140,17 @@ function AccountItems() {
   return (
     <>
       <DropdownMenuItem onSelect={() => navigate('/settings')}>
-        <Settings />
+        <RiSettings3Fill />
         {t('nav.settings')}
       </DropdownMenuItem>
       {user.role === 'admin' ? (
         <DropdownMenuItem onSelect={() => navigate('/admin')}>
-          <Shield />
+          <RiShieldFill />
           {t('nav.admin')}
         </DropdownMenuItem>
       ) : null}
       <DropdownMenuItem onSelect={logout} className="text-danger data-[highlighted]:bg-danger-soft [&_svg]:text-danger">
-        <LogOut />
+        <RiLogoutBoxRFill />
         {t('nav.logout')}
       </DropdownMenuItem>
     </>
@@ -216,7 +216,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="ml-auto flex items-center gap-2 md:ml-0">
             <Button asChild variant="ghost" size="icon" className="md:hidden">
               <Link to="/search" aria-label={t('nav.search')}>
-                <Search />
+                <RiSearchFill />
               </Link>
             </Button>
             <NotificationsPopover />

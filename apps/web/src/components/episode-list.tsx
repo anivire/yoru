@@ -1,6 +1,6 @@
 import type { Episode } from '@yoru/shared'
 import { Badge, Image, Skeleton, cn } from '@yoru/ui'
-import { Check, LayoutGrid, List } from 'lucide-react'
+import { RiCheckFill, RiLayoutGridFill, RiListUnordered } from '@remixicon/react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -38,7 +38,7 @@ export function EpisodeList({
               onClick={() => switchView(v)}
               className={cn('cursor-pointer rounded-md p-1.5', view === v ? 'bg-muted text-foreground' : 'text-subtle-foreground hover:text-foreground')}
             >
-              {v === 'grid' ? <LayoutGrid className="size-4" /> : <List className="size-4" />}
+              {v === 'grid' ? <RiLayoutGridFill className="size-4" /> : <RiListUnordered className="size-4" />}
             </button>
           ))}
         </div>
@@ -106,7 +106,7 @@ export function EpisodeList({
                     ) : null}
                     {e.watched ? (
                       <span className="absolute right-1.5 top-1.5 grid size-5 place-items-center rounded-full bg-black/60 text-white">
-                        <Check className="size-3" />
+                        <RiCheckFill className="size-3" />
                       </span>
                     ) : null}
                   </div>

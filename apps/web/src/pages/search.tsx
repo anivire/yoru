@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { ANIME_TYPES } from '@yoru/shared'
 import { Button, EmptyState, Input, Select, cn } from '@yoru/ui'
-import { Search as SearchIcon, X } from 'lucide-react'
+import { RiCloseFill, RiSearchFill as SearchIcon } from '@remixicon/react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
@@ -79,7 +79,7 @@ export function SearchPage() {
           <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder={t('search.placeholder')} className="h-11 rounded-xl pl-10 text-[15px]" autoFocus />
           {input ? (
             <button type="button" onClick={() => setInput('')} className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-1 text-subtle-foreground hover:text-foreground">
-              <X className="size-4" />
+              <RiCloseFill className="size-4" />
             </button>
           ) : null}
         </div>
@@ -109,7 +109,7 @@ export function SearchPage() {
           )}
           {filtered ? (
             <Button variant="ghost" size="sm" onClick={() => setParams(q ? { q } : {}, { replace: true })}>
-              <X />
+              <RiCloseFill />
               {t('common.all')}
             </Button>
           ) : null}

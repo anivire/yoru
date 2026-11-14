@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Badge, Button, Image, Mascot, Popover, PopoverContent, PopoverTrigger, StatusDot, cn } from '@yoru/ui'
-import { Bell, CheckCheck, Trash2 } from 'lucide-react'
+import { RiCheckDoubleFill, RiDeleteBin6Fill, RiNotification3Fill } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { api } from '../lib/api'
@@ -21,7 +21,7 @@ export function NotificationsPopover() {
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="secondary" size="icon" aria-label={t('notifications.title')} className="relative rounded-full">
-          <Bell />
+          <RiNotification3Fill />
           {unread ? (
             <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-accent px-1 font-mono text-[10px] font-semibold leading-4 text-accent-foreground">
               {unread > 99 ? '99+' : unread}
@@ -34,11 +34,11 @@ export function NotificationsPopover() {
           <span className="px-1 text-sm font-medium">{t('notifications.title')}</span>
           <div className="flex gap-1">
             <Button size="sm" variant="ghost" onClick={() => readAll.mutate()} disabled={!unread}>
-              <CheckCheck />
+              <RiCheckDoubleFill />
               {t('notifications.readAll')}
             </Button>
             <Button size="icon-sm" variant="ghost" onClick={() => clear.mutate()} disabled={!data?.items.length} aria-label={t('notifications.clear')}>
-              <Trash2 />
+              <RiDeleteBin6Fill />
             </Button>
           </div>
         </div>

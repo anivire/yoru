@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, type User } from '@yoru/shared'
 import { Button, Card, CardContent, Code, Field, Input, Segmented, StepSlider, Switch, toast } from '@yoru/ui'
-import { ArrowDownUp, Bell, Check, Download, FileBraces, FileCode, FileSpreadsheet, FileUp, Palette, Shield, TriangleAlert, UserRound } from 'lucide-react'
+import { RiAlertFill, RiArrowUpDownFill, RiBracesFill, RiCheckFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiNotification3Fill, RiPaletteFill, RiShieldFill, RiUser3Fill } from '@remixicon/react'
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
@@ -17,9 +17,9 @@ import { errorMessage, keys, useUser } from '../lib/queries'
 const TABS = ['appearance', 'account', 'notifications', 'import'] as const
 type Tab = (typeof TABS)[number]
 
-const EXPORT_ICONS = { json: FileBraces, csv: FileSpreadsheet, 'mal-xml': FileCode } satisfies Record<ExportFormat, unknown>
+const EXPORT_ICONS = { json: RiBracesFill, csv: RiFileExcel2Fill, 'mal-xml': RiFileCodeFill } satisfies Record<ExportFormat, unknown>
 
-const TAB_ICONS = { appearance: Palette, account: UserRound, notifications: Bell, import: ArrowDownUp } satisfies Record<Tab, unknown>
+const TAB_ICONS = { appearance: RiPaletteFill, account: RiUser3Fill, notifications: RiNotification3Fill, import: RiArrowUpDownFill } satisfies Record<Tab, unknown>
 
 function useUpdateUser() {
   const client = useQueryClient()
@@ -119,7 +119,7 @@ function AccountTab() {
                 <div className="font-medium">Anime365</div>
                 {user.hasOwnAnime365Token ? (
                   <div className="flex items-center gap-1 text-xs text-success">
-                    <Check className="size-3" />
+                    <RiCheckFill className="size-3" />
                     {t('settings.tokenSet')}
                   </div>
                 ) : (
@@ -245,7 +245,7 @@ function SeanimeImport() {
         }}
       />
       <Button variant="secondary" size="sm" loading={upload.isPending} onClick={() => input.current?.click()} className="self-start">
-        <FileUp />
+        <RiFileUploadFill />
         {t('settings.seanime.choose')}
       </Button>
     </Card>
@@ -280,7 +280,7 @@ function ImportTab() {
       <Block title={t('settings.importTitle')} description={t('settings.importHint')}>
         {missing.length ? (
           <div className="mb-4 flex flex-col gap-3 rounded-xl bg-warning-soft p-4 sm:flex-row sm:items-center">
-            <TriangleAlert className="size-5 shrink-0 text-warning" />
+            <RiAlertFill className="size-5 shrink-0 text-warning" />
             <div className="flex-1 text-sm">
               <div className="font-medium">{t('settings.importMissing', { names: missing.map((p) => PROVIDER_NAMES[p]).join(', ') })}</div>
               <div className="mt-0.5 text-muted-foreground">{isAdmin ? <Trans i18nKey="settings.importMissingAdmin" components={{ code: <Code /> }} /> : t('settings.importMissingUser')}</div>
@@ -288,7 +288,7 @@ function ImportTab() {
             {isAdmin ? (
               <Button asChild variant="secondary" size="sm">
                 <Link to="/admin">
-                  <Shield />
+                  <RiShieldFill />
                   {t('nav.admin')}
                 </Link>
               </Button>
@@ -307,7 +307,7 @@ function ImportTab() {
                     <div className="font-medium">{PROVIDER_NAMES[p]}</div>
                     {enabled === false ? (
                       <div className="flex items-center gap-1 text-xs text-warning">
-                        <TriangleAlert className="size-3" />
+                        <RiAlertFill className="size-3" />
                         {t('settings.notConfigured')}
                       </div>
                     ) : null}
@@ -323,13 +323,13 @@ function ImportTab() {
                 {enabled ? (
                   <Button asChild variant="secondary" size="sm" className="mt-auto">
                     <a href={api.importStartUrl(p)}>
-                      <Download />
+                      <RiDownload2Fill />
                       {t('settings.connect', { name: PROVIDER_NAMES[p] })}
                     </a>
                   </Button>
                 ) : (
                   <Button variant="secondary" size="sm" disabled className="mt-auto">
-                    <Download />
+                    <RiDownload2Fill />
                     {t('settings.connect', { name: PROVIDER_NAMES[p] })}
                   </Button>
                 )}
@@ -364,7 +364,7 @@ function ImportTab() {
                 </div>
                 <Button asChild variant="secondary" size="sm" className="mt-auto">
                   <a href={api.exportUrl(f)} download>
-                    <Download />
+                    <RiDownload2Fill />
                     {t('settings.download', { name })}
                   </a>
                 </Button>

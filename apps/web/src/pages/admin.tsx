@@ -18,7 +18,7 @@ import {
   StatusDot,
   toast,
 } from '@yoru/ui'
-import { Copy, Plus, Ticket, Trash2 } from 'lucide-react'
+import { RiAddFill, RiDeleteBin6Fill, RiFileCopyFill, RiTicket2Fill } from '@remixicon/react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DataSources, OAuthSettings } from '../components/admin-sources'
@@ -39,7 +39,7 @@ function ConfirmDelete({ label, onConfirm }: { label: string; onConfirm: () => v
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon-sm" aria-label={t('common.delete')}>
-          <Trash2 />
+          <RiDeleteBin6Fill />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-3">
@@ -108,7 +108,7 @@ function Invites() {
             />
           </Field>
           <Button type="submit" variant="primary" loading={create.isPending}>
-            <Plus />
+            <RiAddFill />
             {t('admin.createInvite')}
           </Button>
         </form>
@@ -118,7 +118,7 @@ function Invites() {
               <Skeleton className="h-14" />
             ) : (
               <div className="flex flex-col items-center gap-2 py-6 text-center text-sm text-muted-foreground">
-                <Ticket className="size-5 text-subtle-foreground" />
+                <RiTicket2Fill className="size-5 text-subtle-foreground" />
                 {t('admin.noInvites')}
               </div>
             )
@@ -151,11 +151,11 @@ function Invites() {
                       aria-label={t('common.copy')}
                       onClick={() => void navigator.clipboard?.writeText(link).then(() => toast.success(t('common.copied')))}
                     >
-                      <Copy />
+                      <RiFileCopyFill />
                     </Button>
                   ) : null}
                   <Button size="icon-sm" variant="ghost" aria-label={t('common.delete')} onClick={() => remove.mutate(invite.id)}>
-                    <Trash2 />
+                    <RiDeleteBin6Fill />
                   </Button>
                 </div>
               )

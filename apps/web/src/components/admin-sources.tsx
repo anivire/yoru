@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { type AdminSettings, type AdminSettingsInput, type DataSourceId, type DataSourceInfo, IMPORT_PROVIDERS, type ImportProvider } from '@yoru/shared'
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Code, Field, Input, Skeleton, Spinner, StatusDot, Switch, toast } from '@yoru/ui'
-import { KeyRound } from 'lucide-react'
+import { RiKey2Fill } from '@remixicon/react'
 import { type FormEvent, type ReactNode, useEffect, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
@@ -120,7 +120,7 @@ function SecretForm({
     return (
       <div className="flex gap-2">
         <div className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg bg-success-soft px-3 text-[13px] text-success">
-          <KeyRound className="size-3.5 shrink-0" />
+          <RiKey2Fill className="size-3.5 shrink-0" />
           <span className="shrink-0 font-medium">{fromEnv ? t('admin.secret.setEnv') : t('admin.secret.set')}</span>
           <span className="truncate font-mono tracking-[0.2em] opacity-60">••••••••••••</span>
         </div>
@@ -378,7 +378,7 @@ export function OAuthSettings() {
       <CardHeader>
         <div>
           <CardTitle className="flex items-center gap-2">
-            <KeyRound className="size-4 text-muted-foreground" />
+            <RiKey2Fill className="size-4 text-muted-foreground" />
             {t('admin.oauthKeys.title')}
           </CardTitle>
           <CardDescription>

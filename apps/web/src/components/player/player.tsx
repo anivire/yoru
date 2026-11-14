@@ -2,24 +2,7 @@ import type { StreamSource } from '@yoru/shared'
 import { Spinner, cn } from '@yoru/ui'
 import type Hls from 'hls.js'
 import type JASSUB from 'jassub'
-import {
-  Captions,
-  CaptionsOff,
-  Check,
-  ChevronLeft,
-  Gauge,
-  Maximize,
-  Minimize,
-  Pause,
-  PictureInPicture2,
-  Play,
-  Settings,
-  SkipBack,
-  SkipForward,
-  Volume1,
-  Volume2,
-  VolumeX,
-} from 'lucide-react'
+import { RiArrowLeftSFill, RiCheckFill, RiClosedCaptioningFill, RiClosedCaptioningLine, RiDashboard3Fill, RiFullscreenExitFill, RiFullscreenFill, RiPauseFill, RiPictureInPicture2Fill, RiPlayFill, RiSettings3Fill, RiSkipBackFill, RiSkipForwardFill, RiVolumeDownFill, RiVolumeMuteFill, RiVolumeUpFill } from '@remixicon/react'
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatTime } from '../../lib/format'
@@ -273,7 +256,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
     return () => window.removeEventListener('keydown', onKey)
   }, [toggle, seekBy, toggleFullscreen, poke, onNext, onPrev, subsOn])
 
-  const VolumeIcon = muted || volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2
+  const VolumeIcon = muted || volume === 0 ? RiVolumeMuteFill : volume < 0.5 ? RiVolumeDownFill : RiVolumeUpFill
   const pct = duration ? (time / duration) * 100 : 0
 
   return (
@@ -329,7 +312,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
 
       {!playing && !waiting && !error ? (
         <button type="button" onClick={toggle} className="absolute left-1/2 top-1/2 grid size-12 -translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/90 text-black shadow-2xl sm:size-16">
-          <Play className="ml-1 size-5 fill-current sm:size-7" />
+          <RiPlayFill className="ml-1 size-5 fill-current sm:size-7" />
         </button>
       ) : null}
 
@@ -366,9 +349,9 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         </div>
 
         <div className="flex items-center gap-1">
-          {onPrev ? <ControlButton label={t('player.prev')} onClick={onPrev} icon={<SkipBack className="fill-current" />} className="hidden sm:grid" /> : null}
-          <ControlButton label={playing ? t('player.pause') : t('player.play')} onClick={toggle} icon={playing ? <Pause className="fill-current" /> : <Play className="fill-current" />} />
-          {onNext ? <ControlButton label={t('player.next')} onClick={onNext} icon={<SkipForward className="fill-current" />} /> : null}
+          {onPrev ? <ControlButton label={t('player.prev')} onClick={onPrev} icon={<RiSkipBackFill className="fill-current" />} className="hidden sm:grid" /> : null}
+          <ControlButton label={playing ? t('player.pause') : t('player.play')} onClick={toggle} icon={playing ? <RiPauseFill className="fill-current" /> : <RiPlayFill className="fill-current" />} />
+          {onNext ? <ControlButton label={t('player.next')} onClick={onNext} icon={<RiSkipForwardFill className="fill-current" />} /> : null}
           <div className="group/vol flex items-center">
             <ControlButton label={t('player.mute')} onClick={() => setMuted((m) => !m)} icon={<VolumeIcon />} />
             <input
@@ -389,24 +372,24 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
           </span>
           <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
             {subtitlesUrl ? (
-              <ControlButton label={t('player.subtitles')} onClick={() => setSubs(!subsOn)} icon={subsOn ? <Captions /> : <CaptionsOff />} active={subsOn} />
+              <ControlButton label={t('player.subtitles')} onClick={() => setSubs(!subsOn)} icon={subsOn ? <RiClosedCaptioningFill /> : <RiClosedCaptioningLine />} active={subsOn} />
             ) : null}
             <div className="relative">
-              <ControlButton label={t('player.quality')} onClick={() => setMenu(menu ? null : 'root')} icon={<Settings />} badge={`${source.height}p`} />
+              <ControlButton label={t('player.quality')} onClick={() => setMenu(menu ? null : 'root')} icon={<RiSettings3Fill />} badge={`${source.height}p`} />
               {menu ? (
                 <div className="absolute bottom-10 right-0 max-h-44 w-56 overflow-y-auto rounded-lg bg-black/85 p-1 sm:bottom-11 sm:max-h-none sm:w-60 sm:overflow-hidden text-sm shadow-2xl backdrop-blur-xl animate-pop" onClick={(e) => e.stopPropagation()}>
                   {menu === 'root' ? (
                     <>
-                      <MenuRow icon={<Settings />} label={t('player.quality')} value={`${source.height}p`} onClick={() => setMenu('quality')} />
-                      <MenuRow icon={<Gauge />} label={t('player.speed')} value={`${rate}×`} onClick={() => setMenu('speed')} />
+                      <MenuRow icon={<RiSettings3Fill />} label={t('player.quality')} value={`${source.height}p`} onClick={() => setMenu('quality')} />
+                      <MenuRow icon={<RiDashboard3Fill />} label={t('player.speed')} value={`${rate}×`} onClick={() => setMenu('speed')} />
                       {subtitlesUrl ? (
-                        <MenuRow icon={<Captions />} label={t('player.subtitles')} value={subsOn ? 'ASS' : t('player.subtitlesOff')} onClick={() => setMenu('subs')} />
+                        <MenuRow icon={<RiClosedCaptioningFill />} label={t('player.subtitles')} value={subsOn ? 'ASS' : t('player.subtitlesOff')} onClick={() => setMenu('subs')} />
                       ) : null}
                     </>
                   ) : (
                     <>
                       <button type="button" onClick={() => setMenu('root')} className="mb-1 flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-white/70 hover:bg-white/10">
-                        <ChevronLeft className="size-4" />
+                        <RiArrowLeftSFill className="size-4" />
                         {menu === 'quality' ? t('player.quality') : menu === 'speed' ? t('player.speed') : t('player.subtitles')}
                       </button>
                       {menu === 'quality'
@@ -425,9 +408,9 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
               ) : null}
             </div>
             {document.pictureInPictureEnabled ? (
-              <ControlButton label={t('player.pip')} onClick={() => void videoRef.current?.requestPictureInPicture().catch(() => undefined)} icon={<PictureInPicture2 />} />
+              <ControlButton label={t('player.pip')} onClick={() => void videoRef.current?.requestPictureInPicture().catch(() => undefined)} icon={<RiPictureInPicture2Fill />} />
             ) : null}
-            <ControlButton label={t('player.fullscreen')} onClick={toggleFullscreen} icon={fullscreen ? <Minimize /> : <Maximize />} />
+            <ControlButton label={t('player.fullscreen')} onClick={toggleFullscreen} icon={fullscreen ? <RiFullscreenExitFill /> : <RiFullscreenFill />} />
           </div>
         </div>
       </div>
@@ -466,7 +449,7 @@ function MenuRow({ icon, label, value, onClick }: { icon: ReactNode; label: stri
 function MenuOption({ label, hint, active, onClick }: { label: string; hint?: string; active: boolean; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick} className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 hover:bg-white/10">
-      <Check className={cn('size-4 text-accent', !active && 'invisible')} />
+      <RiCheckFill className={cn('size-4 text-accent', !active && 'invisible')} />
       <span className="flex-1 text-left">{label}</span>
       {hint ? <span className="font-mono text-[11px] text-white/50">{hint}</span> : null}
     </button>

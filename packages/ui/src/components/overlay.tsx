@@ -1,4 +1,4 @@
-import { Check, ChevronDown, X } from 'lucide-react'
+import { RiArrowDownSFill, RiCheckFill, RiCloseFill } from '@remixicon/react'
 import { Dialog as D, DropdownMenu as M, Popover as P, Select as S, Switch as Sw, Tooltip as T } from 'radix-ui'
 import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '../lib/cn'
@@ -43,7 +43,7 @@ export function DialogContent({
             {description ? <D.Description className="mt-0.5 text-sm text-muted-foreground">{description}</D.Description> : null}
           </div>
           <D.Close className="-mr-1 cursor-pointer rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
-            <X className="size-4" />
+            <RiCloseFill className="size-4" />
           </D.Close>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
@@ -122,7 +122,7 @@ export function Select({
           <S.Value placeholder={placeholder} />
         </span>
         <S.Icon>
-          <ChevronDown className="text-muted-foreground" />
+          <RiArrowDownSFill className="text-muted-foreground" />
         </S.Icon>
       </S.Trigger>
       <S.Portal>
@@ -139,7 +139,7 @@ export function Select({
                   {o.hint ? <div className="truncate text-xs text-subtle-foreground">{o.hint}</div> : null}
                 </div>
                 <S.ItemIndicator className="absolute right-2.5">
-                  <Check className="size-4 text-accent" />
+                  <RiCheckFill className="size-4 text-accent" />
                 </S.ItemIndicator>
               </S.Item>
             ))}

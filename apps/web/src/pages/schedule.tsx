@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { ScheduleItem } from '@yoru/shared'
 import { Button, EmptyState, Image, Segmented, cn } from '@yoru/ui'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { RiArrowLeftSFill, RiArrowRightSFill } from '@remixicon/react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -160,10 +160,10 @@ export function SchedulePage() {
           {t('schedule.today')}
         </Button>
         <Button variant="secondary" size="icon-sm" aria-label={t('schedule.prevMonth')} onClick={() => shift(-1)}>
-          <ChevronLeft />
+          <RiArrowLeftSFill />
         </Button>
         <Button variant="secondary" size="icon-sm" aria-label={t('schedule.nextMonth')} onClick={() => shift(1)}>
-          <ChevronRight />
+          <RiArrowRightSFill />
         </Button>
       </div>
 

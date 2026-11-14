@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AnimeDetails } from '@yoru/shared'
 import { Badge, EmptyState, Image, cn } from '@yoru/ui'
-import { CalendarClock, Clapperboard, Star } from 'lucide-react'
+import { RiCalendarScheduleFill, RiClapperboardFill, RiStarFill } from '@remixicon/react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
@@ -93,7 +93,7 @@ function Header({ anime, listButton }: { anime: AnimeDetails; listButton: React.
             <div className="mt-1 grid grid-cols-2 gap-1.5 sm:grid-cols-1">
               <ServiceLinks malId={anime.malId} />
               {anime.trailerUrl ? (
-                <LinkButton href={anime.trailerUrl} icon={<Clapperboard />}>
+                <LinkButton href={anime.trailerUrl} icon={<RiClapperboardFill />}>
                   {t('anime.trailer')}
                 </LinkButton>
               ) : null}
@@ -108,7 +108,7 @@ function Header({ anime, listButton }: { anime: AnimeDetails; listButton: React.
             <div className="flex flex-wrap items-center gap-2 text-sm">
               {anime.score ? (
                 <Badge variant="warning">
-                  <Star className="fill-current" />
+                  <RiStarFill className="fill-current" />
                   {anime.score.toFixed(2)}
                 </Badge>
               ) : null}
@@ -121,7 +121,7 @@ function Header({ anime, listButton }: { anime: AnimeDetails; listButton: React.
             </div>
             {anime.nextAiringAt ? (
               <div className="inline-flex items-center gap-2 text-sm">
-                <CalendarClock className="size-4 text-accent" />
+                <RiCalendarScheduleFill className="size-4 text-accent" />
                 <span>{anime.latestEpisode ? t('anime.nextEpisode', { episode: anime.latestEpisode + 1, when: relativeTime(anime.nextAiringAt) }) : t('anime.nextAiring', { when: relativeTime(anime.nextAiringAt) })}</span>
                 <span className="dotted-underline font-mono text-xs text-muted-foreground">{formatDateTime(anime.nextAiringAt)}</span>
               </div>

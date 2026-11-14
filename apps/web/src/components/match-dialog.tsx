@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ProviderMatch } from '@yoru/shared'
 import { Badge, Button, Dialog, DialogContent, DialogTrigger, Image, Input, Spinner, cn } from '@yoru/ui'
-import { Link2, Search } from 'lucide-react'
+import { RiLinksFill, RiSearchFill } from '@remixicon/react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
@@ -32,7 +32,7 @@ export function MatchDialog({ malId, match, defaultQuery }: { malId: number; mat
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm">
-          <Link2 />
+          <RiLinksFill />
           {t('player.manualMatch')}
         </Button>
       </DialogTrigger>
@@ -40,7 +40,7 @@ export function MatchDialog({ malId, match, defaultQuery }: { malId: number; mat
         <div className="flex flex-col gap-3 p-4">
           {match?.providerId ? <div className="text-[13px] text-muted-foreground">{t('player.matched', { title: match.title })}</div> : null}
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
+            <RiSearchFill className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
             <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('player.matchSearch')} className="pl-9" autoFocus />
           </div>
           <div className="flex min-h-40 flex-col gap-1">

@@ -1,6 +1,6 @@
 import type { AnimeSummary, ContinueItem, ListStatus, UpcomingItem } from '@yoru/shared'
 import { Badge, Image, Progress, cn } from '@yoru/ui'
-import { Clock, Play, Repeat, Star } from 'lucide-react'
+import { RiPlayFill, RiRepeatFill, RiStarFill, RiTimeFill } from '@remixicon/react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -18,7 +18,7 @@ export function Poster({ src, alt, className }: { src: string | null; alt: strin
 export function Score({ value, className }: { value: number; className?: string }) {
   return (
     <span className={cn('inline-flex h-6 items-center gap-1 rounded-full bg-black/55 px-2 text-xs font-semibold tabular-nums text-white backdrop-blur-md', className)}>
-      <Star className="size-3 fill-amber-400 text-amber-400" />
+      <RiStarFill className="size-3 fill-amber-400 text-amber-400" />
       {value.toFixed(1)}
     </span>
   )
@@ -83,7 +83,7 @@ export function AnimeCard({
             ) : null}
             {rewatches ? (
               <Badge size="sm" variant="solid" className="bg-info text-white" title={t('anime.rewatchedTimes', { count: rewatches })}>
-                <Repeat className="size-3" />×{rewatches}
+                <RiRepeatFill className="size-3" />×{rewatches}
               </Badge>
             ) : null}
             {anime.airing ? (
@@ -150,7 +150,7 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
         {item.pending ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/65 bg-[linear-gradient(to_bottom,color-mix(in_oklab,var(--warning)_30%,transparent),transparent_70%)] px-4 text-center text-white backdrop-blur-[6px]">
             <span className="grid size-11 place-items-center rounded-full bg-warning text-black shadow-lg [text-shadow:none]">
-              <Clock className="size-5" />
+              <RiTimeFill className="size-5" />
             </span>
             <span className="text-sm font-semibold">{t('home.awaitingTitle')}</span>
             <span className="text-[11px] leading-snug text-white/90">{t('home.awaitingText')}</span>
@@ -160,7 +160,7 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
             <div className="absolute inset-0 grid place-items-center opacity-0 transition-opacity group-hover:opacity-100">
               <span className="grid size-12 place-items-center rounded-full bg-white/90 text-black shadow-lg">
-                <Play className="ml-0.5 size-5 fill-current" />
+                <RiPlayFill className="ml-0.5 size-5 fill-current" />
               </span>
             </div>
           </>
@@ -187,7 +187,7 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
           </span>
           {item.pending ? (
             <span className="inline-flex h-5 items-center gap-1 rounded-full bg-warning-soft px-2 text-[11px] font-medium text-warning">
-              <Clock className="size-3" />
+              <RiTimeFill className="size-3" />
               {t('home.awaitingTranslation')}
             </span>
           ) : null}

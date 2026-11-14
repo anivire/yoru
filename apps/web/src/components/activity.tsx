@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Skeleton, cn } from '@yoru/ui'
-import { Activity } from 'lucide-react'
+import { RiPulseFill } from '@remixicon/react'
 import { useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Section } from './app-shell'
@@ -67,7 +67,7 @@ export function ActivityHeatmap() {
   return (
     <Section
       title={t('home.activity')}
-      icon={<Activity />}
+      icon={<RiPulseFill />}
       hint={data ? t('home.activityHint', { count: data.total }) : undefined}
       action={data && data.total ? <span className="text-[13px] text-muted-foreground">{t('home.streak', { current: data.currentStreak, longest: data.longestStreak })}</span> : null}
     >
