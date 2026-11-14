@@ -17,6 +17,14 @@ export function Footer({ scope, className }: { scope: 'app' | 'public'; classNam
             <a href={data.repoUrl} target="_blank" rel="noreferrer" className="hover:text-foreground">
               v{data.version}
             </a>
+            {data.commit && data.commitUrl ? (
+              <>
+                {' '}
+                <a href={data.commitUrl} target="_blank" rel="noreferrer" className="font-mono text-xs text-subtle-foreground hover:text-foreground">
+                  {data.commit.slice(0, 7)}
+                </a>
+              </>
+            ) : null}
           </>
         ) : null}
       </span>
