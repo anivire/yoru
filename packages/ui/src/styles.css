@@ -367,11 +367,14 @@
 }
 
 ::view-transition-group(site-header),
-::view-transition-new(site-header) {
+::view-transition-new(site-header),
+::view-transition-group(site-rail),
+::view-transition-new(site-rail) {
   animation: none;
 }
 
-::view-transition-old(site-header) {
+::view-transition-old(site-header),
+::view-transition-old(site-rail) {
   display: none;
 }
 

@@ -188,7 +188,7 @@ function SideRail({ position }: { position: Exclude<NavPosition, 'top'> }) {
   return (
     <aside
       className={cn(
-        'fixed inset-y-0 z-40 hidden w-16 flex-col items-center bg-surface/80 py-3 backdrop-blur-2xl backdrop-saturate-150 [view-transition-name:site-header] md:flex',
+        'fixed inset-y-0 z-40 hidden w-16 flex-col items-center bg-surface py-3 [view-transition-name:site-rail] md:flex',
         position === 'left' ? 'left-0' : 'right-0',
       )}
     >
