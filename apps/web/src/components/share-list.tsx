@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ShareInfo } from '@yoru/shared'
 import { Button, Input, Popover, PopoverContent, PopoverTrigger, Skeleton, toast } from '@yoru/ui'
-import { RiFileCopyFill, RiLinkUnlinkM, RiRefreshFill, RiShareFill } from '@remixicon/react'
+import { RiExternalLinkFill, RiFileCopyFill, RiLinkUnlinkM, RiRefreshFill, RiShareFill } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { errorMessage } from '../lib/queries'
@@ -47,6 +47,11 @@ export function ShareListButton() {
               <Input readOnly value={shareUrl(token)} onFocus={(e) => e.currentTarget.select()} className="h-8 font-mono text-xs" />
               <Button size="icon-sm" variant="accent" aria-label={t('common.copy')} onClick={() => copy(shareUrl(token))}>
                 <RiFileCopyFill />
+              </Button>
+              <Button asChild size="icon-sm" variant="secondary" aria-label={t('lists.share.open')} title={t('lists.share.open')}>
+                <a href={shareUrl(token)} target="_blank" rel="noreferrer">
+                  <RiExternalLinkFill />
+                </a>
               </Button>
             </div>
             <div className="flex flex-wrap gap-2">

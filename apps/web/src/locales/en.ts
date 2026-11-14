@@ -199,6 +199,7 @@ export const en: Messages = {
   },
   lists: {
     share: {
+      open: 'Open in a new tab',
       button: 'Share',
       title: 'Public list link',
       hint: 'Anyone with the link can see your lists without signing in: statuses, progress, scores and rewatches.',
