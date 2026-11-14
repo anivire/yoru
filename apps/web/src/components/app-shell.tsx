@@ -207,7 +207,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto max-w-(--page-max) px-4 sm:px-6">
           <div
             className={cn(
-              'flex h-12 items-center gap-3 rounded-full pl-3.5 pr-1.5 transition-[background-color,backdrop-filter] duration-300 [view-transition-name:site-header] sm:h-14 sm:gap-4 sm:pl-4 sm:pr-2.5',
+              'flex h-12 items-center gap-3 -mx-2 rounded-full px-2 transition-[background-color,backdrop-filter] duration-300 [view-transition-name:site-header] sm:h-14 sm:gap-4 sm:-mx-4 sm:px-4',
               header.scrolled ? 'bg-background/55 backdrop-blur-2xl backdrop-saturate-150' : 'bg-transparent',
             )}
           >
