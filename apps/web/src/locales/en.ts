@@ -201,7 +201,7 @@ export const en: Messages = {
     share: {
       button: 'Share',
       title: 'Public list link',
-      hint: 'Anyone with the link can see your lists without signing in: statuses, progress, scores and rewatches. Notes stay private.',
+      hint: 'Anyone with the link can see your lists without signing in: statuses, progress, scores and rewatches.',
       create: 'Create link',
       regenerate: 'New link',
       disable: 'Turn off',
