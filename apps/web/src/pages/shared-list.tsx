@@ -12,6 +12,8 @@ import { PosterGridSkeleton } from '../components/skeletons'
 import { api } from '../lib/api'
 import { useDocumentTitle } from '../lib/title'
 import { SchemePicker, ThemePicker } from '../components/theme-picker'
+import { ListTable, ViewToggle, useListView } from '../components/list-table'
+import { ListTableSkeleton } from '../components/skeletons'
 import { ListFilterBar, useListParams } from '../components/list-filters'
 
 const PAGE_SIZE = 48
@@ -21,6 +23,7 @@ export function SharedListPage() {
   const { token = '' } = useParams()
   const header = useHeader()
   const { status, filters, set } = useListParams()
+  const [view, setView] = useListView()
   const query = useInfiniteQuery({
     queryKey: ['public-list', token, filters],
     queryFn: ({ pageParam }) => api.publicList(token, { ...filters, offset: pageParam, limit: PAGE_SIZE }),
@@ -97,11 +100,19 @@ export function SharedListPage() {
                 ...LIST_STATUSES.map((s) => ({ value: s, label: t(`status.${s}`), count: first?.counts.byStatus[s] })),
               ]}
             />
-            <ListFilterBar filters={filters} set={set} years={first?.facets.years ?? []} types={first?.facets.types ?? []} />
+            <ListFilterBar filters={filters} set={set} years={first?.facets.years ?? []} types={first?.facets.types ?? []}>
+              <ViewToggle view={view} onChange={setView} />
+            </ListFilterBar>
             {isPending ? (
-              <PosterGridSkeleton />
+              view === 'table' ? (
+                <ListTableSkeleton />
+              ) : (
+                <PosterGridSkeleton />
+              )
             ) : !items.length ? (
               <EmptyState mood="sleepy" title={t('lists.empty')} />
+            ) : view === 'table' ? (
+              <ListTable items={items} external />
             ) : (
               <PosterGrid>
                 {items.map((e) => (
@@ -120,7 +131,7 @@ export function SharedListPage() {
             )}
             {hasNextPage ? (
               <div ref={sentinel} className="mt-6">
-                {isFetchingNextPage ? <PosterGridSkeleton count={6} /> : <div className="h-px" />}
+                {isFetchingNextPage ? view === 'table' ? <ListTableSkeleton rows={4} /> : <PosterGridSkeleton count={6} /> : <div className="h-px" />}
               </div>
             ) : null}
           </>
