@@ -25,6 +25,7 @@ export const ru = {
     selfHost: 'Установка на свой сервер',
   },
   version: {
+    later: 'Позже',
     deployed: 'Вышла новая версия yoru',
     deployedText: 'Обновите страницу, чтобы получить изменения',
     reload: 'Обновить',
