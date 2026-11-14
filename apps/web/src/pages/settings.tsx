@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, type User } from '@yoru/shared'
-import { Button, Card, CardContent, Code, Field, Input, LogoMark, Segmented, StepSlider, Switch, toast } from '@yoru/ui'
+import { Badge, Button, Card, CardContent, Code, Field, Input, LogoMark, Segmented, Skeleton, Spinner, StepSlider, Switch, toast } from '@yoru/ui'
 import { RiAlertFill, RiArrowUpDownFill, RiBracesFill, RiCheckFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiNotification3Fill, RiPaletteFill, RiShieldFill, RiUser3Fill } from '@remixicon/react'
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { Page, PageHeader } from '../components/app-shell'
 import { SecretForm } from '../components/admin-sources'
 import { HomeLayoutSettings, NavigationSettings } from '../components/layout-settings'
@@ -16,6 +16,7 @@ import { api } from '../lib/api'
 import { PAGE_WIDTHS, useAppearance } from '../lib/appearance'
 import { exportFormatName, formatDate } from '../lib/format'
 import { errorMessage, keys, useUser } from '../lib/queries'
+import { TLink } from '../components/transition-link'
 
 const TABS = ['appearance', 'account', 'notifications', 'import'] as const
 type Tab = (typeof TABS)[number]
@@ -105,12 +106,13 @@ function AccountInfoCard() {
   const user = useUser()
   const info = useQuery({ queryKey: ['account-info'], queryFn: api.account })
   const none = <span className="text-subtle-foreground">{t('settings.accountInfo.none')}</span>
+  const loading = <Skeleton className="ml-auto h-4 w-28 rounded-md" />
   const rows: [string, ReactNode][] = [
     [t('settings.accountInfo.role'), user.role === 'admin' ? t('nav.roleAdmin') : t('nav.roleUser')],
     [t('settings.accountInfo.id'), <span className="font-mono">#{user.id}</span>],
     [t('settings.accountInfo.createdAt'), formatDate(user.createdAt, { dateStyle: 'long', timeStyle: 'short' })],
-    [t('settings.accountInfo.invitedBy'), info.data ? (info.data.invitedBy ?? none) : '…'],
-    [t('settings.accountInfo.lastLogin'), info.data ? (info.data.lastLoginAt ? formatDate(info.data.lastLoginAt, { dateStyle: 'long', timeStyle: 'short' }) : none) : '…'],
+    [t('settings.accountInfo.invitedBy'), info.data ? (info.data.invitedBy ?? none) : loading],
+    [t('settings.accountInfo.lastLogin'), info.data ? (info.data.lastLoginAt ? formatDate(info.data.lastLoginAt, { dateStyle: 'long', timeStyle: 'short' }) : none) : loading],
   ]
   return (
     <Card className="flex flex-col gap-4 p-4">
@@ -370,10 +372,10 @@ function ImportTab() {
             </div>
             {isAdmin ? (
               <Button asChild variant="secondary" size="sm">
-                <Link viewTransition to="/admin">
+                <TLink to="/admin">
                   <RiShieldFill />
                   {t('nav.admin')}
-                </Link>
+                </TLink>
               </Button>
             ) : null}
           </div>
@@ -388,7 +390,12 @@ function ImportTab() {
                   <ProviderIcon provider={p} />
                   <div className="min-w-0">
                     <div className="font-medium">{PROVIDER_NAMES[p]}</div>
-                    {enabled === false ? (
+                    {status.isPending ? (
+                      <Badge size="sm" variant="neutral" className="mt-0.5">
+                        <Spinner />
+                        {t('admin.checking')}
+                      </Badge>
+                    ) : enabled === false ? (
                       <div className="flex items-center gap-1 text-xs text-warning">
                         <RiAlertFill className="size-3" />
                         {t('settings.notConfigured')}

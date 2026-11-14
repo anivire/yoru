@@ -4,7 +4,6 @@ import { Button, EmptyState, Image } from '@yoru/ui'
 import { RiCalendarScheduleFill, RiDownload2Fill, RiPlayCircleFill, RiPlayLargeFill, RiSearchFill, RiTv2Fill } from '@remixicon/react'
 import { Fragment, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router'
 import { AnimeCard, ContinueCard, PosterGrid, Rail, Score, UpcomingCard, UpcomingGrid } from '../components/anime-cards'
 import { ActivityHeatmap } from '../components/activity'
 import { HomeSkeleton, TextLine } from '../components/skeletons'
@@ -15,6 +14,7 @@ import type { HomeSectionId } from '../lib/navigation'
 import { keys } from '../lib/queries'
 import { seasonLabel, typeLabel } from '../lib/format'
 import { HeroBackdrop } from '../components/hero-backdrop'
+import { TLink } from '../components/transition-link'
 
 function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number | null; label: string }) {
   const { t } = useTranslation()
@@ -28,11 +28,11 @@ function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number 
       <div className="mx-auto max-w-(--page-max) px-4 pb-12 pt-6 sm:px-6">
         <div className="mb-6 flex h-1 items-center text-[0.9375rem] font-medium text-muted-foreground">{label}</div>
         <div className="flex items-end gap-6">
-          <Link viewTransition to={`/anime/${anime.malId}`} className="hidden shrink-0 sm:block">
+          <TLink to={`/anime/${anime.malId}`} className="hidden shrink-0 sm:block">
             <div className="aspect-[2/3] w-44 overflow-hidden rounded-xl bg-muted shadow-2xl">
               {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" /> : null}
             </div>
-          </Link>
+          </TLink>
           <div className="flex min-w-0 max-w-2xl flex-col gap-3">
             <h1 className="line-clamp-2 text-3xl font-semibold tracking-tight sm:text-4xl">{anime.title}</h1>
             {genres.length ? (
@@ -61,10 +61,10 @@ function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number 
             ) : null}
             <div className="mt-1">
               <Button asChild variant="accent" size="lg">
-                <Link viewTransition to={`/anime/${anime.malId}${episode ? `?episode=${episode}` : ''}`}>
+                <TLink to={`/anime/${anime.malId}${episode ? `?episode=${episode}` : ''}`}>
                   <RiPlayLargeFill />
                   {episode ? `${t('common.episode')} ${episode}` : t('common.open')}
-                </Link>
+                </TLink>
               </Button>
             </div>
           </div>
@@ -113,7 +113,7 @@ export function HomePage() {
         hint={t('home.upcomingHint')}
         action={
           <Button asChild variant="ghost" size="sm">
-            <Link viewTransition to="/schedule">{t('nav.schedule')}</Link>
+            <TLink to="/schedule">{t('nav.schedule')}</TLink>
           </Button>
         }
       >
@@ -131,7 +131,7 @@ export function HomePage() {
         icon={<RiTv2Fill />}
         action={
           <Button asChild variant="ghost" size="sm">
-            <Link viewTransition to="/lists?status=watching">{t('common.viewAll')}</Link>
+            <TLink to="/lists?status=watching">{t('common.viewAll')}</TLink>
           </Button>
         }
       >
@@ -161,16 +161,16 @@ export function HomePage() {
             action={
               <div className="flex gap-2">
                 <Button asChild variant="primary">
-                  <Link viewTransition to="/search">
+                  <TLink to="/search">
                     <RiSearchFill />
                     {t('home.find')}
-                  </Link>
+                  </TLink>
                 </Button>
                 <Button asChild variant="secondary">
-                  <Link viewTransition to="/settings/import">
+                  <TLink to="/settings/import">
                     <RiDownload2Fill />
                     {t('home.import')}
-                  </Link>
+                  </TLink>
                 </Button>
               </div>
             }

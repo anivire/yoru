@@ -61,8 +61,8 @@ function SourceStatus({ info }: { info: DataSourceInfo }) {
     )
   }
   return (
-    <Badge variant={info.reachable ? 'success' : 'warning'}>
-      <StatusDot tone={info.reachable ? 'success' : 'warning'} pulse={!info.reachable} />
+    <Badge variant={info.reachable ? 'success' : 'danger'}>
+      <StatusDot tone={info.reachable ? 'success' : 'danger'} pulse={!info.reachable} />
       {info.reachable ? t('admin.reachable') : t('admin.unreachable')}
     </Badge>
   )

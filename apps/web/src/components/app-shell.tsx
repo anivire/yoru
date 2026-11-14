@@ -13,17 +13,18 @@ import {
 import { RiLogoutBoxRFill, RiMenuFill, RiSearchFill, RiSettings3Fill, RiShieldFill } from '@remixicon/react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, NavLink, matchPath, useLocation, useNavigate } from 'react-router'
+import { matchPath, useLocation, useNavigate } from 'react-router'
 import { api } from '../lib/api'
 import { useAppearance } from '../lib/appearance'
 import { NAV } from '../lib/navigation'
 import { keys, useUser } from '../lib/queries'
 import { NotificationsPopover } from './notifications'
 import { Footer } from './footer'
+import { TLink, TNavLink, useTransitionNavigate } from './transition-link'
 
 function NavItem({ to, children, end, label }: { to: string; children: ReactNode; end?: boolean; label?: string }) {
   return (
-    <NavLink viewTransition
+    <TNavLink
       to={to}
       end={end}
       aria-label={label}
@@ -36,7 +37,7 @@ function NavItem({ to, children, end, label }: { to: string; children: ReactNode
       }
     >
       {children}
-    </NavLink>
+    </TNavLink>
   )
 }
 
@@ -76,9 +77,9 @@ function DesktopNav() {
 }
 
 function MobileMenu() {
+  const go = useTransitionNavigate()
   const { t } = useTranslation()
   const nav = useVisibleNav()
-  const navigate = useNavigate()
   const { pathname } = useLocation()
   return (
     <DropdownMenu>
@@ -95,7 +96,7 @@ function MobileMenu() {
           return (
             <DropdownMenuItem
               key={to}
-              onSelect={() => navigate(to, { viewTransition: true })}
+              onSelect={() => go(to)}
               className={cn(active && 'bg-accent-soft text-accent data-[highlighted]:bg-accent-soft [&_svg]:text-accent')}
             >
               <Icon />
@@ -125,6 +126,7 @@ function ProfileLabel() {
 }
 
 function AccountItems() {
+  const go = useTransitionNavigate()
   const { t } = useTranslation()
   const user = useUser()
   const navigate = useNavigate()
@@ -137,12 +139,12 @@ function AccountItems() {
   }
   return (
     <>
-      <DropdownMenuItem onSelect={() => navigate('/settings', { viewTransition: true })}>
+      <DropdownMenuItem onSelect={() => go('/settings')}>
         <RiSettings3Fill />
         {t('nav.settings')}
       </DropdownMenuItem>
       {user.role === 'admin' ? (
-        <DropdownMenuItem onSelect={() => navigate('/admin', { viewTransition: true })}>
+        <DropdownMenuItem onSelect={() => go('/admin')}>
           <RiShieldFill />
           {t('nav.admin')}
         </DropdownMenuItem>
@@ -200,30 +202,32 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-dvh flex-col">
       <header
         ref={header.ref}
-        className="sticky top-0 z-40 px-2 pt-2 sm:px-3"
+        className="sticky top-0 z-40 pt-2"
       >
-        <div
-          className={cn(
-            'mx-auto flex h-12 max-w-(--page-max) items-center gap-3 rounded-2xl pl-3.5 pr-1.5 transition-[background-color,backdrop-filter] duration-300 [view-transition-name:site-header] sm:h-14 sm:gap-4 sm:px-3',
-            header.scrolled ? 'bg-background/55 backdrop-blur-2xl backdrop-saturate-150' : 'bg-transparent',
-          )}
-        >
-          <Link viewTransition to="/" className="flex shrink-0 items-center">
-            <Logo className="[&>span]:text-[0.9375rem] [&_svg]:size-6 sm:[&>span]:text-[17px] sm:[&_svg]:size-7" />
-          </Link>
-          <DesktopNav />
-          <div className="ml-auto flex items-center gap-1.5 sm:gap-2 md:ml-0">
-            <Button asChild variant="ghost" size="icon" className="md:hidden">
-              <Link viewTransition to="/search" aria-label={t('nav.search')}>
-                <RiSearchFill />
-              </Link>
-            </Button>
-            <NotificationsPopover />
-            <div className="hidden md:block">
-              <UserMenu />
-            </div>
-            <div className="md:hidden">
-              <MobileMenu />
+        <div className="mx-auto max-w-(--page-max) px-4 sm:px-6">
+          <div
+            className={cn(
+              'flex h-12 items-center gap-3 rounded-2xl pl-2.5 pr-1.5 transition-[background-color,backdrop-filter] duration-300 [view-transition-name:site-header] sm:h-14 sm:gap-4 sm:pl-3 sm:pr-2',
+              header.scrolled ? 'bg-background/55 backdrop-blur-2xl backdrop-saturate-150' : 'bg-transparent',
+            )}
+          >
+            <TLink to="/" className="flex shrink-0 items-center">
+              <Logo className="[&>span]:text-[0.9375rem] [&_svg]:size-6 sm:[&>span]:text-[17px] sm:[&_svg]:size-7" />
+            </TLink>
+            <DesktopNav />
+            <div className="ml-auto flex items-center gap-1.5 sm:gap-2 md:ml-0">
+              <Button asChild variant="ghost" size="icon" className="md:hidden">
+                <TLink to="/search" aria-label={t('nav.search')}>
+                  <RiSearchFill />
+                </TLink>
+              </Button>
+              <NotificationsPopover />
+              <div className="hidden md:block">
+                <UserMenu />
+              </div>
+              <div className="md:hidden">
+                <MobileMenu />
+              </div>
             </div>
           </div>
         </div>

@@ -1,8 +1,8 @@
 import { Button, EmptyState } from '@yoru/ui'
 import { RiHome5Fill } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router'
 import { Page } from '../components/app-shell'
+import { TLink } from '../components/transition-link'
 
 export function NotFoundPage() {
   const { t } = useTranslation()
@@ -19,10 +19,10 @@ export function NotFoundPage() {
         description={t('notFound.text')}
         action={
           <Button asChild variant="accent">
-            <Link viewTransition to="/">
+            <TLink to="/">
               <RiHome5Fill />
               {t('notFound.home')}
-            </Link>
+            </TLink>
           </Button>
         }
       />

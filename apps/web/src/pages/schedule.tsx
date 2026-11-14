@@ -4,12 +4,12 @@ import { Button, EmptyState, Image, Segmented, cn } from '@yoru/ui'
 import { RiArrowLeftSFill, RiArrowRightSFill } from '@remixicon/react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router'
 import { AnimeHoverCard } from '../components/anime-hover'
 import { Page, PageHeader } from '../components/app-shell'
 import { ScheduleSkeleton } from '../components/skeletons'
 import { api } from '../lib/api'
 import { i18n } from '../lib/i18n'
+import { TLink } from '../components/transition-link'
 
 const DAY = 86_400_000
 const COLUMNS = 7
@@ -94,7 +94,7 @@ function EntryRow({ item }: { item: ScheduleItem }) {
   )
   return (
     <AnimeHoverCard anime={item.anime} footer={footer}>
-      <Link viewTransition
+      <TLink
         to={`/anime/${item.anime.malId}${item.available ? `?episode=${item.episode}` : ''}`}
         className={cn('group flex items-stretch gap-2 rounded-lg p-1 pl-1 transition-colors', tone.row)}
       >
@@ -113,7 +113,7 @@ function EntryRow({ item }: { item: ScheduleItem }) {
             <span className="truncate">{t('schedule.episodeShort', { episode: item.episode })}</span>
           </div>
         </div>
-      </Link>
+      </TLink>
     </AnimeHoverCard>
   )
 }

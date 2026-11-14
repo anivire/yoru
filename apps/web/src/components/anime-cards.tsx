@@ -3,10 +3,10 @@ import { Badge, Image, Progress, cn } from '@yoru/ui'
 import { RiPlayLargeFill, RiRepeatFill, RiStarFill, RiTimeFill } from '@remixicon/react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router'
 import { formatDateTime, formatTime, relativeTime, seasonLabel, typeLabel } from '../lib/format'
 import { useAppearance } from '../lib/appearance'
 import { QuickEdit } from './quick-edit'
+import { TLink } from './transition-link'
 
 export function Poster({ src, alt, className }: { src: string | null; alt: string; className?: string }) {
   return (
@@ -207,9 +207,9 @@ function CardLink({ href, to, children }: { href?: string; to: string; children:
     )
   }
   return (
-    <Link viewTransition to={to} className="flex flex-col gap-2">
+    <TLink to={to} className="flex flex-col gap-2">
       {children}
-    </Link>
+    </TLink>
   )
 }
 
@@ -232,7 +232,7 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
   const { t } = useTranslation()
   const image = item.episodeImageUrl ?? item.anime.imageUrl
   return (
-    <Link viewTransition to={item.pending ? `/anime/${item.anime.malId}` : `/anime/${item.anime.malId}?episode=${item.episode}`} className="group flex flex-col gap-2">
+    <TLink to={item.pending ? `/anime/${item.anime.malId}` : `/anime/${item.anime.malId}?episode=${item.episode}`} className="group flex flex-col gap-2">
       <div className="relative isolate aspect-video overflow-hidden rounded-xl bg-muted">
         {image ? (
           <Image
@@ -293,7 +293,7 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
         </div>
         <div className="truncate text-[0.8125rem] text-muted-foreground">{item.anime.title}</div>
       </div>
-    </Link>
+    </TLink>
   )
 }
 
@@ -301,7 +301,7 @@ export function UpcomingCard({ item }: { item: UpcomingItem }) {
   const { t } = useTranslation()
   const image = item.bannerUrl ?? item.anime.imageUrl
   return (
-    <Link viewTransition to={`/anime/${item.anime.malId}`} className="group flex min-w-0 flex-col gap-2.5">
+    <TLink to={`/anime/${item.anime.malId}`} className="group flex min-w-0 flex-col gap-2.5">
       <div className="relative isolate aspect-video overflow-hidden rounded-xl bg-muted transform-gpu">
         {image ? (
           <Image
@@ -324,7 +324,7 @@ export function UpcomingCard({ item }: { item: UpcomingItem }) {
           <span className="shrink-0 text-[0.8125rem] text-muted-foreground">{relativeTime(item.airingAt)}</span>
         </div>
       </div>
-    </Link>
+    </TLink>
   )
 }
 

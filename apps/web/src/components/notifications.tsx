@@ -2,10 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Badge, Button, Image, Mascot, Popover, PopoverContent, PopoverTrigger, StatusDot, cn } from '@yoru/ui'
 import { RiCheckDoubleFill, RiDeleteBin6Fill, RiNotification3Fill } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router'
 import { api } from '../lib/api'
 import { relativeTime } from '../lib/format'
 import { keys } from '../lib/queries'
+import { TLink } from './transition-link'
 
 export function NotificationsPopover() {
   const { t } = useTranslation()
@@ -50,7 +50,7 @@ export function NotificationsPopover() {
             </div>
           ) : (
             data.items.map((n) => (
-              <Link viewTransition
+              <TLink
                 key={n.id}
                 to={`/anime/${n.malId}?episode=${n.episode}&kind=${n.kind}`}
                 onClick={() => !n.readAt && readOne.mutate(n.id)}
@@ -76,7 +76,7 @@ export function NotificationsPopover() {
                     <span className="ml-auto font-mono text-[0.6875rem] text-subtle-foreground">{relativeTime(n.createdAt)}</span>
                   </div>
                 </div>
-              </Link>
+              </TLink>
             ))
           )}
         </div>

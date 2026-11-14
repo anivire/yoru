@@ -33,7 +33,7 @@ export function Segmented<T extends string>({
       <span
         aria-hidden
         style={indicator}
-        className="pointer-events-none absolute rounded-lg bg-raised shadow-sm shadow-black/20 duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] dark:bg-foreground/[0.12]"
+        className="pointer-events-none absolute rounded-lg bg-raised duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] dark:bg-foreground/[0.12]"
       />
       {options.map((option) => {
         const active = option.value === value

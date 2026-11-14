@@ -4,7 +4,6 @@ import { Button, EmptyState, Image, Skeleton, cn } from '@yoru/ui'
 import { RiPlayLargeFill } from '@remixicon/react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router'
 import { AnimeCard, Rail, Score } from '../components/anime-cards'
 import { Page, Section } from '../components/app-shell'
 import { AnimeCardSkeleton, PosterRailSkeleton, SectionTitleSkeleton, TextLine } from '../components/skeletons'
@@ -12,6 +11,7 @@ import { api } from '../lib/api'
 import { HeroBackdrop } from '../components/hero-backdrop'
 import { relativeTime, seasonLabel, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
+import { TLink } from '../components/transition-link'
 
 const SLIDE_MS = 8000
 
@@ -72,11 +72,11 @@ function Hero({ items }: { items: AnimeSummary[] }) {
           ))}
         </div>
         <div key={current.malId} className="flex animate-fade items-end gap-6">
-          <Link viewTransition to={`/anime/${anime.malId}`} className="hidden shrink-0 sm:block">
+          <TLink to={`/anime/${anime.malId}`} className="hidden shrink-0 sm:block">
             <div className="aspect-[2/3] w-44 overflow-hidden rounded-xl bg-muted shadow-2xl">
               {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" /> : null}
             </div>
-          </Link>
+          </TLink>
           <div className="flex min-w-0 max-w-2xl flex-col gap-3">
             <h1 className="line-clamp-2 text-3xl font-semibold tracking-tight sm:text-4xl">{anime.title}</h1>
             {anime.genres.length ? (
@@ -103,10 +103,10 @@ function Hero({ items }: { items: AnimeSummary[] }) {
             ) : null}
             <div className="mt-1">
               <Button asChild variant="accent" size="lg">
-                <Link viewTransition to={`/anime/${anime.malId}`}>
+                <TLink to={`/anime/${anime.malId}`}>
                   <RiPlayLargeFill />
                   {t('discover.open')}
-                </Link>
+                </TLink>
               </Button>
             </div>
           </div>

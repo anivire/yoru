@@ -4,7 +4,7 @@ import { Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, Dro
 import { RiCalendar2Fill, RiCloseFill, RiDownload2Fill, RiFileDownloadFill, RiLayoutGridFill, RiLayoutRowFill, RiRepeatFill, RiSearchFill, RiSortDesc, RiTvFill } from '@remixicon/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useSearchParams } from 'react-router'
+import { useSearchParams } from 'react-router'
 import { AnimeCard, EpisodeCount, PosterGrid, Score } from '../components/anime-cards'
 import { ListTableSkeleton, PosterGridSkeleton } from '../components/skeletons'
 import { Page, PageHeader } from '../components/app-shell'
@@ -12,6 +12,7 @@ import { ShareListButton } from '../components/share-list'
 import { api } from '../lib/api'
 import { exportFormatName, formatDate, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
+import { TLink } from '../components/transition-link'
 
 const ANY = '__any'
 const SORTS = ['score', 'updated', 'title', 'progress', 'year', 'added'] as const
@@ -42,7 +43,7 @@ function ListTable({ items }: { items: ListEntryWithAnime[] }) {
           {items.map((e) => (
             <tr key={e.malId} className="even:bg-field/60 hover:bg-muted">
               <td className="px-4 py-2.5">
-                <Link viewTransition to={`/anime/${e.malId}`} className="flex min-w-0 items-center gap-3">
+                <TLink to={`/anime/${e.malId}`} className="flex min-w-0 items-center gap-3">
                   {e.anime.imageUrl ? <Image src={e.anime.imageUrl} alt="" loading="lazy" className="h-12 w-8 shrink-0 rounded object-cover" /> : null}
                   <div className="min-w-0">
                     <div className="truncate font-medium hover:text-accent">{e.anime.title}</div>
@@ -56,7 +57,7 @@ function ListTable({ items }: { items: ListEntryWithAnime[] }) {
                       ) : null}
                     </div>
                   </div>
-                </Link>
+                </TLink>
               </td>
               <td className="hidden px-4 py-2.5 @2xl:table-cell">
                 <Badge size="sm" variant={STATUS_TONE[e.status]}>
@@ -142,10 +143,10 @@ export function ListsPage() {
           <>
             <ShareListButton />
             <Button asChild variant="secondary" size="sm">
-              <Link viewTransition to="/settings/import">
+              <TLink to="/settings/import">
                 <RiDownload2Fill />
                 {t('lists.import')}
-              </Link>
+              </TLink>
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

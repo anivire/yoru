@@ -4,12 +4,13 @@ import { Button, Mascot, Select, Spinner } from '@yoru/ui'
 import { RiClosedCaptioningFill, RiMicFill, RiSettings3Fill, RiVolumeUpFill } from '@remixicon/react'
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useSearchParams } from 'react-router'
+import { useSearchParams } from 'react-router'
 import { ApiError, api } from '../lib/api'
 import { errorMessage, keys } from '../lib/queries'
 import { EpisodeList } from './episode-list'
 import { MatchDialog } from './match-dialog'
 import { Player } from './player/player'
+import { TLink } from './transition-link'
 
 const KIND_KEY = 'yoru:kind'
 
@@ -157,10 +158,10 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
         action={
           tokenProblem ? (
             <Button asChild size="sm" variant="secondary">
-              <Link viewTransition to="/settings/account">
+              <TLink to="/settings/account">
                 <RiSettings3Fill />
                 {t('nav.settings')}
-              </Link>
+              </TLink>
             </Button>
           ) : (
             <Button size="sm" variant="secondary" onClick={() => stream.refetch()}>
