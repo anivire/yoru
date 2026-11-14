@@ -166,9 +166,6 @@ export const en: Messages = {
     updated: 'Updated',
   },
   anime: {
-    status: 'Status',
-    rewatchesShort: 'Rewatches',
-    remove: 'Remove from list',
     noScore: 'None',
     rewatches: 'Times rewatched',
     add: 'Add to list',

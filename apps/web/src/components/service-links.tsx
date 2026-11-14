@@ -6,11 +6,10 @@ import type { ReactNode } from 'react'
 import { api } from '../lib/api'
 import { keys } from '../lib/queries'
 
-const SERVICES: Record<AnimeService, { name: string; color?: string; label?: string; image?: string }> = {
+const SERVICES: Record<AnimeService, { name: string; color: string; label: string }> = {
   mal: { name: 'MyAnimeList', color: '#2e51a2', label: 'MAL' },
   shikimori: { name: 'Shikimori', color: '#343a40', label: 'Ш' },
   anilist: { name: 'AniList', color: '#02a9ff', label: 'AL' },
-  anime365: { name: 'Anime365', image: '/anime365.png' },
   anidb: { name: 'AniDB', color: '#24356c', label: 'DB' },
   kinopoisk: { name: 'Кинопоиск', color: '#ff5500', label: 'КП' },
   crunchyroll: { name: 'Crunchyroll', color: '#f47521', label: 'CR' },
@@ -18,8 +17,7 @@ const SERVICES: Record<AnimeService, { name: string; color?: string; label?: str
 
 export function ServiceIcon({ service }: { service: AnimeService }) {
   const s = SERVICES[service]
-  if (s.image) return <img src={s.image} alt="" className="size-4 shrink-0 rounded-sm bg-white object-contain" />
-  const label = s.label ?? ''
+  const label = s.label
   return (
     <svg viewBox="0 0 24 24" aria-hidden>
       <rect width="24" height="24" rx="5" fill={s.color} />

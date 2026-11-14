@@ -35,7 +35,6 @@ export async function animeLinks(malId: number): Promise<AnimeLink[]> {
     if (service && !found.has(service)) found.set(service, link.url)
   }
   if (found.has('anilist')) links.push({ service: 'anilist', url: found.get('anilist')! })
-  links.push({ service: 'anime365', url: `${env.anime365Url}/catalog/${match.providerId}` })
   for (const service of ['anidb', 'kinopoisk', 'crunchyroll'] as const) {
     const url = found.get(service)
     if (url) links.push({ service, url })

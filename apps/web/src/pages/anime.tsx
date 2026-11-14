@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
 import { Page } from '../components/app-shell'
-import { ListButton } from '../components/list-editor'
+import { ListEditor } from '../components/list-editor'
 import { LinkButton, ServiceLinks } from '../components/service-links'
 import { AnimePageSkeleton } from '../components/skeletons'
 import { WatchSection } from '../components/watch-section'
@@ -67,7 +67,7 @@ function Synopsis({ text, open, onToggle }: { text: string; open: boolean; onTog
   )
 }
 
-function Header({ anime, listButton }: { anime: AnimeDetails; listButton: React.ReactNode }) {
+function Header({ anime, addButton, editor }: { anime: AnimeDetails; addButton: React.ReactNode; editor: React.ReactNode }) {
   const { t } = useTranslation()
   const { expandSynopsis } = useAppearance()
   const [open, setOpen] = useState(expandSynopsis)
@@ -89,7 +89,7 @@ function Header({ anime, listButton }: { anime: AnimeDetails; listButton: React.
             <div className="aspect-[2/3] w-full overflow-hidden rounded-xl bg-muted shadow-2xl">
               {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" /> : null}
             </div>
-            {listButton}
+            {addButton}
             <div className="mt-1 flex flex-col gap-1.5">
               <ServiceLinks malId={anime.malId} />
               {anime.trailerUrl ? (
@@ -138,13 +138,18 @@ function Header({ anime, listButton }: { anime: AnimeDetails; listButton: React.
             {anime.synopsis ? <Synopsis text={anime.synopsis} open={open} onToggle={() => setOpen(!open)} /> : null}
           </div>
         </div>
-        {facts.length ? (
-          <div className="mt-6 flex flex-wrap justify-end gap-x-6 gap-y-1 text-[13px] text-muted-foreground">
-            {facts.map((f) => (
-              <span key={f.label}>
-                {f.label}: <span className="text-foreground">{f.value}</span>
-              </span>
-            ))}
+        {editor || facts.length ? (
+          <div className="mt-6 flex flex-wrap items-center gap-2">
+            {editor}
+            {facts.length ? (
+              <div className="flex flex-wrap gap-x-6 gap-y-1 text-[13px] text-muted-foreground sm:ml-auto">
+                {facts.map((f) => (
+                  <span key={f.label}>
+                    {f.label}: <span className="text-foreground">{f.value}</span>
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -170,13 +175,16 @@ export function AnimePage() {
     <>
       <Header
         anime={data.anime}
-        listButton={
-          <ListButton
-            malId={malId}
-            entry={data.entry}
-            total={data.anime.episodes}
-            aired={data.anime.status === 'finished' ? data.anime.episodes : data.anime.status === 'upcoming' ? 0 : data.anime.latestEpisode}
-          />
+        addButton={data.entry ? null : <ListEditor malId={malId} entry={null} total={data.anime.episodes} aired={null} />}
+        editor={
+          data.entry ? (
+            <ListEditor
+              malId={malId}
+              entry={data.entry}
+              total={data.anime.episodes}
+              aired={data.anime.status === 'finished' ? data.anime.episodes : data.anime.status === 'upcoming' ? 0 : data.anime.latestEpisode}
+            />
+          ) : null
         }
       />
       <Page>

@@ -131,7 +131,7 @@ export interface ProviderMatch {
   manual: boolean
 }
 
-export const ANIME_SERVICES = ['mal', 'shikimori', 'anilist', 'anime365', 'anidb', 'kinopoisk', 'crunchyroll'] as const
+export const ANIME_SERVICES = ['mal', 'shikimori', 'anilist', 'anidb', 'kinopoisk', 'crunchyroll'] as const
 export type AnimeService = (typeof ANIME_SERVICES)[number]
 
 export interface AnimeLink {
