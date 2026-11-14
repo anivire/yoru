@@ -1,5 +1,5 @@
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { ListEntryInput, User } from '@yoru/shared'
+import type { AnimePage, ListEntry, ListEntryInput, User } from '@yoru/shared'
 import { toast } from '@yoru/ui'
 import { useTranslation } from 'react-i18next'
 import { ApiError, api } from './api'
@@ -46,30 +46,75 @@ export function useUser(): User {
   return data
 }
 
-export function useSaveEntry(malId: number) {
+function entryMutationKey(malId: number) {
+  return ['entry', malId] as const
+}
+
+function useEntryCache(malId: number) {
   const client = useQueryClient()
+  const snapshot = async () => {
+    await client.cancelQueries({ queryKey: keys.anime(malId) })
+    return client.getQueryData<AnimePage>(keys.anime(malId))
+  }
+  const setEntry = (update: (entry: ListEntry | null) => ListEntry | null) =>
+    client.setQueryData<AnimePage>(keys.anime(malId), (page) => (page ? { ...page, entry: update(page.entry) } : page))
+  const settle = () => {
+    if (client.isMutating({ mutationKey: entryMutationKey(malId) }) > 1) return
+    void client.invalidateQueries({ queryKey: keys.anime(malId) })
+    void client.invalidateQueries({ queryKey: ['list'] })
+    void client.invalidateQueries({ queryKey: keys.home })
+    void client.invalidateQueries({ queryKey: keys.episodes(malId) })
+  }
+  return { client, snapshot, setEntry, settle }
+}
+
+export function useSaveEntry(malId: number) {
   const { t } = useTranslation()
+  const cache = useEntryCache(malId)
   return useMutation({
+    mutationKey: entryMutationKey(malId),
     mutationFn: (input: ListEntryInput) => api.saveEntry(malId, input),
-    onSuccess: () => {
-      void client.invalidateQueries({ queryKey: keys.anime(malId) })
-      void client.invalidateQueries({ queryKey: ['list'] })
-      void client.invalidateQueries({ queryKey: keys.home })
-      void client.invalidateQueries({ queryKey: keys.episodes(malId) })
+    onMutate: async (input) => {
+      const previous = await cache.snapshot()
+      cache.setEntry((entry) => ({
+        malId,
+        progress: 0,
+        score: null,
+        rewatches: 0,
+        notes: null,
+        startedAt: null,
+        completedAt: null,
+        ...entry,
+        ...Object.fromEntries(Object.entries(input).filter(([, v]) => v !== undefined)),
+        status: input.status,
+        updatedAt: new Date().toISOString(),
+      }))
+      return { previous }
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : t('common.error')),
+    onError: (e, _input, context) => {
+      if (context?.previous) cache.client.setQueryData(keys.anime(malId), context.previous)
+      toast.error(e instanceof Error ? e.message : t('common.error'))
+    },
+    onSettled: cache.settle,
   })
 }
 
 export function useDeleteEntry(malId: number) {
-  const client = useQueryClient()
+  const { t } = useTranslation()
+  const cache = useEntryCache(malId)
   return useMutation({
+    mutationKey: entryMutationKey(malId),
     mutationFn: () => api.deleteEntry(malId),
-    onSuccess: () => {
-      void client.invalidateQueries({ queryKey: keys.anime(malId) })
-      void client.invalidateQueries({ queryKey: ['list'] })
-      void client.invalidateQueries({ queryKey: keys.home })
+    onMutate: async () => {
+      const previous = await cache.snapshot()
+      cache.setEntry(() => null)
+      return { previous }
     },
+    onError: (e, _input, context) => {
+      if (context?.previous) cache.client.setQueryData(keys.anime(malId), context.previous)
+      toast.error(e instanceof Error ? e.message : t('common.error'))
+    },
+    onSettled: cache.settle,
   })
 }
 

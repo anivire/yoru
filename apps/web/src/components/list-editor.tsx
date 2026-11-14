@@ -103,7 +103,7 @@ export function ListEditor({ malId, entry, total, aired }: { malId: number; entr
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="accent" size="sm" className="w-full" loading={save.isPending}>
+        <Button variant="accent" size="sm" className="w-full">
           {entry ? <BookmarkCheck /> : <Plus />}
           <span className="flex-1 truncate text-left">{entry ? t(`status.${entry.status}`) : t('anime.add')}</span>
           <ChevronDown className="opacity-70" />
