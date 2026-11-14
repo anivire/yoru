@@ -10,21 +10,16 @@ export function Footer({ scope, className }: { scope: 'app' | 'public'; classNam
   return (
     <footer className={cn('flex flex-wrap items-center justify-center gap-x-2 gap-y-2 py-6 text-sm text-muted-foreground', className)}>
       <span>
-        yoru · <span className="text-foreground">Anime365</span> · Jikan
-      </span>
-      {data ? (
-        <span className="inline-flex items-center gap-1.5">
-          <span>·</span>
-          <a href={data.repoUrl} target="_blank" rel="noreferrer" className="hover:text-foreground">
-            v{data.version}
-          </a>
-          {data.commit && data.commitUrl ? (
-            <a href={data.commitUrl} target="_blank" rel="noreferrer" className="font-mono text-xs text-subtle-foreground hover:text-foreground">
-              {data.commit.slice(0, 7)}
+        yoru
+        {data ? (
+          <>
+            {' · '}
+            <a href={data.repoUrl} target="_blank" rel="noreferrer" className="hover:text-foreground">
+              v{data.version}
             </a>
-          ) : null}
-        </span>
-      ) : null}
+          </>
+        ) : null}
+      </span>
       {data?.updateAvailable ? (
         <a
           href={data.compareUrl ?? data.repoUrl}
