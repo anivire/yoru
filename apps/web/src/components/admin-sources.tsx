@@ -22,7 +22,7 @@ function SourceIcon({ id }: { id: DataSourceId }) {
   if (id === 'anime365') {
     return (
       <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-white">
-        <img src="/anime365.png" alt="" className="size-7 object-contain" />
+        <img src="/anime365.webp" alt="" className="size-7 object-contain" />
       </span>
     )
   }

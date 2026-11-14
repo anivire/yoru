@@ -6,6 +6,7 @@ import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'rea
 import { Trans, useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { Page, PageHeader } from '../components/app-shell'
+import { HomeLayoutSettings, NavigationSettings } from '../components/layout-settings'
 import { Flag, LANGUAGES, useChangeLanguage } from '../components/language'
 import { PROVIDER_NAMES, ProviderIcon } from '../components/providers'
 import { SchemePicker, ThemePicker } from '../components/theme-picker'
@@ -72,6 +73,12 @@ function AppearanceTab() {
           </label>
         </Card>
       </Block>
+      <Block title={t('settings.homeLayout')} description={t('settings.homeLayoutHint')}>
+        <HomeLayoutSettings />
+      </Block>
+      <Block title={t('settings.navigation')} description={t('settings.navigationHint')}>
+        <NavigationSettings />
+      </Block>
       <Block title={t('settings.colorScheme')}>
         <SchemePicker />
       </Block>
@@ -113,7 +120,7 @@ function AccountTab() {
           <Card className="flex flex-col gap-4 p-4">
             <div className="flex items-center gap-3">
               <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-white">
-                <img src="/anime365.png" alt="" className="size-7 object-contain" />
+                <img src="/anime365.webp" alt="" className="size-7 object-contain" />
               </span>
               <div className="min-w-0 flex-1">
                 <div className="font-medium">Anime365</div>

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { AnimeSummary, HomeData } from '@yoru/shared'
 import { Button, EmptyState, Image } from '@yoru/ui'
 import { RiCalendarScheduleFill, RiDownload2Fill, RiPlayCircleFill, RiPlayFill, RiSearchFill, RiTv2Fill } from '@remixicon/react'
+import { Fragment, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { AnimeCard, ContinueCard, PosterGrid, Rail, UpcomingCard, UpcomingGrid } from '../components/anime-cards'
@@ -9,6 +10,8 @@ import { ActivityHeatmap } from '../components/activity'
 import { HomeSkeleton } from '../components/skeletons'
 import { Page, Section } from '../components/app-shell'
 import { api } from '../lib/api'
+import { useAppearance } from '../lib/appearance'
+import type { HomeSectionId } from '../lib/navigation'
 import { keys } from '../lib/queries'
 
 function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number | null; label: string }) {
@@ -55,14 +58,72 @@ function HomeHero({ data }: { data: HomeData }) {
 export function HomePage() {
   const { t } = useTranslation()
   const { data, isPending } = useQuery({ queryKey: keys.home, queryFn: api.home })
+  const { showHero, homeSections } = useAppearance()
 
   if (isPending) return <HomeSkeleton />
 
   const empty = !data || (!data.continueWatching.length && !data.upcoming.length && !data.watching.length)
 
+  const sections: Record<HomeSectionId, ReactNode> = {
+    continue: data?.continueWatching.length ? (
+      <Section
+        title={t('home.continue')}
+        icon={<RiPlayCircleFill />}
+        hint={data.continueWatching.some((c) => c.pending) ? t('home.continueHint') : undefined}
+      >
+        <Rail>
+          {data.continueWatching.map((item) => (
+            <ContinueCard key={item.anime.malId} item={item} />
+          ))}
+        </Rail>
+      </Section>
+    ) : null,
+    upcoming: data?.upcoming.length ? (
+      <Section
+        title={t('home.upcoming')}
+        icon={<RiCalendarScheduleFill />}
+        hint={t('home.upcomingHint')}
+        action={
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/schedule">{t('nav.schedule')}</Link>
+          </Button>
+        }
+      >
+        <UpcomingGrid>
+          {data.upcoming.slice(0, 8).map((item) => (
+            <UpcomingCard key={item.anime.malId} item={item} />
+          ))}
+        </UpcomingGrid>
+      </Section>
+    ) : null,
+    activity: !empty ? <ActivityHeatmap /> : null,
+    watching: data?.watching.length ? (
+      <Section
+        title={t('home.watching')}
+        icon={<RiTv2Fill />}
+        action={
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/lists?status=watching">{t('common.viewAll')}</Link>
+          </Button>
+        }
+      >
+        <PosterGrid>
+          {data.watching.map((e) => (
+            <AnimeCard
+              key={e.malId}
+              anime={e.anime}
+              progress={e.progress}
+              newEpisodes={e.latestEpisode && e.latestEpisode > e.progress ? e.latestEpisode - e.progress : undefined}
+            />
+          ))}
+        </PosterGrid>
+      </Section>
+    ) : null,
+  }
+
   return (
     <>
-      {data ? <HomeHero data={data} /> : null}
+      {data && showHero ? <HomeHero data={data} /> : null}
       <Page>
         {empty ? (
           <EmptyState
@@ -88,63 +149,11 @@ export function HomePage() {
           />
         ) : null}
 
-        {data?.continueWatching.length ? (
-          <Section
-            title={t('home.continue')}
-            icon={<RiPlayCircleFill />}
-            hint={data.continueWatching.some((c) => c.pending) ? t('home.continueHint') : undefined}
-          >
-            <Rail>
-              {data.continueWatching.map((item) => (
-                <ContinueCard key={item.anime.malId} item={item} />
-              ))}
-            </Rail>
-          </Section>
-        ) : null}
-
-        {data?.upcoming.length ? (
-          <Section
-            title={t('home.upcoming')}
-            icon={<RiCalendarScheduleFill />}
-            hint={t('home.upcomingHint')}
-            action={
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/schedule">{t('nav.schedule')}</Link>
-              </Button>
-            }
-          >
-            <UpcomingGrid>
-              {data.upcoming.slice(0, 8).map((item) => (
-                <UpcomingCard key={item.anime.malId} item={item} />
-              ))}
-            </UpcomingGrid>
-          </Section>
-        ) : null}
-
-        {!empty ? <ActivityHeatmap /> : null}
-
-        {data?.watching.length ? (
-          <Section
-            title={t('home.watching')}
-            icon={<RiTv2Fill />}
-            action={
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/lists?status=watching">{t('common.viewAll')}</Link>
-              </Button>
-            }
-          >
-            <PosterGrid>
-              {data.watching.map((e) => (
-                <AnimeCard
-                  key={e.malId}
-                  anime={e.anime}
-                  progress={e.progress}
-                  newEpisodes={e.latestEpisode && e.latestEpisode > e.progress ? e.latestEpisode - e.progress : undefined}
-                />
-              ))}
-            </PosterGrid>
-          </Section>
-        ) : null}
+        {homeSections
+          .filter((section) => section.visible)
+          .map((section) => (
+            <Fragment key={section.id}>{sections[section.id]}</Fragment>
+          ))}
       </Page>
     </>
   )

@@ -1,5 +1,6 @@
 import { type ColorScheme, DEFAULT_SCHEME, DEFAULT_THEME, THEME_PRESETS, type ThemePreset, applyTheme } from '@yoru/ui'
 import { type ReactNode, createContext, useContext, useEffect, useState } from 'react'
+import { HOME_SECTIONS, type HomeSectionId, NAV, type NavKey } from './navigation'
 
 const STORAGE_KEY = 'yoru:appearance'
 
@@ -20,11 +21,34 @@ export type PageWidth = (typeof PAGE_WIDTHS)[number]['value']
 
 const DEFAULT_WIDTH: PageWidth = '7xl'
 
+export interface HomeSectionSetting {
+  id: HomeSectionId
+  visible: boolean
+}
+
 interface State {
   theme: ThemePreset
   scheme: ColorScheme
   pageWidth: PageWidth
   expandSynopsis: boolean
+  showHero: boolean
+  homeSections: HomeSectionSetting[]
+  hiddenNav: NavKey[]
+}
+
+const DEFAULT_SECTIONS: HomeSectionSetting[] = HOME_SECTIONS.map((s) => ({ id: s.id, visible: true }))
+
+function normalizeSections(value: unknown): HomeSectionSetting[] {
+  const known = new Set<string>(HOME_SECTIONS.map((s) => s.id))
+  const list = Array.isArray(value) ? (value as HomeSectionSetting[]).filter((s) => s && known.has(s.id)) : []
+  const seen = new Set(list.map((s) => s.id))
+  return [...list.map((s) => ({ id: s.id, visible: s.visible !== false })), ...DEFAULT_SECTIONS.filter((s) => !seen.has(s.id))]
+}
+
+function normalizeNav(value: unknown): NavKey[] {
+  const known = new Set<string>(NAV.map((n) => n.key))
+  const list = Array.isArray(value) ? (value as string[]).filter((k) => known.has(k)) : []
+  return list.length >= NAV.length ? [] : (list as NavKey[])
 }
 
 interface Appearance extends State {
@@ -33,6 +57,9 @@ interface Appearance extends State {
   setScheme: (scheme: ColorScheme) => void
   setPageWidth: (width: PageWidth) => void
   setExpandSynopsis: (expand: boolean) => void
+  setShowHero: (show: boolean) => void
+  setHomeSections: (sections: HomeSectionSetting[]) => void
+  setHiddenNav: (hidden: NavKey[]) => void
 }
 
 const AppearanceContext = createContext<Appearance | null>(null)
@@ -45,15 +72,26 @@ function load(): State {
       stretch?: boolean
       pageWidth?: string
       expandSynopsis?: boolean
+      showHero?: boolean
+      homeSections?: unknown
+      hiddenNav?: unknown
     }
     const theme = THEME_PRESETS.some((t) => t.id === raw.theme) ? (raw.theme as ThemePreset) : DEFAULT_THEME
     const scheme = raw.scheme === 'light' || raw.scheme === 'dark' || raw.scheme === 'system' ? raw.scheme : DEFAULT_SCHEME
     const pageWidth = PAGE_WIDTHS.some((w) => w.value === raw.pageWidth)
       ? (raw.pageWidth as PageWidth)
       : (raw.pageWidth && LEGACY_WIDTHS[raw.pageWidth]) || (raw.stretch ? 'full' : DEFAULT_WIDTH)
-    return { theme, scheme, pageWidth, expandSynopsis: raw.expandSynopsis !== false }
+    return {
+      theme,
+      scheme,
+      pageWidth,
+      expandSynopsis: raw.expandSynopsis !== false,
+      showHero: raw.showHero !== false,
+      homeSections: normalizeSections(raw.homeSections),
+      hiddenNav: normalizeNav(raw.hiddenNav),
+    }
   } catch {
-    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true }
+    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [] }
   }
 }
 
@@ -90,6 +128,9 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
         setScheme: (scheme) => setState((s) => ({ ...s, scheme })),
         setPageWidth: (pageWidth) => setState((s) => ({ ...s, pageWidth })),
         setExpandSynopsis: (expandSynopsis) => setState((s) => ({ ...s, expandSynopsis })),
+        setShowHero: (showHero) => setState((s) => ({ ...s, showHero })),
+        setHomeSections: (homeSections) => setState((s) => ({ ...s, homeSections })),
+        setHiddenNav: (hiddenNav) => setState((s) => ({ ...s, hiddenNav: normalizeNav(hiddenNav) })),
       }}
     >
       {children}

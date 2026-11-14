@@ -181,7 +181,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
   return (
     <section id="watch" className="scroll-mt-20">
       <div className="mb-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
-        <Select size="sm" className="w-full sm:w-36" value="anime365" onValueChange={() => undefined} icon={<img src="/anime365.png" alt="" className="size-4 rounded-sm bg-white object-contain" />} options={[{ value: 'anime365', label: 'Anime365' }]} />
+        <Select size="sm" className="w-full sm:w-36" value="anime365" onValueChange={() => undefined} icon={<img src="/anime365.webp" alt="" className="size-4 rounded-sm bg-white object-contain" />} options={[{ value: 'anime365', label: 'Anime365' }]} />
         <Select
           size="sm"
           className="w-full sm:w-40"

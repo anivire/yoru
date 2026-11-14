@@ -9,11 +9,13 @@ import {
   Logo,
   cn,
 } from '@yoru/ui'
-import { RiBookShelfFill, RiCalendar2Fill, RiCheckFill, RiCompass3Fill, RiHome5Fill, RiLogoutBoxRFill, RiMenuFill, RiSearchFill, RiSettings3Fill, RiShieldFill } from '@remixicon/react'
+import { RiCheckFill, RiLogoutBoxRFill, RiMenuFill, RiSearchFill, RiSettings3Fill, RiShieldFill } from '@remixicon/react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink, matchPath, useLocation, useNavigate } from 'react-router'
 import { api } from '../lib/api'
+import { useAppearance } from '../lib/appearance'
+import { NAV } from '../lib/navigation'
 import { keys, useUser } from '../lib/queries'
 import { Flag, LANGUAGES, useChangeLanguage } from './language'
 import { NotificationsPopover } from './notifications'
@@ -36,31 +38,28 @@ function NavItem({ to, children, end }: { to: string; children: ReactNode; end?:
   )
 }
 
+function useVisibleNav() {
+  const { hiddenNav } = useAppearance()
+  return NAV.filter((n) => !hiddenNav.includes(n.key))
+}
+
 function NavItems() {
   const { t } = useTranslation()
+  const nav = useVisibleNav()
   return (
     <>
-      <NavItem to="/" end>
-        {t('nav.home')}
-      </NavItem>
-      <NavItem to="/discover">{t('nav.discover')}</NavItem>
-      <NavItem to="/schedule">{t('nav.schedule')}</NavItem>
-      <NavItem to="/search">{t('nav.search')}</NavItem>
-      <NavItem to="/lists">{t('nav.lists')}</NavItem>
+      {nav.map((n) => (
+        <NavItem key={n.to} to={n.to} end={n.end}>
+          {t(`nav.${n.key}`)}
+        </NavItem>
+      ))}
     </>
   )
 }
 
-const NAV = [
-  { to: '/', key: 'home', icon: RiHome5Fill, end: true },
-  { to: '/discover', key: 'discover', icon: RiCompass3Fill },
-  { to: '/schedule', key: 'schedule', icon: RiCalendar2Fill },
-  { to: '/search', key: 'search', icon: RiSearchFill },
-  { to: '/lists', key: 'lists', icon: RiBookShelfFill },
-] as const
-
 function MobileMenu() {
   const { t } = useTranslation()
+  const nav = useVisibleNav()
   const navigate = useNavigate()
   const { pathname } = useLocation()
   return (
@@ -73,8 +72,8 @@ function MobileMenu() {
       <DropdownMenuContent className="max-h-[calc(100dvh-5rem)] w-64 overflow-y-auto">
         <ProfileLabel />
         <DropdownMenuLabel className="mt-1">{t('nav.sections')}</DropdownMenuLabel>
-        {NAV.map(({ to, key, icon: Icon, ...rest }) => {
-          const active = Boolean(matchPath({ path: to, end: 'end' in rest }, pathname))
+        {nav.map(({ to, key, icon: Icon, end }) => {
+          const active = Boolean(matchPath({ path: to, end }, pathname))
           return (
             <DropdownMenuItem
               key={to}
