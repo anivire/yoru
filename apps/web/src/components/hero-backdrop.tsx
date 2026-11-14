@@ -27,11 +27,11 @@ export function HeroBackdrop({ src }: { src: string | null }) {
     let timer: number | undefined
     void preload(src).then(() => {
       if (cancelled) return
-      setLayers((prev) => (prev.at(-1)?.src === src ? prev : [...prev.slice(-1), { src, shown: false }]))
+      setLayers((prev) => (prev.at(-1)?.src === src ? prev : [...prev.filter((l) => l.shown && l.src !== src), { src, shown: false }]))
       requestAnimationFrame(() => requestAnimationFrame(() => {
         if (cancelled) return
         setLayers((prev) => prev.map((l) => (l.src === src ? { ...l, shown: true } : l)))
-        timer = window.setTimeout(() => setLayers((prev) => prev.filter((l) => l.src === src)), FADE_MS)
+        timer = window.setTimeout(() => setLayers((prev) => (prev.at(-1)?.src === src ? prev.slice(-1) : prev)), FADE_MS)
       }))
     })
     return () => {
@@ -42,15 +42,17 @@ export function HeroBackdrop({ src }: { src: string | null }) {
 
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[calc(100%+12rem)] overflow-hidden [mask-image:linear-gradient(to_bottom,black_45%,transparent)]">
+      <div className="absolute inset-0 opacity-50">
       {layers.map((layer) => (
         <img
           key={layer.src}
           src={layer.src}
           alt=""
           style={{ transitionDuration: `${FADE_MS}ms` }}
-          className={cn('absolute inset-0 h-full w-full scale-110 object-cover object-[50%_30%] blur-xl transition-opacity ease-out', layer.shown ? 'opacity-50' : 'opacity-0')}
+          className={cn('absolute inset-0 h-full w-full scale-110 object-cover object-[50%_30%] blur-xl transition-opacity ease-out', layer.shown ? 'opacity-100' : 'opacity-0')}
         />
       ))}
+      </div>
       <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-background/50 to-background/20" />
     </div>
   )
