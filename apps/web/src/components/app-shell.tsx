@@ -188,8 +188,8 @@ function SideRail({ position }: { position: Exclude<NavPosition, 'top'> }) {
   return (
     <aside
       className={cn(
-        'fixed inset-y-2 z-40 hidden w-16 flex-col items-center rounded-[2rem] bg-surface/80 py-3 backdrop-blur-2xl backdrop-saturate-150 [view-transition-name:site-header] md:flex',
-        position === 'left' ? 'left-2' : 'right-2',
+        'fixed inset-y-0 z-40 hidden w-16 flex-col items-center bg-surface/80 py-3 backdrop-blur-2xl backdrop-saturate-150 [view-transition-name:site-header] md:flex',
+        position === 'left' ? 'left-0' : 'right-0',
       )}
     >
       <TLink to="/" aria-label="yoru" className="grid size-11 place-items-center">
@@ -197,23 +197,24 @@ function SideRail({ position }: { position: Exclude<NavPosition, 'top'> }) {
       </TLink>
       <nav ref={ref} className="relative mt-4 flex flex-col items-center gap-1">
         <span aria-hidden style={indicator} className="pointer-events-none absolute rounded-xl bg-muted duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]" />
-        {nav.map((n) => (
-          <Tooltip key={n.to} content={t(`nav.${n.key}`)} side={side}>
-            <TNavLink
-              to={n.to}
-              end={n.end}
-              aria-label={t(`nav.${n.key}`)}
-              className={({ isActive }) =>
-                cn(
+        {nav.map((n) => {
+          const active = Boolean(matchPath({ path: n.to, end: n.end }, pathname))
+          return (
+            <Tooltip key={n.to} content={t(`nav.${n.key}`)} side={side}>
+              <TNavLink
+                to={n.to}
+                end={n.end}
+                aria-label={t(`nav.${n.key}`)}
+                className={cn(
                   'relative grid size-11 place-items-center rounded-xl transition-colors [&_svg]:size-5',
-                  isActive ? 'text-foreground [&_svg]:text-accent' : 'text-muted-foreground hover:text-foreground',
-                )
-              }
-            >
-              <n.icon />
-            </TNavLink>
-          </Tooltip>
-        ))}
+                  active ? 'text-foreground [&_svg]:text-accent' : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <n.icon />
+              </TNavLink>
+            </Tooltip>
+          )
+        })}
       </nav>
       <div className="mt-auto flex flex-col items-center gap-2">
         <NotificationsPopover side={side} />
@@ -249,7 +250,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { navPosition } = useAppearance()
   const rail = navPosition === 'top' ? null : navPosition
   return (
-    <div className={cn('flex min-h-dvh flex-col', rail === 'left' && 'md:pl-[4.5rem]', rail === 'right' && 'md:pr-[4.5rem]')}>
+    <div className={cn('flex min-h-dvh flex-col', rail === 'left' && 'md:pl-16', rail === 'right' && 'md:pr-16')}>
       {rail ? <SideRail position={rail} /> : null}
       <header ref={header.ref} className={cn('sticky top-0 z-40 pt-2', rail && 'md:hidden')}>
         <div className="mx-auto max-w-(--page-max) px-4 sm:px-6">
