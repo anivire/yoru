@@ -1,12 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Locale, User } from '@yoru/shared'
-import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, cn, toast } from '@yoru/ui'
-import { Check } from 'lucide-react'
+import { cn, toast } from '@yoru/ui'
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { setLocale } from '../lib/i18n'
-import { errorMessage, keys, useUser } from '../lib/queries'
+import { errorMessage, keys } from '../lib/queries'
 
 export const LANGUAGES: { value: Locale; label: string }[] = [
   { value: 'ru', label: 'Русский' },
@@ -59,28 +58,4 @@ export function useChangeLanguage() {
     setLocale(locale)
     mutation.mutate(locale)
   }
-}
-
-export function LanguageMenu() {
-  const { t } = useTranslation()
-  const user = useUser()
-  const change = useChangeLanguage()
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="secondary" size="icon" aria-label={t('settings.language')} className="rounded-full">
-          <Flag locale={user.locale} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        {LANGUAGES.map((l) => (
-          <DropdownMenuItem key={l.value} onSelect={() => change(l.value)}>
-            <Flag locale={l.value} />
-            <span className="flex-1">{l.label}</span>
-            {l.value === user.locale ? <Check className="text-accent" /> : null}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
 }

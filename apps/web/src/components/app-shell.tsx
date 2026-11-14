@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, NavLink, matchPath, useLocation, useNavigate } from 'react-router'
 import { api } from '../lib/api'
 import { keys, useUser } from '../lib/queries'
-import { Flag, LANGUAGES, LanguageMenu, useChangeLanguage } from './language'
+import { Flag, LANGUAGES, useChangeLanguage } from './language'
 import { NotificationsPopover } from './notifications'
 import { Footer } from './footer'
 
@@ -61,10 +61,8 @@ const NAV = [
 
 function MobileMenu() {
   const { t } = useTranslation()
-  const user = useUser()
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const change = useChangeLanguage()
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -88,18 +86,29 @@ function MobileMenu() {
             </DropdownMenuItem>
           )
         })}
-        <DropdownMenuLabel className="mt-1">{t('settings.language')}</DropdownMenuLabel>
-        {LANGUAGES.map((l) => (
-          <DropdownMenuItem key={l.value} onSelect={() => change(l.value)}>
-            <Flag locale={l.value} className="h-3 w-4 rounded-[2px]" />
-            <span className="flex-1">{l.label}</span>
-            {l.value === user.locale ? <Check className="text-accent!" /> : null}
-          </DropdownMenuItem>
-        ))}
+        <LanguageItems />
         <DropdownMenuLabel className="mt-1">{t('nav.account')}</DropdownMenuLabel>
         <AccountItems />
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+function LanguageItems() {
+  const { t } = useTranslation()
+  const user = useUser()
+  const change = useChangeLanguage()
+  return (
+    <>
+      <DropdownMenuLabel className="mt-1">{t('settings.language')}</DropdownMenuLabel>
+      {LANGUAGES.map((l) => (
+        <DropdownMenuItem key={l.value} onSelect={() => change(l.value)}>
+          <Flag locale={l.value} className="h-3 w-4 rounded-[2px]" />
+          <span className="flex-1">{l.label}</span>
+          {l.value === user.locale ? <Check className="text-accent!" /> : null}
+        </DropdownMenuItem>
+      ))}
+    </>
   )
 }
 
@@ -160,6 +169,8 @@ function UserMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-60">
         <ProfileLabel />
+        <LanguageItems />
+        <DropdownMenuLabel className="mt-1">{t('nav.account')}</DropdownMenuLabel>
         <AccountItems />
       </DropdownMenuContent>
     </DropdownMenu>
@@ -211,9 +222,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             <NotificationsPopover />
             <div className="hidden md:block">
               <UserMenu />
-            </div>
-            <div className="hidden md:block">
-              <LanguageMenu />
             </div>
             <div className="md:hidden">
               <MobileMenu />
