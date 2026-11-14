@@ -60,8 +60,7 @@ function AppearanceTab() {
               value={pageWidth}
               onChange={setPageWidth}
               label={t('settings.pageWidth')}
-              options={PAGE_WIDTHS.map((w) => ({ value: w.value, label: w.label ?? t('settings.pageWidthFull') }))}
-              className="max-w-xl"
+              options={PAGE_WIDTHS.map((w) => ({ value: w.value, label: w.label }))}
             />
           </div>
           <label className="flex cursor-pointer items-center justify-between gap-4 px-5 py-3">

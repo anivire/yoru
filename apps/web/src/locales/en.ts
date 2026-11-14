@@ -246,7 +246,6 @@ export const en: Messages = {
     themes: 'Themes',
     layout: 'Layout',
     pageWidth: 'Maximum width',
-    pageWidthFull: 'Full screen',
     expandSynopsis: 'Show full anime synopsis',
     expandSynopsisHint: 'Otherwise the synopsis is cut to the poster height and opens fully with “More”',
     pageWidthHint: 'How wide content stretches on large monitors. Wider means more columns in grids',

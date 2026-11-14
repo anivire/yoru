@@ -4,16 +4,21 @@ import { type ReactNode, createContext, useContext, useEffect, useState } from '
 const STORAGE_KEY = 'yoru:appearance'
 
 export const PAGE_WIDTHS = [
-  { value: 'narrow', max: '64rem', label: '1024' },
-  { value: 'default', max: '80rem', label: '1280' },
-  { value: 'wide', max: '96rem', label: '1536' },
-  { value: 'xwide', max: '120rem', label: '1920' },
-  { value: 'full', max: 'none', label: null },
+  { value: '3xl', max: '48rem', label: '3XL' },
+  { value: '4xl', max: '56rem', label: '4XL' },
+  { value: '5xl', max: '64rem', label: '5XL' },
+  { value: '6xl', max: '72rem', label: '6XL' },
+  { value: '7xl', max: '80rem', label: '7XL' },
+  { value: '8xl', max: '96rem', label: '8XL' },
+  { value: '9xl', max: '120rem', label: '9XL' },
+  { value: 'full', max: 'none', label: '100%' },
 ] as const
+
+const LEGACY_WIDTHS: Record<string, PageWidth> = { narrow: '5xl', default: '7xl', wide: '8xl', xwide: '9xl' }
 
 export type PageWidth = (typeof PAGE_WIDTHS)[number]['value']
 
-const DEFAULT_WIDTH: PageWidth = 'default'
+const DEFAULT_WIDTH: PageWidth = '7xl'
 
 interface State {
   theme: ThemePreset
@@ -43,7 +48,9 @@ function load(): State {
     }
     const theme = THEME_PRESETS.some((t) => t.id === raw.theme) ? (raw.theme as ThemePreset) : DEFAULT_THEME
     const scheme = raw.scheme === 'light' || raw.scheme === 'dark' || raw.scheme === 'system' ? raw.scheme : DEFAULT_SCHEME
-    const pageWidth = PAGE_WIDTHS.some((w) => w.value === raw.pageWidth) ? (raw.pageWidth as PageWidth) : raw.stretch ? 'full' : DEFAULT_WIDTH
+    const pageWidth = PAGE_WIDTHS.some((w) => w.value === raw.pageWidth)
+      ? (raw.pageWidth as PageWidth)
+      : (raw.pageWidth && LEGACY_WIDTHS[raw.pageWidth]) || (raw.stretch ? 'full' : DEFAULT_WIDTH)
     return { theme, scheme, pageWidth, expandSynopsis: raw.expandSynopsis !== false }
   } catch {
     return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true }
