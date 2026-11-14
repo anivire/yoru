@@ -22,7 +22,7 @@ import { Footer } from './footer'
 
 function NavItem({ to, children, end, label }: { to: string; children: ReactNode; end?: boolean; label?: string }) {
   return (
-    <NavLink
+    <NavLink viewTransition
       to={to}
       end={end}
       aria-label={label}
@@ -81,7 +81,7 @@ function MobileMenu() {
           return (
             <DropdownMenuItem
               key={to}
-              onSelect={() => navigate(to)}
+              onSelect={() => navigate(to, { viewTransition: true })}
               className={cn(active && 'bg-accent-soft text-accent data-[highlighted]:bg-accent-soft [&_svg]:text-accent')}
             >
               <Icon />
@@ -123,12 +123,12 @@ function AccountItems() {
   }
   return (
     <>
-      <DropdownMenuItem onSelect={() => navigate('/settings')}>
+      <DropdownMenuItem onSelect={() => navigate('/settings', { viewTransition: true })}>
         <RiSettings3Fill />
         {t('nav.settings')}
       </DropdownMenuItem>
       {user.role === 'admin' ? (
-        <DropdownMenuItem onSelect={() => navigate('/admin')}>
+        <DropdownMenuItem onSelect={() => navigate('/admin', { viewTransition: true })}>
           <RiShieldFill />
           {t('nav.admin')}
         </DropdownMenuItem>
@@ -186,10 +186,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-dvh flex-col">
       <header
         ref={header.ref}
-        className={cn('sticky top-0 z-40 transition-[background-color,backdrop-filter] duration-200', header.scrolled ? 'bg-background/80 backdrop-blur-xl' : 'bg-transparent')}
+        className={cn('sticky top-0 z-40 transition-[background-color,backdrop-filter] duration-200 [view-transition-name:site-header]', header.scrolled ? 'bg-background/80 backdrop-blur-xl' : 'bg-transparent')}
       >
         <div className="mx-auto flex h-16 max-w-(--page-max) items-center gap-4 px-4 sm:px-6">
-          <Link to="/" className="shrink-0">
+          <Link viewTransition to="/" className="shrink-0">
             <Logo />
           </Link>
           <nav className="mx-auto hidden items-center gap-1 md:flex">
@@ -197,7 +197,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
           <div className="ml-auto flex items-center gap-2 md:ml-0">
             <Button asChild variant="ghost" size="icon" className="md:hidden">
-              <Link to="/search" aria-label={t('nav.search')}>
+              <Link viewTransition to="/search" aria-label={t('nav.search')}>
                 <RiSearchFill />
               </Link>
             </Button>

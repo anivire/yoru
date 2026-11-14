@@ -32,7 +32,7 @@ function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number 
           {anime.titleEnglish && anime.titleEnglish !== anime.title ? <div className="mt-1 truncate text-muted-foreground">{anime.titleEnglish}</div> : null}
           <div className="mt-5 flex gap-2">
             <Button asChild variant="accent" size="lg">
-              <Link to={`/anime/${anime.malId}${episode ? `?episode=${episode}` : ''}`}>
+              <Link viewTransition to={`/anime/${anime.malId}${episode ? `?episode=${episode}` : ''}`}>
                 <RiPlayLargeFill />
                 {episode ? `${t('common.episode')} ${episode}` : t('common.open')}
               </Link>
@@ -83,7 +83,7 @@ export function HomePage() {
         hint={t('home.upcomingHint')}
         action={
           <Button asChild variant="ghost" size="sm">
-            <Link to="/schedule">{t('nav.schedule')}</Link>
+            <Link viewTransition to="/schedule">{t('nav.schedule')}</Link>
           </Button>
         }
       >
@@ -101,7 +101,7 @@ export function HomePage() {
         icon={<RiTv2Fill />}
         action={
           <Button asChild variant="ghost" size="sm">
-            <Link to="/lists?status=watching">{t('common.viewAll')}</Link>
+            <Link viewTransition to="/lists?status=watching">{t('common.viewAll')}</Link>
           </Button>
         }
       >
@@ -131,13 +131,13 @@ export function HomePage() {
             action={
               <div className="flex gap-2">
                 <Button asChild variant="primary">
-                  <Link to="/search">
+                  <Link viewTransition to="/search">
                     <RiSearchFill />
                     {t('home.find')}
                   </Link>
                 </Button>
                 <Button asChild variant="secondary">
-                  <Link to="/settings/import">
+                  <Link viewTransition to="/settings/import">
                     <RiDownload2Fill />
                     {t('home.import')}
                   </Link>

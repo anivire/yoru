@@ -370,7 +370,7 @@ function ImportTab() {
             </div>
             {isAdmin ? (
               <Button asChild variant="secondary" size="sm">
-                <Link to="/admin">
+                <Link viewTransition to="/admin">
                   <RiShieldFill />
                   {t('nav.admin')}
                 </Link>
@@ -473,7 +473,7 @@ export function SettingsPage() {
       <PageHeader title={t('settings.title')} />
       <Segmented
         value={tab}
-        onChange={(v) => navigate(`/settings/${v}`, { replace: true })}
+        onChange={(v) => navigate(`/settings/${v}`, { replace: true, viewTransition: true })}
         options={TABS.map((v) => {
           const Icon = TAB_ICONS[v]
           return { value: v, label: t(`settings.${v}`), icon: <Icon /> }

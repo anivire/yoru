@@ -41,7 +41,7 @@ function ListTable({ items }: { items: ListEntryWithAnime[] }) {
           {items.map((e) => (
             <tr key={e.malId} className="even:bg-field/60 hover:bg-muted">
               <td className="px-4 py-2.5">
-                <Link to={`/anime/${e.malId}`} className="flex min-w-0 items-center gap-3">
+                <Link viewTransition to={`/anime/${e.malId}`} className="flex min-w-0 items-center gap-3">
                   {e.anime.imageUrl ? <Image src={e.anime.imageUrl} alt="" loading="lazy" className="h-12 w-8 shrink-0 rounded object-cover" /> : null}
                   <div className="min-w-0">
                     <div className="truncate font-medium hover:text-accent">{e.anime.title}</div>
@@ -140,7 +140,7 @@ export function ListsPage() {
         actions={
           <>
             <Button asChild variant="secondary" size="sm">
-              <Link to="/settings/import">
+              <Link viewTransition to="/settings/import">
                 <RiDownload2Fill />
                 {t('lists.import')}
               </Link>

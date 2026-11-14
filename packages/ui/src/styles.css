@@ -341,3 +341,38 @@
   background-size: 200% 100%;
   animation: yoru-shimmer 1.6s linear infinite;
 }
+
+@keyframes yoru-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.375rem);
+  }
+}
+
+@keyframes yoru-page-out {
+  to {
+    opacity: 0;
+  }
+}
+
+::view-transition-old(root) {
+  animation: yoru-page-out 140ms ease-in both;
+}
+
+::view-transition-new(root) {
+  animation: yoru-page-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+::view-transition-group(site-header),
+::view-transition-old(site-header),
+::view-transition-new(site-header) {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

@@ -50,7 +50,7 @@ export function NotificationsPopover() {
             </div>
           ) : (
             data.items.map((n) => (
-              <Link
+              <Link viewTransition
                 key={n.id}
                 to={`/anime/${n.malId}?episode=${n.episode}&kind=${n.kind}`}
                 onClick={() => !n.readAt && readOne.mutate(n.id)}

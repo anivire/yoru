@@ -94,7 +94,7 @@ function EntryRow({ item }: { item: ScheduleItem }) {
   )
   return (
     <AnimeHoverCard anime={item.anime} footer={footer}>
-      <Link
+      <Link viewTransition
         to={`/anime/${item.anime.malId}${item.available ? `?episode=${item.episode}` : ''}`}
         className={cn('group flex items-stretch gap-2 rounded-lg p-1 pl-1 transition-colors', tone.row)}
       >

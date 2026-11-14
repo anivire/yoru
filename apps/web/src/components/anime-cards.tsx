@@ -117,7 +117,7 @@ export function AnimeCard({
   const details = [typeLabel(anime.type), seasonLabel(anime), total ? `${total} ${t('common.episodes')}` : null].filter(Boolean).join(' · ')
   return (
     <div className="group relative">
-      <Link to={`/anime/${anime.malId}`} className="flex flex-col gap-2">
+      <Link viewTransition to={`/anime/${anime.malId}`} className="flex flex-col gap-2">
       <div className="relative isolate aspect-[2/3] overflow-hidden rounded-xl bg-muted shadow-sm transition-shadow duration-300 group-hover:shadow-xl group-hover:shadow-black/40 transform-gpu">
         {anime.imageUrl ? (
           <Image
@@ -213,7 +213,7 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
   const { t } = useTranslation()
   const image = item.episodeImageUrl ?? item.anime.imageUrl
   return (
-    <Link to={item.pending ? `/anime/${item.anime.malId}` : `/anime/${item.anime.malId}?episode=${item.episode}`} className="group flex flex-col gap-2">
+    <Link viewTransition to={item.pending ? `/anime/${item.anime.malId}` : `/anime/${item.anime.malId}?episode=${item.episode}`} className="group flex flex-col gap-2">
       <div className="relative isolate aspect-video overflow-hidden rounded-xl bg-muted">
         {image ? (
           <Image
@@ -282,7 +282,7 @@ export function UpcomingCard({ item }: { item: UpcomingItem }) {
   const { t } = useTranslation()
   const image = item.bannerUrl ?? item.anime.imageUrl
   return (
-    <Link to={`/anime/${item.anime.malId}`} className="group flex min-w-0 flex-col gap-2.5">
+    <Link viewTransition to={`/anime/${item.anime.malId}`} className="group flex min-w-0 flex-col gap-2.5">
       <div className="relative isolate aspect-video overflow-hidden rounded-xl bg-muted transform-gpu">
         {image ? (
           <Image

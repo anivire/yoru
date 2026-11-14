@@ -19,7 +19,7 @@ export function NotFoundPage() {
         description={t('notFound.text')}
         action={
           <Button asChild variant="accent">
-            <Link to="/">
+            <Link viewTransition to="/">
               <RiHome5Fill />
               {t('notFound.home')}
             </Link>

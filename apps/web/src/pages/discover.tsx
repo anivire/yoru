@@ -72,7 +72,7 @@ function Hero({ items }: { items: AnimeSummary[] }) {
           ))}
         </div>
         <div key={current.malId} className="flex animate-fade items-end gap-6">
-          <Link to={`/anime/${anime.malId}`} className="hidden shrink-0 sm:block">
+          <Link viewTransition to={`/anime/${anime.malId}`} className="hidden shrink-0 sm:block">
             <div className="aspect-[2/3] w-44 overflow-hidden rounded-xl bg-muted shadow-2xl">
               {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" /> : null}
             </div>
@@ -103,7 +103,7 @@ function Hero({ items }: { items: AnimeSummary[] }) {
             ) : null}
             <div className="mt-1">
               <Button asChild variant="accent" size="lg">
-                <Link to={`/anime/${anime.malId}`}>
+                <Link viewTransition to={`/anime/${anime.malId}`}>
                   <RiPlayLargeFill />
                   {t('discover.open')}
                 </Link>

@@ -157,7 +157,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
         action={
           tokenProblem ? (
             <Button asChild size="sm" variant="secondary">
-              <Link to="/settings/account">
+              <Link viewTransition to="/settings/account">
                 <RiSettings3Fill />
                 {t('nav.settings')}
               </Link>
