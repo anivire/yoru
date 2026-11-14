@@ -422,6 +422,10 @@ export const en: Messages = {
     },
   },
   admin: {
+    tabs: {
+      sources: 'Sources',
+      oauth: 'Import',
+    },
     title: 'Management',
     invites: 'Invites',
     createInvite: 'Create invite',

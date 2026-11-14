@@ -376,7 +376,7 @@ function ImportTab() {
             </div>
             {isAdmin ? (
               <Button asChild variant="secondary" size="sm">
-                <TLink to="/admin">
+                <TLink to="/admin?tab=oauth">
                   <RiShieldFill />
                   {t('nav.admin')}
                 </TLink>

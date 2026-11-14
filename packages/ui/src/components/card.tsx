@@ -6,7 +6,7 @@ export function Card({ className, ...props }: ComponentProps<'div'>) {
 }
 
 export function CardHeader({ className, ...props }: ComponentProps<'div'>) {
-  return <div className={cn('flex items-start justify-between gap-4 px-5 pb-1 pt-4', className)} {...props} />
+  return <div className={cn('flex items-start justify-between gap-4 px-4 pb-1 pt-4 sm:px-5', className)} {...props} />
 }
 
 export function CardTitle({ className, ...props }: ComponentProps<'h3'>) {
@@ -18,9 +18,9 @@ export function CardDescription({ className, ...props }: ComponentProps<'p'>) {
 }
 
 export function CardContent({ className, ...props }: ComponentProps<'div'>) {
-  return <div className={cn('px-5 py-4', className)} {...props} />
+  return <div className={cn('px-4 py-4 sm:px-5', className)} {...props} />
 }
 
 export function CardFooter({ className, ...props }: ComponentProps<'div'>) {
-  return <div className={cn('flex items-center justify-end gap-2 px-5 pb-4 pt-1', className)} {...props} />
+  return <div className={cn('flex items-center justify-end gap-2 px-4 pb-4 pt-1 sm:px-5', className)} {...props} />
 }

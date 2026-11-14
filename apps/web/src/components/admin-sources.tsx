@@ -254,7 +254,7 @@ function SourceCard({ info, settings }: { info: DataSourceInfo; settings: AdminS
   if (info.id === 'anime365') extras = <Anime365Extras settings={settings} />
   if (info.id === 'github') extras = <GithubExtras settings={settings} />
   return (
-    <div className="flex flex-col gap-4 rounded-xl bg-field/50 p-4">
+    <div className="flex flex-col gap-4 rounded-xl bg-field/50 p-3 sm:p-4">
       <div className="flex items-center gap-3">
         <SourceIcon id={info.id} />
         <div className="min-w-0 flex-1">
@@ -324,7 +324,7 @@ function OAuthProvider({ provider, settings }: { provider: ImportProvider; setti
   const [clientId, setClientId] = useState(info.clientId)
   useEffect(() => setClientId(info.clientId), [info.clientId])
   return (
-    <div className="flex flex-col gap-3 rounded-xl bg-field/50 p-4">
+    <div className="flex flex-col gap-3 rounded-xl bg-field/50 p-3 sm:p-4">
       <div className="flex items-center gap-3">
         <ProviderIcon provider={provider} />
         <div className="min-w-0 flex-1">
@@ -367,7 +367,7 @@ function OAuthProvider({ provider, settings }: { provider: ImportProvider; setti
       </Field>
       <div>
         <div className="mb-1 text-xs font-medium text-subtle-foreground">{t('admin.oauthKeys.redirect')}</div>
-        <Code className="text-xs">{info.redirectUri}</Code>
+        <Code className="block break-all px-2.5 py-2 text-xs leading-relaxed">{info.redirectUri}</Code>
       </div>
     </div>
   )

@@ -420,6 +420,10 @@ export const ru = {
     },
   },
   admin: {
+    tabs: {
+      sources: 'Источники',
+      oauth: 'Импорт',
+    },
     title: 'Управление',
     invites: 'Приглашения',
     createInvite: 'Создать приглашение',

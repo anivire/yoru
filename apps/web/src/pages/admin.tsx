@@ -10,6 +10,7 @@ import {
   Field,
   Input,
   Popover,
+  Segmented,
   PopoverClose,
   PopoverContent,
   PopoverTrigger,
@@ -18,9 +19,10 @@ import {
   StatusDot,
   toast,
 } from '@yoru/ui'
-import { RiAddFill, RiDeleteBin6Fill, RiFileCopyFill, RiTicket2Fill } from '@remixicon/react'
+import { RiAddFill, RiDatabase2Fill, RiDeleteBin6Fill, RiFileCopyFill, RiGroupFill, RiKey2Fill, RiTicket2Fill } from '@remixicon/react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router'
 import { DataSources, OAuthSettings } from '../components/admin-sources'
 import { Page, PageHeader } from '../components/app-shell'
 import { api } from '../lib/api'
@@ -218,25 +220,34 @@ function Users() {
   )
 }
 
+const TABS = ['invites', 'users', 'sources', 'oauth'] as const
+type Tab = (typeof TABS)[number]
+const TAB_ICONS = { invites: RiTicket2Fill, users: RiGroupFill, sources: RiDatabase2Fill, oauth: RiKey2Fill } satisfies Record<Tab, unknown>
+const TAB_LABELS = { invites: 'admin.invites', users: 'admin.users', sources: 'admin.tabs.sources', oauth: 'admin.tabs.oauth' } as const satisfies Record<Tab, string>
+
 export function AdminPage() {
   const { t } = useTranslation()
-  useDocumentTitle(t('admin.title'))
+  const [params, setParams] = useSearchParams()
+  const raw = params.get('tab')
+  const tab: Tab = TABS.includes(raw as Tab) ? (raw as Tab) : 'invites'
+  useDocumentTitle(`${t(TAB_LABELS[tab])} · ${t('admin.title')}`)
   return (
     <Page>
       <PageHeader title={t('admin.title')} />
-      <div className="grid items-start gap-6 lg:grid-cols-2">
-        <div className="lg:col-span-2">
-          <Invites />
-        </div>
-        <div className="lg:col-span-2">
-          <DataSources />
-        </div>
-        <div className="lg:col-span-2">
-          <OAuthSettings />
-        </div>
-        <div className="lg:col-span-2">
-          <Users />
-        </div>
+      <Segmented
+        value={tab}
+        onChange={(v) => setParams(v === 'invites' ? {} : { tab: v }, { replace: true })}
+        options={TABS.map((v) => {
+          const Icon = TAB_ICONS[v]
+          return { value: v, label: t(TAB_LABELS[v]), icon: <Icon /> }
+        })}
+        className="mb-8 grid w-full grid-cols-2 sm:inline-flex sm:w-auto"
+      />
+      <div key={tab} className="animate-fade">
+        {tab === 'invites' ? <Invites /> : null}
+        {tab === 'users' ? <Users /> : null}
+        {tab === 'sources' ? <DataSources /> : null}
+        {tab === 'oauth' ? <OAuthSettings /> : null}
       </div>
     </Page>
   )
