@@ -120,10 +120,10 @@ export function AnimePageSkeleton() {
     <>
       <div className="mx-auto max-w-7xl px-4 py-10 wide:max-w-none sm:px-6">
         <div className="flex flex-col gap-6 sm:flex-row">
-          <div className="flex w-40 shrink-0 flex-col gap-2 self-start sm:w-48">
+          <div className="flex w-full shrink-0 flex-col gap-2 self-start sm:w-48">
             <Skeleton className="aspect-[2/3] w-full rounded-xl" />
             <Skeleton className="h-8 w-full rounded-md" />
-            <div className="mt-1 flex flex-col gap-1.5">
+            <div className="mt-1 grid grid-cols-2 gap-1.5 sm:grid-cols-1">
               {[0, 1, 2, 3].map((i) => (
                 <Skeleton key={i} className="h-8 w-full rounded-md" />
               ))}

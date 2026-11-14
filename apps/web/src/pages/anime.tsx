@@ -85,12 +85,12 @@ function Header({ anime, addButton, editor }: { anime: AnimeDetails; addButton: 
       </div>
       <div className="mx-auto max-w-7xl px-4 py-10 wide:max-w-none sm:px-6">
         <div className="flex flex-col gap-6 sm:flex-row">
-          <div className="flex w-40 shrink-0 flex-col gap-2 self-start sm:w-48">
+          <div className="flex w-full shrink-0 flex-col gap-2 self-start sm:w-48">
             <div className="aspect-[2/3] w-full overflow-hidden rounded-xl bg-muted shadow-2xl">
               {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" /> : null}
             </div>
             {addButton}
-            <div className="mt-1 flex flex-col gap-1.5">
+            <div className="mt-1 grid grid-cols-2 gap-1.5 sm:grid-cols-1">
               <ServiceLinks malId={anime.malId} />
               {anime.trailerUrl ? (
                 <LinkButton href={anime.trailerUrl} icon={<Clapperboard />}>
