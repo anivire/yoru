@@ -170,6 +170,7 @@ export const en: Messages = {
     noScore: 'None',
     rewatches: 'Times rewatched',
     add: 'Add to list',
+    chooseStatus: 'Choose a status',
     inList: 'In list',
     progress: 'Progress',
     score: 'Score',

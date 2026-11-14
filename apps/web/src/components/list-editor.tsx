@@ -1,6 +1,6 @@
 import { LIST_STATUSES, type ListEntry, type ListStatus } from '@yoru/shared'
 import { Button, Popover, PopoverClose, PopoverContent, PopoverTrigger, Select, Tooltip } from '@yoru/ui'
-import { Minus, Plus, Repeat, Star, Trash2 } from 'lucide-react'
+import { ChevronDown, Minus, Plus, Repeat, Star, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useDeleteEntry, useSaveEntry } from '../lib/queries'
 
@@ -11,10 +11,29 @@ export function ListEditor({ malId, entry, total, aired }: { malId: number; entr
 
   if (!entry) {
     return (
-      <Button variant="accent" size="sm" className="w-full" loading={save.isPending} onClick={() => save.mutate({ status: 'planning' })}>
-        <Plus />
-        {t('anime.add')}
-      </Button>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="accent" size="sm" className="w-full" loading={save.isPending}>
+            <Plus />
+            <span className="flex-1 truncate text-left">{t('anime.add')}</span>
+            <ChevronDown className="opacity-70" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] min-w-56 p-1.5">
+          <div className="px-3 pb-1 pt-2 text-xs font-medium text-subtle-foreground">{t('anime.chooseStatus')}</div>
+          {LIST_STATUSES.map((status) => (
+            <PopoverClose key={status} asChild>
+              <button
+                type="button"
+                onClick={() => save.mutate({ status })}
+                className="flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
+              >
+                {t(`status.${status}`)}
+              </button>
+            </PopoverClose>
+          ))}
+        </PopoverContent>
+      </Popover>
     )
   }
 

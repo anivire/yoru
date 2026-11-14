@@ -168,6 +168,7 @@ export const ru = {
     noScore: 'Нет',
     rewatches: 'Сколько раз пересмотрено',
     add: 'Добавить в список',
+    chooseStatus: 'Выберите статус',
     inList: 'В списке',
     progress: 'Прогресс',
     score: 'Оценка',
