@@ -212,8 +212,8 @@ function SeanimeImport() {
     ['Linux', '~/.config/Seanime/offline/local.db'],
   ]
   return (
-    <Card className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start">
-      <div className="flex min-w-0 flex-1 flex-col gap-3">
+    <Card className="flex flex-col gap-4 p-4">
+      <div className="flex min-w-0 flex-col gap-3">
         <div className="flex items-center gap-3">
           <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-black">
             <img src="/seanime.png" alt="" className="size-7 object-contain" />
@@ -244,7 +244,7 @@ function SeanimeImport() {
           e.target.value = ''
         }}
       />
-      <Button variant="secondary" size="sm" loading={upload.isPending} onClick={() => input.current?.click()} className="sm:self-center">
+      <Button variant="secondary" size="sm" loading={upload.isPending} onClick={() => input.current?.click()} className="self-start">
         <FileUp />
         {t('settings.seanime.choose')}
       </Button>

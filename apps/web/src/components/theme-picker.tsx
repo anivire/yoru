@@ -58,7 +58,7 @@ export function SchemePicker({ compact }: { compact?: boolean }) {
             scheme === o.value ? 'bg-accent-soft' : 'bg-surface hover:bg-field',
           )}
         >
-          <div className={cn('overflow-hidden rounded-lg', compact ? 'h-23' : 'h-20 w-28 shrink-0 sm:h-46 sm:w-auto')}>
+          <div className={cn('overflow-hidden rounded-lg', compact ? 'h-24' : 'h-32 w-28 shrink-0 sm:h-64 sm:w-auto')}>
             {o.value === 'system' ? (
               <div className="relative h-full w-full">
                 <div className="absolute inset-0 [clip-path:inset(0_49.5%_0_0)]">
