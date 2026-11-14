@@ -113,9 +113,10 @@ function AccountInfoCard() {
   ]
   return (
     <Card className="flex flex-col gap-4 p-4">
-      <Field label={t('settings.accountInfo.username')}>
-        <Input value={user.username} readOnly className="cursor-default font-medium" />
-      </Field>
+      <div className="flex flex-col gap-1.5">
+        <span className="text-[0.8125rem] font-medium">{t('settings.accountInfo.username')}</span>
+        <div className="flex h-9 cursor-default select-text items-center rounded-lg bg-field px-3 text-sm font-medium">{user.username}</div>
+      </div>
       <dl className="grid gap-x-6 gap-y-2.5 text-sm sm:grid-cols-2">
         {rows.map(([label, value]) => (
           <div key={label} className="flex items-center justify-between gap-3">
@@ -148,6 +149,29 @@ function AccountTab() {
     <>
       <Block title={t('settings.accountInfo.title')}>
         <AccountInfoCard />
+      </Block>
+      <Block title={t('settings.password')}>
+        <Card>
+          <CardContent>
+            <form
+              className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
+              onSubmit={(e: FormEvent) => {
+                e.preventDefault()
+                password.mutate()
+              }}
+            >
+              <Field label={t('settings.currentPassword')} error={password.error ? errorMessage(password.error, t) : undefined}>
+                <Input type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
+              </Field>
+              <Field label={t('settings.newPassword')}>
+                <Input type="password" autoComplete="new-password" minLength={8} value={next} onChange={(e) => setNext(e.target.value)} required />
+              </Field>
+              <Button type="submit" variant="secondary" loading={password.isPending}>
+                {t('settings.changePassword')}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </Block>
       <Block title={t('settings.token')} description={<Trans i18nKey="settings.tokenHint" components={{ code: <Code /> }} />}>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -187,29 +211,6 @@ function AccountTab() {
             </form>
           </Card>
         </div>
-      </Block>
-      <Block title={t('settings.password')}>
-        <Card>
-          <CardContent>
-            <form
-              className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
-              onSubmit={(e: FormEvent) => {
-                e.preventDefault()
-                password.mutate()
-              }}
-            >
-              <Field label={t('settings.currentPassword')} error={password.error ? errorMessage(password.error, t) : undefined}>
-                <Input type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
-              </Field>
-              <Field label={t('settings.newPassword')}>
-                <Input type="password" autoComplete="new-password" minLength={8} value={next} onChange={(e) => setNext(e.target.value)} required />
-              </Field>
-              <Button type="submit" variant="secondary" loading={password.isPending}>
-                {t('settings.changePassword')}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
       </Block>
     </>
   )

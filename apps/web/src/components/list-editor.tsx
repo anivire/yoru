@@ -1,6 +1,6 @@
 import { LIST_STATUSES, type ListEntry, type ListStatus } from '@yoru/shared'
-import { Button, Popover, PopoverClose, PopoverContent, PopoverTrigger, Select, Tooltip, cn } from '@yoru/ui'
-import { EpisodeCount, scoreClass } from './anime-cards'
+import { Button, Popover, PopoverClose, PopoverContent, PopoverTrigger, Select, Tooltip } from '@yoru/ui'
+import { EpisodeCount, scoreColor } from './anime-cards'
 import { RiAddFill, RiArrowDownSFill, RiBookmark3Fill, RiDeleteBin6Fill, RiEdit2Fill, RiRepeatFill, RiStarFill, RiSubtractFill } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
 import { useDeleteEntry, useSaveEntry } from '../lib/queries'
@@ -32,14 +32,15 @@ function EntryControls({ malId, entry, total, aired }: { malId: number; entry: L
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-col gap-2">
       <Select
         className="w-full"
         value={entry.status}
         onValueChange={(v) => save.mutate({ status: v as ListStatus })}
         options={LIST_STATUSES.map((s) => ({ value: s, label: t(`status.${s}`) }))}
       />
-      <div className="inline-flex h-9 items-center rounded-lg bg-field">
+      <div className="grid grid-cols-1 gap-2 min-[22rem]:grid-cols-3">
+      <div className="flex h-9 items-center justify-between rounded-lg bg-field">
         <button type="button" aria-label="-1" onClick={() => setProgress(entry.progress - 1)} className="grid h-full w-8 cursor-pointer place-items-center rounded-l-lg text-muted-foreground hover:bg-field-hover hover:text-foreground">
           <RiSubtractFill className="size-3.5" />
         </button>
@@ -57,14 +58,14 @@ function EntryControls({ malId, entry, total, aired }: { malId: number; entry: L
         </button>
       </div>
       <Select
-        className="w-28"
+        className="w-full"
         value={entry.score ? String(Math.round(entry.score)) : '0'}
         onValueChange={(v) => save.mutate({ status: entry.status, score: Number(v) || null })}
-        icon={<RiStarFill className={entry.score ? cn('fill-current', scoreClass(entry.score)) : ''} />}
+        icon={<RiStarFill style={entry.score ? { color: scoreColor(entry.score) } : undefined} />}
         options={[{ value: '0', label: t('anime.noScore') }, ...Array.from({ length: 10 }, (_, i) => ({ value: String(10 - i), label: String(10 - i) }))]}
       />
       <Tooltip content={t('anime.rewatches')}>
-        <div className="inline-flex h-9 items-center rounded-lg bg-field">
+        <div className="flex h-9 items-center justify-between rounded-lg bg-field">
           <button
             type="button"
             aria-label="-1"
@@ -88,13 +89,13 @@ function EntryControls({ malId, entry, total, aired }: { malId: number; entry: L
           </button>
         </div>
       </Tooltip>
-      <div className="grid w-full grid-cols-2 gap-2">
+      </div>
+      <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
         <DateField label={t('anime.startedAt')} value={entry.startedAt} onChange={(v) => save.mutate({ status: entry.status, startedAt: v })} />
         <DateField label={t('anime.completedAt')} value={entry.completedAt} onChange={(v) => save.mutate({ status: entry.status, completedAt: v })} />
-      </div>
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label={t('common.remove')} className="ml-auto">
+          <Button variant="danger" size="icon" aria-label={t('common.remove')} title={t('common.remove')}>
             <RiDeleteBin6Fill />
           </Button>
         </PopoverTrigger>
@@ -112,6 +113,7 @@ function EntryControls({ malId, entry, total, aired }: { malId: number; entry: L
           </div>
         </PopoverContent>
       </Popover>
+      </div>
     </div>
   )
 }

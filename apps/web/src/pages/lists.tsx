@@ -1,11 +1,11 @@
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
 import { EXPORT_FORMATS, LIST_STATUSES, type ListEntryWithAnime, type ListStatus } from '@yoru/shared'
 import { Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, EmptyState, Image, Input, Segmented, Select, cn } from '@yoru/ui'
-import { RiCalendar2Fill, RiCloseFill, RiDownload2Fill, RiFileDownloadFill, RiLayoutGridFill, RiLayoutRowFill, RiRepeatFill, RiSearchFill, RiSortDesc, RiStarFill, RiTvFill } from '@remixicon/react'
+import { RiCalendar2Fill, RiCloseFill, RiDownload2Fill, RiFileDownloadFill, RiLayoutGridFill, RiLayoutRowFill, RiRepeatFill, RiSearchFill, RiSortDesc, RiTvFill } from '@remixicon/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router'
-import { AnimeCard, EpisodeCount, PosterGrid, formatScore, scoreClass } from '../components/anime-cards'
+import { AnimeCard, EpisodeCount, PosterGrid, Score } from '../components/anime-cards'
 import { ListTableSkeleton, PosterGridSkeleton } from '../components/skeletons'
 import { Page, PageHeader } from '../components/app-shell'
 import { api } from '../lib/api'
@@ -67,10 +67,7 @@ function ListTable({ items }: { items: ListEntryWithAnime[] }) {
               </td>
               <td className="hidden px-4 py-2.5 sm:table-cell">
                 {e.score ? (
-                  <span className={cn('inline-flex items-center gap-1 font-mono text-[0.8125rem] font-semibold', scoreClass(e.score))}>
-                    <RiStarFill className="size-3 fill-current" />
-                    {formatScore(e.score)}
-                  </span>
+                  <Score value={e.score} className="h-5 px-1.5 text-[0.75rem]" />
                 ) : (
                   <span className="text-subtle-foreground">{t('anime.noScore')}</span>
                 )}

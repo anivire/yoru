@@ -9,7 +9,7 @@ import {
   Logo,
   cn,
 } from '@yoru/ui'
-import { RiCheckFill, RiLogoutBoxRFill, RiMenuFill, RiSearchFill, RiSettings3Fill, RiShieldFill } from '@remixicon/react'
+import { RiLogoutBoxRFill, RiMenuFill, RiSearchFill, RiSettings3Fill, RiShieldFill } from '@remixicon/react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink, matchPath, useLocation, useNavigate } from 'react-router'
@@ -17,7 +17,6 @@ import { api } from '../lib/api'
 import { useAppearance } from '../lib/appearance'
 import { NAV } from '../lib/navigation'
 import { keys, useUser } from '../lib/queries'
-import { Flag, LANGUAGES, useChangeLanguage } from './language'
 import { NotificationsPopover } from './notifications'
 import { Footer } from './footer'
 
@@ -86,29 +85,10 @@ function MobileMenu() {
             </DropdownMenuItem>
           )
         })}
-        <LanguageItems />
         <DropdownMenuLabel className="mt-1">{t('nav.account')}</DropdownMenuLabel>
         <AccountItems />
       </DropdownMenuContent>
     </DropdownMenu>
-  )
-}
-
-function LanguageItems() {
-  const { t } = useTranslation()
-  const user = useUser()
-  const change = useChangeLanguage()
-  return (
-    <>
-      <DropdownMenuLabel className="mt-1">{t('settings.language')}</DropdownMenuLabel>
-      {LANGUAGES.map((l) => (
-        <DropdownMenuItem key={l.value} onSelect={() => change(l.value)}>
-          <Flag locale={l.value} className="h-3 w-4 rounded-[0.125rem]" />
-          <span className="flex-1">{l.label}</span>
-          {l.value === user.locale ? <RiCheckFill className="text-accent!" /> : null}
-        </DropdownMenuItem>
-      ))}
-    </>
   )
 }
 

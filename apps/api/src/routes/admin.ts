@@ -13,7 +13,7 @@ import {
   inviteInputSchema,
 } from '@yoru/shared'
 import { db, now } from '../db/client'
-import { invites, listEntries, users } from '../db/schema'
+import { invites, users } from '../db/schema'
 import { env } from '../env'
 import { type AppEnv, requireAdmin, requireAuth } from '../lib/auth'
 import { randomToken } from '../lib/crypto'
@@ -66,7 +66,7 @@ export const adminRoutes = new Hono<AppEnv>()
         username: users.username,
         role: users.role,
         createdAt: users.createdAt,
-        entries: sql<number>`(select count(*) from ${listEntries} where ${listEntries.userId} = ${users.id})`,
+        entries: sql<number>`(select count(*) from "list_entries" as "le" where "le"."user_id" = "users"."id")`,
       })
       .from(users)
       .orderBy(users.createdAt)

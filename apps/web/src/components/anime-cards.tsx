@@ -25,38 +25,27 @@ export function scoreTone(value: number): ScoreTone {
   return 'red'
 }
 
-const TONE_ON_DARK: Record<ScoreTone, string> = {
-  gold: 'text-amber-300',
-  green: 'text-emerald-400',
-  yellow: 'text-yellow-300',
-  red: 'text-red-400',
+const TONE_COLOR: Record<ScoreTone, string> = {
+  gold: '#fbbf24',
+  green: '#34d399',
+  yellow: '#fde047',
+  red: '#f87171',
 }
 
-const TONE_ON_THEME: Record<ScoreTone, string> = {
-  gold: 'text-amber-500 dark:text-amber-300',
-  green: 'text-emerald-600 dark:text-emerald-400',
-  yellow: 'text-yellow-600 dark:text-yellow-300',
-  red: 'text-red-600 dark:text-red-400',
-}
-
-export function scoreClass(value: number, surface: 'dark' | 'theme' = 'theme') {
-  return (surface === 'dark' ? TONE_ON_DARK : TONE_ON_THEME)[scoreTone(value)]
+export function scoreColor(value: number) {
+  return TONE_COLOR[scoreTone(value)]
 }
 
 export function formatScore(value: number, digits = 1) {
   return Number.isInteger(value) ? String(value) : value.toFixed(digits)
 }
 
-export function Score({ value, className, surface = 'dark', digits = 1, title }: { value: number; className?: string; surface?: 'dark' | 'theme'; digits?: number; title?: string }) {
+export function Score({ value, className, digits = 1, title }: { value: number; className?: string; surface?: 'dark' | 'theme'; digits?: number; title?: string }) {
   return (
     <span
       title={title}
-      className={cn(
-        'inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs font-semibold tabular-nums',
-        surface === 'dark' ? 'bg-black/55 backdrop-blur-md' : 'bg-field',
-        scoreClass(value, surface),
-        className,
-      )}
+      style={{ backgroundColor: scoreColor(value) }}
+      className={cn('inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs font-bold tabular-nums text-neutral-950 shadow-sm shadow-black/20', className)}
     >
       <RiStarFill className="size-3 fill-current" />
       {formatScore(value, digits)}

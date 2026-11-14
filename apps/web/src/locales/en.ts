@@ -323,7 +323,7 @@ export const en: Messages = {
       none: 'unknown',
     },
     importMissing: 'Import from {{names}} is unavailable',
-    importMissingAdmin: 'OAuth keys are not set. Enter them in the admin panel under “List import” or put them in <code>.env</code>.',
+    importMissingAdmin: 'Import from these services is not set up. You can connect it in Management.',
     importMissingUser: 'The admin has not set up import from these services.',
     fileImportTitle: 'Import from a file',
     fileImportHint: 'Lists from apps that are not tied to an online account',
