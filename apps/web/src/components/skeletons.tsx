@@ -246,19 +246,19 @@ export function ScheduleSkeleton() {
 
 export function ListTableSkeleton({ rows = 10 }: { rows?: number }) {
   return (
-    <div className="overflow-hidden rounded-xl bg-surface">
-      <div className="flex h-[2.375rem] items-center bg-inset px-4">
+    <div className="rounded-2xl bg-surface p-1.5">
+      <div className="px-3 pb-1.5 pt-2">
         <TextLine className="text-xs" bar="w-24" />
       </div>
       {Array.from({ length: rows }, (_, i) => (
-        <div key={i} className="flex items-center gap-3 px-4 py-2.5 even:bg-field/60">
-          <Skeleton className="h-12 w-8 shrink-0 rounded" />
+        <div key={i} className="flex items-center gap-3 px-3 py-2">
+          <Skeleton className="h-14 w-10 shrink-0 rounded-md" />
           <div className="min-w-0 flex-1">
             <TextLine className="text-sm" bar="w-1/3" />
-            <TextLine className="text-xs" bar="w-24" />
+            <TextLine className="mt-0.5 text-xs" bar="w-24" />
           </div>
           <TextLine className="hidden text-[0.8125rem] md:flex" bar="w-20" />
-          <TextLine className="font-mono text-[0.8125rem]" bar="w-12" />
+          <TextLine className="text-[0.8125rem]" bar="w-12" />
         </div>
       ))}
     </div>
