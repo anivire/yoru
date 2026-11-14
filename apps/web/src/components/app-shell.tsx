@@ -5,7 +5,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
   Logo,
   cn,
@@ -19,7 +18,6 @@ import { keys, useUser } from '../lib/queries'
 import { LanguageMenu } from './language'
 import { NotificationsPopover } from './notifications'
 import { Footer } from './footer'
-import { QuickAppearance } from './quick-appearance'
 
 function NavItem({ to, children, end }: { to: string; children: ReactNode; end?: boolean }) {
   return (
@@ -72,14 +70,13 @@ function UserMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-60">
-        <DropdownMenuLabel className="flex items-center gap-3 px-3 py-2.5">
+        <DropdownMenuLabel className="flex items-center gap-3 px-3 py-2">
           <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-soft text-sm font-semibold uppercase text-accent">{user.username.slice(0, 1)}</span>
           <span className="min-w-0">
             <span className="block truncate text-sm font-medium text-foreground">{user.username}</span>
             <span className="block text-xs font-normal text-muted-foreground">{user.role === 'admin' ? t('nav.roleAdmin') : t('nav.roleUser')}</span>
           </span>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => navigate('/settings')}>
           <Settings />
           {t('nav.settings')}
@@ -152,7 +149,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
       <main className="flex-1">{children}</main>
       <Footer scope="app" />
-      <QuickAppearance />
     </div>
   )
 }
