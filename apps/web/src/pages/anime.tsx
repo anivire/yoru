@@ -154,11 +154,7 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
     anime.rating ? { label: t('anime.rating'), value: anime.rating } : null,
   ].filter((f) => f !== null)
   return (
-    <div className="relative isolate -mt-(--header-h) overflow-hidden pt-(--header-h)">
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[40rem] overflow-hidden [mask-image:linear-gradient(to_bottom,black_35%,transparent)]">
-        {anime.imageUrl ? <img src={anime.imageUrl} alt="" className="h-full w-full scale-110 object-cover object-[50%_25%] opacity-50 blur-xl" /> : null}
-        <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-background/50 to-background/20" />
-      </div>
+    <div>
       <div className="mx-auto max-w-(--page-max) px-4 pb-10 pt-4 sm:px-6 sm:pt-10">
         <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
           <div className="flex w-36 shrink-0 flex-col gap-3 sm:w-48">
@@ -244,12 +240,16 @@ export function AnimePage() {
   }
 
   return (
-    <>
+    <div className="relative isolate -mt-(--header-h) pt-(--header-h)">
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[52rem] overflow-hidden [mask-image:linear-gradient(to_bottom,black_30%,transparent)]">
+        {data.anime.imageUrl ? <img src={data.anime.imageUrl} alt="" className="h-full w-full scale-110 object-cover object-[50%_25%] opacity-50 blur-xl" /> : null}
+        <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-background/50 to-background/20" />
+      </div>
       <Header anime={data.anime} entry={data.entry} />
       <Page>
         <h2 className="mb-4 text-xl font-semibold tracking-tight">{t('anime.streaming')}</h2>
         <WatchSection anime={data.anime} entry={data.entry} />
       </Page>
-    </>
+    </div>
   )
 }
