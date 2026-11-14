@@ -10,6 +10,7 @@ import { ScheduleSkeleton } from '../components/skeletons'
 import { api } from '../lib/api'
 import { i18n } from '../lib/i18n'
 import { TLink } from '../components/transition-link'
+import { useDocumentTitle } from '../lib/title'
 
 const DAY = 86_400_000
 const COLUMNS = 7
@@ -134,6 +135,7 @@ function DayHeader({ day, total, today }: { day: Date; total: number; today: boo
 
 export function SchedulePage() {
   const { t } = useTranslation()
+  useDocumentTitle(t('schedule.title'))
   const [scope, setScope] = useState<'mine' | 'all'>('mine')
   const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1))
   const range = useMemo(() => monthRange(month), [month])

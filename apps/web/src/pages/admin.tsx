@@ -26,6 +26,7 @@ import { Page, PageHeader } from '../components/app-shell'
 import { api } from '../lib/api'
 import { formatDate } from '../lib/format'
 import { useUser } from '../lib/queries'
+import { useDocumentTitle } from '../lib/title'
 
 function inviteState(invite: Invite): 'used' | 'expired' | 'active' {
   if (invite.usedAt) return 'used'
@@ -219,6 +220,7 @@ function Users() {
 
 export function AdminPage() {
   const { t } = useTranslation()
+  useDocumentTitle(t('admin.title'))
   return (
     <Page>
       <PageHeader title={t('admin.title')} />

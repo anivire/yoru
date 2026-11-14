@@ -16,6 +16,7 @@ import { api } from '../lib/api'
 import { useAppearance } from '../lib/appearance'
 import { formatDate, formatDateTime, relativeTime, seasonLabel, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
+import { useDocumentTitle } from '../lib/title'
 
 const MORE_SPACE = 24
 
@@ -228,6 +229,7 @@ export function AnimePage() {
   const { t } = useTranslation()
   const malId = Number(useParams().id)
   const { data, isPending, isError, error } = useQuery({ queryKey: keys.anime(malId), queryFn: () => api.anime(malId), enabled: malId > 0 })
+  useDocumentTitle(data?.anime.title)
 
   if (isPending) return <AnimePageSkeleton />
   if (isError || !data) {

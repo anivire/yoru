@@ -9,6 +9,7 @@ import { useHeader } from '../components/app-shell'
 import { Footer } from '../components/footer'
 import { PosterGridSkeleton } from '../components/skeletons'
 import { api } from '../lib/api'
+import { useDocumentTitle } from '../lib/title'
 
 const PAGE_SIZE = 48
 
@@ -30,9 +31,7 @@ export function SharedListPage() {
   const items = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data])
   const sentinel = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (first) document.title = `${t('share.title', { name: first.username })} · yoru`
-  }, [first, t])
+  useDocumentTitle(first ? t('share.title', { name: first.username }) : null)
 
   useEffect(() => {
     const el = sentinel.current

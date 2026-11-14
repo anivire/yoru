@@ -15,6 +15,7 @@ import { keys } from '../lib/queries'
 import { seasonLabel, typeLabel } from '../lib/format'
 import { HeroBackdrop } from '../components/hero-backdrop'
 import { TLink } from '../components/transition-link'
+import { useDocumentTitle } from '../lib/title'
 
 function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number | null; label: string }) {
   const { t } = useTranslation()
@@ -86,6 +87,7 @@ function HomeHero({ data }: { data: HomeData }) {
 export function HomePage() {
   const { t } = useTranslation()
   const { data, isPending } = useQuery({ queryKey: keys.home, queryFn: api.home })
+  useDocumentTitle(t('nav.home'))
   const { showHero, homeSections } = useAppearance()
 
   if (isPending) return <HomeSkeleton />

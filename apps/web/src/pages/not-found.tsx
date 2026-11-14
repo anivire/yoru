@@ -3,9 +3,11 @@ import { RiHome5Fill } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
 import { Page } from '../components/app-shell'
 import { TLink } from '../components/transition-link'
+import { useDocumentTitle } from '../lib/title'
 
 export function NotFoundPage() {
   const { t } = useTranslation()
+  useDocumentTitle(t('notFound.title'))
   return (
     <Page>
       <EmptyState

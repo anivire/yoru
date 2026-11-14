@@ -13,6 +13,7 @@ import { api } from '../lib/api'
 import { exportFormatName, formatDate, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
 import { TLink } from '../components/transition-link'
+import { useDocumentTitle } from '../lib/title'
 
 const ANY = '__any'
 const SORTS = ['score', 'updated', 'title', 'progress', 'year', 'added'] as const
@@ -87,6 +88,7 @@ const PAGE_SIZE = 48
 
 export function ListsPage() {
   const { t } = useTranslation()
+  useDocumentTitle(t('lists.title'))
   const [params, setParams] = useSearchParams()
   const [view, setView] = useState<'grid' | 'table'>(() => (localStorage.getItem('yoru:list-view') === 'table' ? 'table' : 'grid'))
   const [resetKey, setResetKey] = useState(0)

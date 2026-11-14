@@ -9,6 +9,7 @@ import { AnimeCard, PosterGrid } from '../components/anime-cards'
 import { PosterGridSkeleton } from '../components/skeletons'
 import { Page, PageHeader } from '../components/app-shell'
 import { api } from '../lib/api'
+import { useDocumentTitle } from '../lib/title'
 
 const ANY = '__any'
 const ORDERS = ['popularity', 'score', 'start_date', 'title', 'members'] as const
@@ -19,6 +20,7 @@ export function SearchPage() {
   const { t } = useTranslation()
   const [params, setParams] = useSearchParams()
   const q = params.get('q') ?? ''
+  useDocumentTitle(q ? `${q} · ${t('search.title')}` : t('search.title'))
   const [input, setInput] = useState(q)
   const filters = {
     type: params.get('type') ?? undefined,

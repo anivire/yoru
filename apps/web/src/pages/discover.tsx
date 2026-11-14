@@ -12,6 +12,7 @@ import { HeroBackdrop } from '../components/hero-backdrop'
 import { relativeTime, seasonLabel, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
 import { TLink } from '../components/transition-link'
+import { useDocumentTitle } from '../lib/title'
 
 const SLIDE_MS = 8000
 
@@ -234,6 +235,7 @@ function RecentSection() {
 
 export function DiscoverPage() {
   const { t } = useTranslation()
+  useDocumentTitle(t('nav.discover'))
   const hero = useQuery({ queryKey: ['discover', 'hero'], queryFn: () => api.discoverCollection('hero'), staleTime: 10 * 60_000 })
 
   return (

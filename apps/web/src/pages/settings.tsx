@@ -17,6 +17,7 @@ import { PAGE_WIDTHS, useAppearance } from '../lib/appearance'
 import { exportFormatName, formatDate } from '../lib/format'
 import { errorMessage, keys, useUser } from '../lib/queries'
 import { TLink } from '../components/transition-link'
+import { useDocumentTitle } from '../lib/title'
 
 const TABS = ['appearance', 'account', 'notifications', 'import'] as const
 type Tab = (typeof TABS)[number]
@@ -477,6 +478,7 @@ export function SettingsPage() {
   const navigate = useNavigate()
   const { tab: raw } = useParams()
   const tab: Tab = TABS.includes(raw as Tab) ? (raw as Tab) : 'appearance'
+  useDocumentTitle(`${t(`settings.${tab}`)} · ${t('settings.title')}`)
   return (
     <Page>
       <PageHeader title={t('settings.title')} />

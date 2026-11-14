@@ -6,6 +6,7 @@ import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router'
 import { Footer } from '../components/footer'
 import { api } from '../lib/api'
 import { errorMessage, keys, useMe } from '../lib/queries'
+import { useDocumentTitle } from '../lib/title'
 
 export function AuthLayout({ tagline, title, subtitle, children }: { tagline?: ReactNode; title?: ReactNode; subtitle?: ReactNode; children: ReactNode }) {
   return (
@@ -32,6 +33,7 @@ export function AuthLayout({ tagline, title, subtitle, children }: { tagline?: R
 
 export function LoginPage() {
   const { t } = useTranslation()
+  useDocumentTitle(t('auth.login'))
   const { data: me } = useMe()
   const [params] = useSearchParams()
   const navigate = useNavigate()
@@ -116,6 +118,7 @@ export function InviteForm({ code, role }: { code: string; role: string | null }
 
 export function InvitePageInner() {
   const { t } = useTranslation()
+  useDocumentTitle(t('auth.inviteTitle'))
   const { code = '' } = useParams()
   const invite = useQuery({ queryKey: ['invite', code], queryFn: () => api.invite(code) })
   return (
