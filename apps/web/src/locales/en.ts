@@ -42,6 +42,11 @@ export const en: Messages = {
     min: 'min',
     open: 'Open',
   },
+  notFound: {
+    title: 'Page not found',
+    text: 'The link may be outdated or the page was removed.',
+    home: 'Go home',
+  },
   auth: {
     username: 'Username',
     password: 'Password',

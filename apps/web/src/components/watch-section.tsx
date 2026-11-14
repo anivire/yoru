@@ -9,7 +9,7 @@ import { ApiError, api } from '../lib/api'
 import { errorMessage, keys } from '../lib/queries'
 import { EpisodeList } from './episode-list'
 import { MatchDialog } from './match-dialog'
-import { Player, PlayerShortcuts } from './player/player'
+import { Player } from './player/player'
 
 const KIND_KEY = 'yoru:kind'
 
@@ -180,11 +180,11 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
 
   return (
     <section id="watch" className="scroll-mt-20">
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Select size="sm" className="w-36" value="anime365" onValueChange={() => undefined} icon={<img src="/anime365.png" alt="" className="size-4 rounded-sm bg-white object-contain" />} options={[{ value: 'anime365', label: 'Anime365' }]} />
+      <div className="mb-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+        <Select size="sm" className="w-full sm:w-36" value="anime365" onValueChange={() => undefined} icon={<img src="/anime365.png" alt="" className="size-4 rounded-sm bg-white object-contain" />} options={[{ value: 'anime365', label: 'Anime365' }]} />
         <Select
           size="sm"
-          className="w-40"
+          className="w-full sm:w-40"
           value={kind}
           icon={kind === 'sub' ? <Captions /> : <Mic />}
           onValueChange={(v) => {
@@ -198,7 +198,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
         />
         <Select
           size="sm"
-          className="w-64"
+          className="col-span-2 w-full sm:w-64"
           disabled={!translations.data?.length}
           placeholder={t('player.author')}
           value={translationId ? String(translationId) : undefined}
@@ -213,17 +213,14 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
             hint: [x.height ? `${x.height}p` : null, x.qualityType?.toUpperCase()].filter(Boolean).join(' · ') || undefined,
           }))}
         />
-        <div className="ml-auto">
+        <div className="col-span-2 flex justify-end sm:ml-auto">
           <MatchDialog malId={malId} match={match.data} defaultQuery={anime.title} />
         </div>
       </div>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="flex flex-col gap-3">
-          {body}
-          <PlayerShortcuts />
-        </div>
+        <div className="min-w-0">{body}</div>
         <div className="lg:relative">
-          <div className="max-h-[32rem] lg:absolute lg:inset-0 lg:max-h-none">
+          <div className="h-[26rem] lg:absolute lg:inset-0 lg:h-auto">
             <EpisodeList episodes={list} current={episode ?? 0} loading={episodes.isPending} onSelect={goTo} />
           </div>
         </div>

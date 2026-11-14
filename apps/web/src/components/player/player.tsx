@@ -1,5 +1,5 @@
 import type { StreamSource } from '@yoru/shared'
-import { Kbd, Spinner, cn } from '@yoru/ui'
+import { Spinner, cn } from '@yoru/ui'
 import type Hls from 'hls.js'
 import type JASSUB from 'jassub'
 import {
@@ -328,17 +328,17 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
       ) : null}
 
       {!playing && !waiting && !error ? (
-        <button type="button" onClick={toggle} className="absolute left-1/2 top-1/2 grid size-16 -translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/90 text-black shadow-2xl">
-          <Play className="ml-1 size-7 fill-current" />
+        <button type="button" onClick={toggle} className="absolute left-1/2 top-1/2 grid size-12 -translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/90 text-black shadow-2xl sm:size-16">
+          <Play className="ml-1 size-5 fill-current sm:size-7" />
         </button>
       ) : null}
 
-      <div className={cn('pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 to-transparent px-5 pb-10 pt-4 transition-opacity', controls ? 'opacity-100' : 'opacity-0')}>
-        <div className="text-[13px] text-white/70">{subtitle}</div>
-        <div className="text-[15px] font-medium">{title}</div>
+      <div className={cn('pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 to-transparent px-3 pb-8 pt-2.5 transition-opacity sm:px-5 sm:pb-10 sm:pt-4', controls ? 'opacity-100' : 'opacity-0')}>
+        <div className="truncate text-xs text-white/70 sm:text-[13px]">{subtitle}</div>
+        <div className="truncate text-sm font-medium sm:text-[15px]">{title}</div>
       </div>
 
-      <div className={cn('absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-4 pb-3 pt-14 transition-opacity', controls ? 'opacity-100' : 'pointer-events-none opacity-0')}>
+      <div className={cn('absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-2 pb-1.5 pt-10 transition-opacity sm:px-4 sm:pb-3 sm:pt-14', controls ? 'opacity-100' : 'pointer-events-none opacity-0')}>
         <div
           className="group/seek relative mb-2 flex h-4 cursor-pointer items-center"
           onMouseMove={(e) => {
@@ -366,7 +366,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         </div>
 
         <div className="flex items-center gap-1">
-          {onPrev ? <ControlButton label={t('player.prev')} onClick={onPrev} icon={<SkipBack className="fill-current" />} /> : null}
+          {onPrev ? <ControlButton label={t('player.prev')} onClick={onPrev} icon={<SkipBack className="fill-current" />} className="hidden sm:grid" /> : null}
           <ControlButton label={playing ? t('player.pause') : t('player.play')} onClick={toggle} icon={playing ? <Pause className="fill-current" /> : <Play className="fill-current" />} />
           {onNext ? <ControlButton label={t('player.next')} onClick={onNext} icon={<SkipForward className="fill-current" />} /> : null}
           <div className="group/vol flex items-center">
@@ -381,20 +381,20 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
                 setVolume(Number(e.target.value))
                 setMuted(false)
               }}
-              className="w-0 cursor-pointer accent-[var(--accent)] opacity-0 transition-all group-hover/vol:w-20 group-hover/vol:opacity-100"
+              className="hidden w-0 cursor-pointer accent-[var(--accent)] opacity-0 transition-all group-hover/vol:w-20 group-hover/vol:opacity-100 sm:block"
             />
           </div>
-          <span className="ml-2 font-mono text-xs text-white/80">
+          <span className="ml-1 whitespace-nowrap font-mono text-[11px] text-white/80 sm:ml-2 sm:text-xs">
             {formatTime(time)} / {formatTime(duration)}
           </span>
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
             {subtitlesUrl ? (
               <ControlButton label={t('player.subtitles')} onClick={() => setSubs(!subsOn)} icon={subsOn ? <Captions /> : <CaptionsOff />} active={subsOn} />
             ) : null}
             <div className="relative">
               <ControlButton label={t('player.quality')} onClick={() => setMenu(menu ? null : 'root')} icon={<Settings />} badge={`${source.height}p`} />
               {menu ? (
-                <div className="absolute bottom-11 right-0 w-60 overflow-hidden rounded-xl bg-black/85 p-1 text-sm shadow-2xl backdrop-blur-xl animate-pop" onClick={(e) => e.stopPropagation()}>
+                <div className="absolute bottom-10 right-0 max-h-44 w-56 overflow-y-auto rounded-lg bg-black/85 p-1 sm:bottom-11 sm:max-h-none sm:w-60 sm:overflow-hidden text-sm shadow-2xl backdrop-blur-xl animate-pop" onClick={(e) => e.stopPropagation()}>
                   {menu === 'root' ? (
                     <>
                       <MenuRow icon={<Settings />} label={t('player.quality')} value={`${source.height}p`} onClick={() => setMenu('quality')} />
@@ -435,7 +435,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   )
 }
 
-function ControlButton({ label, onClick, icon, active, badge }: { label: string; onClick: () => void; icon: ReactNode; active?: boolean; badge?: string }) {
+function ControlButton({ label, onClick, icon, active, badge, className }: { label: string; onClick: () => void; icon: ReactNode; active?: boolean; badge?: string; className?: string }) {
   return (
     <button
       type="button"
@@ -445,7 +445,7 @@ function ControlButton({ label, onClick, icon, active, badge }: { label: string;
         e.stopPropagation()
         onClick()
       }}
-      className={cn('relative grid size-9 cursor-pointer place-items-center rounded-lg text-white/90 transition-colors hover:bg-white/10 [&_svg]:size-[18px]', active && 'text-accent')}
+      className={cn('relative grid size-8 cursor-pointer place-items-center rounded-lg text-white/90 transition-colors hover:bg-white/10 sm:size-9 [&_svg]:size-4 sm:[&_svg]:size-[18px]', active && 'text-accent', className)}
     >
       {icon}
       {badge ? <span className="absolute -right-1 -top-0.5 rounded bg-accent px-1 font-mono text-[9px] font-semibold leading-3.5 text-accent-foreground">{badge}</span> : null}
@@ -470,28 +470,5 @@ function MenuOption({ label, hint, active, onClick }: { label: string; hint?: st
       <span className="flex-1 text-left">{label}</span>
       {hint ? <span className="font-mono text-[11px] text-white/50">{hint}</span> : null}
     </button>
-  )
-}
-
-export function PlayerShortcuts() {
-  const keysList: [string, string][] = [
-    ['Space', '⏯'],
-    ['← →', '±5s'],
-    ['J L', '±10s'],
-    ['S', '+85s'],
-    ['F', '⛶'],
-    ['M', '🔇'],
-    ['C', 'CC'],
-    ['⇧N', '⏭'],
-  ]
-  return (
-    <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-subtle-foreground">
-      {keysList.map(([k, v]) => (
-        <span key={k} className="inline-flex items-center gap-1.5">
-          <Kbd>{k}</Kbd>
-          {v}
-        </span>
-      ))}
-    </div>
   )
 }

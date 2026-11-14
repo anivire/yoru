@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AnimeDetails } from '@yoru/shared'
 import { Badge, Button, EmptyState, Image, cn } from '@yoru/ui'
-import { CalendarClock, ExternalLink, Star } from 'lucide-react'
+import { CalendarClock, Clapperboard, Star } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
@@ -66,6 +66,17 @@ function Synopsis({ text, open, onToggle }: { text: string; open: boolean; onTog
   )
 }
 
+function MalIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <rect width="24" height="24" rx="5" fill="#2e51a2" />
+      <text x="12" y="15.4" textAnchor="middle" fontSize="8.5" fontWeight="800" fill="#fff" fontFamily="Arial, sans-serif">
+        MAL
+      </text>
+    </svg>
+  )
+}
+
 function Header({ anime, children }: { anime: AnimeDetails; children: React.ReactNode }) {
   const { t } = useTranslation()
   const { expandSynopsis } = useAppearance()
@@ -84,8 +95,24 @@ function Header({ anime, children }: { anime: AnimeDetails; children: React.Reac
       </div>
       <div className="mx-auto max-w-7xl px-4 py-10 wide:max-w-none sm:px-6">
         <div className="flex flex-col gap-6 sm:flex-row">
-          <div className="aspect-[2/3] w-40 shrink-0 self-start overflow-hidden rounded-xl bg-muted shadow-2xl sm:w-48">
-            {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" /> : null}
+          <div className="flex w-40 shrink-0 flex-col gap-2 self-start sm:w-48">
+            <div className="aspect-[2/3] w-full overflow-hidden rounded-xl bg-muted shadow-2xl">
+              {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" /> : null}
+            </div>
+            <Button asChild variant="secondary" size="sm" className="w-full">
+              <a href={`https://myanimelist.net/anime/${anime.malId}`} target="_blank" rel="noreferrer">
+                <MalIcon />
+                MyAnimeList
+              </a>
+            </Button>
+            {anime.trailerUrl ? (
+              <Button asChild variant="secondary" size="sm" className="w-full">
+                <a href={anime.trailerUrl} target="_blank" rel="noreferrer">
+                  <Clapperboard />
+                  {t('anime.trailer')}
+                </a>
+              </Button>
+            ) : null}
           </div>
           <div className={cn('flex min-w-0 flex-1 flex-col gap-3', !open && 'sm:h-72')}>
             <div>
@@ -128,20 +155,6 @@ function Header({ anime, children }: { anime: AnimeDetails; children: React.Reac
         </div>
         <div className="mt-6 flex flex-wrap items-center gap-2">
           {children}
-          <Button asChild variant="ghost" size="sm">
-            <a href={`https://myanimelist.net/anime/${anime.malId}`} target="_blank" rel="noreferrer">
-              MAL
-              <ExternalLink />
-            </a>
-          </Button>
-          {anime.trailerUrl ? (
-            <Button asChild variant="ghost" size="sm">
-              <a href={anime.trailerUrl} target="_blank" rel="noreferrer">
-                {t('anime.trailer')}
-                <ExternalLink />
-              </a>
-            </Button>
-          ) : null}
           {facts.length ? (
             <div className="flex flex-wrap gap-x-6 gap-y-1 text-[13px] text-muted-foreground sm:ml-auto">
               {facts.map((f) => (

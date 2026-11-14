@@ -4,7 +4,7 @@ import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '../lib/cn'
 
 const surface =
-  'z-50 rounded-xl bg-raised text-foreground shadow-[0_0_0_1px_color-mix(in_oklab,var(--foreground)_9%,transparent),0_18px_48px_-12px_rgb(0_0_0/0.35)]'
+  'z-50 rounded-lg bg-raised text-foreground shadow-[0_2px_6px_-2px_rgb(0_0_0/0.12),0_18px_48px_-12px_rgb(0_0_0/0.3)]'
 export const panel = `${surface} animate-pop`
 
 export const Popover = P.Root
@@ -37,7 +37,7 @@ export function DialogContent({
         className={cn(surface, 'fixed left-1/2 top-1/2 flex max-h-[85vh] animate-zoom w-[min(92vw,32rem)] -translate-x-1/2 -translate-y-1/2 flex-col', className)}
         {...props}
       >
-        <div className="flex items-start justify-between gap-4 px-5 pb-1 pt-4">
+        <div className="flex items-start justify-between gap-4 px-6 pb-2 pt-5">
           <div>
             <D.Title className="text-[15px] font-semibold tracking-tight">{title}</D.Title>
             {description ? <D.Description className="mt-0.5 text-sm text-muted-foreground">{description}</D.Description> : null}
@@ -58,7 +58,7 @@ export const DropdownMenuTrigger = M.Trigger
 export function DropdownMenuContent({ className, align = 'end', sideOffset = 6, ...props }: ComponentProps<typeof M.Content>) {
   return (
     <M.Portal>
-      <M.Content align={align} sideOffset={sideOffset} className={cn(panel, 'min-w-44 p-1', className)} {...props} />
+      <M.Content align={align} sideOffset={sideOffset} className={cn(panel, 'min-w-44 p-1.5', className)} {...props} />
     </M.Portal>
   )
 }
@@ -67,7 +67,7 @@ export function DropdownMenuItem({ className, ...props }: ComponentProps<typeof 
   return (
     <M.Item
       className={cn(
-        'flex cursor-pointer select-none items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-muted data-[disabled]:opacity-50 [&_svg]:size-4 [&_svg]:text-muted-foreground',
+        'flex cursor-pointer select-none items-center gap-2.5 rounded-md px-3 py-2 text-sm outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-muted data-[disabled]:opacity-50 [&_svg]:size-4 [&_svg]:text-muted-foreground',
         className,
       )}
       {...props}
@@ -76,7 +76,7 @@ export function DropdownMenuItem({ className, ...props }: ComponentProps<typeof 
 }
 
 export function DropdownMenuLabel({ className, ...props }: ComponentProps<typeof M.Label>) {
-  return <M.Label className={cn('px-2.5 py-1.5 text-xs font-medium text-subtle-foreground', className)} {...props} />
+  return <M.Label className={cn('px-3 py-2 text-xs font-medium text-subtle-foreground', className)} {...props} />
 }
 
 export function DropdownMenuSeparator({ className, ...props }: ComponentProps<typeof M.Separator>) {
@@ -127,12 +127,12 @@ export function Select({
       </S.Trigger>
       <S.Portal>
         <S.Content position="popper" sideOffset={6} className={cn(panel, 'max-h-80 min-w-[var(--radix-select-trigger-width)] overflow-hidden')}>
-          <S.Viewport className="p-1">
+          <S.Viewport className="p-1.5">
             {options.map((o) => (
               <S.Item
                 key={o.value}
                 value={o.value}
-                className="relative flex cursor-pointer select-none items-center gap-2 rounded-lg py-1.5 pl-2.5 pr-8 text-sm outline-none data-[highlighted]:bg-muted"
+                className="relative flex cursor-pointer select-none items-center gap-2 rounded-md py-2 pl-3 pr-8 text-sm outline-none data-[highlighted]:bg-muted"
               >
                 <div className="min-w-0">
                   <S.ItemText>{o.label}</S.ItemText>
@@ -156,7 +156,7 @@ export function Tooltip({ content, children, side = 'top' }: { content: ReactNod
       <T.Root>
         <T.Trigger asChild>{children}</T.Trigger>
         <T.Portal>
-          <T.Content side={side} sideOffset={6} className={cn(panel, 'max-w-72 rounded-lg px-2.5 py-1.5 text-xs')}>
+          <T.Content side={side} sideOffset={6} className={cn(panel, 'max-w-72 rounded-md px-2.5 py-1.5 text-xs')}>
             {content}
           </T.Content>
         </T.Portal>

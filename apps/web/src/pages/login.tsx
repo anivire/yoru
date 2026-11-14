@@ -1,28 +1,31 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Badge, Button, Card, Field, Input, Logo, Mascot } from '@yoru/ui'
+import { Badge, Button, Card, Field, Input, LogoMark, Mascot } from '@yoru/ui'
 import { type FormEvent, type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router'
 import { api } from '../lib/api'
 import { errorMessage, keys, useMe } from '../lib/queries'
 
-export function AuthLayout({ title, subtitle, children }: { title?: ReactNode; subtitle?: ReactNode; children: ReactNode }) {
+export function AuthLayout({ tagline, title, subtitle, children }: { tagline?: ReactNode; title?: ReactNode; subtitle?: ReactNode; children: ReactNode }) {
   return (
     <div className="grid min-h-dvh place-items-center px-4 py-10">
       <div className="w-full max-w-sm">
-        {title ? (
-          <div className="mb-8 flex flex-col items-center gap-4 text-center">
-            <Mascot size={64} />
-            <div>
-              <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
-              {subtitle ? <p className="mt-1 text-[15px] text-muted-foreground">{subtitle}</p> : null}
-            </div>
+        <div className="mb-8 flex flex-col items-center gap-3 text-center">
+          <LogoMark size={72} />
+          <div>
+            <div className="text-3xl font-semibold tracking-tight">yoru</div>
+            {tagline ? <p className="mt-1 text-[15px] text-muted-foreground">{tagline}</p> : null}
           </div>
-        ) : null}
-        <Card className="p-5">{children}</Card>
-        <div className="mt-6 flex justify-center opacity-60">
-          <Logo size={18} />
         </div>
+        <Card className="p-6">
+          {title ? (
+            <div className="mb-5">
+              <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
+              {subtitle ? <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p> : null}
+            </div>
+          ) : null}
+          {children}
+        </Card>
       </div>
     </div>
   )

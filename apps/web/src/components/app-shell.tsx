@@ -71,7 +71,7 @@ function UserMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-60">
-        <DropdownMenuLabel className="flex items-center gap-3 px-2.5 py-2">
+        <DropdownMenuLabel className="flex items-center gap-3 px-3 py-2.5">
           <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-soft text-sm font-semibold uppercase text-accent">{user.username.slice(0, 1)}</span>
           <span className="min-w-0">
             <span className="block truncate text-sm font-medium text-foreground">{user.username}</span>
@@ -89,7 +89,6 @@ function UserMenu() {
             {t('nav.admin')}
           </DropdownMenuItem>
         ) : null}
-        <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={logout} className="text-danger data-[highlighted]:bg-danger-soft [&_svg]:text-danger">
           <LogOut />
           {t('nav.logout')}
