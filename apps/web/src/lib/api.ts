@@ -8,6 +8,7 @@ import type {
   Episode,
   Genre,
   HomeData,
+  ImportResult,
   ImportStatus,
   Invite,
   ListEntry,
@@ -36,11 +37,12 @@ export class ApiError extends Error {
 }
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const form = body instanceof FormData
   const res = await fetch(`/api${path}`, {
     method,
     credentials: 'same-origin',
-    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    headers: body === undefined || form ? undefined : { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : form ? body : JSON.stringify(body),
   })
   if (!res.ok) {
     let message = res.statusText
@@ -107,6 +109,11 @@ export const api = {
 
   importStatus: () => get<ImportStatus>('/import/status'),
   importStartUrl: (provider: string) => `/api/import/${provider}/start`,
+  importSeanime: (file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return request<ImportResult>('POST', '/import/seanime', form)
+  },
 
   admin: {
     invites: () => get<Invite[]>('/admin/invites'),

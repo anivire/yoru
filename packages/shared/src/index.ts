@@ -11,6 +11,7 @@ export type StreamKind = (typeof STREAM_KINDS)[number]
 
 export const IMPORT_PROVIDERS = ['anilist', 'shikimori', 'mal'] as const
 export type ImportProvider = (typeof IMPORT_PROVIDERS)[number]
+export type ImportSource = ImportProvider | 'seanime'
 
 export const EXPORT_FORMATS = ['json', 'csv', 'mal-xml'] as const
 export type ExportFormat = (typeof EXPORT_FORMATS)[number]
@@ -283,7 +284,7 @@ export interface AdminSettings {
 }
 
 export interface ImportResult {
-  provider: ImportProvider
+  provider: ImportSource
   imported: number
   updated: number
   skipped: number

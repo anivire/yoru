@@ -1,5 +1,5 @@
 import { and, eq, lt } from 'drizzle-orm'
-import type { ImportProvider, ImportResult, ListStatus } from '@yoru/shared'
+import type { ImportProvider, ImportResult, ImportSource, ListStatus } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { imports, listEntries, oauthStates } from '../db/schema'
 import { env } from '../env'
@@ -109,7 +109,7 @@ async function getJson<T>(url: string, token: string, init: RequestInit = {}): P
   return (await res.json()) as T
 }
 
-const ANILIST_STATUS: Record<string, ListStatus> = {
+export const ANILIST_STATUS: Record<string, ListStatus> = {
   CURRENT: 'watching',
   PLANNING: 'planning',
   COMPLETED: 'completed',
@@ -338,7 +338,7 @@ export async function fetchProviderList(provider: ImportProvider, code: string, 
   }
 }
 
-export function applyImport(userId: number, provider: ImportProvider, items: ImportItem[]): ImportResult {
+export function applyImport(userId: number, provider: ImportSource, items: ImportItem[]): ImportResult {
   const result: ImportResult = { provider, imported: 0, updated: 0, skipped: 0 }
   db.transaction(() => {
     for (const item of items) {

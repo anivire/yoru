@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, type User } from '@yoru/shared'
 import { Button, Card, CardContent, Code, Field, Input, Segmented, StepSlider, Switch, toast } from '@yoru/ui'
-import { ArrowDownUp, Bell, Check, Download, FileBraces, FileCode, FileSpreadsheet, Palette, Shield, TriangleAlert, UserRound } from 'lucide-react'
-import { type FormEvent, type ReactNode, useEffect, useState } from 'react'
+import { ArrowDownUp, Bell, Check, Download, FileBraces, FileCode, FileSpreadsheet, FileUp, Palette, Shield, TriangleAlert, UserRound } from 'lucide-react'
+import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { Page, PageHeader } from '../components/app-shell'
@@ -192,6 +192,66 @@ function NotificationsTab() {
   )
 }
 
+function SeanimeImport() {
+  const { t } = useTranslation()
+  const client = useQueryClient()
+  const input = useRef<HTMLInputElement>(null)
+  const upload = useMutation({
+    mutationFn: api.importSeanime,
+    onSuccess: (r) => {
+      toast.success(t('settings.importDone', { name: 'Seanime', imported: r.imported, updated: r.updated, skipped: r.skipped }))
+      void client.invalidateQueries({ queryKey: ['list'] })
+      void client.invalidateQueries({ queryKey: keys.home })
+      void client.invalidateQueries({ queryKey: ['import-status'] })
+    },
+    onError: (e) => toast.error(errorMessage(e, t)),
+  })
+  const paths = [
+    ['Windows', String.raw`%APPDATA%\Seanime\offline\local.db`],
+    ['macOS', '~/Library/Application Support/Seanime/offline/local.db'],
+    ['Linux', '~/.config/Seanime/offline/local.db'],
+  ]
+  return (
+    <Card className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start">
+      <div className="flex min-w-0 flex-1 flex-col gap-3">
+        <div className="flex items-center gap-3">
+          <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-black">
+            <img src="/seanime.png" alt="" className="size-7 object-contain" />
+          </span>
+          <div className="min-w-0">
+            <div className="font-medium">Seanime</div>
+            <p className="text-xs text-muted-foreground">{t('settings.seanime.hint')}</p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-1 text-[13px] text-muted-foreground">
+          {paths.map(([os, path]) => (
+            <div key={os} className="flex flex-wrap items-center gap-2">
+              <span className="w-16 shrink-0 text-subtle-foreground">{os}</span>
+              <Code>{path}</Code>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">{t('settings.seanime.note')}</p>
+      </div>
+      <input
+        ref={input}
+        type="file"
+        accept=".db,.json,application/json"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file) upload.mutate(file)
+          e.target.value = ''
+        }}
+      />
+      <Button variant="secondary" size="sm" loading={upload.isPending} onClick={() => input.current?.click()} className="sm:self-center">
+        <FileUp />
+        {t('settings.seanime.choose')}
+      </Button>
+    </Card>
+  )
+}
+
 function ImportTab() {
   const { t } = useTranslation()
   const [params, setParams] = useSearchParams()
@@ -279,9 +339,12 @@ function ImportTab() {
         </div>
         {status.data?.last ? (
           <p className="mt-3 text-[13px] text-muted-foreground">
-            {t('settings.lastImport', { name: PROVIDER_NAMES[status.data.last.provider], date: formatDate(status.data.last.createdAt, { dateStyle: 'medium', timeStyle: 'short' }) })}
+            {t('settings.lastImport', { name: status.data.last.provider === 'seanime' ? 'Seanime' : PROVIDER_NAMES[status.data.last.provider], date: formatDate(status.data.last.createdAt, { dateStyle: 'medium', timeStyle: 'short' }) })}
           </p>
         ) : null}
+      </Block>
+      <Block title={t('settings.fileImportTitle')} description={t('settings.fileImportHint')}>
+        <SeanimeImport />
       </Block>
       <Block title={t('settings.exportTitle')} description={t('settings.exportHint')}>
         <div className="grid gap-3 sm:grid-cols-3">

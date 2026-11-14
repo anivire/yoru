@@ -1,12 +1,15 @@
 import { desc, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
-import { IMPORT_PROVIDERS, type ImportProvider, type ImportStatus } from '@yoru/shared'
+import { IMPORT_PROVIDERS, type ImportProvider, type ImportSource, type ImportStatus } from '@yoru/shared'
 import { db } from '../db/client'
 import { imports } from '../db/schema'
 import { env } from '../env'
 import { type AppEnv, requireAuth } from '../lib/auth'
 import { badRequest } from '../lib/http'
 import { applyImport, consumeState, createAuthorizeUrl, fetchProviderList, providerEnabled } from '../services/importers'
+import { parseSeanimeExport } from '../services/seanime'
+
+const MAX_FILE_BYTES = 64 * 1024 * 1024
 
 function providerParam(value: string): ImportProvider {
   if (!IMPORT_PROVIDERS.includes(value as ImportProvider)) badRequest('Unknown provider')
@@ -25,7 +28,7 @@ export const importRoutes = new Hono<AppEnv>()
       providers: Object.fromEntries(IMPORT_PROVIDERS.map((p) => [p, providerEnabled(p)])) as ImportStatus['providers'],
       last: last
         ? {
-            provider: last.provider as ImportProvider,
+            provider: last.provider as ImportSource,
             imported: last.imported,
             updated: last.updated,
             skipped: last.skipped,
@@ -34,6 +37,14 @@ export const importRoutes = new Hono<AppEnv>()
         : null,
     }
     return c.json(body)
+  })
+  .post('/seanime', async (c) => {
+    const body = await c.req.parseBody()
+    const file = body.file
+    if (!(file instanceof File)) badRequest('SEANIME_NO_FILE')
+    if (file.size > MAX_FILE_BYTES) badRequest('SEANIME_TOO_LARGE')
+    const items = parseSeanimeExport(Buffer.from(await file.arrayBuffer()))
+    return c.json(applyImport(c.get('user').id, 'seanime', items))
   })
   .get('/:provider/start', (c) => {
     const provider = providerParam(c.req.param('provider'))

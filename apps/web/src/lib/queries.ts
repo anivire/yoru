@@ -127,6 +127,10 @@ export function errorMessage(error: unknown, t: (key: string) => string): string
     INVALID_CREDENTIALS: 'auth.invalid',
     INVITE_INVALID: 'auth.inviteInvalid',
     USERNAME_TAKEN: 'auth.usernameTaken',
+    SEANIME_INVALID: 'settings.seanime.invalid',
+    SEANIME_EMPTY: 'settings.seanime.empty',
+    SEANIME_NO_FILE: 'settings.seanime.invalid',
+    SEANIME_TOO_LARGE: 'settings.seanime.tooLarge',
   }
   return map[error.message] ? t(map[error.message]!) : error.message
 }

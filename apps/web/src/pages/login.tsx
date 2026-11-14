@@ -11,7 +11,7 @@ export function AuthLayout({ tagline, title, subtitle, children }: { tagline?: R
   return (
     <div className="grid min-h-dvh place-items-center px-4 py-10">
       <div className="w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center gap-1 text-center">
+        <div className="mb-5 flex flex-col items-center gap-1 text-center">
           <LogoMark size={72} />
           {tagline ? <p className="mt-1 text-[15px] text-muted-foreground">{tagline}</p> : null}
         </div>
