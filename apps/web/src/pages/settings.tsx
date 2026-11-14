@@ -223,7 +223,7 @@ function SeanimeImport() {
       <div className="flex min-w-0 flex-col gap-3">
         <div className="flex items-center gap-3">
           <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-black">
-            <img src="/seanime.png" alt="" className="size-7 object-contain" />
+            <img src="/seanime.webp" alt="" className="size-7 object-contain" />
           </span>
           <div className="min-w-0">
             <div className="font-medium">Seanime</div>

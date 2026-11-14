@@ -66,7 +66,7 @@ export function StepSlider<T extends string>({
             <span key={o.value} className={cn('size-1.5 rounded-full transition-colors', i <= shown ? 'bg-accent-foreground/70' : 'bg-subtle-foreground/60')} />
           ))}
         </div>
-        <Slider.Thumb className="relative block size-5 cursor-grab rounded-full bg-raised shadow-md shadow-black/30 ring-4 ring-accent/25 transition-[box-shadow,scale] active:scale-110 active:cursor-grabbing focus-visible:outline-none focus-visible:ring-accent/50" />
+        <Slider.Thumb className="relative block size-5 cursor-grab rounded-full bg-raised shadow-md shadow-black/30 ring-4 ring-accent/25 zoom-layer transition-[box-shadow,transform] active:[--zoom:1.1] active:cursor-grabbing focus-visible:outline-none focus-visible:ring-accent/50" />
       </Slider.Root>
       <div className="relative h-4 text-xs">
         {options.map((o, i) => (

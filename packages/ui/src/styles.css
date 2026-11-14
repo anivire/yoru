@@ -310,6 +310,12 @@
   animation: yoru-fade-in 140ms ease-out;
 }
 
+@utility zoom-layer {
+  transform: translateZ(0) scale(var(--zoom, 1));
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
 @utility animate-fade {
   animation: yoru-fade 160ms ease-out;
 }

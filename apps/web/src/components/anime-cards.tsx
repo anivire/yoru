@@ -52,7 +52,7 @@ export function AnimeCard({
             src={anime.imageUrl}
             alt={anime.title}
             loading="lazy"
-            className="absolute inset-0 h-full w-full transform-gpu object-cover backface-hidden transition-[scale] duration-300 ease-out will-change-transform group-hover:scale-105"
+            className="absolute inset-0 h-full w-full zoom-layer object-cover transition-transform duration-300 ease-out group-hover:[--zoom:1.05]"
           />
         ) : null}
         <div className="absolute inset-0 flex flex-col justify-end gap-1.5 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-2.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
@@ -142,13 +142,13 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
             alt=""
             loading="lazy"
             className={cn(
-              'absolute inset-0 h-full w-full object-cover transition-[scale] duration-300 ease-out transform-gpu backface-hidden will-change-transform group-hover:scale-[1.04]',
+              'absolute inset-0 h-full w-full zoom-layer object-cover transition-transform duration-300 ease-out group-hover:[--zoom:1.04]',
               !item.episodeImageUrl && 'object-[50%_25%]',
             )}
           />
         ) : null}
         {item.pending ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/65 bg-[linear-gradient(to_bottom,color-mix(in_oklab,var(--warning)_30%,transparent),transparent_70%)] px-4 text-center text-white backdrop-blur-[6px]">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/80 bg-[linear-gradient(to_bottom,color-mix(in_oklab,var(--warning)_18%,transparent),transparent_60%)] px-4 text-center text-white backdrop-blur-[6px]">
             <span className="grid size-11 place-items-center rounded-full bg-warning text-black shadow-lg [text-shadow:none]">
               <RiTimeFill className="size-5" />
             </span>
@@ -210,7 +210,7 @@ export function UpcomingCard({ item }: { item: UpcomingItem }) {
             alt=""
             loading="lazy"
             className={cn(
-              'absolute inset-0 h-full w-full transform-gpu object-cover backface-hidden transition-[scale] duration-300 ease-out will-change-transform group-hover:scale-105',
+              'absolute inset-0 h-full w-full zoom-layer object-cover transition-transform duration-300 ease-out group-hover:[--zoom:1.05]',
               !item.bannerUrl && 'object-[50%_25%]',
             )}
           />

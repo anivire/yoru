@@ -107,7 +107,7 @@ function Invites() {
               ]}
             />
           </Field>
-          <Button type="submit" variant="primary" loading={create.isPending}>
+          <Button type="submit" variant="accent" loading={create.isPending}>
             <RiAddFill />
             {t('admin.createInvite')}
           </Button>

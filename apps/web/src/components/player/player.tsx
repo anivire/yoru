@@ -340,7 +340,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
             <div className="absolute inset-y-0 left-0 bg-white/30" style={{ width: `${duration ? (buffered / duration) * 100 : 0}%` }} />
             <div className="absolute inset-y-0 left-0 bg-accent" style={{ width: `${pct}%` }} />
           </div>
-          <div className="absolute size-3 -translate-x-1/2 scale-0 rounded-full bg-accent shadow transition-transform group-hover/seek:scale-100" style={{ left: `${pct}%` }} />
+          <div className="absolute size-3 -translate-x-1/2 rounded-full bg-accent shadow zoom-layer transition-transform [--zoom:0] group-hover/seek:[--zoom:1]" style={{ left: `${pct}%` }} />
           {hover ? (
             <div className="absolute -top-8 -translate-x-1/2 rounded-md bg-black/80 px-2 py-0.5 font-mono text-xs" style={{ left: hover.x }}>
               {formatTime(hover.time)}
