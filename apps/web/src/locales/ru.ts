@@ -9,6 +9,8 @@ export const ru = {
     admin: 'Админ-панель',
     logout: 'Выйти',
     account: 'Аккаунт',
+    roleAdmin: 'Администратор',
+    roleUser: 'Пользователь',
   },
   version: {
     update: 'Доступно обновление',

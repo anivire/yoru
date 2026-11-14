@@ -3,7 +3,8 @@ import { Dialog as D, DropdownMenu as M, Popover as P, Select as S, Switch as Sw
 import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '../lib/cn'
 
-const surface = 'z-50 rounded-xl bg-raised text-foreground shadow-2xl shadow-black/30'
+const surface =
+  'z-50 rounded-xl bg-raised text-foreground shadow-[0_0_0_1px_color-mix(in_oklab,var(--foreground)_9%,transparent),0_18px_48px_-12px_rgb(0_0_0/0.35)]'
 export const panel = `${surface} animate-pop`
 
 export const Popover = P.Root

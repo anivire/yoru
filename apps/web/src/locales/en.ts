@@ -11,6 +11,8 @@ export const en: Messages = {
     admin: 'Admin panel',
     logout: 'Log out',
     account: 'Account',
+    roleAdmin: 'Administrator',
+    roleUser: 'User',
   },
   version: {
     update: 'Update available',

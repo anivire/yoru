@@ -1,6 +1,6 @@
 import type { AnimeSummary, ContinueItem, ListStatus, UpcomingItem } from '@yoru/shared'
 import { Badge, Image, Progress, cn } from '@yoru/ui'
-import { Play, Star } from 'lucide-react'
+import { Play, Repeat, Star } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -31,6 +31,7 @@ export function AnimeCard({
   newEpisodes,
   badge,
   subtitle,
+  rewatches,
 }: {
   anime: AnimeSummary
   progress?: number
@@ -38,6 +39,7 @@ export function AnimeCard({
   newEpisodes?: number
   badge?: ReactNode
   subtitle?: ReactNode
+  rewatches?: number
 }) {
   const { t } = useTranslation()
   const total = anime.episodes
@@ -102,6 +104,12 @@ export function AnimeCard({
             <span className="truncate">{[typeLabel(anime.type), seasonLabel(anime)].filter(Boolean).join(' · ')}</span>
           )}
           {status ? <span className="truncate">· {t(`status.${status}`)}</span> : null}
+          {rewatches ? (
+            <span className="inline-flex shrink-0 items-center gap-0.5" title={t('anime.rewatches')}>
+              · <Repeat className="size-3" />
+              {rewatches}
+            </span>
+          ) : null}
         </div>
       </div>
     </Link>

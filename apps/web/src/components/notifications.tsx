@@ -30,7 +30,7 @@ export function NotificationsPopover() {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-96 p-0">
-        <div className="flex items-center justify-between bg-inset px-3 py-2">
+        <div className="flex items-center justify-between px-3 pb-1 pt-2.5">
           <span className="px-1 text-sm font-medium">{t('notifications.title')}</span>
           <div className="flex gap-1">
             <Button size="sm" variant="ghost" onClick={() => readAll.mutate()} disabled={!unread}>

@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { EXPORT_FORMATS, LIST_STATUSES, type ListEntryWithAnime, type ListStatus } from '@yoru/shared'
 import { Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, EmptyState, Image, Input, Segmented, Select, cn } from '@yoru/ui'
-import { Download, FileDown, LayoutGrid, Rows3, Search, Star } from 'lucide-react'
+import { Download, FileDown, LayoutGrid, Repeat, Rows3, Search, Star } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router'
@@ -45,7 +45,15 @@ function ListTable({ items }: { items: ListEntryWithAnime[] }) {
                   {e.anime.imageUrl ? <Image src={e.anime.imageUrl} alt="" loading="lazy" className="h-12 w-8 shrink-0 rounded object-cover" /> : null}
                   <div className="min-w-0">
                     <div className="truncate font-medium hover:text-accent">{e.anime.title}</div>
-                    <div className="text-xs text-muted-foreground">{[typeLabel(e.anime.type), e.anime.year].filter(Boolean).join(' · ')}</div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      {[typeLabel(e.anime.type), e.anime.year].filter(Boolean).join(' · ')}
+                      {e.rewatches ? (
+                        <span className="inline-flex items-center gap-0.5" title={t('anime.rewatches')}>
+                          · <Repeat className="size-3" />
+                          {e.rewatches}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                 </Link>
               </td>
@@ -208,6 +216,7 @@ export function ListsPage() {
               anime={e.anime}
               progress={e.progress}
               status={status === 'all' ? e.status : undefined}
+              rewatches={e.rewatches}
               newEpisodes={(e.status === 'watching' || e.status === 'rewatching') && e.latestEpisode && e.latestEpisode > e.progress ? e.latestEpisode - e.progress : undefined}
             />
           ))}

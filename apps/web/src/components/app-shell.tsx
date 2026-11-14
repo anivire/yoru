@@ -10,7 +10,7 @@ import {
   Logo,
   cn,
 } from '@yoru/ui'
-import { ArrowUpCircle, LogOut, Search, Settings, Shield, User as UserIcon } from 'lucide-react'
+import { ArrowUpCircle, LogOut, Search, Settings, Shield } from 'lucide-react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink, useNavigate } from 'react-router'
@@ -70,10 +70,13 @@ function UserMenu() {
           <span className="text-[13px] font-semibold uppercase">{user.username.slice(0, 1)}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuLabel className="flex items-center gap-2">
-          <UserIcon className="size-3.5" />
-          {user.username}
+      <DropdownMenuContent className="w-60">
+        <DropdownMenuLabel className="flex items-center gap-3 px-2.5 py-2">
+          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-soft text-sm font-semibold uppercase text-accent">{user.username.slice(0, 1)}</span>
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-medium text-foreground">{user.username}</span>
+            <span className="block text-xs font-normal text-muted-foreground">{user.role === 'admin' ? t('nav.roleAdmin') : t('nav.roleUser')}</span>
+          </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => navigate('/settings')}>
@@ -87,7 +90,7 @@ function UserMenu() {
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={logout}>
+        <DropdownMenuItem onSelect={logout} className="text-danger data-[highlighted]:bg-danger-soft [&_svg]:text-danger">
           <LogOut />
           {t('nav.logout')}
         </DropdownMenuItem>

@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { AnimeDetails, Episode, ListEntry, StreamKind } from '@yoru/shared'
 import { Button, Mascot, Select, Spinner } from '@yoru/ui'
-import { Captions, Globe, Mic, Settings } from 'lucide-react'
+import { Captions, Mic, Settings } from 'lucide-react'
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router'
@@ -181,7 +181,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
   return (
     <section id="watch" className="scroll-mt-20">
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Select size="sm" className="w-36" value="anime365" onValueChange={() => undefined} icon={<Globe />} options={[{ value: 'anime365', label: 'Anime365' }]} />
+        <Select size="sm" className="w-36" value="anime365" onValueChange={() => undefined} icon={<img src="/anime365.png" alt="" className="size-4 rounded-sm bg-white object-contain" />} options={[{ value: 'anime365', label: 'Anime365' }]} />
         <Select
           size="sm"
           className="w-40"

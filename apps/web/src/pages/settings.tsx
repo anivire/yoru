@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, type User } from '@yoru/shared'
 import { Button, Card, CardContent, Code, Field, Input, Segmented, Switch, toast } from '@yoru/ui'
-import { ArrowDownUp, Bell, Check, Download, FileBraces, FileCode, FileSpreadsheet, KeyRound, Palette, Shield, TriangleAlert, UserRound } from 'lucide-react'
+import { ArrowDownUp, Bell, Check, Download, FileBraces, FileCode, FileSpreadsheet, Palette, Shield, TriangleAlert, UserRound } from 'lucide-react'
 import { type FormEvent, type ReactNode, useEffect, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
@@ -105,8 +105,8 @@ function AccountTab() {
         <div className="grid gap-3 sm:grid-cols-2">
           <Card className="flex flex-col gap-4 p-4">
             <div className="flex items-center gap-3">
-              <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent">
-                <KeyRound className="size-[18px]" />
+              <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-white">
+                <img src="/anime365.png" alt="" className="size-7 object-contain" />
               </span>
               <div className="min-w-0 flex-1">
                 <div className="font-medium">Anime365</div>
