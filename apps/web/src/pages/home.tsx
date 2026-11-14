@@ -45,7 +45,7 @@ function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number 
 
 function HomeHero({ data }: { data: HomeData }) {
   const { t } = useTranslation()
-  const first = data.continueWatching[0]
+  const first = data.continueWatching.find((c) => !c.pending)
   if (first) return <Hero anime={first.anime} episode={first.episode} label={t('home.continue')} />
   const watching = data.watching[0]
   if (watching) return <Hero anime={watching.anime} episode={watching.progress + 1} label={t('home.watching')} />
@@ -89,7 +89,11 @@ export function HomePage() {
         ) : null}
 
         {data?.continueWatching.length ? (
-          <Section title={t('home.continue')} icon={<CirclePlay />}>
+          <Section
+            title={t('home.continue')}
+            icon={<CirclePlay />}
+            hint={data.continueWatching.some((c) => c.pending) ? t('home.continueHint') : undefined}
+          >
             <Rail>
               {data.continueWatching.map((item) => (
                 <ContinueCard key={item.anime.malId} item={item} />

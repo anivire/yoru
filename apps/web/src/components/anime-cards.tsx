@@ -1,6 +1,6 @@
 import type { AnimeSummary, ContinueItem, ListStatus, UpcomingItem } from '@yoru/shared'
 import { Badge, Image, Progress, cn } from '@yoru/ui'
-import { Play, Repeat, Star } from 'lucide-react'
+import { Clock, Play, Repeat, Star } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -134,33 +134,44 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
   const { t } = useTranslation()
   const image = item.episodeImageUrl ?? item.anime.imageUrl
   return (
-    <Link to={`/anime/${item.anime.malId}?episode=${item.episode}`} className="group flex flex-col gap-2">
+    <Link to={item.pending ? `/anime/${item.anime.malId}` : `/anime/${item.anime.malId}?episode=${item.episode}`} className="group flex flex-col gap-2">
       <div className="relative isolate aspect-video overflow-hidden rounded-xl bg-muted">
         {image ? (
           <Image
             src={image}
             alt=""
             loading="lazy"
-            className={cn('absolute inset-0 h-full w-full object-cover transition-[scale] duration-300 ease-out transform-gpu backface-hidden will-change-transform group-hover:scale-[1.04]', !item.episodeImageUrl && 'object-[50%_25%]')}
+            className={cn(
+              'absolute inset-0 h-full w-full object-cover transition-[scale] duration-300 ease-out transform-gpu backface-hidden will-change-transform group-hover:scale-[1.04]',
+              !item.episodeImageUrl && 'object-[50%_25%]',
+              item.pending && 'grayscale-[70%]',
+            )}
           />
         ) : null}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-        <div className="absolute inset-0 grid place-items-center opacity-0 transition-opacity group-hover:opacity-100">
-          <span className="grid size-12 place-items-center rounded-full bg-white/90 text-black shadow-lg">
-            <Play className="ml-0.5 size-5 fill-current" />
-          </span>
-        </div>
         {item.pending ? (
-          <Badge size="sm" variant="solid" className="absolute left-2 top-2.5 bg-black/60 text-white backdrop-blur-md">
-            <span className="size-1.5 rounded-full bg-warning" />
-            {t('home.awaitingTranslation')}
-          </Badge>
-        ) : item.fresh ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/55 px-4 text-center text-white">
+            <span className="grid size-11 place-items-center rounded-full bg-warning/90 text-black shadow-lg">
+              <Clock className="size-5" />
+            </span>
+            <span className="text-sm font-semibold">{t('home.awaitingTitle')}</span>
+            <span className="text-[11px] leading-snug text-white/75">{t('home.awaitingText')}</span>
+          </div>
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+            <div className="absolute inset-0 grid place-items-center opacity-0 transition-opacity group-hover:opacity-100">
+              <span className="grid size-12 place-items-center rounded-full bg-white/90 text-black shadow-lg">
+                <Play className="ml-0.5 size-5 fill-current" />
+              </span>
+            </div>
+          </>
+        )}
+        {item.fresh && !item.pending ? (
           <Badge size="sm" variant="solid" className="absolute left-2 top-2.5 bg-accent text-accent-foreground">
             {t('home.newEpisode')}
           </Badge>
         ) : null}
-        {item.duration ? (
+        {item.duration && !item.pending ? (
           <div className="absolute inset-x-3 bottom-3 flex items-center gap-2">
             <Progress value={item.position / item.duration} className="h-1 bg-white/25" />
             <span className="font-mono text-[11px] text-white/80">{formatTime(item.duration - item.position)}</span>
@@ -168,11 +179,19 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
         ) : null}
       </div>
       <div className="min-w-0 px-0.5">
-        <div className="text-sm">
-          <span className="font-medium">
-            {t('common.episode')} {item.episode}
+        <div className="flex items-center gap-2 text-sm">
+          <span>
+            <span className="font-medium">
+              {t('common.episode')} {item.episode}
+            </span>
+            <span className="text-muted-foreground"> / {item.anime.episodes ?? '?'}</span>
           </span>
-          <span className="text-muted-foreground"> / {item.anime.episodes ?? '?'}</span>
+          {item.pending ? (
+            <span className="inline-flex h-5 items-center gap-1 rounded-full bg-warning-soft px-2 text-[11px] font-medium text-warning">
+              <Clock className="size-3" />
+              {t('home.awaitingTranslation')}
+            </span>
+          ) : null}
         </div>
         <div className="truncate text-[13px] text-muted-foreground">{item.anime.title}</div>
       </div>

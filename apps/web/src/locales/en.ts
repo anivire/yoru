@@ -64,7 +64,10 @@ export const en: Messages = {
     usernameTaken: 'Username is taken',
   },
   home: {
-    awaitingTranslation: 'Aired · awaiting translation',
+    awaitingTitle: 'Aired, no translation yet',
+    awaitingText: 'Opens once subtitles or a dub appear on Anime365',
+    continueHint: 'Untranslated episodes become playable once they appear on Anime365',
+    awaitingTranslation: 'Awaiting translation',
     newEpisode: 'New episode',
     activity: 'Activity',
     activityHint_one: '{{count}} episode in the last year',

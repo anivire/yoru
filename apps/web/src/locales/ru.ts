@@ -62,7 +62,10 @@ export const ru = {
     usernameTaken: 'Это имя уже занято',
   },
   home: {
-    awaitingTranslation: 'Вышла · ждём перевод',
+    awaitingTitle: 'Серия вышла, перевода ещё нет',
+    awaitingText: 'Откроется, когда на Anime365 появятся субтитры или озвучка',
+    continueHint: 'Серии без перевода станут доступны, как только появятся на Anime365',
+    awaitingTranslation: 'Ждём перевод',
     newEpisode: 'Новая серия',
     activity: 'Активность',
     activityHint_one: '{{count}} серия за год',
