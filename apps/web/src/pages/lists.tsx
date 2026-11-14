@@ -1,10 +1,9 @@
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
 import { EXPORT_FORMATS, LIST_STATUSES, type ListEntryWithAnime, type ListStatus } from '@yoru/shared'
-import { Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, EmptyState, Image, Input, Segmented, Select, cn } from '@yoru/ui'
-import { RiCalendar2Fill, RiCloseFill, RiDownload2Fill, RiFileDownloadFill, RiLayoutGridFill, RiLayoutRowFill, RiRepeatFill, RiSearchFill, RiSortDesc, RiTvFill } from '@remixicon/react'
+import { Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, EmptyState, Image, Segmented, cn } from '@yoru/ui'
+import { RiDownload2Fill, RiFileDownloadFill, RiLayoutGridFill, RiLayoutRowFill, RiRepeatFill } from '@remixicon/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useSearchParams } from 'react-router'
 import { AnimeCard, EpisodeCount, PosterGrid, Score } from '../components/anime-cards'
 import { ListTableSkeleton, PosterGridSkeleton } from '../components/skeletons'
 import { Page, PageHeader } from '../components/app-shell'
@@ -14,9 +13,8 @@ import { exportFormatName, formatDate, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
 import { TLink } from '../components/transition-link'
 import { useDocumentTitle } from '../lib/title'
+import { ListFilterBar, useListParams } from '../components/list-filters'
 
-const ANY = '__any'
-const SORTS = ['score', 'updated', 'title', 'progress', 'year', 'added'] as const
 const STATUS_TONE: Record<ListStatus, 'accent' | 'info' | 'success' | 'warning' | 'danger' | 'neutral'> = {
   watching: 'accent',
   rewatching: 'accent',
@@ -89,23 +87,9 @@ const PAGE_SIZE = 48
 export function ListsPage() {
   const { t } = useTranslation()
   useDocumentTitle(t('lists.title'))
-  const [params, setParams] = useSearchParams()
+  const { status: rawStatus, filters, set } = useListParams()
+  const status = rawStatus as ListStatus | 'all'
   const [view, setView] = useState<'grid' | 'table'>(() => (localStorage.getItem('yoru:list-view') === 'table' ? 'table' : 'grid'))
-  const [resetKey, setResetKey] = useState(0)
-  const status = (params.get('status') as ListStatus | null) ?? 'all'
-  const filters = {
-    status: status === 'all' ? undefined : status,
-    q: params.get('q') ?? undefined,
-    type: params.get('type') ?? undefined,
-    year: params.get('year') ?? undefined,
-    sort: params.get('sort') ?? 'score',
-  }
-  const set = (key: string, value: string | undefined) => {
-    const next = new URLSearchParams(params)
-    if (!value || value === ANY || value === 'all') next.delete(key)
-    else next.set(key, value)
-    setParams(next, { replace: true })
-  }
   const query = useInfiniteQuery({
     queryKey: keys.list(filters),
     queryFn: ({ pageParam }) => api.list({ ...filters, offset: pageParam, limit: PAGE_SIZE }),
@@ -180,47 +164,7 @@ export function ListsPage() {
         ]}
       />
 
-      <div className="relative mt-4">
-        <RiSearchFill className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
-        <Input key={resetKey} defaultValue={filters.q} onChange={(e) => set('q', e.target.value)} placeholder={t('lists.filter')} className="h-11 rounded-xl pl-10 text-[0.9375rem]" />
-        {filters.q ? (
-          <button
-            type="button"
-            onClick={() => {
-              set('q', undefined)
-              setResetKey((k) => k + 1)
-            }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-1 text-subtle-foreground hover:text-foreground"
-          >
-            <RiCloseFill className="size-4" />
-          </button>
-        ) : null}
-      </div>
-      <div className="mb-8 mt-3 flex flex-wrap items-center gap-2">
-        <Select
-          size="sm"
-          className="w-40"
-          icon={<RiTvFill />}
-          value={filters.type ?? ANY}
-          onValueChange={(v) => set('type', v)}
-          options={[{ value: ANY, label: `${t('search.type')}: ${t('common.any')}` }, ...types.map((v) => ({ value: v, label: typeLabel(v) }))]}
-        />
-        <Select
-          size="sm"
-          className="w-36"
-          icon={<RiCalendar2Fill />}
-          value={filters.year ?? ANY}
-          onValueChange={(v) => set('year', v)}
-          options={[{ value: ANY, label: `${t('lists.year')}: ${t('common.any')}` }, ...years.map((y) => ({ value: String(y), label: String(y) }))]}
-        />
-        <Select
-          size="sm"
-          className="w-64"
-          icon={<RiSortDesc />}
-          value={filters.sort}
-          onValueChange={(v) => set('sort', v === 'score' ? undefined : v)}
-          options={SORTS.map((s) => ({ value: s, label: `${t('lists.sortBy')}: ${t(`order.${s}`).toLowerCase()}` }))}
-        />
+      <ListFilterBar filters={filters} set={set} years={years} types={types}>
         <div className="ml-auto flex rounded-lg bg-inset p-0.5">
           {(['grid', 'table'] as const).map((v) => (
             <button
@@ -234,7 +178,7 @@ export function ListsPage() {
             </button>
           ))}
         </div>
-      </div>
+      </ListFilterBar>
 
       {isPending ? (
         view === 'table' ? (

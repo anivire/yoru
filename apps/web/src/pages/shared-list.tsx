@@ -1,7 +1,7 @@
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
-import { LIST_STATUSES, type ListStatus } from '@yoru/shared'
+import { LIST_STATUSES } from '@yoru/shared'
 import { EmptyState, Logo, Segmented, cn } from '@yoru/ui'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
 import { AnimeCard, PosterGrid } from '../components/anime-cards'
@@ -10,6 +10,7 @@ import { Footer } from '../components/footer'
 import { PosterGridSkeleton } from '../components/skeletons'
 import { api } from '../lib/api'
 import { useDocumentTitle } from '../lib/title'
+import { ListFilterBar, useListParams } from '../components/list-filters'
 
 const PAGE_SIZE = 48
 
@@ -17,10 +18,10 @@ export function SharedListPage() {
   const { t } = useTranslation()
   const { token = '' } = useParams()
   const header = useHeader()
-  const [status, setStatus] = useState<'all' | ListStatus>('all')
+  const { status, filters, set } = useListParams()
   const query = useInfiniteQuery({
-    queryKey: ['public-list', token, status],
-    queryFn: ({ pageParam }) => api.publicList(token, { status: status === 'all' ? undefined : status, offset: pageParam, limit: PAGE_SIZE }),
+    queryKey: ['public-list', token, filters],
+    queryFn: ({ pageParam }) => api.publicList(token, { ...filters, offset: pageParam, limit: PAGE_SIZE }),
     initialPageParam: 0,
     getNextPageParam: (last) => (last.offset + last.items.length < last.total ? last.offset + last.items.length : undefined),
     placeholderData: keepPreviousData,
@@ -71,13 +72,13 @@ export function SharedListPage() {
             </div>
             <Segmented
               value={status}
-              onChange={setStatus}
-              className="mb-8"
+              onChange={(v) => set('status', v)}
               options={[
                 { value: 'all', label: t('common.all'), count: first?.counts.all },
                 ...LIST_STATUSES.map((s) => ({ value: s, label: t(`status.${s}`), count: first?.counts.byStatus[s] })),
               ]}
             />
+            <ListFilterBar filters={filters} set={set} years={first?.facets.years ?? []} types={first?.facets.types ?? []} />
             {isPending ? (
               <PosterGridSkeleton />
             ) : !items.length ? (
