@@ -36,6 +36,8 @@ export function useMe() {
         throw error
       }
     },
+    retry: true,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
     staleTime: Infinity,
   })
 }

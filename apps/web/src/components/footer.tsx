@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Logo, cn } from '@yoru/ui'
+import { Logo, Skeleton, cn } from '@yoru/ui'
 import { RiArrowUpCircleFill, RiExternalLinkLine, RiGithubFill } from '@remixicon/react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -55,7 +55,7 @@ function useVersion(scope: 'app' | 'public') {
 function VersionBadge({ scope }: { scope: 'app' | 'public' }) {
   const { t } = useTranslation()
   const data = useVersion(scope)
-  if (!data) return null
+  if (!data) return <Skeleton className="h-4 w-24 rounded-full" />
   return (
     <span className="inline-flex flex-wrap items-center gap-2">
       <a href={data.repoUrl} target="_blank" rel="noreferrer" className="hover:text-foreground">
