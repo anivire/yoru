@@ -155,9 +155,9 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
   ].filter((f) => f !== null)
   return (
     <div className="relative isolate -mt-(--header-h) overflow-hidden pt-(--header-h)">
-      <div className="absolute inset-x-0 top-0 -z-10 h-[36rem] overflow-hidden">
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[40rem] overflow-hidden [mask-image:linear-gradient(to_bottom,black_35%,transparent)]">
         {anime.imageUrl ? <img src={anime.imageUrl} alt="" className="h-full w-full scale-110 object-cover object-[50%_25%] opacity-50 blur-xl" /> : null}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-background/50 to-background/20" />
       </div>
       <div className="mx-auto max-w-(--page-max) px-4 pb-10 pt-4 sm:px-6 sm:pt-10">
         <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
