@@ -104,10 +104,6 @@ export const en: Messages = {
     empty: 'Could not load the collections',
   },
   schedule: {
-    more_one: '{{count}} more',
-    more_few: '{{count}} more',
-    more_many: '{{count}} more',
-    more_other: '{{count}} more',
     prevMonth: 'Previous month',
     nextMonth: 'Next month',
     episodeShort: 'Ep. {{episode}}',

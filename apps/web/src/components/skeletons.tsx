@@ -200,16 +200,14 @@ export function ScheduleSkeleton() {
   return (
     <>
       <div className="hidden md:block">
-        <div className="mb-2 grid grid-cols-7 gap-2 px-1">
-          {Array.from({ length: 7 }, (_, i) => (
-            <TextLine key={i} className="text-xs" bar="w-6" />
-          ))}
-        </div>
         <div className="grid grid-cols-7 gap-2">
           {Array.from({ length: 35 }, (_, i) => (
             <div key={i} className="flex min-h-28 flex-col gap-0.5 rounded-xl bg-surface p-1.5">
-              <Skeleton className="mx-1 mb-0.5 size-6 rounded-full" />
-              {Array.from({ length: (i * 7) % 3 }, (_, j) => (
+              <div className="flex h-7 items-center gap-2 px-1">
+                <Skeleton className="size-6 rounded-full" />
+                <TextLine className="text-xs" bar="w-6" />
+              </div>
+              {Array.from({ length: (i * 7) % 4 }, (_, j) => (
                 <ScheduleEntrySkeleton key={j} />
               ))}
             </div>

@@ -102,10 +102,6 @@ export const ru = {
     empty: 'Не удалось загрузить подборки',
   },
   schedule: {
-    more_one: 'Ещё {{count}}',
-    more_few: 'Ещё {{count}}',
-    more_many: 'Ещё {{count}}',
-    more_other: 'Ещё {{count}}',
     prevMonth: 'Предыдущий месяц',
     nextMonth: 'Следующий месяц',
     episodeShort: '{{episode}} серия',
