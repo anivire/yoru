@@ -4,7 +4,7 @@ import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '../lib/cn'
 
 const surface =
-  'z-50 rounded-lg bg-raised text-foreground shadow-[0_2px_6px_-2px_rgb(0_0_0/0.12),0_18px_48px_-12px_rgb(0_0_0/0.3)]'
+  'z-50 rounded-lg bg-raised text-foreground [--field:var(--raised-field)] [--field-hover:var(--raised-field-hover)] [--muted:var(--raised-muted)] shadow-[0_2px_6px_-2px_rgb(0_0_0/0.12),0_18px_48px_-12px_rgb(0_0_0/0.3)]'
 export const panel = `${surface} animate-pop`
 
 export const Popover = P.Root

@@ -57,6 +57,9 @@
   --inset: oklch(0.945 var(--tint) var(--hue));
   --field: oklch(0.945 var(--tint) var(--hue));
   --field-hover: oklch(0.925 var(--tint) var(--hue));
+  --raised-field: oklch(0.945 var(--tint) var(--hue));
+  --raised-field-hover: oklch(0.915 var(--tint) var(--hue));
+  --raised-muted: oklch(0.945 var(--tint) var(--hue));
   --border: oklch(0.905 var(--tint) var(--hue));
   --border-strong: oklch(0.85 var(--tint) var(--hue));
   --foreground: oklch(0.2 calc(var(--tint) * 1.5) var(--hue));
@@ -90,6 +93,9 @@
   --inset: oklch(0.175 var(--tint) var(--hue));
   --field: oklch(0.225 var(--tint) var(--hue));
   --field-hover: oklch(0.25 var(--tint) var(--hue));
+  --raised-field: oklch(0.29 var(--tint) var(--hue));
+  --raised-field-hover: oklch(0.325 var(--tint) var(--hue));
+  --raised-muted: oklch(0.295 var(--tint) var(--hue));
   --border: oklch(0.27 var(--tint) var(--hue));
   --border-strong: oklch(0.34 var(--tint) var(--hue));
   --foreground: oklch(0.95 calc(var(--tint) * 0.5) var(--hue));
