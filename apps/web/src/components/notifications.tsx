@@ -42,7 +42,7 @@ export function NotificationsPopover() {
             </Button>
           </div>
         </div>
-        <div className="max-h-[60vh] overflow-y-auto">
+        <div className="flex max-h-[60vh] flex-col gap-0.5 overflow-y-auto p-1.5">
           {!data?.items.length ? (
             <div className="flex flex-col items-center gap-2 px-6 py-10 text-center text-sm text-muted-foreground">
               <Mascot mood="sleepy" size={44} />
@@ -54,7 +54,7 @@ export function NotificationsPopover() {
                 key={n.id}
                 to={`/anime/${n.malId}?episode=${n.episode}&kind=${n.kind}`}
                 onClick={() => !n.readAt && readOne.mutate(n.id)}
-                className={cn('flex gap-3 px-4 py-3 hover:bg-muted', n.readAt && 'opacity-60')}
+                className={cn('flex gap-3 rounded-lg px-2.5 py-2.5 transition-colors hover:bg-muted', n.readAt && 'opacity-60')}
               >
                 {n.imageUrl ? <Image src={n.imageUrl} alt="" className="h-14 w-10 shrink-0 rounded-md object-cover" loading="lazy" /> : null}
                 <div className="min-w-0 flex-1">
