@@ -1,0 +1,4 @@
+services:
+  jikan:
+    ports:
+      - "127.0.0.1:${JIKAN_PORT:-8080}:8080"

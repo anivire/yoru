@@ -1,0 +1,23 @@
+{
+  "name": "yoru",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "nx run-many -t dev --parallel=2 --output-style=stream",
+    "build": "nx run-many -t build",
+    "typecheck": "nx run-many -t typecheck",
+    "db:generate": "nx run api:db:generate"
+  },
+  "devDependencies": {
+    "nx": "^24.0.6",
+    "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": ">=22.12"
+  }
+}

@@ -1,0 +1,308 @@
+import { z } from 'zod'
+
+export const LIST_STATUSES = ['watching', 'planning', 'completed', 'rewatching', 'paused', 'dropped'] as const
+export type ListStatus = (typeof LIST_STATUSES)[number]
+
+export const ANIME_TYPES = ['tv', 'movie', 'ova', 'ona', 'special', 'music', 'tv_special', 'cm', 'pv'] as const
+export type AnimeType = (typeof ANIME_TYPES)[number]
+
+export const STREAM_KINDS = ['sub', 'voice'] as const
+export type StreamKind = (typeof STREAM_KINDS)[number]
+
+export const IMPORT_PROVIDERS = ['anilist', 'shikimori', 'mal'] as const
+export type ImportProvider = (typeof IMPORT_PROVIDERS)[number]
+
+export const EXPORT_FORMATS = ['json', 'csv', 'mal-xml'] as const
+export type ExportFormat = (typeof EXPORT_FORMATS)[number]
+
+export const METADATA_SOURCES = ['jikan', 'anime365'] as const
+export type MetadataSource = (typeof METADATA_SOURCES)[number]
+
+export const LOCALES = ['ru', 'en'] as const
+export type Locale = (typeof LOCALES)[number]
+
+export type UserRole = 'admin' | 'user'
+
+export interface User {
+  id: number
+  username: string
+  role: UserRole
+  locale: Locale
+  notifySub: boolean
+  notifyVoice: boolean
+  hasOwnAnime365Token: boolean
+  createdAt: string
+}
+
+export interface AnimeSummary {
+  malId: number
+  title: string
+  titleEnglish: string | null
+  titleJapanese: string | null
+  imageUrl: string | null
+  type: string | null
+  episodes: number | null
+  status: string | null
+  airing: boolean
+  year: number | null
+  season: string | null
+  score: number | null
+  genres: string[]
+}
+
+export interface Broadcast {
+  day: string | null
+  time: string | null
+  timezone: string | null
+}
+
+export interface AnimeDetails extends AnimeSummary {
+  synopsis: string | null
+  synonyms: string[]
+  studios: string[]
+  duration: string | null
+  rating: string | null
+  airedFrom: string | null
+  airedTo: string | null
+  broadcast: Broadcast
+  trailerUrl: string | null
+  latestEpisode: number | null
+  nextAiringAt: string | null
+}
+
+export interface ListEntry {
+  malId: number
+  status: ListStatus
+  progress: number
+  score: number | null
+  rewatches: number
+  notes: string | null
+  startedAt: string | null
+  completedAt: string | null
+  updatedAt: string
+}
+
+export interface ListEntryWithAnime extends ListEntry {
+  anime: AnimeSummary
+  latestEpisode: number | null
+}
+
+export interface AnimePage {
+  anime: AnimeDetails
+  entry: ListEntry | null
+}
+
+export interface Episode {
+  number: number
+  title: string | null
+  titleJapanese: string | null
+  aired: string | null
+  filler: boolean
+  recap: boolean
+  imageUrl: string | null
+  available: boolean
+  watched: boolean
+  position: number | null
+  duration: number | null
+}
+
+export interface Pagination {
+  page: number
+  hasNextPage: boolean
+  total: number | null
+}
+
+export interface SearchResult {
+  items: AnimeSummary[]
+  pagination: Pagination
+  source: MetadataSource
+}
+
+export interface Genre {
+  id: number
+  name: string
+  count: number
+}
+
+export interface ProviderMatch {
+  provider: 'anime365'
+  providerId: number | null
+  title: string | null
+  manual: boolean
+}
+
+export interface ProviderCandidate {
+  providerId: number
+  title: string
+  year: number | null
+  type: string | null
+  episodes: number | null
+  malId: number | null
+  posterUrl: string | null
+}
+
+export interface Translation {
+  id: number
+  kind: StreamKind
+  author: string
+  priority: number
+  qualityType: string | null
+  height: number | null
+}
+
+export interface StreamSource {
+  url: string
+  type: 'mp4' | 'm3u8'
+  height: number
+}
+
+export interface StreamResult {
+  translationId: number
+  author: string
+  sources: StreamSource[]
+  subtitlesUrl: string | null
+}
+
+export interface ContinueItem {
+  anime: AnimeSummary
+  episode: number
+  episodeTitle: string | null
+  episodeImageUrl: string | null
+  position: number
+  duration: number
+  updatedAt: string
+}
+
+export interface UpcomingItem {
+  anime: AnimeSummary
+  episode: number | null
+  airingAt: string
+}
+
+export interface HomeData {
+  continueWatching: ContinueItem[]
+  upcoming: UpcomingItem[]
+  watching: ListEntryWithAnime[]
+}
+
+export interface Notification {
+  id: number
+  malId: number
+  episode: number
+  kind: StreamKind
+  author: string | null
+  animeTitle: string
+  imageUrl: string | null
+  createdAt: string
+  readAt: string | null
+}
+
+export interface NotificationList {
+  items: Notification[]
+  unread: number
+}
+
+export interface Invite {
+  id: number
+  code: string
+  note: string | null
+  createdAt: string
+  expiresAt: string | null
+  usedAt: string | null
+  usedBy: string | null
+}
+
+export interface AdminUser {
+  id: number
+  username: string
+  role: UserRole
+  createdAt: string
+  entries: number
+}
+
+export interface AdminSettings {
+  hasAnime365Token: boolean
+  importProviders: Record<ImportProvider, boolean>
+  jikanReachable: boolean | null
+  metadataSource: MetadataSource
+}
+
+export interface ImportResult {
+  provider: ImportProvider
+  imported: number
+  updated: number
+  skipped: number
+}
+
+export interface ImportStatus {
+  providers: Record<ImportProvider, boolean>
+  last: (ImportResult & { createdAt: string }) | null
+}
+
+export interface ListCounts {
+  all: number
+  byStatus: Record<ListStatus, number>
+}
+
+export interface ListResponse {
+  items: ListEntryWithAnime[]
+  counts: ListCounts
+}
+
+export const loginSchema = z.object({
+  username: z.string().trim().min(1).max(64),
+  password: z.string().min(1).max(256),
+})
+
+export const registerSchema = z.object({
+  code: z.string().trim().min(1),
+  username: z
+    .string()
+    .trim()
+    .min(3)
+    .max(32)
+    .regex(/^[a-zA-Z0-9_.-]+$/),
+  password: z.string().min(8).max(256),
+})
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8).max(256),
+})
+
+export const listEntryInputSchema = z.object({
+  status: z.enum(LIST_STATUSES),
+  progress: z.number().int().min(0).max(100000).optional(),
+  score: z.number().min(0).max(10).nullable().optional(),
+  rewatches: z.number().int().min(0).max(1000).optional(),
+  notes: z.string().max(4000).nullable().optional(),
+  startedAt: z.string().nullable().optional(),
+  completedAt: z.string().nullable().optional(),
+})
+export type ListEntryInput = z.infer<typeof listEntryInputSchema>
+
+export const progressInputSchema = z.object({
+  position: z.number().min(0),
+  duration: z.number().min(0),
+})
+
+export const inviteInputSchema = z.object({
+  note: z.string().trim().max(200).nullable().optional(),
+  expiresInDays: z.number().int().min(1).max(365).nullable().optional(),
+})
+
+export const userSettingsSchema = z.object({
+  locale: z.enum(LOCALES).optional(),
+  notifySub: z.boolean().optional(),
+  notifyVoice: z.boolean().optional(),
+  anime365Token: z.string().trim().max(512).nullable().optional(),
+})
+
+export const adminSettingsSchema = z.object({
+  anime365Token: z.string().trim().max(512).nullable().optional(),
+  metadataSource: z.enum(METADATA_SOURCES).optional(),
+})
+
+export const providerMatchSchema = z.object({
+  providerId: z.number().int().positive().nullable(),
+})

@@ -1,0 +1,128 @@
+import { type ColorScheme, THEME_PRESETS, cn } from '@yoru/ui'
+import { Moon, Sun } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { useAppearance } from '../lib/appearance'
+
+function SchemePreview({ scheme }: { scheme: 'light' | 'dark' }) {
+  return (
+    <div className={cn(scheme, 'flex h-full w-full flex-col gap-[6%] bg-background p-[5%]')}>
+      <div className="flex h-[8%] items-center gap-[3%]">
+        <div className="aspect-square h-full rounded-full bg-accent" />
+        <div className="h-[70%] w-[12%] rounded-full bg-foreground/70" />
+        <div className="mx-auto flex h-full w-[36%] items-center gap-[8%]">
+          <div className="h-full flex-1 rounded-full bg-muted" />
+          <div className="h-[60%] flex-1 rounded-full bg-muted-foreground/30" />
+          <div className="h-[60%] flex-1 rounded-full bg-muted-foreground/30" />
+        </div>
+        <div className="aspect-square h-full rounded-full bg-field" />
+        <div className="aspect-square h-full rounded-full bg-field" />
+      </div>
+      <div
+        className="flex h-[34%] flex-col justify-center gap-[10%] rounded-[6px] bg-surface px-[5%]"
+        style={{ backgroundImage: 'radial-gradient(circle at 85% 40%, var(--accent-soft), transparent 55%)' }}
+      >
+        <div className="h-[14%] w-[45%] rounded-full bg-foreground/80" />
+        <div className="h-[9%] w-[30%] rounded-full bg-muted-foreground/40" />
+        <div className="h-[20%] w-[18%] rounded-full bg-accent" />
+      </div>
+      <div className="grid flex-1 grid-cols-5 gap-[3%]">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div key={i} className="flex flex-col gap-[8%]">
+            <div className={cn('flex-1 rounded-[4px]', i === 1 ? 'bg-accent-soft' : 'bg-muted')} />
+            <div className="h-[10%] w-4/5 rounded-full bg-muted-foreground/30" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function SchemePicker({ compact }: { compact?: boolean }) {
+  const { t } = useTranslation()
+  const { scheme, setScheme } = useAppearance()
+  const options: { value: ColorScheme; label: string }[] = [
+    { value: 'system', label: t('settings.system') },
+    { value: 'light', label: t('settings.light') },
+    { value: 'dark', label: t('settings.dark') },
+  ]
+  return (
+    <div className={cn('grid grid-cols-3', compact ? 'gap-2' : 'gap-4')}>
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          onClick={() => setScheme(o.value)}
+          className={cn(
+            'group cursor-pointer rounded-xl p-1.5 text-center transition-colors',
+            scheme === o.value ? 'bg-accent-soft' : 'bg-surface hover:bg-field',
+          )}
+        >
+          <div className={cn('overflow-hidden rounded-lg', compact ? 'h-23' : 'h-46')}>
+            {o.value === 'system' ? (
+              <div className="relative h-full w-full">
+                <div className="absolute inset-0">
+                  <SchemePreview scheme="light" />
+                </div>
+                <div className="absolute inset-0 [clip-path:inset(0_0_0_50%)]">
+                  <SchemePreview scheme="dark" />
+                </div>
+              </div>
+            ) : (
+              <SchemePreview scheme={o.value} />
+            )}
+          </div>
+          <div className={cn('pt-1.5 text-[13px]', scheme === o.value ? 'font-medium text-foreground' : 'text-muted-foreground')}>{o.label}</div>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function Orb({ colors, active, mode }: { colors: readonly [string, string]; active: boolean; mode: 'light' | 'dark' }) {
+  return (
+    <span
+      className={cn('relative inline-block rounded-full shadow-md transition-[scale] duration-200 ease-out will-change-[scale]', active && 'scale-110')}
+      style={{
+        width: 'var(--orb)',
+        height: 'var(--orb)',
+        background: `radial-gradient(circle at 30% 25%, ${colors[0]} 0%, ${colors[1]} 70%, ${mode === 'dark' ? '#000' : colors[1]} 130%)`,
+      }}
+    >
+      {active ? (
+        <span className="absolute -bottom-0.5 -right-0.5 grid size-4 place-items-center rounded-full bg-raised text-foreground shadow">
+          {mode === 'light' ? <Sun className="size-2.5" /> : <Moon className="size-2.5" />}
+        </span>
+      ) : null}
+    </span>
+  )
+}
+
+export function ThemePicker({ compact }: { compact?: boolean }) {
+  const { theme, setTheme, scheme } = useAppearance()
+  const dark = scheme === 'dark' || (scheme === 'system' && document.documentElement.classList.contains('dark'))
+  return (
+    <div className={cn('grid', compact ? 'grid-cols-3 gap-2' : 'grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4')} style={{ ['--orb' as string]: compact ? '22px' : '56px' }}>
+      {THEME_PRESETS.map((p) => {
+        const active = p.id === theme
+        return (
+          <button
+            key={p.id}
+            type="button"
+            onClick={() => setTheme(p.id)}
+            className={cn(
+              'flex cursor-pointer flex-col rounded-xl transition-colors',
+              compact ? 'items-center gap-1.5 p-2' : 'gap-4 p-4',
+              active ? 'bg-accent-soft' : 'bg-surface hover:bg-field',
+            )}
+          >
+            <div className={cn('flex justify-center', compact ? 'gap-1' : 'gap-4 py-2')}>
+              <Orb colors={p.light} active={active && !dark} mode="light" />
+              <Orb colors={p.dark} active={active && dark} mode="dark" />
+            </div>
+            <span className={cn('text-left', compact ? 'text-xs' : 'text-sm font-medium')}>{p.name}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
