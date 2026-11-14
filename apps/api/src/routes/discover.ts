@@ -9,13 +9,13 @@ export const discoverRoutes = new Hono<AppEnv>()
   .get('/recent', async (c) => c.json(await recentReleases().catch(() => [])))
   .get('/trending', async (c) => {
     const genre = Number(c.req.query('genre')) || null
-    return c.json(await trending(genre))
+    return c.json(await trending(genre).catch(() => []))
   })
   .get('/genres', async (c) => c.json(await shikimori.genres(c.get('user').locale === 'en' ? 'en' : 'ru').catch(() => [])))
   .get('/:name', async (c) => {
     const name = c.req.param('name')
     if (!isCollection(name)) notFound()
-    return c.json(await collection(name))
+    return c.json(await collection(name).catch(() => []))
   })
 
 export const scheduleRoutes = new Hono<AppEnv>().use(requireAuth).get('/', async (c) => c.json(await schedule(c.get('user').id)))

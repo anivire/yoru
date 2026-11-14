@@ -1,6 +1,7 @@
 import type {
   AnimeLink,
   AdminSettings,
+  AdminSettingsInput,
   AdminUser,
   AnimePage,
   AnimeSummary,
@@ -12,7 +13,6 @@ import type {
   ListEntry,
   ListEntryInput,
   ListResponse,
-  MetadataSource,
   NotificationList,
   ProviderCandidate,
   ProviderMatch,
@@ -115,6 +115,6 @@ export const api = {
     users: () => get<AdminUser[]>('/admin/users'),
     deleteUser: (id: number) => request<{ ok: true }>('DELETE', `/admin/users/${id}`),
     settings: () => get<AdminSettings>('/admin/settings'),
-    saveSettings: (patch: { anime365Token?: string | null; metadataSource?: MetadataSource }) => request<{ ok: true }>('PUT', '/admin/settings', patch),
+    saveSettings: (patch: AdminSettingsInput) => request<{ ok: true }>('PUT', '/admin/settings', patch),
   },
 }

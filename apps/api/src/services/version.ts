@@ -4,6 +4,7 @@ import path from 'node:path'
 import type { VersionInfo } from '@yoru/shared'
 import { env } from '../env'
 import { cached } from '../lib/http'
+import { githubConfig, sourceEnabled, sourceUrl } from '../lib/sources'
 
 const LATEST_TTL = 30 * 60_000
 
@@ -42,11 +43,12 @@ function detectCommit(): string | null {
 const current = { version: detectVersion(), commit: detectCommit() }
 
 async function github<T>(route: string): Promise<T> {
-  const res = await fetch(`https://api.github.com/repos/${env.githubRepo}${route}`, {
+  const { repo, token } = githubConfig()
+  const res = await fetch(`${sourceUrl('github')}/repos/${repo}${route}`, {
     headers: {
       Accept: 'application/vnd.github+json',
       'User-Agent': env.userAgent,
-      ...(env.githubToken ? { Authorization: `Bearer ${env.githubToken}` } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     signal: AbortSignal.timeout(10_000),
   })
@@ -61,8 +63,10 @@ interface GithubCommit {
 }
 
 async function latestInfo(commit: string | null) {
-  return cached(`github:latest:${env.githubRepo}:${env.githubBranch}:${commit ?? ''}`, LATEST_TTL, async () => {
-    const head = await github<GithubCommit>(`/commits/${env.githubBranch}`)
+  const { repo, branch } = githubConfig()
+  if (!sourceEnabled('github')) throw new Error('GitHub is disabled')
+  return cached(`github:latest:${repo}:${branch}:${commit ?? ''}`, LATEST_TTL, async () => {
+    const head = await github<GithubCommit>(`/commits/${branch}`)
     let behindBy: number | null = null
     if (commit && commit !== head.sha) {
       const compare = await github<{ ahead_by: number }>(`/compare/${commit}...${head.sha}`).catch(() => null)
@@ -81,7 +85,7 @@ async function latestInfo(commit: string | null) {
 }
 
 export async function versionInfo(withUpdates: boolean): Promise<VersionInfo> {
-  const repoUrl = `https://github.com/${env.githubRepo}`
+  const repoUrl = `https://github.com/${githubConfig().repo}`
   const info = withUpdates ? await latestInfo(current.commit).catch(() => null) : null
   const latest = info?.latest ?? null
   return {

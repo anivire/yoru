@@ -5,6 +5,7 @@ import { imports, listEntries, oauthStates } from '../db/schema'
 import { env } from '../env'
 import { randomToken } from '../lib/crypto'
 import { UpstreamError } from '../lib/http'
+import { oauthConfig, sourceEnabled, sourceUrl } from '../lib/sources'
 import { isoDate } from '../lib/time'
 import { upsertAnime } from './anime'
 import { getEntry } from './lists'
@@ -31,8 +32,8 @@ export function redirectUri(provider: ImportProvider) {
 }
 
 export function providerEnabled(provider: ImportProvider) {
-  const c = env.oauth[provider]
-  return Boolean(c.clientId && c.clientSecret)
+  const c = oauthConfig(provider)
+  return Boolean(c.clientId && c.clientSecret) && (provider !== 'shikimori' || sourceEnabled('shikimori'))
 }
 
 export function createAuthorizeUrl(userId: number, provider: ImportProvider): string {
@@ -40,7 +41,7 @@ export function createAuthorizeUrl(userId: number, provider: ImportProvider): st
   const state = randomToken(24)
   const verifier = provider === 'mal' ? randomToken(48) : null
   db.insert(oauthStates).values({ state, userId, provider, codeVerifier: verifier, createdAt: now() }).run()
-  const { clientId } = env.oauth[provider]
+  const { clientId } = oauthConfig(provider)
   const redirect = redirectUri(provider)
   switch (provider) {
     case 'anilist': {
@@ -49,7 +50,7 @@ export function createAuthorizeUrl(userId: number, provider: ImportProvider): st
     }
     case 'shikimori': {
       const q = new URLSearchParams({ client_id: clientId, redirect_uri: redirect, response_type: 'code', scope: 'user_rates', state })
-      return `${env.shikimoriUrl}/oauth/authorize?${q}`
+      return `${sourceUrl('shikimori')}/oauth/authorize?${q}`
     }
     case 'mal': {
       const q = new URLSearchParams({
@@ -163,7 +164,7 @@ async function anilistGraphql<T>(token: string, query: string, variables: Record
 }
 
 async function fetchAniList(code: string): Promise<ImportItem[]> {
-  const { clientId, clientSecret } = env.oauth.anilist
+  const { clientId, clientSecret } = oauthConfig('anilist')
   const token = await postToken(
     'https://anilist.co/api/v2/oauth/token',
     { grant_type: 'authorization_code', client_id: clientId, client_secret: clientSecret, redirect_uri: redirectUri('anilist'), code },
@@ -221,25 +222,25 @@ interface ShikiRate {
 }
 
 async function fetchShikimori(code: string): Promise<ImportItem[]> {
-  const { clientId, clientSecret } = env.oauth.shikimori
-  const token = await postToken(`${env.shikimoriUrl}/oauth/token`, {
+  const { clientId, clientSecret } = oauthConfig('shikimori')
+  const token = await postToken(`${sourceUrl('shikimori')}/oauth/token`, {
     grant_type: 'authorization_code',
     client_id: clientId,
     client_secret: clientSecret,
     code,
     redirect_uri: redirectUri('shikimori'),
   }, false)
-  const me = await getJson<{ id: number }>(`${env.shikimoriUrl}/api/users/whoami`, token)
+  const me = await getJson<{ id: number }>(`${sourceUrl('shikimori')}/api/users/whoami`, token)
   const items: ImportItem[] = []
   for (let page = 1; page < 50; page++) {
-    const rates = await getJson<ShikiRate[]>(`${env.shikimoriUrl}/api/users/${me.id}/anime_rates?limit=5000&page=${page}`, token)
+    const rates = await getJson<ShikiRate[]>(`${sourceUrl('shikimori')}/api/users/${me.id}/anime_rates?limit=5000&page=${page}`, token)
     for (const r of rates) {
       if (!r.anime) continue
       const image = r.anime.image?.original
       items.push({
         malId: r.anime.id,
         title: r.anime.name,
-        imageUrl: image ? (image.startsWith('http') ? image : `${env.shikimoriUrl}${image}`) : null,
+        imageUrl: image ? (image.startsWith('http') ? image : `${sourceUrl('shikimori')}${image}`) : null,
         type: r.anime.kind,
         episodes: r.anime.episodes || null,
         status: SHIKI_STATUS[r.status] ?? 'planning',
@@ -289,7 +290,7 @@ interface MalListPage {
 }
 
 async function fetchMal(code: string, verifier: string): Promise<ImportItem[]> {
-  const { clientId, clientSecret } = env.oauth.mal
+  const { clientId, clientSecret } = oauthConfig('mal')
   const token = await postToken('https://myanimelist.net/v1/oauth2/token', {
     client_id: clientId,
     client_secret: clientSecret,

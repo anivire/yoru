@@ -4,6 +4,7 @@ import { db, now } from '../db/client'
 import { anime } from '../db/schema'
 import { env } from '../env'
 import { UpstreamError, cacheGet, cached, sleep } from '../lib/http'
+import { sourceEnabled, sourceUrl } from '../lib/sources'
 import { type AnimeRow, toSummary, upsertAnime } from './anime'
 
 const HOUR = 3_600_000
@@ -37,6 +38,10 @@ interface ShikiGenre {
   entry_type: string
 }
 
+function disabled<T>(): Promise<T> {
+  return Promise.reject(new UpstreamError('shikimori', 503, 'Shikimori is disabled'))
+}
+
 let queue: Promise<unknown> = Promise.resolve()
 let lastRequestAt = 0
 
@@ -47,7 +52,7 @@ async function request<T>(path: string, params: Record<string, string | number> 
   const query = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]))
   let res: Response
   try {
-    res = await fetch(`${env.shikimoriUrl}/api${path}${query.size ? `?${query}` : ''}`, {
+    res = await fetch(`${sourceUrl('shikimori')}/api${path}${query.size ? `?${query}` : ''}`, {
       headers: { Accept: 'application/json', 'User-Agent': env.userAgent },
       signal: AbortSignal.timeout(15_000),
     })
@@ -66,7 +71,7 @@ function enqueue<T>(path: string, params: Record<string, string | number> = {}):
 
 export function shikiUrl(path: string | null | undefined): string | null {
   if (!path || path.includes('/missing_')) return null
-  return /^https?:\/\//.test(path) ? path : env.shikimoriUrl + path
+  return /^https?:\/\//.test(path) ? path : sourceUrl('shikimori') + path
 }
 
 const STATUS: Record<string, string> = { anons: 'upcoming', ongoing: 'airing', released: 'finished' }
@@ -118,6 +123,7 @@ function screenshotsKey(id: number) {
 }
 
 export function cachedBanner(id: number): string | null | undefined {
+  if (!sourceEnabled('shikimori')) return null
   const value = cacheGet<string[]>(screenshotsKey(id))
   return value === null ? undefined : (value[0] ?? null)
 }
@@ -137,16 +143,19 @@ export function warmBanners(ids: number[]) {
 
 export const shikimori = {
   calendar(): Promise<ShikiCalendarEntry[]> {
+    if (!sourceEnabled('shikimori')) return disabled()
     return cached('shiki:calendar', HOUR, () => enqueue<ShikiCalendarEntry[]>('/calendar', { censored: 'true' }))
   },
 
   animes(params: Record<string, string | number>): Promise<ShikiAnime[]> {
+    if (!sourceEnabled('shikimori')) return disabled()
     const query = { censored: 'true', limit: 24, ...params }
     const key = new URLSearchParams(Object.entries(query).map(([k, v]) => [k, String(v)])).toString()
     return cached(`shiki:animes:${key}`, 3 * HOUR, () => enqueue<ShikiAnime[]>('/animes', query))
   },
 
   async screenshots(id: number): Promise<string[]> {
+    if (!sourceEnabled('shikimori')) return disabled()
     return cached(screenshotsKey(id), 7 * 24 * HOUR, async () => {
       const rows = await enqueue<{ original?: string }[]>(`/animes/${id}/screenshots`)
       return rows.map((r) => shikiUrl(r.original)).filter((u): u is string => Boolean(u))
@@ -154,6 +163,7 @@ export const shikimori = {
   },
 
   genres(locale: 'ru' | 'en'): Promise<Genre[]> {
+    if (!sourceEnabled('shikimori')) return disabled()
     return cached('shiki:genres', 24 * HOUR, () => enqueue<ShikiGenre[]>('/genres')).then((rows) =>
       rows
         .filter((g) => g.entry_type === 'Anime' && g.kind === 'genre')

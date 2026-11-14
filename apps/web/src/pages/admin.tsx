@@ -1,32 +1,28 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { IMPORT_PROVIDERS, type Invite, type MetadataSource } from '@yoru/shared'
+import type { Invite } from '@yoru/shared'
 import {
   Badge,
   Button,
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
-  Code,
   Field,
   Input,
   Popover,
   PopoverClose,
   PopoverContent,
   PopoverTrigger,
-  Segmented,
   Select,
   Skeleton,
-  Spinner,
   StatusDot,
   toast,
 } from '@yoru/ui'
-import { Copy, KeyRound, Plus, Ticket, Trash2 } from 'lucide-react'
+import { Copy, Plus, Ticket, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { Trans, useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
+import { DataSources, OAuthSettings } from '../components/admin-sources'
 import { Page, PageHeader } from '../components/app-shell'
-import { PROVIDER_NAMES } from '../components/providers'
 import { api } from '../lib/api'
 import { formatDate } from '../lib/format'
 import { useUser } from '../lib/queries'
@@ -221,130 +217,6 @@ function Users() {
   )
 }
 
-function GlobalSettings() {
-  const { t } = useTranslation()
-  const client = useQueryClient()
-  const settings = useQuery({
-    queryKey: ['admin', 'settings'],
-    queryFn: api.admin.settings,
-    refetchInterval: (query) => (query.state.data?.metadataSource === 'jikan' && query.state.data.jikanReachable === null ? 2000 : false),
-  })
-  const [token, setToken] = useState('')
-  const save = useMutation({
-    mutationFn: (value: string | null) => api.admin.saveSettings({ anime365Token: value }),
-    onSuccess: () => {
-      setToken('')
-      toast.success(t('common.saved'))
-      void client.invalidateQueries({ queryKey: ['admin', 'settings'] })
-    },
-  })
-  const source = useMutation({
-    mutationFn: (metadataSource: MetadataSource) => api.admin.saveSettings({ metadataSource }),
-    onSuccess: () => {
-      toast.success(t('common.saved'))
-      void client.invalidateQueries({ queryKey: ['admin', 'settings'] })
-      void client.invalidateQueries({ queryKey: ['search'] })
-      void client.invalidateQueries({ queryKey: ['genres'] })
-    },
-  })
-  const s = settings.data
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t('admin.global')}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-6">
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="text-sm font-medium">{t('admin.globalToken')}</div>
-              <CardDescription>
-                <Trans i18nKey="admin.globalTokenHint" components={{ code: <Code /> }} />
-              </CardDescription>
-            </div>
-            {!s ? (
-              <Skeleton className="h-6 w-28 rounded-full" />
-            ) : (
-              <Badge variant={s.hasAnime365Token ? 'success' : 'warning'}>
-                <KeyRound />
-                {s.hasAnime365Token ? t('admin.tokenConfigured') : t('admin.tokenNotConfigured')}
-              </Badge>
-            )}
-          </div>
-          <form
-            className="flex gap-2"
-            onSubmit={(e) => {
-              e.preventDefault()
-              save.mutate(token.trim())
-            }}
-          >
-            <Input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="access_token" autoComplete="off" />
-            <Button type="submit" variant="primary" disabled={!token.trim()} loading={save.isPending}>
-              {t('common.save')}
-            </Button>
-            {s?.hasAnime365Token ? (
-              <Button type="button" variant="ghost" onClick={() => save.mutate(null)}>
-                {t('common.delete')}
-              </Button>
-            ) : null}
-          </form>
-        </div>
-        <div>
-          <div className="text-sm font-medium">{t('admin.oauth')}</div>
-          <CardDescription>
-            <Trans i18nKey="admin.oauthHint" values={{ url: `${location.origin}/api/import/{provider}/callback` }} components={{ code: <Code /> }} />
-          </CardDescription>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {IMPORT_PROVIDERS.map((p) => (
-              <Badge key={p} variant={s?.importProviders[p] ? 'success' : 'neutral'}>
-                <StatusDot tone={s?.importProviders[p] ? 'success' : 'neutral'} />
-                {PROVIDER_NAMES[p]}
-              </Badge>
-            ))}
-          </div>
-        </div>
-        <div className="flex flex-col gap-3">
-          <div>
-            <div className="text-sm font-medium">{t('admin.source')}</div>
-            <CardDescription>{t('admin.sourceHint')}</CardDescription>
-          </div>
-          {!s ? (
-            <Skeleton className="h-10 w-56 rounded-xl" />
-          ) : (
-            <Segmented
-              value={s.metadataSource}
-              onChange={(v) => source.mutate(v)}
-              options={[
-                { value: 'jikan', label: 'Jikan' },
-                { value: 'anime365', label: 'Anime365' },
-              ]}
-              className="self-start"
-            />
-          )}
-        </div>
-        {s?.metadataSource === 'anime365' ? null : (
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-sm font-medium">{t('admin.jikan')}</div>
-            {!s ? (
-              <Skeleton className="h-6 w-28 rounded-full" />
-            ) : s.jikanReachable === null ? (
-              <Badge variant="neutral">
-                <Spinner />
-                {t('admin.checking')}
-              </Badge>
-            ) : (
-              <Badge variant={s.jikanReachable ? 'success' : 'warning'}>
-                <StatusDot tone={s.jikanReachable ? 'success' : 'warning'} pulse={!s.jikanReachable} />
-                {s.jikanReachable ? t('admin.reachable') : t('admin.unreachable')}
-              </Badge>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
-
 export function AdminPage() {
   const { t } = useTranslation()
   return (
@@ -354,8 +226,15 @@ export function AdminPage() {
         <div className="lg:col-span-2">
           <Invites />
         </div>
-        <Users />
-        <GlobalSettings />
+        <div className="lg:col-span-2">
+          <DataSources />
+        </div>
+        <div className="lg:col-span-2">
+          <OAuthSettings />
+        </div>
+        <div className="lg:col-span-2">
+          <Users />
+        </div>
       </div>
     </Page>
   )

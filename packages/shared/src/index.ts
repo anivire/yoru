@@ -16,6 +16,8 @@ export const EXPORT_FORMATS = ['json', 'csv', 'mal-xml'] as const
 export type ExportFormat = (typeof EXPORT_FORMATS)[number]
 
 export const METADATA_SOURCES = ['jikan', 'anime365'] as const
+export const DATA_SOURCES = ['anime365', 'jikan', 'shikimori', 'github'] as const
+export type DataSourceId = (typeof DATA_SOURCES)[number]
 export type MetadataSource = (typeof METADATA_SOURCES)[number]
 
 export const LOCALES = ['ru', 'en'] as const
@@ -254,11 +256,30 @@ export interface AdminUser {
   entries: number
 }
 
+export interface DataSourceInfo {
+  id: DataSourceId
+  enabled: boolean
+  url: string
+  defaultUrl: string
+  customUrl: boolean
+  reachable: boolean | null
+}
+
+export interface OAuthProviderInfo {
+  configured: boolean
+  clientId: string
+  hasSecret: boolean
+  fromEnv: boolean
+  redirectUri: string
+}
+
 export interface AdminSettings {
   hasAnime365Token: boolean
   importProviders: Record<ImportProvider, boolean>
-  jikanReachable: boolean | null
   metadataSource: MetadataSource
+  sources: DataSourceInfo[]
+  github: { repo: string; branch: string; defaultRepo: string; defaultBranch: string; hasToken: boolean }
+  oauth: Record<ImportProvider, OAuthProviderInfo>
 }
 
 export interface ImportResult {
@@ -332,10 +353,45 @@ export const userSettingsSchema = z.object({
   anime365Token: z.string().trim().max(512).nullable().optional(),
 })
 
+const sourcePatchSchema = z.object({
+  enabled: z.boolean().optional(),
+  url: z
+    .string()
+    .trim()
+    .max(300)
+    .regex(/^https?:\/\/\S+$/)
+    .nullable()
+    .optional(),
+})
+
+const oauthPatchSchema = z.object({
+  clientId: z.string().trim().max(300).nullable().optional(),
+  clientSecret: z.string().trim().max(500).nullable().optional(),
+})
+
 export const adminSettingsSchema = z.object({
   anime365Token: z.string().trim().max(512).nullable().optional(),
   metadataSource: z.enum(METADATA_SOURCES).optional(),
+  sources: z
+    .object({ anime365: sourcePatchSchema, jikan: sourcePatchSchema, shikimori: sourcePatchSchema, github: sourcePatchSchema })
+    .partial()
+    .optional(),
+  github: z
+    .object({
+      repo: z
+        .string()
+        .trim()
+        .regex(/^[\w.-]+\/[\w.-]+$/)
+        .nullable()
+        .optional(),
+      branch: z.string().trim().max(100).nullable().optional(),
+      token: z.string().trim().max(300).nullable().optional(),
+    })
+    .optional(),
+  oauth: z.object({ anilist: oauthPatchSchema, shikimori: oauthPatchSchema, mal: oauthPatchSchema }).partial().optional(),
 })
+
+export type AdminSettingsInput = z.infer<typeof adminSettingsSchema>
 
 export const providerMatchSchema = z.object({
   providerId: z.number().int().positive().nullable(),

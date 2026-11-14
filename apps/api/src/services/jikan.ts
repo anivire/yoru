@@ -1,5 +1,6 @@
 import { env } from '../env'
 import { UpstreamError, cached, sleep } from '../lib/http'
+import { sourceUrl } from '../lib/sources'
 
 export interface JikanImageSet {
   image_url?: string | null
@@ -91,7 +92,7 @@ async function request<T>(path: string): Promise<T> {
     await throttle()
     let res: Response
     try {
-      res = await fetch(env.jikanUrl + path, {
+      res = await fetch(sourceUrl('jikan') + path, {
         headers: { Accept: 'application/json', 'User-Agent': env.userAgent },
         signal: AbortSignal.timeout(10_000),
       })
@@ -148,7 +149,7 @@ export const jikan = {
   },
   async ping(): Promise<boolean> {
     try {
-      const res = await fetch(env.jikanUrl + '/anime/1', { signal: AbortSignal.timeout(8000) })
+      const res = await fetch(sourceUrl('jikan') + '/anime/1', { signal: AbortSignal.timeout(8000) })
       return res.ok
     } catch {
       return false

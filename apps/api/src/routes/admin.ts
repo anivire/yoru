@@ -2,16 +2,26 @@ import { desc, eq, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
-import { type AdminSettings, type AdminUser, type Invite, IMPORT_PROVIDERS, adminSettingsSchema, inviteInputSchema } from '@yoru/shared'
+import {
+  type AdminSettings,
+  type AdminUser,
+  type DataSourceId,
+  type ImportProvider,
+  type Invite,
+  IMPORT_PROVIDERS,
+  adminSettingsSchema,
+  inviteInputSchema,
+} from '@yoru/shared'
 import { db, now } from '../db/client'
 import { invites, listEntries, users } from '../db/schema'
 import { env } from '../env'
 import { type AppEnv, requireAdmin, requireAuth } from '../lib/auth'
 import { randomToken } from '../lib/crypto'
 import { getSetting, metadataSource, setSetting } from '../lib/settings'
+import { githubConfig, oauthConfig, setSourceEnabled, setSourceUrl } from '../lib/sources'
 import { intParam, parseBody } from '../lib/validate'
-import { providerEnabled } from '../services/importers'
-import { jikan } from '../services/jikan'
+import { providerEnabled, redirectUri } from '../services/importers'
+import { resetSourceStatus, sourceInfos } from '../services/sources'
 
 const usedByUser = alias(users, 'used_by_user')
 
@@ -31,21 +41,6 @@ function listInvites(): Invite[] {
       usedAt: invite.usedAt,
       usedBy,
     }))
-}
-
-let jikanStatus: { value: boolean; at: number } | null = null
-let jikanCheck: Promise<void> | null = null
-
-function refreshJikanStatus() {
-  if (jikanCheck) return
-  jikanCheck = jikan
-    .ping()
-    .then((value) => {
-      jikanStatus = { value, at: Date.now() }
-    })
-    .finally(() => {
-      jikanCheck = null
-    })
 }
 
 export const adminRoutes = new Hono<AppEnv>()
@@ -84,13 +79,28 @@ export const adminRoutes = new Hono<AppEnv>()
     return c.json({ ok: true })
   })
   .get('/settings', (c) => {
-    const source = metadataSource()
-    if (source === 'jikan' && (!jikanStatus || Date.now() - jikanStatus.at > 5 * 60_000)) refreshJikanStatus()
+    const github = githubConfig()
     const body: AdminSettings = {
       hasAnime365Token: Boolean(getSetting('anime365_token') || env.anime365Token),
       importProviders: Object.fromEntries(IMPORT_PROVIDERS.map((p) => [p, providerEnabled(p)])) as AdminSettings['importProviders'],
-      jikanReachable: jikanStatus?.value ?? null,
-      metadataSource: source,
+      metadataSource: metadataSource(),
+      sources: sourceInfos(),
+      github: { repo: github.repo, branch: github.branch, defaultRepo: env.githubRepo, defaultBranch: env.githubBranch, hasToken: Boolean(github.token) },
+      oauth: Object.fromEntries(
+        IMPORT_PROVIDERS.map((p) => {
+          const config = oauthConfig(p)
+          return [
+            p,
+            {
+              configured: Boolean(config.clientId && config.clientSecret),
+              clientId: config.clientId,
+              hasSecret: Boolean(config.clientSecret),
+              fromEnv: config.fromEnv,
+              redirectUri: redirectUri(p),
+            },
+          ]
+        }),
+      ) as AdminSettings['oauth'],
     }
     return c.json(body)
   })
@@ -98,5 +108,24 @@ export const adminRoutes = new Hono<AppEnv>()
     const input = await parseBody(c, adminSettingsSchema)
     if (input.anime365Token !== undefined) setSetting('anime365_token', input.anime365Token || null)
     if (input.metadataSource) setSetting('metadata_source', input.metadataSource)
+    for (const [id, patch] of Object.entries(input.sources ?? {}) as [DataSourceId, { enabled?: boolean; url?: string | null } | undefined][]) {
+      if (!patch) continue
+      if (patch.enabled !== undefined) setSourceEnabled(id, patch.enabled)
+      if (patch.url !== undefined) {
+        setSourceUrl(id, patch.url || null)
+        resetSourceStatus(id)
+      }
+    }
+    if (input.github) {
+      if (input.github.repo !== undefined) setSetting('github.repo', input.github.repo || null)
+      if (input.github.branch !== undefined) setSetting('github.branch', input.github.branch || null)
+      if (input.github.token !== undefined) setSetting('github.token', input.github.token || null)
+      resetSourceStatus('github')
+    }
+    for (const [provider, patch] of Object.entries(input.oauth ?? {}) as [ImportProvider, { clientId?: string | null; clientSecret?: string | null } | undefined][]) {
+      if (!patch) continue
+      if (patch.clientId !== undefined) setSetting(`oauth.${provider}.clientId`, patch.clientId || null)
+      if (patch.clientSecret !== undefined) setSetting(`oauth.${provider}.clientSecret`, patch.clientSecret || null)
+    }
     return c.json({ ok: true })
   })

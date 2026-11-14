@@ -1,5 +1,5 @@
 import type { AnimeLink, AnimeService } from '@yoru/shared'
-import { env } from '../env'
+import { sourceEnabled, sourceUrl } from '../lib/sources'
 import { anime365 } from './anime365'
 import { resolveMatch } from './provider'
 
@@ -19,10 +19,8 @@ function host(url: string): string | null {
 }
 
 export async function animeLinks(malId: number): Promise<AnimeLink[]> {
-  const links: AnimeLink[] = [
-    { service: 'mal', url: `https://myanimelist.net/anime/${malId}` },
-    { service: 'shikimori', url: `${env.shikimoriUrl}/animes/${malId}` },
-  ]
+  const links: AnimeLink[] = [{ service: 'mal', url: `https://myanimelist.net/anime/${malId}` }]
+  if (sourceEnabled('shikimori')) links.push({ service: 'shikimori', url: `${sourceUrl('shikimori')}/animes/${malId}` })
   const match = await resolveMatch(malId).catch(() => null)
   if (!match?.providerId) return links
   const series = await anime365.series(match.providerId).catch(() => null)

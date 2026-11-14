@@ -1,6 +1,7 @@
 import type { Genre, StreamKind, StreamSource } from '@yoru/shared'
 import { env } from '../env'
 import { UpstreamError, cached } from '../lib/http'
+import { sourceUrl } from '../lib/sources'
 
 export interface A365Titles {
   romaji?: string
@@ -71,7 +72,7 @@ const HOUR = 3_600_000
 
 async function api<T>(path: string, params: Record<string, string | number> = {}): Promise<T> {
   const query = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]))
-  const url = `${env.anime365Url}/api${path}${query.size ? `?${query}` : ''}`
+  const url = `${sourceUrl('anime365')}/api${path}${query.size ? `?${query}` : ''}`
   let res: Response
   try {
     res = await fetch(url, {
@@ -92,7 +93,7 @@ const isHttps = (url: unknown): url is string => typeof url === 'string' && /^ht
 export function absoluteA365Url(url: string): string {
   if (/^https?:\/\//.test(url)) return url
   if (url.startsWith('//')) return 'https:' + url
-  return env.anime365Url + (url.startsWith('/') ? '' : '/') + url
+  return sourceUrl('anime365') + (url.startsWith('/') ? '' : '/') + url
 }
 
 export function seriesTitle(s: A365Series): string {
