@@ -200,9 +200,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-dvh flex-col">
       <header
         ref={header.ref}
-        className={cn('sticky top-0 z-40 transition-[background-color,backdrop-filter] duration-200 [view-transition-name:site-header]', header.scrolled ? 'bg-background/80 backdrop-blur-xl' : 'bg-transparent')}
+        className="sticky top-0 z-40 px-2 pt-2 [view-transition-name:site-header] sm:px-3"
       >
-        <div className="mx-auto flex h-16 max-w-(--page-max) items-center gap-4 px-4 sm:px-6">
+        <div
+          className={cn(
+            'mx-auto flex h-14 max-w-(--page-max) items-center gap-4 rounded-2xl px-2 transition-[background-color,box-shadow,backdrop-filter] duration-300 sm:px-3',
+            header.scrolled ? 'bg-background/75 shadow-lg shadow-black/15 backdrop-blur-xl' : 'bg-transparent',
+          )}
+        >
           <Link viewTransition to="/" className="shrink-0">
             <Logo />
           </Link>
