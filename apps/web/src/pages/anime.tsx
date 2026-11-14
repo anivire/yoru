@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AnimeDetails, ListEntry } from '@yoru/shared'
-import { Badge, Dialog, DialogContent, DialogTrigger, EmptyState, Image, cn } from '@yoru/ui'
+import { Badge, Dialog, DialogContent, DialogTrigger, EmptyState, Image, Lightbox, cn } from '@yoru/ui'
 import { RiCalendarScheduleFill, RiClapperboardFill, RiPlayCircleFill, RiYoutubeFill } from '@remixicon/react'
 import { EpisodeCount, Score } from '../components/anime-cards'
 import { useEffect, useRef, useState } from 'react'
@@ -165,9 +165,15 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
       <div className="mx-auto max-w-(--page-max) px-4 pb-10 pt-4 sm:px-6 sm:pt-10">
         <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
           <div className="flex w-36 shrink-0 flex-col gap-3 sm:w-48">
-            <div className="aspect-[2/3] w-full overflow-hidden rounded-xl bg-muted shadow-2xl">
-              {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" /> : null}
-            </div>
+            {anime.imageUrl ? (
+              <Lightbox src={anime.imageUrl} title={anime.title} closeLabel={t('common.close')}>
+                <button type="button" aria-label={t('anime.poster')} className="group aspect-[2/3] w-full cursor-zoom-in overflow-hidden rounded-xl bg-muted shadow-2xl">
+                  <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover transition-[filter] duration-200 group-hover:brightness-110" />
+                </button>
+              </Lightbox>
+            ) : (
+              <div className="aspect-[2/3] w-full rounded-xl bg-muted shadow-2xl" />
+            )}
             <div className="hidden sm:block">
               <ListEditor malId={anime.malId} entry={entry} total={anime.episodes} aired={airedLimit(anime)} />
             </div>

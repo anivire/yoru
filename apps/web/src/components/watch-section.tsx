@@ -11,14 +11,17 @@ import { EpisodeList } from './episode-list'
 import { MatchDialog } from './match-dialog'
 import { Player } from './player/player'
 import { TLink } from './transition-link'
+import { useAppearance } from '../lib/appearance'
 
-const KIND_KEY = 'yoru:kind'
+function kindKey(malId: number) {
+  return `yoru:kind:${malId}`
+}
 
 function parseKind(value: string | null): StreamKind | null {
   return STREAM_KINDS.includes(value as StreamKind) ? (value as StreamKind) : null
 }
 
-const KIND_ICONS: Record<StreamKind, typeof RiMicFill> = {
+export const KIND_ICONS: Record<StreamKind, typeof RiMicFill> = {
   sub: RiClosedCaptioningFill,
   voice: RiMicFill,
   subEn: RiClosedCaptioningFill,
@@ -54,7 +57,8 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
   const client = useQueryClient()
   const malId = anime.malId
   const [params, setParams] = useSearchParams()
-  const kind = parseKind(params.get('kind')) ?? parseKind(localStorage.getItem(KIND_KEY)) ?? 'sub'
+  const { defaultKind, preferredAuthors } = useAppearance()
+  const kind = parseKind(params.get('kind')) ?? parseKind(localStorage.getItem(kindKey(malId))) ?? defaultKind
 
   const match = useQuery({ queryKey: keys.match(malId), queryFn: () => api.match(malId) })
   const episodes = useQuery({ queryKey: keys.episodes(malId), queryFn: () => api.episodes(malId) })
@@ -89,9 +93,10 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
       setTranslationId(null)
       return
     }
-    const preferred = localStorage.getItem(authorKey(malId, kind))
-    setTranslationId((items.find((x) => x.author === preferred) ?? items[0]!).id)
-  }, [translations.data, malId, kind])
+    const remembered = localStorage.getItem(authorKey(malId, kind))
+    const favorite = preferredAuthors.map((p) => p.toLowerCase()).reduce<(typeof items)[number] | undefined>((found, p) => found ?? items.find((x) => x.author.toLowerCase().includes(p)), undefined)
+    setTranslationId((items.find((x) => x.author === remembered) ?? favorite ?? items[0]!).id)
+  }, [translations.data, malId, kind, preferredAuthors])
 
   const translation = translations.data?.find((x) => x.id === translationId)
   const stream = useQuery({
@@ -204,7 +209,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
             return <Icon />
           })()}
           onValueChange={(v) => {
-            localStorage.setItem(KIND_KEY, v)
+            localStorage.setItem(kindKey(malId), v)
             setParam({ kind: v })
           }}
           options={STREAM_KINDS.map((k) => ({ value: k, label: t(`player.${k}`) }))}

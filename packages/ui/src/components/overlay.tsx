@@ -63,6 +63,26 @@ export function DialogContent({
   )
 }
 
+export function Lightbox({ src, title, closeLabel, children }: { src: string; title: string; closeLabel: string; children: ReactNode }) {
+  return (
+    <D.Root>
+      <D.Trigger asChild>{children}</D.Trigger>
+      <D.Portal>
+        <D.Overlay className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm animate-fade" />
+        <D.Content aria-describedby={undefined} className="fixed inset-0 z-50 outline-none">
+          <D.Title className="sr-only">{title}</D.Title>
+          <D.Close aria-label={closeLabel} className="grid size-full cursor-zoom-out place-items-center p-4 sm:p-8">
+            <img src={src} alt={title} className="max-h-full max-w-full animate-zoom rounded-xl object-contain shadow-2xl" />
+          </D.Close>
+          <D.Close aria-label={closeLabel} className="absolute right-4 top-4 grid size-9 cursor-pointer place-items-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70">
+            <RiCloseFill className="size-5" />
+          </D.Close>
+        </D.Content>
+      </D.Portal>
+    </D.Root>
+  )
+}
+
 export const DropdownMenu = M.Root
 export const DropdownMenuTrigger = M.Trigger
 

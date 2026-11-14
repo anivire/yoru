@@ -1,3 +1,4 @@
+import { STREAM_KINDS, type StreamKind } from '@yoru/shared'
 import { type ColorScheme, DEFAULT_SCHEME, DEFAULT_THEME, THEME_PRESETS, type ThemePreset, applyTheme, logoSvg } from '@yoru/ui'
 import { type ReactNode, createContext, useContext, useEffect, useState } from 'react'
 import { HOME_SECTIONS, type HomeSectionId, NAV, type NavKey } from './navigation'
@@ -34,6 +35,8 @@ interface State {
   showHero: boolean
   homeSections: HomeSectionSetting[]
   hiddenNav: NavKey[]
+  defaultKind: StreamKind
+  preferredAuthors: string[]
 }
 
 const DEFAULT_SECTIONS: HomeSectionSetting[] = HOME_SECTIONS.map((s) => ({ id: s.id, visible: true }))
@@ -60,6 +63,8 @@ interface Appearance extends State {
   setShowHero: (show: boolean) => void
   setHomeSections: (sections: HomeSectionSetting[]) => void
   setHiddenNav: (hidden: NavKey[]) => void
+  setDefaultKind: (kind: StreamKind) => void
+  setPreferredAuthors: (authors: string[]) => void
 }
 
 const AppearanceContext = createContext<Appearance | null>(null)
@@ -75,6 +80,8 @@ function load(): State {
       showHero?: boolean
       homeSections?: unknown
       hiddenNav?: unknown
+      defaultKind?: string
+      preferredAuthors?: unknown
     }
     const theme = THEME_PRESETS.some((t) => t.id === raw.theme) ? (raw.theme as ThemePreset) : DEFAULT_THEME
     const scheme = raw.scheme === 'light' || raw.scheme === 'dark' || raw.scheme === 'system' ? raw.scheme : DEFAULT_SCHEME
@@ -89,9 +96,11 @@ function load(): State {
       showHero: raw.showHero !== false,
       homeSections: normalizeSections(raw.homeSections),
       hiddenNav: normalizeNav(raw.hiddenNav),
+      defaultKind: STREAM_KINDS.includes(raw.defaultKind as StreamKind) ? (raw.defaultKind as StreamKind) : 'sub',
+      preferredAuthors: Array.isArray(raw.preferredAuthors) ? raw.preferredAuthors.filter((a): a is string => typeof a === 'string' && Boolean(a.trim())) : [],
     }
   } catch {
-    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [] }
+    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], defaultKind: 'sub', preferredAuthors: [] }
   }
 }
 
@@ -150,6 +159,8 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
         setShowHero: (showHero) => setState((s) => ({ ...s, showHero })),
         setHomeSections: (homeSections) => setState((s) => ({ ...s, homeSections })),
         setHiddenNav: (hiddenNav) => setState((s) => ({ ...s, hiddenNav: normalizeNav(hiddenNav) })),
+        setDefaultKind: (defaultKind) => setState((s) => ({ ...s, defaultKind })),
+        setPreferredAuthors: (preferredAuthors) => setState((s) => ({ ...s, preferredAuthors })),
       }}
     >
       {children}

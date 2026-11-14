@@ -80,7 +80,7 @@ function fromJikan(j: JikanAnime): AnimeInsert {
     broadcastDay: j.broadcast?.day ?? null,
     broadcastTime: j.broadcast?.time ?? null,
     broadcastTimezone: j.broadcast?.timezone ?? null,
-    trailerUrl: j.trailer?.url ?? (j.trailer?.youtube_id ? `https://www.youtube.com/watch?v=${j.trailer.youtube_id}` : null),
+    trailerUrl: j.trailer?.url ?? (j.trailer?.youtube_id ? `https://www.youtube.com/watch?v=${j.trailer.youtube_id}` : null) ?? j.trailer?.embed_url ?? null,
     updatedAt: now(),
   }
 }

@@ -35,6 +35,7 @@ export const en: Messages = {
     updateCount: 'Update available: {{count}} new commits',
   },
   common: {
+    close: 'Close',
     save: 'Save',
     saved: 'Saved',
     cancel: 'Cancel',
@@ -225,6 +226,7 @@ export const en: Messages = {
     updated: 'Updated',
   },
   anime: {
+    poster: 'Open poster',
     yourScore: 'Your score',
     rewatchedTimes_one: 'Rewatched {{count}} time',
     rewatchedTimes_few: 'Rewatched {{count}} times',
@@ -305,6 +307,18 @@ export const en: Messages = {
     voice: 'voice-over',
   },
   settings: {
+    player: 'Player',
+    playerPrefs: {
+      kind: 'Default translation',
+      kindHint: 'What to play when you open an anime for the first time. Your choice on the anime page is remembered for that title.',
+      authors: 'Favorite translators',
+      authorsHint: 'If an episode has a translation by one of these authors, it is picked automatically. Higher in the list wins. Part of the name is enough.',
+      authorsEmpty: 'Empty for now, the first translation in the list is used',
+      add: 'Add',
+      placeholder: 'For example, AniLibria',
+      up: 'Move up',
+      remove: 'Remove',
+    },
     dragToReorder: 'Drag to reorder',
     homeLayout: 'Home page',
     homeLayoutHint: 'Section order and which ones to show',
