@@ -205,7 +205,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div
           className={cn(
             'mx-auto flex h-14 max-w-(--page-max) items-center gap-4 rounded-2xl px-2 transition-[background-color,box-shadow,backdrop-filter] duration-300 sm:px-3',
-            header.scrolled ? 'bg-background/75 shadow-lg shadow-black/15 backdrop-blur-xl' : 'bg-transparent',
+            header.scrolled ? 'bg-background/55 backdrop-blur-2xl backdrop-saturate-150' : 'bg-transparent',
           )}
         >
           <Link viewTransition to="/" className="shrink-0">
