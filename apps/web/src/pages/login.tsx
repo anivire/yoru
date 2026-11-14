@@ -24,7 +24,7 @@ export function AuthLayout({ tagline, title, subtitle, children }: { tagline?: R
           ) : null}
           {children}
         </Card>
-        <Footer scope="public" className="pb-0 pt-5 text-[0.8125rem]" />
+        <Footer scope="public" compact className="pb-0 pt-5 text-[0.8125rem]" />
       </div>
     </div>
   )

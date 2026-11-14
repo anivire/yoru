@@ -16,6 +16,18 @@ export const en: Messages = {
     roleAdmin: 'Administrator',
     roleUser: 'User',
   },
+  footer: {
+    tagline: 'Anime tracker and player with subtitles and dubs. Runs on your own server.',
+    openSource: 'Open source',
+    browse: 'Browse',
+    account: 'Account',
+    sources: 'Sources',
+    project: 'Project',
+    changelog: 'Changelog',
+    issues: 'Report a bug',
+    selfHost: 'Self-hosting guide',
+    disclaimer: 'yoru does not host any video and is not affiliated with the services listed. Episodes play from Anime365, anime info comes from MyAnimeList, Shikimori and AniList.',
+  },
   version: {
     update: 'Update available',
     updateCount: 'Update available: {{count}} new commits',
