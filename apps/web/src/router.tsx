@@ -1,5 +1,5 @@
 import { Button, Mascot } from '@yoru/ui'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, Outlet, createBrowserRouter, useLocation, useRouteError } from 'react-router'
 import { AppShell } from './components/app-shell'
@@ -26,10 +26,31 @@ function Splash() {
   )
 }
 
+const RELOAD_KEY = 'yoru:error-reload'
+
+function useAutoReload() {
+  const [reloading] = useState(() => {
+    try {
+      const last = Number(sessionStorage.getItem(RELOAD_KEY) ?? 0)
+      if (Date.now() - last < 60_000) return false
+      sessionStorage.setItem(RELOAD_KEY, String(Date.now()))
+      return true
+    } catch {
+      return false
+    }
+  })
+  useEffect(() => {
+    if (reloading) window.location.reload()
+  }, [reloading])
+  return reloading
+}
+
 function RouteError() {
   const { t } = useTranslation()
   const error = useRouteError()
   const message = error instanceof Error ? error.message : String(error)
+  const reloading = useAutoReload()
+  if (reloading) return <Splash />
   return (
     <div className="grid min-h-dvh place-items-center px-4">
       <div className="flex max-w-lg flex-col items-center gap-4 text-center">

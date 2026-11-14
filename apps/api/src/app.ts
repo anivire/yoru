@@ -59,8 +59,20 @@ if (env.webDist && fs.existsSync(env.webDist)) {
       },
     }),
   )
-  app.use('*', serveStatic({ root }))
-  app.get('*', (c) => c.html(indexHtml))
+  app.all('/assets/*', (c) => c.text('Not found', 404))
+  app.use(
+    '*',
+    serveStatic({
+      root,
+      onFound: (_path, c) => {
+        c.header('Cache-Control', 'no-cache')
+      },
+    }),
+  )
+  app.get('*', (c) => {
+    c.header('Cache-Control', 'no-cache')
+    return c.html(indexHtml)
+  })
 }
 
 app.onError((error, c) => {
