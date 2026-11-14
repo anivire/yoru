@@ -72,7 +72,9 @@ function MobileMenu() {
           <Menu />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-60">
+      <DropdownMenuContent className="max-h-[calc(100dvh-5rem)] w-64 overflow-y-auto">
+        <ProfileLabel />
+        <DropdownMenuLabel className="mt-1">{t('nav.sections')}</DropdownMenuLabel>
         {NAV.map(({ to, key, icon: Icon, ...rest }) => {
           const active = Boolean(matchPath({ path: to, end: 'end' in rest }, pathname))
           return (
@@ -94,12 +96,28 @@ function MobileMenu() {
             {l.value === user.locale ? <Check className="text-accent!" /> : null}
           </DropdownMenuItem>
         ))}
+        <DropdownMenuLabel className="mt-1">{t('nav.account')}</DropdownMenuLabel>
+        <AccountItems />
       </DropdownMenuContent>
     </DropdownMenu>
   )
 }
 
-function UserMenu() {
+function ProfileLabel() {
+  const { t } = useTranslation()
+  const user = useUser()
+  return (
+    <DropdownMenuLabel className="flex items-center gap-3 px-3 py-2">
+      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-soft text-sm font-semibold uppercase text-accent">{user.username.slice(0, 1)}</span>
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-medium text-foreground">{user.username}</span>
+        <span className="block text-xs font-normal text-muted-foreground">{user.role === 'admin' ? t('nav.roleAdmin') : t('nav.roleUser')}</span>
+      </span>
+    </DropdownMenuLabel>
+  )
+}
+
+function AccountItems() {
   const { t } = useTranslation()
   const user = useUser()
   const navigate = useNavigate()
@@ -111,6 +129,29 @@ function UserMenu() {
     navigate('/login')
   }
   return (
+    <>
+      <DropdownMenuItem onSelect={() => navigate('/settings')}>
+        <Settings />
+        {t('nav.settings')}
+      </DropdownMenuItem>
+      {user.role === 'admin' ? (
+        <DropdownMenuItem onSelect={() => navigate('/admin')}>
+          <Shield />
+          {t('nav.admin')}
+        </DropdownMenuItem>
+      ) : null}
+      <DropdownMenuItem onSelect={logout} className="text-danger data-[highlighted]:bg-danger-soft [&_svg]:text-danger">
+        <LogOut />
+        {t('nav.logout')}
+      </DropdownMenuItem>
+    </>
+  )
+}
+
+function UserMenu() {
+  const { t } = useTranslation()
+  const user = useUser()
+  return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="secondary" size="icon" aria-label={t('nav.account')} className="rounded-full">
@@ -118,27 +159,8 @@ function UserMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-60">
-        <DropdownMenuLabel className="flex items-center gap-3 px-3 py-2">
-          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-soft text-sm font-semibold uppercase text-accent">{user.username.slice(0, 1)}</span>
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-medium text-foreground">{user.username}</span>
-            <span className="block text-xs font-normal text-muted-foreground">{user.role === 'admin' ? t('nav.roleAdmin') : t('nav.roleUser')}</span>
-          </span>
-        </DropdownMenuLabel>
-        <DropdownMenuItem onSelect={() => navigate('/settings')}>
-          <Settings />
-          {t('nav.settings')}
-        </DropdownMenuItem>
-        {user.role === 'admin' ? (
-          <DropdownMenuItem onSelect={() => navigate('/admin')}>
-            <Shield />
-            {t('nav.admin')}
-          </DropdownMenuItem>
-        ) : null}
-        <DropdownMenuItem onSelect={logout} className="text-danger data-[highlighted]:bg-danger-soft [&_svg]:text-danger">
-          <LogOut />
-          {t('nav.logout')}
-        </DropdownMenuItem>
+        <ProfileLabel />
+        <AccountItems />
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -187,7 +209,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             </Button>
             <NotificationsPopover />
-            <UserMenu />
+            <div className="hidden md:block">
+              <UserMenu />
+            </div>
             <div className="hidden md:block">
               <LanguageMenu />
             </div>

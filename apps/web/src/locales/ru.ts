@@ -4,6 +4,7 @@ export const ru = {
     search: 'Поиск',
     discover: 'Обзор',
     menu: 'Меню',
+    sections: 'Разделы',
     schedule: 'Расписание',
     lists: 'Мои списки',
     settings: 'Настройки',
