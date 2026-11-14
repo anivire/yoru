@@ -10,7 +10,6 @@ const SERVICES: Record<AnimeService, { name: string; color: string; label: strin
   shikimori: { name: 'Shikimori', color: '#343a40', label: 'Ш' },
   anilist: { name: 'AniList', color: '#02a9ff', label: 'AL' },
   anidb: { name: 'AniDB', color: '#24356c', label: 'DB' },
-  kinopoisk: { name: 'Кинопоиск', color: '#ff5500', label: 'КП' },
   crunchyroll: { name: 'Crunchyroll', color: '#f47521', label: 'CR' },
 }
 

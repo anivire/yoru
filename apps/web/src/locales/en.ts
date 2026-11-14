@@ -458,7 +458,7 @@ export const en: Messages = {
       usedFor: 'Used for',
       url: 'API URL',
       reset: 'Reset',
-      anime365: ['Video, dubs and subtitles', 'Released episodes and new episode notifications', 'Aired recently on Discover', 'Anime metadata when Jikan is off', 'Links to AniList, AniDB, Kinopoisk and Crunchyroll'],
+      anime365: ['Video, dubs and subtitles', 'Released episodes and new episode notifications', 'Aired recently on Discover', 'Anime metadata when Jikan is off', 'Links to AniList, AniDB and Crunchyroll'],
       jikan: ['Synopses, posters, studios, trailers and rating', 'Weekly airing times', 'Episode titles and thumbnails', 'Search with genre filters and sorting'],
       jikanOff: 'Off: metadata comes from Anime365',
       shikimori: ['Discover: trending, top rated, upcoming', 'Schedule and upcoming episodes on home', 'Screenshots for banners', 'Shikimori link on the anime page', 'List import from Shikimori'],

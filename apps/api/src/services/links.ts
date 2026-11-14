@@ -6,7 +6,6 @@ import { resolveMatch } from './provider'
 const HOSTS: [AnimeService, RegExp][] = [
   ['anilist', /(^|\.)anilist\.co$/],
   ['anidb', /(^|\.)anidb\.net$/],
-  ['kinopoisk', /(^|\.)kinopoisk\.ru$/],
   ['crunchyroll', /(^|\.)crunchyroll\.com$/],
 ]
 
