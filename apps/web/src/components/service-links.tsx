@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AnimeLink, AnimeService } from '@yoru/shared'
-import { RiExternalLinkFill } from '@remixicon/react'
-import type { ReactNode } from 'react'
+import { Tooltip } from '@yoru/ui'
+import { type ReactNode, forwardRef } from 'react'
 import { api } from '../lib/api'
 import { keys } from '../lib/queries'
 
@@ -35,23 +35,29 @@ export function ServiceIcon({ service }: { service: AnimeService }) {
   )
 }
 
-export function LinkButton({ href, icon, children }: { href: string; icon: ReactNode; children: ReactNode }) {
+export const linkTileClass =
+  'grid size-9 shrink-0 cursor-pointer place-items-center rounded-lg bg-field transition-colors hover:bg-field-hover [&_svg]:size-5'
+
+export const LinkTile = forwardRef<HTMLButtonElement, { label: string; children: ReactNode }>(function LinkTile({ label, children, ...props }, ref) {
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      className="group flex h-9 min-w-0 items-center gap-2.5 rounded-lg px-2.5 text-[0.8125rem] font-medium text-foreground transition-colors hover:bg-field-hover [&_svg]:size-4 [&_svg]:shrink-0"
-    >
-      {icon}
-      <span className="flex-1 truncate text-left">{children}</span>
-      <RiExternalLinkFill className="size-3.5! text-subtle-foreground transition-colors group-hover:text-foreground" />
-    </a>
+    <button ref={ref} type="button" aria-label={label} className={linkTileClass} {...props}>
+      {children}
+    </button>
+  )
+})
+
+export function LinkButton({ href, icon, children }: { href: string; icon: ReactNode; children: string }) {
+  return (
+    <Tooltip content={children}>
+      <a href={href} target="_blank" rel="noreferrer" aria-label={children} className={linkTileClass}>
+        {icon}
+      </a>
+    </Tooltip>
   )
 }
 
 export function LinkGroup({ children }: { children: ReactNode }) {
-  return <div className="grid grid-cols-2 gap-0.5 rounded-xl bg-field p-1 sm:grid-cols-1">{children}</div>
+  return <div className="flex flex-wrap gap-1.5">{children}</div>
 }
 
 export function ServiceLinks({ malId }: { malId: number }) {

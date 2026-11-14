@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AnimeDetails, ListEntry } from '@yoru/shared'
-import { Badge, Dialog, DialogContent, DialogTrigger, EmptyState, Image, Lightbox, cn } from '@yoru/ui'
-import { RiCalendarScheduleFill, RiClapperboardFill, RiPlayCircleFill, RiYoutubeFill } from '@remixicon/react'
+import { Badge, Dialog, DialogContent, DialogTrigger, EmptyState, Image, Lightbox, Tooltip, cn } from '@yoru/ui'
+import { RiCalendarScheduleFill, RiClapperboardFill, RiYoutubeFill } from '@remixicon/react'
 import { EpisodeCount, Score } from '../components/anime-cards'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -9,7 +9,7 @@ import { useParams } from 'react-router'
 import { Page } from '../components/app-shell'
 import { ListEditor } from '../components/list-editor'
 import { airedLimit } from '../components/quick-edit'
-import { LinkButton, LinkGroup, ServiceLinks } from '../components/service-links'
+import { LinkButton, LinkGroup, LinkTile, ServiceLinks } from '../components/service-links'
 import { AnimePageSkeleton } from '../components/skeletons'
 import { WatchSection } from '../components/watch-section'
 import { api } from '../lib/api'
@@ -94,16 +94,13 @@ function TrailerButton({ url }: { url: string }) {
   }
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          className="group flex h-9 min-w-0 cursor-pointer items-center gap-2.5 rounded-lg px-2.5 text-left text-[0.8125rem] font-medium text-foreground transition-colors hover:bg-field-hover [&_svg]:size-4 [&_svg]:shrink-0"
-        >
-          <RiYoutubeFill className="text-[#ff0033]" />
-          <span className="flex-1 truncate">{t('anime.trailer')}</span>
-          <RiPlayCircleFill className="size-3.5! text-subtle-foreground transition-colors group-hover:text-foreground" />
-        </button>
-      </DialogTrigger>
+      <Tooltip content={t('anime.trailer')}>
+        <DialogTrigger asChild>
+          <LinkTile label={t('anime.trailer')}>
+            <RiYoutubeFill className="text-[#ff0033]" />
+          </LinkTile>
+        </DialogTrigger>
+      </Tooltip>
       <DialogContent title={t('anime.trailer')} className="w-[min(94vw,56rem)]">
         <div className="p-4 pt-2">
           <div className="aspect-video overflow-hidden rounded-lg bg-black">

@@ -18,7 +18,15 @@ export function EpisodeList({
   const { t } = useTranslation()
   const [view, setView] = useState<'list' | 'grid'>(() => (localStorage.getItem('yoru:episodes-view') === 'grid' ? 'grid' : 'list'))
   const activeRef = useRef<HTMLButtonElement>(null)
-  useEffect(() => activeRef.current?.scrollIntoView({ block: 'nearest' }), [current, episodes.length])
+  const scrollRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const box = scrollRef.current
+    const item = activeRef.current
+    if (!box || !item) return
+    const top = item.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop
+    if (top < box.scrollTop) box.scrollTop = top
+    else if (top + item.offsetHeight > box.scrollTop + box.clientHeight) box.scrollTop = top + item.offsetHeight - box.clientHeight
+  }, [current, episodes.length, view])
   const switchView = (v: 'list' | 'grid') => {
     setView(v)
     localStorage.setItem('yoru:episodes-view', v)
@@ -43,7 +51,7 @@ export function EpisodeList({
           ))}
         </div>
       </div>
-      <div className="-mr-2 min-h-0 flex-1 overflow-y-auto pr-2">
+      <div ref={scrollRef} className="-mr-2 min-h-0 flex-1 overflow-y-auto pr-2">
         {loading ? (
           <div className="flex flex-col gap-3">
             {Array.from({ length: 6 }, (_, i) => (
