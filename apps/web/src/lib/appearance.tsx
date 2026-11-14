@@ -22,6 +22,8 @@ export type PageWidth = (typeof PAGE_WIDTHS)[number]['value']
 
 const DEFAULT_WIDTH: PageWidth = '7xl'
 
+export type NavPosition = 'top' | 'left' | 'right'
+
 export interface HomeSectionSetting {
   id: HomeSectionId
   visible: boolean
@@ -37,6 +39,7 @@ interface State {
   hiddenNav: NavKey[]
   defaultKind: StreamKind
   preferredAuthors: string[]
+  navPosition: NavPosition
 }
 
 const DEFAULT_SECTIONS: HomeSectionSetting[] = HOME_SECTIONS.map((s) => ({ id: s.id, visible: true }))
@@ -65,6 +68,7 @@ interface Appearance extends State {
   setHiddenNav: (hidden: NavKey[]) => void
   setDefaultKind: (kind: StreamKind) => void
   setPreferredAuthors: (authors: string[]) => void
+  setNavPosition: (position: NavPosition) => void
 }
 
 const AppearanceContext = createContext<Appearance | null>(null)
@@ -82,6 +86,7 @@ function load(): State {
       hiddenNav?: unknown
       defaultKind?: string
       preferredAuthors?: unknown
+      navPosition?: string
     }
     const theme = THEME_PRESETS.some((t) => t.id === raw.theme) ? (raw.theme as ThemePreset) : DEFAULT_THEME
     const scheme = raw.scheme === 'light' || raw.scheme === 'dark' || raw.scheme === 'system' ? raw.scheme : DEFAULT_SCHEME
@@ -98,9 +103,10 @@ function load(): State {
       hiddenNav: normalizeNav(raw.hiddenNav),
       defaultKind: STREAM_KINDS.includes(raw.defaultKind as StreamKind) ? (raw.defaultKind as StreamKind) : 'sub',
       preferredAuthors: Array.isArray(raw.preferredAuthors) ? raw.preferredAuthors.filter((a): a is string => typeof a === 'string' && Boolean(a.trim())) : [],
+      navPosition: raw.navPosition === 'left' || raw.navPosition === 'right' ? raw.navPosition : 'top',
     }
   } catch {
-    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], defaultKind: 'sub', preferredAuthors: [] }
+    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], defaultKind: 'sub', preferredAuthors: [], navPosition: 'top' }
   }
 }
 
@@ -161,6 +167,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
         setHiddenNav: (hiddenNav) => setState((s) => ({ ...s, hiddenNav: normalizeNav(hiddenNav) })),
         setDefaultKind: (defaultKind) => setState((s) => ({ ...s, defaultKind })),
         setPreferredAuthors: (preferredAuthors) => setState((s) => ({ ...s, preferredAuthors })),
+        setNavPosition: (navPosition) => setState((s) => ({ ...s, navPosition })),
       }}
     >
       {children}

@@ -7,6 +7,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
   Logo,
+  LogoMark,
+  Tooltip,
   cn,
   useSlidingIndicator,
 } from '@yoru/ui'
@@ -15,7 +17,7 @@ import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { matchPath, useLocation, useNavigate } from 'react-router'
 import { api } from '../lib/api'
-import { useAppearance } from '../lib/appearance'
+import { type NavPosition, useAppearance } from '../lib/appearance'
 import { NAV } from '../lib/navigation'
 import { keys, useUser } from '../lib/queries'
 import { NotificationsPopover } from './notifications'
@@ -157,7 +159,7 @@ function AccountItems() {
   )
 }
 
-function UserMenu() {
+function UserMenu({ side = 'bottom' }: { side?: 'bottom' | 'left' | 'right' }) {
   const { t } = useTranslation()
   const user = useUser()
   return (
@@ -167,11 +169,57 @@ function UserMenu() {
           <span className="text-[0.8125rem] font-semibold uppercase">{user.username.slice(0, 1)}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-60">
+      <DropdownMenuContent side={side} className="w-60">
         <ProfileLabel />
         <AccountItems />
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+function SideRail({ position }: { position: Exclude<NavPosition, 'top'> }) {
+  const { t } = useTranslation()
+  const ref = useRef<HTMLElement>(null)
+  const { pathname } = useLocation()
+  const { hiddenNav } = useAppearance()
+  const nav = useVisibleNav()
+  const indicator = useSlidingIndicator(ref, '[aria-current="page"]', `${pathname}|${hiddenNav.join()}|${position}`)
+  const side = position === 'left' ? 'right' : 'left'
+  return (
+    <aside
+      className={cn(
+        'fixed inset-y-2 z-40 hidden w-16 flex-col items-center rounded-[2rem] bg-surface/80 py-3 backdrop-blur-2xl backdrop-saturate-150 [view-transition-name:site-header] md:flex',
+        position === 'left' ? 'left-2' : 'right-2',
+      )}
+    >
+      <TLink to="/" aria-label="yoru" className="grid size-11 place-items-center">
+        <LogoMark size={30} />
+      </TLink>
+      <nav ref={ref} className="relative mt-4 flex flex-col items-center gap-1">
+        <span aria-hidden style={indicator} className="pointer-events-none absolute rounded-xl bg-muted duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]" />
+        {nav.map((n) => (
+          <Tooltip key={n.to} content={t(`nav.${n.key}`)} side={side}>
+            <TNavLink
+              to={n.to}
+              end={n.end}
+              aria-label={t(`nav.${n.key}`)}
+              className={({ isActive }) =>
+                cn(
+                  'relative grid size-11 place-items-center rounded-xl transition-colors [&_svg]:size-5',
+                  isActive ? 'text-foreground [&_svg]:text-accent' : 'text-muted-foreground hover:text-foreground',
+                )
+              }
+            >
+              <n.icon />
+            </TNavLink>
+          </Tooltip>
+        ))}
+      </nav>
+      <div className="mt-auto flex flex-col items-center gap-2">
+        <NotificationsPopover side={side} />
+        <UserMenu side={side} />
+      </div>
+    </aside>
   )
 }
 
@@ -198,12 +246,12 @@ export function useHeader() {
 export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useTranslation()
   const header = useHeader()
+  const { navPosition } = useAppearance()
+  const rail = navPosition === 'top' ? null : navPosition
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header
-        ref={header.ref}
-        className="sticky top-0 z-40 pt-2"
-      >
+    <div className={cn('flex min-h-dvh flex-col', rail === 'left' && 'md:pl-[4.5rem]', rail === 'right' && 'md:pr-[4.5rem]')}>
+      {rail ? <SideRail position={rail} /> : null}
+      <header ref={header.ref} className={cn('sticky top-0 z-40 pt-2', rail && 'md:hidden')}>
         <div className="mx-auto max-w-(--page-max) px-4 sm:px-6">
           <div
             className={cn(

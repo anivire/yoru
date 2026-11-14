@@ -7,7 +7,7 @@ import { relativeTime } from '../lib/format'
 import { keys } from '../lib/queries'
 import { TLink } from './transition-link'
 
-export function NotificationsPopover() {
+export function NotificationsPopover({ side = 'bottom' }: { side?: 'bottom' | 'left' | 'right' }) {
   const { t } = useTranslation()
   const client = useQueryClient()
   const { data } = useQuery({ queryKey: keys.notifications, queryFn: api.notifications, refetchInterval: 60_000, refetchOnWindowFocus: true })
@@ -29,7 +29,7 @@ export function NotificationsPopover() {
           ) : null}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[min(24rem,calc(100vw-1.5rem))] p-0" align="end" collisionPadding={12}>
+      <PopoverContent className="w-[min(24rem,calc(100vw-1.5rem))] p-0" side={side} align="end" collisionPadding={12}>
         <div className="flex items-center justify-between px-3 pb-1 pt-2.5">
           <span className="px-1 text-sm font-medium">{t('notifications.title')}</span>
           <div className="flex gap-1">

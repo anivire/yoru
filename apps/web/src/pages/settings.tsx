@@ -7,7 +7,7 @@ import { Trans, useTranslation } from 'react-i18next'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { Page, PageHeader } from '../components/app-shell'
 import { SecretForm } from '../components/admin-sources'
-import { HomeLayoutSettings, NavigationSettings } from '../components/layout-settings'
+import { HomeLayoutSettings, NavPositionSettings, NavigationSettings } from '../components/layout-settings'
 import { SessionsList } from '../components/sessions'
 import { Flag, LANGUAGES, useChangeLanguage } from '../components/language'
 import { PROVIDER_NAMES, ProviderIcon } from '../components/providers'
@@ -89,6 +89,9 @@ function AppearanceTab() {
       </Block>
       <Block title={t('settings.homeLayout')} description={t('settings.homeLayoutHint')}>
         <HomeLayoutSettings />
+      </Block>
+      <Block title={t('settings.navPosition.title')} description={t('settings.navPosition.hint')}>
+        <NavPositionSettings />
       </Block>
       <Block title={t('settings.navigation')} description={t('settings.navigationHint')}>
         <NavigationSettings />

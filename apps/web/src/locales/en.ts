@@ -308,6 +308,13 @@ export const en: Messages = {
     voice: 'voice-over',
   },
   settings: {
+    navPosition: {
+      title: 'Navigation bar',
+      hint: 'Show navigation at the top or on the side. On phones it always stays at the top.',
+      top: 'Top',
+      left: 'Left',
+      right: 'Right',
+    },
     player: 'Player',
     playerPrefs: {
       kind: 'Default translation',
