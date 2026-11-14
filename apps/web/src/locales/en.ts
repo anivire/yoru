@@ -420,6 +420,7 @@ export const en: Messages = {
     entries: 'anime in lists',
     deleteUser: 'Delete user {{name}}?',
     globalToken: 'Global Anime365 token',
+    globalTokenMissing: 'No shared token is set. Users without a personal token will not be able to play episodes.',
     globalTokenHint: 'Used by everyone without a personal token. Can also be set via <code>ANIME365_TOKEN</code>.',
     reachable: 'Reachable',
     checking: 'Checking…',

@@ -178,7 +178,7 @@ export function SecretForm({
 
 function Anime365Extras({ settings }: { settings: AdminSettings }) {
   const { t } = useTranslation()
-  const save = useSaveSettings()
+  const save = useSaveSettings([['me']])
   return (
     <Field
       label={t('admin.globalToken')}
@@ -191,6 +191,7 @@ function Anime365Extras({ settings }: { settings: AdminSettings }) {
         onSave={(v) => save.mutate({ anime365Token: v })}
         onClear={() => save.mutate({ anime365Token: null })}
       />
+      {settings.hasAnime365Token ? null : <p className="text-xs text-danger">{t('admin.globalTokenMissing')}</p>}
     </Field>
   )
 }

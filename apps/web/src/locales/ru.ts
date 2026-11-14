@@ -418,6 +418,7 @@ export const ru = {
     entries: 'аниме в списках',
     deleteUser: 'Удалить пользователя {{name}}?',
     globalToken: 'Общий токен Anime365',
+    globalTokenMissing: 'Общий токен не задан. Пользователи без личного токена не смогут смотреть серии.',
     globalTokenHint: 'Используется всеми, у кого нет личного токена. Также можно задать через <code>ANIME365_TOKEN</code>.',
     reachable: 'Доступен',
     checking: 'Проверяем…',
