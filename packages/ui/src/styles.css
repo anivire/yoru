@@ -197,14 +197,8 @@
     border-color: var(--border);
   }
 
-  html body[data-scroll-locked] {
-    margin-right: 0 !important;
-    padding-right: 0 !important;
-  }
-
   html {
     font-size: 108%;
-    scrollbar-gutter: stable;
     background: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
@@ -217,11 +211,6 @@
     html {
       font-size: 120%;
     }
-  }
-
-  html:has(:fullscreen) {
-    scrollbar-gutter: auto;
-    overflow: hidden;
   }
 
   :fullscreen {
