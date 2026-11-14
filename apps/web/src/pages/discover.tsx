@@ -40,7 +40,13 @@ function Hero({ items }: { items: AnimeSummary[] }) {
   useEffect(() => {
     const next = items[(index + 1) % items.length]
     if (!next) return
-    void client.prefetchQuery({ queryKey: ['banner', next.malId], queryFn: () => api.banner(next.malId), staleTime: Infinity })
+    void client
+      .fetchQuery({ queryKey: ['banner', next.malId], queryFn: () => api.banner(next.malId), staleTime: Infinity })
+      .then((b) => {
+        const url = b?.url ?? next.imageUrl
+        if (url) new window.Image().src = url
+      })
+      .catch(() => undefined)
     void client.prefetchQuery({ queryKey: keys.anime(next.malId), queryFn: () => api.anime(next.malId), staleTime: 10 * 60_000 })
   }, [index, items, client])
 
@@ -52,7 +58,7 @@ function Hero({ items }: { items: AnimeSummary[] }) {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <HeroBackdrop src={background ?? null} />
+      <HeroBackdrop src={banner.isPending ? null : (background ?? null)} />
       <div className="mx-auto max-w-(--page-max) px-4 pb-12 pt-6 sm:px-6">
         <div className="mb-6 flex gap-1.5">
           {items.map((item, i) => (

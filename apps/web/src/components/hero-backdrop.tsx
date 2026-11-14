@@ -1,7 +1,56 @@
-export function HeroBackdrop({ src, fadeKey }: { src: string | null; fadeKey?: string }) {
+import { cn } from '@yoru/ui'
+import { useEffect, useState } from 'react'
+
+const FADE_MS = 700
+
+interface Layer {
+  src: string
+  shown: boolean
+}
+
+function preload(src: string): Promise<void> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => resolve()
+    img.onerror = () => resolve()
+    img.src = src
+    if (img.complete) resolve()
+  })
+}
+
+export function HeroBackdrop({ src }: { src: string | null }) {
+  const [layers, setLayers] = useState<Layer[]>([])
+
+  useEffect(() => {
+    if (!src) return
+    let cancelled = false
+    let timer: number | undefined
+    void preload(src).then(() => {
+      if (cancelled) return
+      setLayers((prev) => (prev.at(-1)?.src === src ? prev : [...prev.slice(-1), { src, shown: false }]))
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (cancelled) return
+        setLayers((prev) => prev.map((l) => (l.src === src ? { ...l, shown: true } : l)))
+        timer = window.setTimeout(() => setLayers((prev) => prev.filter((l) => l.src === src)), FADE_MS)
+      }))
+    })
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [src])
+
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[calc(100%+12rem)] overflow-hidden [mask-image:linear-gradient(to_bottom,black_45%,transparent)]">
-      {src ? <img key={fadeKey ?? src} src={src} alt="" className="h-full w-full scale-110 animate-fade object-cover object-[50%_30%] opacity-50 blur-xl" /> : null}
+      {layers.map((layer) => (
+        <img
+          key={layer.src}
+          src={layer.src}
+          alt=""
+          style={{ transitionDuration: `${FADE_MS}ms` }}
+          className={cn('absolute inset-0 h-full w-full scale-110 object-cover object-[50%_30%] blur-xl transition-opacity ease-out', layer.shown ? 'opacity-50' : 'opacity-0')}
+        />
+      ))}
       <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-background/50 to-background/20" />
     </div>
   )
