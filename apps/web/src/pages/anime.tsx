@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
 import { Page } from '../components/app-shell'
 import { ListEditor } from '../components/list-editor'
-import { LinkButton, ServiceLinks } from '../components/service-links'
+import { LinkButton, LinkGroup, ServiceLinks } from '../components/service-links'
 import { AnimePageSkeleton } from '../components/skeletons'
 import { WatchSection } from '../components/watch-section'
 import { api } from '../lib/api'
@@ -85,19 +85,19 @@ function Header({ anime, listButton }: { anime: AnimeDetails; listButton: React.
       </div>
       <div className="mx-auto max-w-(--page-max) px-4 pb-10 pt-4 sm:px-6 sm:pt-10">
         <div className="flex flex-col gap-6 sm:flex-row">
-          <div className="flex w-full shrink-0 flex-col gap-2 self-start sm:w-48">
+          <div className="flex w-full shrink-0 flex-col gap-3 self-start sm:w-48">
             <div className="aspect-[2/3] w-full overflow-hidden rounded-xl bg-muted shadow-2xl">
               {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" /> : null}
             </div>
             {listButton}
-            <div className="mt-1 grid grid-cols-2 gap-1.5 sm:grid-cols-1">
+            <LinkGroup>
               <ServiceLinks malId={anime.malId} />
               {anime.trailerUrl ? (
                 <LinkButton href={anime.trailerUrl} icon={<RiClapperboardFill />}>
                   {t('anime.trailer')}
                 </LinkButton>
               ) : null}
-            </div>
+            </LinkGroup>
           </div>
           <div className={cn('flex min-w-0 flex-1 flex-col gap-3', !open && 'sm:h-72')}>
             <div>

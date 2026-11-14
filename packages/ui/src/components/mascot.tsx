@@ -148,7 +148,7 @@ export function LogoMark({ size = 28, className }: { size?: number; className?: 
 
 export function Logo({ className, size = 28 }: { className?: string; size?: number }) {
   return (
-    <span className={cn('inline-flex items-center gap-2', className)}>
+    <span className={cn('inline-flex items-center gap-1', className)}>
       <LogoMark size={size} />
       <span className="text-[17px] font-semibold tracking-tight">yoru</span>
     </span>

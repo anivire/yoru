@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AnimeSummary, HomeData } from '@yoru/shared'
 import { Button, EmptyState, Image } from '@yoru/ui'
-import { RiCalendarScheduleFill, RiDownload2Fill, RiPlayCircleFill, RiPlayFill, RiSearchFill, RiTv2Fill } from '@remixicon/react'
+import { RiCalendarScheduleFill, RiDownload2Fill, RiPlayCircleFill, RiPlayLargeFill, RiSearchFill, RiTv2Fill } from '@remixicon/react'
 import { Fragment, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -35,7 +35,7 @@ function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number 
           <div className="mt-5 flex gap-2">
             <Button asChild variant="accent" size="lg">
               <Link to={`/anime/${anime.malId}${episode ? `?episode=${episode}` : ''}`}>
-                <RiPlayFill className="fill-current" />
+                <RiPlayLargeFill />
                 {episode ? `${t('common.episode')} ${episode}` : t('common.open')}
               </Link>
             </Button>

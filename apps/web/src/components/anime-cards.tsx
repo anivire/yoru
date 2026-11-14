@@ -1,6 +1,6 @@
 import type { AnimeSummary, ContinueItem, ListStatus, UpcomingItem } from '@yoru/shared'
 import { Badge, Image, Progress, cn } from '@yoru/ui'
-import { RiPlayFill, RiRepeatFill, RiStarFill, RiTimeFill } from '@remixicon/react'
+import { RiPlayLargeFill, RiRepeatFill, RiStarFill, RiTimeFill } from '@remixicon/react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -171,7 +171,7 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
             <div className="absolute inset-0 grid place-items-center opacity-0 transition-opacity group-hover:opacity-100">
               <span className="grid size-12 place-items-center rounded-full bg-white/90 text-black shadow-lg">
-                <RiPlayFill className="ml-0.5 size-5 fill-current" />
+                <RiPlayLargeFill className="size-5" />
               </span>
             </div>
           </>

@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AnimeLink, AnimeService } from '@yoru/shared'
-import { Button } from '@yoru/ui'
 import { RiExternalLinkFill } from '@remixicon/react'
 import type { ReactNode } from 'react'
 import { api } from '../lib/api'
@@ -38,14 +37,21 @@ export function ServiceIcon({ service }: { service: AnimeService }) {
 
 export function LinkButton({ href, icon, children }: { href: string; icon: ReactNode; children: ReactNode }) {
   return (
-    <Button asChild variant="secondary" size="sm" className="w-full justify-start">
-      <a href={href} target="_blank" rel="noreferrer">
-        {icon}
-        <span className="flex-1 truncate">{children}</span>
-        <RiExternalLinkFill className="text-subtle-foreground" />
-      </a>
-    </Button>
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="group flex h-9 min-w-0 items-center gap-2.5 rounded-lg px-2.5 text-[13px] font-medium text-foreground transition-colors hover:bg-field-hover [&_svg]:size-4 [&_svg]:shrink-0"
+    >
+      {icon}
+      <span className="flex-1 truncate">{children}</span>
+      <RiExternalLinkFill className="size-3.5! text-subtle-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+    </a>
   )
+}
+
+export function LinkGroup({ children }: { children: ReactNode }) {
+  return <div className="grid grid-cols-2 gap-0.5 rounded-xl bg-field p-1 sm:grid-cols-1">{children}</div>
 }
 
 export function ServiceLinks({ malId }: { malId: number }) {

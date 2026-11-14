@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { AnimeSummary } from '@yoru/shared'
 import { Button, EmptyState, Image, Skeleton, cn } from '@yoru/ui'
-import { RiPlayFill } from '@remixicon/react'
+import { RiPlayLargeFill } from '@remixicon/react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -103,7 +103,7 @@ function Hero({ items }: { items: AnimeSummary[] }) {
             <div className="mt-1">
               <Button asChild variant="accent" size="lg">
                 <Link to={`/anime/${anime.malId}`}>
-                  <RiPlayFill className="fill-current" />
+                  <RiPlayLargeFill />
                   {t('discover.open')}
                 </Link>
               </Button>
