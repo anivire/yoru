@@ -98,7 +98,7 @@ function UrlField({ info }: { info: DataSourceInfo }) {
   )
 }
 
-function SecretForm({
+export function SecretForm({
   placeholder,
   isSet,
   fromEnv = false,

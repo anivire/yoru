@@ -6,6 +6,7 @@ import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'rea
 import { Trans, useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { Page, PageHeader } from '../components/app-shell'
+import { SecretForm } from '../components/admin-sources'
 import { HomeLayoutSettings, NavigationSettings } from '../components/layout-settings'
 import { SessionsList } from '../components/sessions'
 import { Flag, LANGUAGES, useChangeLanguage } from '../components/language'
@@ -133,7 +134,6 @@ function AccountTab() {
   const { t } = useTranslation()
   const user = useUser()
   const update = useUpdateUser()
-  const [token, setToken] = useState('')
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
   const password = useMutation({
@@ -177,43 +177,31 @@ function AccountTab() {
         </Card>
       </Block>
       <Block title={t('settings.token')} description={<Trans i18nKey="settings.tokenHint" components={{ code: <Code /> }} />}>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Card className="flex flex-col gap-4 p-4">
-            <div className="flex items-center gap-3">
-              <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-white">
-                <img src="/anime365.webp" alt="" className="size-7 object-contain" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="font-medium">Anime365</div>
-                {user.hasOwnAnime365Token ? (
-                  <div className="flex items-center gap-1 text-xs text-success">
-                    <RiCheckFill className="size-3" />
-                    {t('settings.tokenSet')}
-                  </div>
-                ) : (
-                  <div className="text-xs text-muted-foreground">{t('settings.tokenNotSet')}</div>
-                )}
-              </div>
+        <Card className="flex flex-col gap-4 p-4">
+          <div className="flex items-center gap-3">
+            <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-white">
+              <img src="/anime365.webp" alt="" className="size-7 object-contain" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="font-medium">Anime365</div>
               {user.hasOwnAnime365Token ? (
-                <Button size="sm" variant="ghost" onClick={() => update.mutate({ anime365Token: null })}>
-                  {t('common.delete')}
-                </Button>
-              ) : null}
+                <div className="flex items-center gap-1 text-xs text-success">
+                  <RiCheckFill className="size-3" />
+                  {t('settings.tokenSet')}
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground">{t('settings.tokenNotSet')}</div>
+              )}
             </div>
-            <form
-              className="mt-auto flex gap-2"
-              onSubmit={(e) => {
-                e.preventDefault()
-                update.mutate({ anime365Token: token.trim() }, { onSuccess: () => setToken('') })
-              }}
-            >
-              <Input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="access_token" autoComplete="off" className="h-8 text-[0.8125rem]" />
-              <Button type="submit" variant="secondary" size="sm" disabled={!token.trim()} loading={update.isPending}>
-                {t('common.save')}
-              </Button>
-            </form>
-          </Card>
-        </div>
+          </div>
+          <SecretForm
+            placeholder="access_token"
+            isSet={user.hasOwnAnime365Token}
+            onSave={(v) => update.mutate({ anime365Token: v })}
+            onClear={() => update.mutate({ anime365Token: null })}
+            pending={update.isPending}
+          />
+        </Card>
       </Block>
     </>
   )
