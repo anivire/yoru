@@ -158,8 +158,6 @@ export function Footer({ scope, compact, className }: { scope: 'app' | 'public';
           <div className="mt-10 flex flex-col gap-3 border-t border-border pt-6 text-xs text-subtle-foreground sm:flex-row sm:items-center sm:justify-between">
             <p className="max-w-2xl">{t('footer.disclaimer')}</p>
             <div className="flex shrink-0 items-center gap-2 text-sm text-muted-foreground">
-              <span>© {new Date().getFullYear()} yoru</span>
-              <span className="text-subtle-foreground">·</span>
               <VersionBadge scope={scope} />
             </div>
           </div>
