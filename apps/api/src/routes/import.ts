@@ -8,6 +8,7 @@ import { type AppEnv, requireAuth } from '../lib/auth'
 import { badRequest } from '../lib/http'
 import { applyImport, consumeState, createAuthorizeUrl, fetchProviderList, providerEnabled } from '../services/importers'
 import { parseSeanimeExport } from '../services/seanime'
+import { parseYoruExport } from '../services/yoru-import'
 
 const MAX_FILE_BYTES = 64 * 1024 * 1024
 
@@ -45,6 +46,14 @@ export const importRoutes = new Hono<AppEnv>()
     if (file.size > MAX_FILE_BYTES) badRequest('SEANIME_TOO_LARGE')
     const items = parseSeanimeExport(Buffer.from(await file.arrayBuffer()))
     return c.json(applyImport(c.get('user').id, 'seanime', items))
+  })
+  .post('/yoru', async (c) => {
+    const body = await c.req.parseBody()
+    const file = body.file
+    if (!(file instanceof File)) badRequest('YORU_INVALID')
+    if (file.size > MAX_FILE_BYTES) badRequest('SEANIME_TOO_LARGE')
+    const items = parseYoruExport(Buffer.from(await file.arrayBuffer()))
+    return c.json(applyImport(c.get('user').id, 'yoru', items))
   })
   .get('/:provider/start', (c) => {
     const provider = providerParam(c.req.param('provider'))

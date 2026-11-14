@@ -40,7 +40,7 @@ function UkFlag() {
 
 export function Flag({ locale, className }: { locale: Locale; className?: string }) {
   return (
-    <span className={cn('inline-block h-3.5 w-5 shrink-0 overflow-hidden rounded-[3px] shadow-[0_0_0_1px_rgb(0_0_0/0.12)]', className)}>
+    <span className={cn('inline-block h-3.5 w-5 shrink-0 overflow-hidden rounded-[0.1875rem] shadow-[0_0_0_1px_rgb(0_0_0/0.12)]', className)}>
       {locale === 'ru' ? <RuFlag /> : <UkFlag />}
     </span>
   )

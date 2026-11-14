@@ -1,11 +1,11 @@
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
 import { EXPORT_FORMATS, LIST_STATUSES, type ListEntryWithAnime, type ListStatus } from '@yoru/shared'
 import { Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, EmptyState, Image, Input, Segmented, Select, cn } from '@yoru/ui'
-import { RiDownload2Fill, RiFileDownloadFill, RiLayoutGridFill, RiLayoutRowFill, RiRepeatFill, RiSearchFill, RiStarFill } from '@remixicon/react'
+import { RiCalendar2Fill, RiCloseFill, RiDownload2Fill, RiFileDownloadFill, RiLayoutGridFill, RiLayoutRowFill, RiRepeatFill, RiSearchFill, RiSortDesc, RiStarFill, RiTvFill } from '@remixicon/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router'
-import { AnimeCard, PosterGrid } from '../components/anime-cards'
+import { AnimeCard, EpisodeCount, PosterGrid, formatScore, scoreClass } from '../components/anime-cards'
 import { ListTableSkeleton, PosterGridSkeleton } from '../components/skeletons'
 import { Page, PageHeader } from '../components/app-shell'
 import { api } from '../lib/api'
@@ -62,14 +62,14 @@ function ListTable({ items }: { items: ListEntryWithAnime[] }) {
                   {t(`status.${e.status}`)}
                 </Badge>
               </td>
-              <td className="px-4 py-2.5 font-mono text-[13px]">
-                {e.progress}/{e.anime.episodes ?? '?'}
+              <td className="px-4 py-2.5 font-mono text-[0.8125rem]">
+                <EpisodeCount current={e.progress} total={e.anime.episodes} />
               </td>
               <td className="hidden px-4 py-2.5 sm:table-cell">
                 {e.score ? (
-                  <span className="inline-flex items-center gap-1 font-mono text-[13px]">
-                    <RiStarFill className="size-3 fill-warning text-warning" />
-                    {e.score}
+                  <span className={cn('inline-flex items-center gap-1 font-mono text-[0.8125rem] font-semibold', scoreClass(e.score))}>
+                    <RiStarFill className="size-3 fill-current" />
+                    {formatScore(e.score)}
                   </span>
                 ) : (
                   <span className="text-subtle-foreground">{t('anime.noScore')}</span>
@@ -90,6 +90,7 @@ export function ListsPage() {
   const { t } = useTranslation()
   const [params, setParams] = useSearchParams()
   const [view, setView] = useState<'grid' | 'table'>(() => (localStorage.getItem('yoru:list-view') === 'table' ? 'table' : 'grid'))
+  const [resetKey, setResetKey] = useState(0)
   const status = (params.get('status') as ListStatus | null) ?? 'all'
   const filters = {
     status: status === 'all' ? undefined : status,
@@ -177,21 +178,35 @@ export function ListsPage() {
         ]}
       />
 
-      <div className="mb-6 mt-4 flex flex-wrap items-center gap-2">
-        <div className="relative min-w-56 flex-1">
-          <RiSearchFill className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
-          <Input defaultValue={filters.q} onChange={(e) => set('q', e.target.value)} placeholder={t('lists.filter')} className="h-8 pl-9 text-[13px]" />
-        </div>
+      <div className="relative mt-4">
+        <RiSearchFill className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
+        <Input key={resetKey} defaultValue={filters.q} onChange={(e) => set('q', e.target.value)} placeholder={t('lists.filter')} className="h-11 rounded-xl pl-10 text-[0.9375rem]" />
+        {filters.q ? (
+          <button
+            type="button"
+            onClick={() => {
+              set('q', undefined)
+              setResetKey((k) => k + 1)
+            }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-1 text-subtle-foreground hover:text-foreground"
+          >
+            <RiCloseFill className="size-4" />
+          </button>
+        ) : null}
+      </div>
+      <div className="mb-8 mt-3 flex flex-wrap items-center gap-2">
         <Select
           size="sm"
-          className="w-36"
+          className="w-40"
+          icon={<RiTvFill />}
           value={filters.type ?? ANY}
           onValueChange={(v) => set('type', v)}
           options={[{ value: ANY, label: `${t('search.type')}: ${t('common.any')}` }, ...types.map((v) => ({ value: v, label: typeLabel(v) }))]}
         />
         <Select
           size="sm"
-          className="w-32"
+          className="w-36"
+          icon={<RiCalendar2Fill />}
           value={filters.year ?? ANY}
           onValueChange={(v) => set('year', v)}
           options={[{ value: ANY, label: `${t('lists.year')}: ${t('common.any')}` }, ...years.map((y) => ({ value: String(y), label: String(y) }))]}
@@ -199,11 +214,12 @@ export function ListsPage() {
         <Select
           size="sm"
           className="w-64"
+          icon={<RiSortDesc />}
           value={filters.sort}
           onValueChange={(v) => set('sort', v === 'score' ? undefined : v)}
           options={SORTS.map((s) => ({ value: s, label: `${t('lists.sortBy')}: ${t(`order.${s}`).toLowerCase()}` }))}
         />
-        <div className="flex rounded-lg bg-inset p-0.5">
+        <div className="ml-auto flex rounded-lg bg-inset p-0.5">
           {(['grid', 'table'] as const).map((v) => (
             <button
               key={v}

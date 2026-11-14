@@ -69,7 +69,7 @@ export function ActivityHeatmap() {
       title={t('home.activity')}
       icon={<RiPulseFill />}
       hint={data ? t('home.activityHint', { count: data.total }) : undefined}
-      action={data && data.total ? <span className="text-[13px] text-muted-foreground">{t('home.streak', { current: data.currentStreak, longest: data.longestStreak })}</span> : null}
+      action={data && data.total ? <span className="text-[0.8125rem] text-muted-foreground">{t('home.streak', { current: data.currentStreak, longest: data.longestStreak })}</span> : null}
     >
       {!grid ? (
         <Skeleton className="h-32 w-full rounded-xl" />
@@ -78,21 +78,21 @@ export function ActivityHeatmap() {
           <div ref={scroller} className="overflow-x-auto scrollbar-none">
             <div className="grid min-w-[44rem] grid-cols-[auto_1fr] gap-x-2">
               <div />
-              <div className="relative mb-1.5 h-4 text-[11px] text-muted-foreground">
+              <div className="relative mb-1.5 h-4 text-[0.6875rem] text-muted-foreground">
                 {grid.months.map((m) => (
                   <span key={m.index} className="absolute" style={{ left: `${(m.index / WEEKS) * 100}%` }}>
                     {m.label}
                   </span>
                 ))}
               </div>
-              <div className="grid grid-rows-7 gap-[3px] text-[11px] text-muted-foreground">
+              <div className="grid grid-rows-7 gap-[0.1875rem] text-[0.6875rem] text-muted-foreground">
                 {Array.from({ length: 7 }, (_, row) => (
                   <span key={row} className="flex items-center leading-none">
                     {weekdays.find((w) => w.row === row)?.label ?? ''}
                   </span>
                 ))}
               </div>
-              <div className="grid grid-flow-col grid-rows-7 gap-[3px]" style={{ gridTemplateColumns: `repeat(${WEEKS}, minmax(0, 1fr))` }}>
+              <div className="grid grid-flow-col grid-rows-7 gap-[0.1875rem]" style={{ gridTemplateColumns: `repeat(${WEEKS}, minmax(0, 1fr))` }}>
                 {grid.weeks.flat().map((cell) => (
                   <span
                     key={cell.date}
@@ -104,18 +104,18 @@ export function ActivityHeatmap() {
                             date: parse(cell.date).toLocaleDateString(i18n.language, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }),
                           })
                     }
-                    className={cn('aspect-square rounded-[3px]', cell.future ? 'opacity-0' : LEVELS[level(cell.count)])}
+                    className={cn('aspect-square rounded-[0.1875rem]', cell.future ? 'opacity-0' : LEVELS[level(cell.count)])}
                   />
                 ))}
               </div>
             </div>
           </div>
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-[11px] text-muted-foreground">
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-[0.6875rem] text-muted-foreground">
             <span>{data && !data.total ? t('home.activityEmpty') : null}</span>
             <span className="flex items-center gap-1.5">
               {t('home.less')}
               {LEVELS.map((c) => (
-                <span key={c} className={cn('size-2.5 rounded-[3px]', c)} />
+                <span key={c} className={cn('size-2.5 rounded-[0.1875rem]', c)} />
               ))}
               {t('home.more')}
             </span>

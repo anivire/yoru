@@ -93,8 +93,8 @@ function Hero({ items }: { items: AnimeSummary[] }) {
                 <span key={m}>{m}</span>
               ))}
             </div>
-            {synopsis ? <p className="line-clamp-3 text-[15px] leading-relaxed text-foreground/80">{synopsis}</p> : details.isPending ? (
-              <div className="text-[15px] leading-relaxed">
+            {synopsis ? <p className="line-clamp-3 text-[0.9375rem] leading-relaxed text-foreground/80">{synopsis}</p> : details.isPending ? (
+              <div className="text-[0.9375rem] leading-relaxed">
                 <TextLine />
                 <TextLine />
                 <TextLine bar="w-2/3" />
@@ -152,7 +152,7 @@ function Trending() {
   const items = useQuery({ queryKey: ['discover', 'trending', genre], queryFn: () => api.trending(genre), staleTime: 10 * 60_000 })
   const chip = (active: boolean) =>
     cn(
-      'inline-flex h-7 shrink-0 cursor-pointer items-center rounded-full px-3 text-[13px] font-medium transition-colors',
+      'inline-flex h-7 shrink-0 cursor-pointer items-center rounded-full px-3 text-[0.8125rem] font-medium transition-colors',
       active ? 'bg-accent text-accent-foreground' : 'bg-field text-muted-foreground hover:bg-field-hover hover:text-foreground',
     )
   return (
@@ -219,7 +219,7 @@ function RecentSection() {
             key={r.anime.malId}
             anime={r.anime}
             badge={
-              <span className="inline-flex h-6 shrink-0 items-center rounded-full bg-accent px-2 text-[11px] font-semibold text-accent-foreground">
+              <span className="inline-flex h-6 shrink-0 items-center rounded-full bg-accent px-2 text-[0.6875rem] font-semibold text-accent-foreground">
                 {t('common.episode')} {r.episode}
               </span>
             }

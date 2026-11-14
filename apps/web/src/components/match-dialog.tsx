@@ -31,14 +31,14 @@ export function MatchDialog({ malId, match, defaultQuery }: { malId: number; mat
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm">
+        <Button variant="ghost" size="sm" aria-label={t('player.manualMatch')} title={t('player.manualMatch')} className="max-sm:w-8 max-sm:bg-field max-sm:px-0">
           <RiLinksFill />
-          {t('player.manualMatch')}
+          <span className="hidden sm:inline">{t('player.manualMatch')}</span>
         </Button>
       </DialogTrigger>
       <DialogContent title={t('player.matchTitle')} description={t('player.matchHint')} className="w-[min(92vw,36rem)]">
         <div className="flex flex-col gap-3 p-4">
-          {match?.providerId ? <div className="text-[13px] text-muted-foreground">{t('player.matched', { title: match.title })}</div> : null}
+          {match?.providerId ? <div className="text-[0.8125rem] text-muted-foreground">{t('player.matched', { title: match.title })}</div> : null}
           <div className="relative">
             <RiSearchFill className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
             <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('player.matchSearch')} className="pl-9" autoFocus />

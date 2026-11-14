@@ -104,7 +104,7 @@ function EntryRow({ item }: { item: ScheduleItem }) {
         </div>
         <div className="min-w-0 flex-1 self-center leading-tight">
           <div className={cn('truncate text-xs', item.listStatus ? 'font-semibold text-accent' : 'font-medium group-hover:text-accent')}>{item.anime.title}</div>
-          <div className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+          <div className="mt-0.5 flex items-center gap-1 text-[0.6875rem] text-muted-foreground">
             <span className="font-mono">
               {item.estimated ? '~' : ''}
               {time}
@@ -127,7 +127,7 @@ function DayHeader({ day, total, today }: { day: Date; total: number; today: boo
       <span className={cn('text-xs first-letter:uppercase', today ? 'font-medium text-accent' : 'text-subtle-foreground')}>
         {day.toLocaleDateString(i18n.language, { weekday: 'short' })}
       </span>
-      {total ? <span className="ml-auto text-[11px] text-subtle-foreground">{total}</span> : null}
+      {total ? <span className="ml-auto text-[0.6875rem] text-subtle-foreground">{total}</span> : null}
     </div>
   )
 }

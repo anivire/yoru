@@ -130,7 +130,7 @@ function Invites() {
                 <div key={invite.id} className="flex flex-wrap items-center gap-3 rounded-lg bg-field px-4 py-3">
                   <StatusDot tone={state === 'active' ? 'success' : state === 'used' ? 'neutral' : 'danger'} />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-mono text-[13px]">{link}</div>
+                    <div className="truncate font-mono text-[0.8125rem]">{link}</div>
                     <div className="text-xs text-muted-foreground">
                       {[
                         invite.note,
@@ -195,7 +195,7 @@ function Users() {
           : null}
         {users.data?.map((u) => (
           <div key={u.id} className="flex items-center gap-3 px-5 py-3">
-            <span className="grid size-8 place-items-center rounded-full bg-field text-[13px] font-semibold uppercase">{u.username.slice(0, 1)}</span>
+            <span className="grid size-8 place-items-center rounded-full bg-field text-[0.8125rem] font-semibold uppercase">{u.username.slice(0, 1)}</span>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 text-sm font-medium">
                 {u.username}

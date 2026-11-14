@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { formatDateTime, formatTime, relativeTime, seasonLabel, typeLabel } from '../lib/format'
 import { useAppearance } from '../lib/appearance'
+import { QuickEdit } from './quick-edit'
 
 export function Poster({ src, alt, className }: { src: string | null; alt: string; className?: string }) {
   return (
@@ -15,11 +16,59 @@ export function Poster({ src, alt, className }: { src: string | null; alt: strin
   )
 }
 
-export function Score({ value, className }: { value: number; className?: string }) {
+type ScoreTone = 'gold' | 'green' | 'yellow' | 'red'
+
+export function scoreTone(value: number): ScoreTone {
+  if (value >= 9) return 'gold'
+  if (value >= 7) return 'green'
+  if (value >= 5) return 'yellow'
+  return 'red'
+}
+
+const TONE_ON_DARK: Record<ScoreTone, string> = {
+  gold: 'text-amber-300',
+  green: 'text-emerald-400',
+  yellow: 'text-yellow-300',
+  red: 'text-red-400',
+}
+
+const TONE_ON_THEME: Record<ScoreTone, string> = {
+  gold: 'text-amber-500 dark:text-amber-300',
+  green: 'text-emerald-600 dark:text-emerald-400',
+  yellow: 'text-yellow-600 dark:text-yellow-300',
+  red: 'text-red-600 dark:text-red-400',
+}
+
+export function scoreClass(value: number, surface: 'dark' | 'theme' = 'theme') {
+  return (surface === 'dark' ? TONE_ON_DARK : TONE_ON_THEME)[scoreTone(value)]
+}
+
+export function formatScore(value: number, digits = 1) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(digits)
+}
+
+export function Score({ value, className, surface = 'dark', digits = 1, title }: { value: number; className?: string; surface?: 'dark' | 'theme'; digits?: number; title?: string }) {
   return (
-    <span className={cn('inline-flex h-6 items-center gap-1 rounded-full bg-black/55 px-2 text-xs font-semibold tabular-nums text-white backdrop-blur-md', className)}>
-      <RiStarFill className="size-3 fill-amber-400 text-amber-400" />
-      {value.toFixed(1)}
+    <span
+      title={title}
+      className={cn(
+        'inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs font-semibold tabular-nums',
+        surface === 'dark' ? 'bg-black/55 backdrop-blur-md' : 'bg-field',
+        scoreClass(value, surface),
+        className,
+      )}
+    >
+      <RiStarFill className="size-3 fill-current" />
+      {formatScore(value, digits)}
+    </span>
+  )
+}
+
+export function EpisodeCount({ current, total, className }: { current: number | string; total: number | null | undefined; className?: string }) {
+  return (
+    <span className={cn('tabular-nums', className)}>
+      {current}
+      <span className="opacity-55">/{total ?? '?'}</span>
     </span>
   )
 }
@@ -47,7 +96,8 @@ export function AnimeCard({
   const total = anime.episodes
   const details = [typeLabel(anime.type), seasonLabel(anime), total ? `${total} ${t('common.episodes')}` : null].filter(Boolean).join(' · ')
   return (
-    <Link to={`/anime/${anime.malId}`} className="group flex flex-col gap-2">
+    <div className="group relative">
+      <Link to={`/anime/${anime.malId}`} className="flex flex-col gap-2">
       <div className="relative isolate aspect-[2/3] overflow-hidden rounded-xl bg-muted shadow-sm transition-shadow duration-300 group-hover:shadow-xl group-hover:shadow-black/40 transform-gpu">
         {anime.imageUrl ? (
           <Image
@@ -61,13 +111,13 @@ export function AnimeCard({
           {anime.genres.length ? (
             <div className="flex max-h-[2.75rem] flex-wrap gap-1 overflow-hidden">
               {anime.genres.slice(0, 3).map((g) => (
-                <span key={g} className="inline-flex h-5 max-w-full items-center rounded-full bg-white/20 px-2 text-[11px] font-medium text-white">
+                <span key={g} className="inline-flex h-5 max-w-full items-center rounded-full bg-white/20 px-2 text-[0.6875rem] font-medium text-white">
                   <span className="truncate">{g}</span>
                 </span>
               ))}
             </div>
           ) : null}
-          {details ? <div className="line-clamp-2 text-[11px] leading-snug text-white/80">{details}</div> : null}
+          {details ? <div className="line-clamp-2 text-[0.6875rem] leading-snug text-white/80">{details}</div> : null}
         </div>
         {progress !== undefined && total && progress < total ? (
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2.5 pb-2.5 pt-6 transition-opacity duration-150 group-hover:opacity-0">
@@ -97,10 +147,7 @@ export function AnimeCard({
           </div>
           {badge ??
             (userScore ? (
-              <span title={t('anime.yourScore')} className="inline-flex h-6 shrink-0 items-center gap-1 rounded-full bg-accent px-2 text-xs font-semibold tabular-nums text-accent-foreground">
-                <RiStarFill className="size-3" />
-                {Number.isInteger(userScore) ? userScore : userScore.toFixed(1)}
-              </span>
+              <Score value={userScore} title={t('anime.yourScore')} className="shrink-0 ring-1 ring-white/25" />
             ) : anime.score ? (
               <Score value={anime.score} className="shrink-0" />
             ) : null)}
@@ -112,16 +159,18 @@ export function AnimeCard({
           {subtitle ? (
             <span className="truncate">{subtitle}</span>
           ) : progress !== undefined ? (
-            <span className="font-mono">
-              {progress}/{total ?? '?'}
-            </span>
+            <EpisodeCount current={progress} total={total} className="font-mono" />
           ) : (
             <span className="truncate">{[typeLabel(anime.type), seasonLabel(anime)].filter(Boolean).join(' · ')}</span>
           )}
           {status ? <span className="truncate">· {t(`status.${status}`)}</span> : null}
         </div>
       </div>
-    </Link>
+      </Link>
+      <div className="pointer-events-none absolute inset-x-0 top-0 aspect-[2/3]">
+        <QuickEdit malId={anime.malId} className="pointer-events-auto absolute right-2 top-10" />
+      </div>
+    </div>
   )
 }
 
@@ -164,7 +213,7 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
               <RiTimeFill className="size-5" />
             </span>
             <span className="text-sm font-semibold">{t('home.awaitingTitle')}</span>
-            <span className="text-[11px] leading-snug text-white/90">{t('home.awaitingText')}</span>
+            <span className="text-[0.6875rem] leading-snug text-white/90">{t('home.awaitingText')}</span>
           </div>
         ) : (
           <>
@@ -184,7 +233,7 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
         {item.duration && !item.pending ? (
           <div className="absolute inset-x-3 bottom-3 flex items-center gap-2">
             <Progress value={item.position / item.duration} className="h-1 bg-white/25" />
-            <span className="font-mono text-[11px] text-white/80">{formatTime(item.duration - item.position)}</span>
+            <span className="font-mono text-[0.6875rem] text-white/80">{formatTime(item.duration - item.position)}</span>
           </div>
         ) : null}
       </div>
@@ -194,16 +243,16 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
             <span className="font-medium">
               {t('common.episode')} {item.episode}
             </span>
-            <span className="text-muted-foreground"> / {item.anime.episodes ?? '?'}</span>
+            <span className="text-subtle-foreground"> / {item.anime.episodes ?? '?'}</span>
           </span>
           {item.pending ? (
-            <span className="inline-flex h-5 items-center gap-1 rounded-full bg-warning-soft px-2 text-[11px] font-medium text-warning">
+            <span className="inline-flex h-5 items-center gap-1 rounded-full bg-warning-soft px-2 text-[0.6875rem] font-medium text-warning">
               <RiTimeFill className="size-3" />
               {t('home.awaitingTranslation')}
             </span>
           ) : null}
         </div>
-        <div className="truncate text-[13px] text-muted-foreground">{item.anime.title}</div>
+        <div className="truncate text-[0.8125rem] text-muted-foreground">{item.anime.title}</div>
       </div>
     </Link>
   )
@@ -227,13 +276,13 @@ export function UpcomingCard({ item }: { item: UpcomingItem }) {
           />
         ) : null}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-        <span className="absolute bottom-2.5 left-3 font-mono text-[11px] text-white/90">{formatDateTime(item.airingAt)}</span>
+        <span className="absolute bottom-2.5 left-3 font-mono text-[0.6875rem] text-white/90">{formatDateTime(item.airingAt)}</span>
       </div>
       <div className="min-w-0 px-0.5">
         <div className="truncate text-sm font-medium">{item.anime.title}</div>
         <div className="mt-0.5 flex items-baseline justify-between gap-2">
           <span className="text-base font-semibold">{item.episode ? `${t('common.episode')} ${item.episode}` : '—'}</span>
-          <span className="shrink-0 text-[13px] text-muted-foreground">{relativeTime(item.airingAt)}</span>
+          <span className="shrink-0 text-[0.8125rem] text-muted-foreground">{relativeTime(item.airingAt)}</span>
         </div>
       </div>
     </Link>

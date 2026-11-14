@@ -28,7 +28,7 @@ export function AnimeHoverCard({ anime, footer, children }: { anime: AnimeSummar
             <div className="line-clamp-2 text-sm font-semibold leading-snug">{anime.title}</div>
             {data?.titleEnglish && data.titleEnglish !== anime.title ? <div className="truncate text-xs text-muted-foreground">{data.titleEnglish}</div> : null}
             <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-              {anime.score ? <Score value={anime.score} className="h-5 bg-field px-1.5 text-foreground backdrop-blur-none" /> : null}
+              {anime.score ? <Score value={anime.score} surface="theme" className="h-5 px-1.5" /> : null}
               {meta.map((m) => (
                 <span key={m}>{m}</span>
               ))}
@@ -36,7 +36,7 @@ export function AnimeHoverCard({ anime, footer, children }: { anime: AnimeSummar
             {genres.length ? (
               <div className="flex flex-wrap gap-1">
                 {genres.map((g) => (
-                  <span key={g} className="inline-flex h-5 items-center rounded-full bg-field px-2 text-[11px] font-medium text-muted-foreground">
+                  <span key={g} className="inline-flex h-5 items-center rounded-full bg-field px-2 text-[0.6875rem] font-medium text-muted-foreground">
                     {g}
                   </span>
                 ))}

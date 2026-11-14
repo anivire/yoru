@@ -317,8 +317,8 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
       ) : null}
 
       <div className={cn('pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 to-transparent px-3 pb-8 pt-2.5 transition-opacity sm:px-5 sm:pb-10 sm:pt-4', controls ? 'opacity-100' : 'opacity-0')}>
-        <div className="truncate text-xs text-white/70 sm:text-[13px]">{subtitle}</div>
-        <div className="truncate text-sm font-medium sm:text-[15px]">{title}</div>
+        <div className="truncate text-xs text-white/70 sm:text-[0.8125rem]">{subtitle}</div>
+        <div className="truncate text-sm font-medium sm:text-[0.9375rem]">{title}</div>
       </div>
 
       <div className={cn('absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-2 pb-1.5 pt-10 transition-opacity sm:px-4 sm:pb-3 sm:pt-14', controls ? 'opacity-100' : 'pointer-events-none opacity-0')}>
@@ -367,7 +367,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
               className="hidden w-0 cursor-pointer accent-[var(--accent)] opacity-0 transition-all group-hover/vol:w-20 group-hover/vol:opacity-100 sm:block"
             />
           </div>
-          <span className="ml-1 whitespace-nowrap font-mono text-[11px] text-white/80 sm:ml-2 sm:text-xs">
+          <span className="ml-1 whitespace-nowrap font-mono text-[0.6875rem] text-white/80 sm:ml-2 sm:text-xs">
             {formatTime(time)} / {formatTime(duration)}
           </span>
           <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
@@ -428,10 +428,10 @@ function ControlButton({ label, onClick, icon, active, badge, className }: { lab
         e.stopPropagation()
         onClick()
       }}
-      className={cn('relative grid size-8 cursor-pointer place-items-center rounded-lg text-white/90 transition-colors hover:bg-white/10 sm:size-9 [&_svg]:size-4 sm:[&_svg]:size-[18px]', active && 'text-accent', className)}
+      className={cn('relative grid size-8 cursor-pointer place-items-center rounded-lg text-white/90 transition-colors hover:bg-white/10 sm:size-9 [&_svg]:size-4 sm:[&_svg]:size-[1.125rem]', active && 'text-accent', className)}
     >
       {icon}
-      {badge ? <span className="absolute -right-1 -top-0.5 rounded bg-accent px-1 font-mono text-[9px] font-semibold leading-3.5 text-accent-foreground">{badge}</span> : null}
+      {badge ? <span className="absolute -right-1 -top-0.5 rounded bg-accent px-1 font-mono text-[0.5625rem] font-semibold leading-3.5 text-accent-foreground">{badge}</span> : null}
     </button>
   )
 }
@@ -451,7 +451,7 @@ function MenuOption({ label, hint, active, onClick }: { label: string; hint?: st
     <button type="button" onClick={onClick} className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 hover:bg-white/10">
       <RiCheckFill className={cn('size-4 text-accent', !active && 'invisible')} />
       <span className="flex-1 text-left">{label}</span>
-      {hint ? <span className="font-mono text-[11px] text-white/50">{hint}</span> : null}
+      {hint ? <span className="font-mono text-[0.6875rem] text-white/50">{hint}</span> : null}
     </button>
   )
 }

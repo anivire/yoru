@@ -13,7 +13,7 @@ export function AuthLayout({ tagline, title, subtitle, children }: { tagline?: R
       <div className="w-full max-w-sm">
         <div className="mb-5 flex flex-col items-center gap-1 text-center">
           <LogoMark size={72} />
-          {tagline ? <p className="mt-1 text-[15px] text-muted-foreground">{tagline}</p> : null}
+          {tagline ? <p className="mt-1 text-[0.9375rem] text-muted-foreground">{tagline}</p> : null}
         </div>
         <Card className="p-6">
           {title ? (
@@ -24,7 +24,7 @@ export function AuthLayout({ tagline, title, subtitle, children }: { tagline?: R
           ) : null}
           {children}
         </Card>
-        <Footer scope="public" className="pb-0 pt-5 text-[13px]" />
+        <Footer scope="public" className="pb-0 pt-5 text-[0.8125rem]" />
       </div>
     </div>
   )

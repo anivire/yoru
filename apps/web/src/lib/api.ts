@@ -116,6 +116,11 @@ export const api = {
     form.append('file', file)
     return request<ImportResult>('POST', '/import/seanime', form)
   },
+  importYoru: (file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return request<ImportResult>('POST', '/import/yoru', form)
+  },
 
   admin: {
     invites: () => get<Invite[]>('/admin/invites'),

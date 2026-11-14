@@ -86,10 +86,12 @@ export async function homeData(userId: number): Promise<HomeData> {
 
   for (const e of entries) {
     if (seen.has(e.malId) || (e.status !== 'watching' && e.status !== 'rewatching')) continue
-    if (!e.latestEpisode || e.latestEpisode <= e.progress) continue
-    seen.add(e.malId)
     const episode = e.progress + 1
-    const pending = (available.get(e.malId) ?? 0) < episode
+    const finished = e.anime.status === 'finished'
+    const limit = finished ? e.anime.episodes : (airedEpisode(e.malId, e.latestEpisode) ?? e.latestEpisode ?? e.anime.episodes)
+    if (!limit || episode > limit) continue
+    seen.add(e.malId)
+    const pending = !finished && (available.get(e.malId) ?? 0) < episode
     continueWatching.push({
       anime: e.anime,
       episode,

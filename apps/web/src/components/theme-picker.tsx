@@ -18,7 +18,7 @@ function SchemePreview({ scheme }: { scheme: 'light' | 'dark' }) {
         <div className="aspect-square h-full rounded-full bg-field" />
       </div>
       <div
-        className="flex h-[34%] flex-col justify-center gap-[10%] rounded-[6px] bg-surface px-[5%]"
+        className="flex h-[34%] flex-col justify-center gap-[10%] rounded-[0.375rem] bg-surface px-[5%]"
         style={{ backgroundImage: 'radial-gradient(circle at 85% 40%, var(--accent-soft), transparent 55%)' }}
       >
         <div className="h-[14%] w-[45%] rounded-full bg-foreground/80" />
@@ -28,7 +28,7 @@ function SchemePreview({ scheme }: { scheme: 'light' | 'dark' }) {
       <div className="grid flex-1 grid-cols-5 gap-[3%]">
         {[0, 1, 2, 3, 4].map((i) => (
           <div key={i} className="flex flex-col gap-[8%]">
-            <div className={cn('flex-1 rounded-[4px]', i === 1 ? 'bg-accent-soft' : 'bg-muted')} />
+            <div className={cn('flex-1 rounded-[0.25rem]', i === 1 ? 'bg-accent-soft' : 'bg-muted')} />
             <div className="h-[10%] w-4/5 rounded-full bg-muted-foreground/30" />
           </div>
         ))}
@@ -72,7 +72,7 @@ export function SchemePicker({ compact }: { compact?: boolean }) {
               <SchemePreview scheme={o.value} />
             )}
           </div>
-          <div className={cn(compact ? 'pt-1.5 text-[13px]' : 'flex-1 text-sm sm:pt-1.5 sm:text-[13px]', scheme === o.value ? 'font-medium text-foreground' : 'text-muted-foreground')}>{o.label}</div>
+          <div className={cn(compact ? 'pt-1.5 text-[0.8125rem]' : 'flex-1 text-sm sm:pt-1.5 sm:text-[0.8125rem]', scheme === o.value ? 'font-medium text-foreground' : 'text-muted-foreground')}>{o.label}</div>
           {!compact && scheme === o.value ? <RiCheckFill className="mr-2 size-4 text-accent sm:hidden" /> : null}
         </button>
       ))}

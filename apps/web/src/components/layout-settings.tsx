@@ -60,13 +60,14 @@ export function HomeLayoutSettings() {
   }
   return (
     <Card className="py-1">
-      <label className="flex cursor-pointer items-center gap-3 py-3 pl-12 pr-5">
+      <label className="flex cursor-pointer items-center gap-3 py-2.5 pl-2 pr-5">
+        <span className="size-8 shrink-0" aria-hidden />
         <IconTile>
           <RiImageFill />
         </IconTile>
         <span className="min-w-0 flex-1">
           <span className="block text-sm">{t('settings.heroBanner')}</span>
-          <span className="block text-[13px] text-muted-foreground">{t('settings.heroBannerHint')}</span>
+          <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.heroBannerHint')}</span>
         </span>
         <Switch checked={showHero} onCheckedChange={setShowHero} />
       </label>

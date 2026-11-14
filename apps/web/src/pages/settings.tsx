@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, type User } from '@yoru/shared'
-import { Button, Card, CardContent, Code, Field, Input, Segmented, StepSlider, Switch, toast } from '@yoru/ui'
+import { Button, Card, CardContent, Code, Field, Input, LogoMark, Segmented, StepSlider, Switch, toast } from '@yoru/ui'
 import { RiAlertFill, RiArrowUpDownFill, RiBracesFill, RiCheckFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiNotification3Fill, RiPaletteFill, RiShieldFill, RiUser3Fill } from '@remixicon/react'
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
@@ -64,7 +64,7 @@ function AppearanceTab() {
           <div className="flex flex-col gap-3 px-5 py-4">
             <span>
               <span className="block text-sm">{t('settings.pageWidth')}</span>
-              <span className="block text-[13px] text-muted-foreground">{t('settings.pageWidthHint')}</span>
+              <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.pageWidthHint')}</span>
             </span>
             <StepSlider
               value={pageWidth}
@@ -76,7 +76,7 @@ function AppearanceTab() {
           <label className="flex cursor-pointer items-center justify-between gap-4 px-5 py-3">
             <span>
               <span className="block text-sm">{t('settings.expandSynopsis')}</span>
-              <span className="block text-[13px] text-muted-foreground">{t('settings.expandSynopsisHint')}</span>
+              <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.expandSynopsisHint')}</span>
             </span>
             <Switch checked={expandSynopsis} onCheckedChange={setExpandSynopsis} />
           </label>
@@ -147,7 +147,7 @@ function AccountTab() {
                 update.mutate({ anime365Token: token.trim() }, { onSuccess: () => setToken('') })
               }}
             >
-              <Input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="access_token" autoComplete="off" className="h-8 text-[13px]" />
+              <Input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="access_token" autoComplete="off" className="h-8 text-[0.8125rem]" />
               <Button type="submit" variant="secondary" size="sm" disabled={!token.trim()} loading={update.isPending}>
                 {t('common.save')}
               </Button>
@@ -200,6 +200,53 @@ function NotificationsTab() {
   )
 }
 
+function YoruImport() {
+  const { t } = useTranslation()
+  const client = useQueryClient()
+  const input = useRef<HTMLInputElement>(null)
+  const upload = useMutation({
+    mutationFn: api.importYoru,
+    onSuccess: (r) => {
+      toast.success(t('settings.importDone', { name: 'yoru', imported: r.imported, updated: r.updated, skipped: r.skipped }))
+      void client.invalidateQueries({ queryKey: ['list'] })
+      void client.invalidateQueries({ queryKey: keys.home })
+      void client.invalidateQueries({ queryKey: ['import-status'] })
+    },
+    onError: (e) => toast.error(errorMessage(e, t)),
+  })
+  return (
+    <Card className="flex flex-col gap-4 p-4">
+      <div className="flex min-w-0 flex-col gap-3">
+        <div className="flex items-center gap-3">
+          <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-field">
+            <LogoMark size={26} />
+          </span>
+          <div className="min-w-0">
+            <div className="font-medium">yoru</div>
+            <p className="text-xs text-muted-foreground">{t('settings.yoruFile.hint')}</p>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">{t('settings.yoruFile.note')}</p>
+      </div>
+      <input
+        ref={input}
+        type="file"
+        accept=".json,application/json"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file) upload.mutate(file)
+          e.target.value = ''
+        }}
+      />
+      <Button variant="secondary" size="sm" loading={upload.isPending} onClick={() => input.current?.click()} className="mt-auto self-start">
+        <RiFileUploadFill />
+        {t('settings.seanime.choose')}
+      </Button>
+    </Card>
+  )
+}
+
 function SeanimeImport() {
   const { t } = useTranslation()
   const client = useQueryClient()
@@ -231,7 +278,7 @@ function SeanimeImport() {
             <p className="text-xs text-muted-foreground">{t('settings.seanime.hint')}</p>
           </div>
         </div>
-        <div className="flex flex-col gap-1 text-[13px] text-muted-foreground">
+        <div className="flex flex-col gap-1 text-[0.8125rem] text-muted-foreground">
           {paths.map(([os, path]) => (
             <div key={os} className="flex flex-wrap items-center gap-2">
               <span className="w-16 shrink-0 text-subtle-foreground">{os}</span>
@@ -322,7 +369,7 @@ function ImportTab() {
                   </div>
                 </div>
                 {enabled === false && isAdmin ? (
-                  <code className="break-all rounded-md bg-inset px-2 py-1.5 font-mono text-[11px] text-muted-foreground">
+                  <code className="break-all rounded-md bg-inset px-2 py-1.5 font-mono text-[0.6875rem] text-muted-foreground">
                     {env}_CLIENT_ID
                     <br />
                     {env}_CLIENT_SECRET
@@ -346,13 +393,16 @@ function ImportTab() {
           })}
         </div>
         {status.data?.last ? (
-          <p className="mt-3 text-[13px] text-muted-foreground">
-            {t('settings.lastImport', { name: status.data.last.provider === 'seanime' ? 'Seanime' : PROVIDER_NAMES[status.data.last.provider], date: formatDate(status.data.last.createdAt, { dateStyle: 'medium', timeStyle: 'short' }) })}
+          <p className="mt-3 text-[0.8125rem] text-muted-foreground">
+            {t('settings.lastImport', { name: status.data.last.provider === 'seanime' ? 'Seanime' : status.data.last.provider === 'yoru' ? 'yoru' : PROVIDER_NAMES[status.data.last.provider], date: formatDate(status.data.last.createdAt, { dateStyle: 'medium', timeStyle: 'short' }) })}
           </p>
         ) : null}
       </Block>
       <Block title={t('settings.fileImportTitle')} description={t('settings.fileImportHint')}>
-        <SeanimeImport />
+        <div className="grid gap-3 lg:grid-cols-2">
+          <YoruImport />
+          <SeanimeImport />
+        </div>
       </Block>
       <Block title={t('settings.exportTitle')} description={t('settings.exportHint')}>
         <div className="grid gap-3 sm:grid-cols-3">
@@ -363,7 +413,7 @@ function ImportTab() {
               <Card key={f} className="flex flex-col gap-4 p-4">
                 <div className="flex items-center gap-3">
                   <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent">
-                    <Icon className="size-[18px]" />
+                    <Icon className="size-[1.125rem]" />
                   </span>
                   <div className="min-w-0">
                     <div className="font-medium">{name}</div>

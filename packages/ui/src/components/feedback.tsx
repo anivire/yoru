@@ -33,7 +33,7 @@ export function EmptyState({
     <div className={cn('flex flex-col items-center justify-center gap-3 rounded-xl bg-inset px-6 py-12 text-center', className)}>
       <Mascot mood={mood} size={56} />
       <div>
-        <div className="text-[15px] font-medium">{title}</div>
+        <div className="text-[0.9375rem] font-medium">{title}</div>
         {description ? <div className="mt-1 text-sm text-muted-foreground">{description}</div> : null}
       </div>
       {action}
@@ -44,7 +44,7 @@ export function EmptyState({
 export function Kbd({ className, ...props }: ComponentProps<'kbd'>) {
   return (
     <kbd
-      className={cn('inline-flex h-5 min-w-5 items-center justify-center rounded bg-field px-1 font-mono text-[11px] text-muted-foreground', className)}
+      className={cn('inline-flex h-5 min-w-5 items-center justify-center rounded bg-field px-1 font-mono text-[0.6875rem] text-muted-foreground', className)}
       {...props}
     />
   )

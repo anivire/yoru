@@ -1,8 +1,24 @@
 import { LIST_STATUSES, type ListEntry, type ListStatus } from '@yoru/shared'
-import { Button, Popover, PopoverClose, PopoverContent, PopoverTrigger, Select, Tooltip } from '@yoru/ui'
-import { RiAddFill, RiArrowDownSFill, RiBookmark3Fill, RiDeleteBin6Fill, RiRepeatFill, RiStarFill, RiSubtractFill } from '@remixicon/react'
+import { Button, Popover, PopoverClose, PopoverContent, PopoverTrigger, Select, Tooltip, cn } from '@yoru/ui'
+import { EpisodeCount, scoreClass } from './anime-cards'
+import { RiAddFill, RiArrowDownSFill, RiBookmark3Fill, RiDeleteBin6Fill, RiEdit2Fill, RiRepeatFill, RiStarFill, RiSubtractFill } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
 import { useDeleteEntry, useSaveEntry } from '../lib/queries'
+
+function DateField({ label, value, onChange }: { label: string; value: string | null; onChange: (value: string | null) => void }) {
+  return (
+    <label className="flex min-w-0 flex-col gap-1">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <input
+        type="date"
+        value={value?.slice(0, 10) ?? ''}
+        max="9999-12-31"
+        onChange={(e) => onChange(e.target.value || null)}
+        className="h-9 w-full min-w-0 rounded-lg bg-field px-2.5 text-[0.8125rem] text-foreground transition-colors [color-scheme:inherit] hover:bg-field-hover focus-visible:bg-field-hover focus-visible:outline-none"
+      />
+    </label>
+  )
+}
 
 function EntryControls({ malId, entry, total, aired }: { malId: number; entry: ListEntry; total: number | null; aired: number | null }) {
   const { t } = useTranslation()
@@ -27,8 +43,8 @@ function EntryControls({ malId, entry, total, aired }: { malId: number; entry: L
         <button type="button" aria-label="-1" onClick={() => setProgress(entry.progress - 1)} className="grid h-full w-8 cursor-pointer place-items-center rounded-l-lg text-muted-foreground hover:bg-field-hover hover:text-foreground">
           <RiSubtractFill className="size-3.5" />
         </button>
-        <span className="min-w-16 px-1 text-center font-mono text-[13px]">
-          {entry.progress}/{total ?? '?'}
+        <span className="min-w-16 px-1 text-center font-mono text-[0.8125rem]">
+          <EpisodeCount current={entry.progress} total={total} />
         </span>
         <button
           type="button"
@@ -44,7 +60,7 @@ function EntryControls({ malId, entry, total, aired }: { malId: number; entry: L
         className="w-28"
         value={entry.score ? String(Math.round(entry.score)) : '0'}
         onValueChange={(v) => save.mutate({ status: entry.status, score: Number(v) || null })}
-        icon={<RiStarFill className={entry.score ? 'fill-warning text-warning' : ''} />}
+        icon={<RiStarFill className={entry.score ? cn('fill-current', scoreClass(entry.score)) : ''} />}
         options={[{ value: '0', label: t('anime.noScore') }, ...Array.from({ length: 10 }, (_, i) => ({ value: String(10 - i), label: String(10 - i) }))]}
       />
       <Tooltip content={t('anime.rewatches')}>
@@ -58,7 +74,7 @@ function EntryControls({ malId, entry, total, aired }: { malId: number; entry: L
           >
             <RiSubtractFill className="size-3.5" />
           </button>
-          <span className="inline-flex min-w-12 items-center justify-center gap-1.5 px-1 text-[13px]">
+          <span className="inline-flex min-w-12 items-center justify-center gap-1.5 px-1 text-[0.8125rem]">
             <RiRepeatFill className="size-3.5 text-muted-foreground" />
             <span className="font-mono">{entry.rewatches}</span>
           </span>
@@ -72,9 +88,13 @@ function EntryControls({ malId, entry, total, aired }: { malId: number; entry: L
           </button>
         </div>
       </Tooltip>
+      <div className="grid w-full grid-cols-2 gap-2">
+        <DateField label={t('anime.startedAt')} value={entry.startedAt} onChange={(v) => save.mutate({ status: entry.status, startedAt: v })} />
+        <DateField label={t('anime.completedAt')} value={entry.completedAt} onChange={(v) => save.mutate({ status: entry.status, completedAt: v })} />
+      </div>
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label={t('common.remove')}>
+          <Button variant="ghost" size="icon" aria-label={t('common.remove')} className="ml-auto">
             <RiDeleteBin6Fill />
           </Button>
         </PopoverTrigger>
@@ -96,38 +116,66 @@ function EntryControls({ malId, entry, total, aired }: { malId: number; entry: L
   )
 }
 
-export function ListEditor({ malId, entry, total, aired }: { malId: number; entry: ListEntry | null; total: number | null; aired: number | null }) {
+function StatusChoice({ malId }: { malId: number }) {
   const { t } = useTranslation()
   const save = useSaveEntry(malId)
+  return (
+    <>
+      <div className="px-3 pb-1 pt-2 text-xs font-medium text-subtle-foreground">{t('anime.chooseStatus')}</div>
+      {LIST_STATUSES.map((status) => (
+        <button
+          key={status}
+          type="button"
+          onClick={() => save.mutate({ status })}
+          className="flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
+        >
+          {t(`status.${status}`)}
+        </button>
+      ))}
+    </>
+  )
+}
+
+export function ListEditorPanel({ malId, entry, total, aired }: { malId: number; entry: ListEntry | null; total: number | null; aired: number | null }) {
+  return entry ? <EntryControls malId={malId} entry={entry} total={total} aired={aired} /> : <StatusChoice malId={malId} />
+}
+
+export const EDITOR_PANEL_CLASS = 'w-[min(28rem,calc(100vw-2rem))] p-3'
+export const CHOICE_PANEL_CLASS = 'w-56 p-1.5'
+
+export function ListEditor({
+  malId,
+  entry,
+  total,
+  aired,
+  compact,
+}: {
+  malId: number
+  entry: ListEntry | null
+  total: number | null
+  aired: number | null
+  compact?: boolean
+}) {
+  const { t } = useTranslation()
 
   return (
     <Popover>
       <PopoverTrigger asChild>
+        {compact ? (
+          <Button variant="secondary" size="icon-sm" className="rounded-full" aria-label={t('anime.editEntry')}>
+            <RiEdit2Fill />
+          </Button>
+        ) : (
         <Button variant="accent" size="sm" className="w-full">
           {entry ? <RiBookmark3Fill /> : <RiAddFill />}
           <span className="flex-1 truncate text-left">{entry ? t(`status.${entry.status}`) : t('anime.add')}</span>
           <RiArrowDownSFill className="opacity-70" />
         </Button>
+        )}
       </PopoverTrigger>
-      {entry ? (
-        <PopoverContent align="start" className="w-[min(28rem,calc(100vw-2rem))] p-3">
-          <EntryControls malId={malId} entry={entry} total={total} aired={aired} />
-        </PopoverContent>
-      ) : (
-        <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] min-w-56 p-1.5">
-          <div className="px-3 pb-1 pt-2 text-xs font-medium text-subtle-foreground">{t('anime.chooseStatus')}</div>
-          {LIST_STATUSES.map((status) => (
-            <button
-              key={status}
-              type="button"
-              onClick={() => save.mutate({ status })}
-              className="flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
-            >
-              {t(`status.${status}`)}
-            </button>
-          ))}
-        </PopoverContent>
-      )}
+      <PopoverContent align={compact ? 'center' : 'start'} className={entry ? EDITOR_PANEL_CLASS : 'w-[var(--radix-popover-trigger-width)] min-w-56 p-1.5'}>
+        <ListEditorPanel malId={malId} entry={entry} total={total} aired={aired} />
+      </PopoverContent>
     </Popover>
   )
 }

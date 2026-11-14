@@ -43,14 +43,14 @@ export function DialogContent({
 }: ComponentProps<typeof D.Content> & { title: ReactNode; description?: ReactNode }) {
   return (
     <D.Portal>
-      <D.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] animate-fade" />
+      <D.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[0.125rem] animate-fade" />
       <D.Content
         className={cn(surface, 'fixed left-1/2 top-1/2 flex max-h-[85vh] animate-zoom w-[min(92vw,32rem)] -translate-x-1/2 -translate-y-1/2 flex-col', className)}
         {...props}
       >
         <div className="flex items-start justify-between gap-4 px-6 pb-2 pt-5">
           <div>
-            <D.Title className="text-[15px] font-semibold tracking-tight">{title}</D.Title>
+            <D.Title className="text-[0.9375rem] font-semibold tracking-tight">{title}</D.Title>
             {description ? <D.Description className="mt-0.5 text-sm text-muted-foreground">{description}</D.Description> : null}
           </div>
           <D.Close className="-mr-1 cursor-pointer rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
@@ -124,7 +124,7 @@ export function Select({
       <S.Trigger
         className={cn(
           'inline-flex cursor-pointer items-center gap-2 rounded-lg bg-field text-left text-foreground transition-colors hover:bg-field-hover data-[placeholder]:text-subtle-foreground disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0',
-          size === 'sm' ? 'h-8 px-2.5 text-[13px]' : 'h-9 px-3 text-sm',
+          size === 'sm' ? 'h-8 px-2.5 text-[0.8125rem]' : 'h-9 px-3 text-sm',
           className,
         )}
       >

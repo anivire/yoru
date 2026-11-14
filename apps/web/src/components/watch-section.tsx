@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import type { AnimeDetails, Episode, ListEntry, StreamKind } from '@yoru/shared'
+import { type AnimeDetails, type Episode, type ListEntry, STREAM_KINDS, type StreamKind } from '@yoru/shared'
 import { Button, Mascot, Select, Spinner } from '@yoru/ui'
-import { RiClosedCaptioningFill, RiMicFill, RiSettings3Fill } from '@remixicon/react'
+import { RiClosedCaptioningFill, RiMicFill, RiSettings3Fill, RiVolumeUpFill } from '@remixicon/react'
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router'
@@ -12,6 +12,18 @@ import { MatchDialog } from './match-dialog'
 import { Player } from './player/player'
 
 const KIND_KEY = 'yoru:kind'
+
+function parseKind(value: string | null): StreamKind | null {
+  return STREAM_KINDS.includes(value as StreamKind) ? (value as StreamKind) : null
+}
+
+const KIND_ICONS: Record<StreamKind, typeof RiMicFill> = {
+  sub: RiClosedCaptioningFill,
+  voice: RiMicFill,
+  subEn: RiClosedCaptioningFill,
+  voiceEn: RiMicFill,
+  raw: RiVolumeUpFill,
+}
 
 function authorKey(malId: number, kind: StreamKind) {
   return `yoru:author:${malId}:${kind}`
@@ -41,7 +53,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
   const client = useQueryClient()
   const malId = anime.malId
   const [params, setParams] = useSearchParams()
-  const kind: StreamKind = params.get('kind') === 'voice' ? 'voice' : params.get('kind') === 'sub' ? 'sub' : localStorage.getItem(KIND_KEY) === 'voice' ? 'voice' : 'sub'
+  const kind = parseKind(params.get('kind')) ?? parseKind(localStorage.getItem(KIND_KEY)) ?? 'sub'
 
   const match = useQuery({ queryKey: keys.match(malId), queryFn: () => api.match(malId) })
   const episodes = useQuery({ queryKey: keys.episodes(malId), queryFn: () => api.episodes(malId) })
@@ -165,7 +177,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
       <Player
         key={`${episode}:${stream.data.translationId}`}
         sources={stream.data.sources}
-        subtitlesUrl={kind === 'sub' ? stream.data.subtitlesUrl : null}
+        subtitlesUrl={kind === 'sub' || kind === 'subEn' ? stream.data.subtitlesUrl : null}
         startAt={startAt}
         autoPlay={params.get('autoplay') === '1'}
         title={current?.title ? `${t('common.episode')} ${episode} · ${current.title}` : `${t('common.episode')} ${episode}`}
@@ -180,25 +192,28 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
 
   return (
     <section id="watch" className="scroll-mt-20">
-      <div className="mb-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+      <div className="mb-3 grid grid-cols-[1fr_1fr_auto] gap-2 sm:flex sm:flex-wrap sm:items-center">
         <Select size="sm" className="w-full sm:w-36" value="anime365" onValueChange={() => undefined} icon={<img src="/anime365.webp" alt="" className="size-4 rounded-sm bg-white object-contain" />} options={[{ value: 'anime365', label: 'Anime365' }]} />
         <Select
           size="sm"
-          className="w-full sm:w-40"
+          className="w-full sm:w-52"
           value={kind}
-          icon={kind === 'sub' ? <RiClosedCaptioningFill /> : <RiMicFill />}
+          icon={(() => {
+            const Icon = KIND_ICONS[kind]
+            return <Icon />
+          })()}
           onValueChange={(v) => {
             localStorage.setItem(KIND_KEY, v)
             setParam({ kind: v })
           }}
-          options={[
-            { value: 'sub', label: t('player.sub') },
-            { value: 'voice', label: t('player.voice') },
-          ]}
+          options={STREAM_KINDS.map((k) => ({ value: k, label: t(`player.${k}`) }))}
         />
+        <div className="flex justify-end sm:order-last sm:ml-auto">
+          <MatchDialog malId={malId} match={match.data} defaultQuery={anime.title} />
+        </div>
         <Select
           size="sm"
-          className="col-span-2 w-full sm:w-64"
+          className="col-span-3 w-full sm:w-64"
           disabled={!translations.data?.length}
           placeholder={t('player.author')}
           value={translationId ? String(translationId) : undefined}
@@ -213,9 +228,6 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
             hint: [x.height ? `${x.height}p` : null, x.qualityType?.toUpperCase()].filter(Boolean).join(' · ') || undefined,
           }))}
         />
-        <div className="col-span-2 flex justify-end sm:ml-auto">
-          <MatchDialog malId={malId} match={match.data} defaultQuery={anime.title} />
-        </div>
       </div>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0">{body}</div>

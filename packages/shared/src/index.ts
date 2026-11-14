@@ -6,12 +6,12 @@ export type ListStatus = (typeof LIST_STATUSES)[number]
 export const ANIME_TYPES = ['tv', 'movie', 'ova', 'ona', 'special', 'music', 'tv_special', 'cm', 'pv'] as const
 export type AnimeType = (typeof ANIME_TYPES)[number]
 
-export const STREAM_KINDS = ['sub', 'voice'] as const
+export const STREAM_KINDS = ['sub', 'voice', 'subEn', 'voiceEn', 'raw'] as const
 export type StreamKind = (typeof STREAM_KINDS)[number]
 
 export const IMPORT_PROVIDERS = ['anilist', 'shikimori', 'mal'] as const
 export type ImportProvider = (typeof IMPORT_PROVIDERS)[number]
-export type ImportSource = ImportProvider | 'seanime'
+export type ImportSource = ImportProvider | 'seanime' | 'yoru'
 
 export const EXPORT_FORMATS = ['json', 'csv', 'mal-xml'] as const
 export type ExportFormat = (typeof EXPORT_FORMATS)[number]

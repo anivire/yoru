@@ -47,7 +47,7 @@ export function SectionTitleSkeleton({ hint, icon }: { hint?: boolean; icon?: bo
       {icon ? <Skeleton className="size-9 shrink-0 rounded-xl" /> : null}
       <div>
         <TextLine className="text-xl font-semibold" bar="w-56" />
-        {hint ? <TextLine className="text-[13px]" bar="w-32" /> : null}
+        {hint ? <TextLine className="text-[0.8125rem]" bar="w-32" /> : null}
       </div>
     </div>
   )
@@ -59,7 +59,7 @@ export function ContinueCardSkeleton() {
       <Skeleton className="aspect-video w-full rounded-xl" />
       <div className="px-0.5">
         <TextLine className="text-sm" bar="w-1/3" />
-        <TextLine className="text-[13px]" bar="w-2/3" />
+        <TextLine className="text-[0.8125rem]" bar="w-2/3" />
       </div>
     </div>
   )
@@ -73,7 +73,7 @@ export function UpcomingCardSkeleton() {
         <TextLine className="text-sm" bar="w-3/4" />
         <div className="mt-0.5 flex items-center justify-between gap-2">
           <TextLine className="text-base" bar="w-20" />
-          <TextLine className="text-[13px]" bar="w-16" />
+          <TextLine className="text-[0.8125rem]" bar="w-16" />
         </div>
       </div>
     </div>
@@ -86,7 +86,7 @@ export function HomeSkeleton() {
       <div className="mx-auto flex max-w-(--page-max) items-end gap-6 px-4 pb-6 pt-6 sm:px-6">
         <Skeleton className="hidden aspect-[2/3] w-36 shrink-0 rounded-xl sm:block" />
         <div className="w-full min-w-0">
-          <TextLine className="text-[15px]" bar="w-40" />
+          <TextLine className="text-[0.9375rem]" bar="w-40" />
           <TextLine className="mt-1 text-3xl sm:text-4xl" bar="w-2/3" />
           <TextLine className="mt-1" bar="w-1/3" />
           <Skeleton className="mt-5 h-11 w-36 rounded-full" />
@@ -122,20 +122,20 @@ export function AnimePageSkeleton() {
   return (
     <>
       <div className="mx-auto max-w-(--page-max) px-4 pb-10 pt-4 sm:px-6 sm:pt-10">
-        <div className="flex flex-col gap-6 sm:flex-row">
-          <div className="flex w-full shrink-0 flex-col gap-2 self-start sm:w-48">
+        <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
+          <div className="flex w-36 shrink-0 flex-col gap-3 sm:w-48">
             <Skeleton className="aspect-[2/3] w-full rounded-xl" />
-            <Skeleton className="h-8 w-full rounded-md" />
-            <div className="mt-1 grid grid-cols-2 gap-1.5 sm:grid-cols-1">
+            <Skeleton className="hidden h-8 w-full rounded-md sm:block" />
+            <div className="hidden flex-col gap-1.5 sm:flex">
               {[0, 1, 2, 3].map((i) => (
                 <Skeleton key={i} className="h-8 w-full rounded-md" />
               ))}
             </div>
           </div>
-          <div className="flex min-w-0 flex-1 flex-col gap-3">
-            <div>
-              <TextLine className="text-3xl font-semibold sm:text-4xl" bar="w-2/3" />
-              <TextLine className="mt-1 text-lg" bar="w-1/2" />
+          <div className="flex w-full min-w-0 flex-1 flex-col items-center gap-3 sm:items-stretch">
+            <div className="flex w-full flex-col items-center sm:items-start">
+              <TextLine className="text-2xl font-semibold sm:text-4xl" bar="w-2/3" />
+              <TextLine className="mt-1 text-base sm:text-lg" bar="w-1/2" />
               <TextLine className="text-sm" bar="w-1/4" />
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -148,7 +148,7 @@ export function AnimePageSkeleton() {
                 <Skeleton key={w} className="h-6 rounded-full" style={{ width: `${w * 0.25}rem` }} />
               ))}
             </div>
-            <div className="max-w-3xl text-[15px] leading-relaxed">
+            <div className="max-w-3xl text-[0.9375rem] leading-relaxed">
               <TextLine />
               <TextLine />
               <TextLine />
@@ -172,7 +172,7 @@ export function AnimePageSkeleton() {
               <div key={i} className="flex gap-3 p-1.5">
                 <Skeleton className="aspect-video w-36 shrink-0 rounded-lg" />
                 <div className="flex-1 py-0.5">
-                  <TextLine className="text-[13px]" bar="w-1/3" />
+                  <TextLine className="text-[0.8125rem]" bar="w-1/3" />
                   <TextLine className="text-sm leading-snug" bar="w-4/5" />
                 </div>
               </div>
@@ -190,7 +190,7 @@ function ScheduleEntrySkeleton() {
       <Skeleton className="aspect-[2/3] w-7 shrink-0 rounded-md" />
       <div className="min-w-0 flex-1 leading-tight">
         <TextLine className="text-xs" bar="w-4/5" />
-        <TextLine className="mt-0.5 text-[11px]" bar="w-1/2" />
+        <TextLine className="mt-0.5 text-[0.6875rem]" bar="w-1/2" />
       </div>
     </div>
   )
@@ -243,8 +243,8 @@ export function ListTableSkeleton({ rows = 10 }: { rows?: number }) {
             <TextLine className="text-sm" bar="w-1/3" />
             <TextLine className="text-xs" bar="w-24" />
           </div>
-          <TextLine className="hidden text-[13px] md:flex" bar="w-20" />
-          <TextLine className="font-mono text-[13px]" bar="w-12" />
+          <TextLine className="hidden text-[0.8125rem] md:flex" bar="w-20" />
+          <TextLine className="font-mono text-[0.8125rem]" bar="w-12" />
         </div>
       ))}
     </div>

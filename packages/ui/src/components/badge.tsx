@@ -17,7 +17,7 @@ export const badgeVariants = cva(
         solid: 'bg-inverse text-inverse-foreground',
       },
       size: {
-        sm: 'h-5 rounded-md px-1.5 text-[11px]',
+        sm: 'h-5 rounded-md px-1.5 text-[0.6875rem]',
         md: 'h-6 rounded-full px-2.5 text-xs',
         lg: 'h-8 rounded-full px-3 text-sm',
       },

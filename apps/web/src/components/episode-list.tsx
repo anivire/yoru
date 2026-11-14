@@ -111,7 +111,7 @@ export function EpisodeList({
                     ) : null}
                   </div>
                   <div className="min-w-0 flex-1 py-0.5">
-                    <div className={cn('text-[13px] font-medium', active ? 'text-accent' : 'text-muted-foreground')}>
+                    <div className={cn('text-[0.8125rem] font-medium', active ? 'text-accent' : 'text-muted-foreground')}>
                       {t('common.episode')} {e.number}
                     </div>
                     {e.title ? <div className="line-clamp-2 text-sm leading-snug">{e.title}</div> : null}

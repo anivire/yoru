@@ -41,7 +41,7 @@ export function LinkButton({ href, icon, children }: { href: string; icon: React
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="group flex h-9 min-w-0 items-center gap-2.5 rounded-lg px-2.5 text-[13px] font-medium text-foreground transition-colors hover:bg-field-hover [&_svg]:size-4 [&_svg]:shrink-0"
+      className="group flex h-9 min-w-0 items-center gap-2.5 rounded-lg px-2.5 text-[0.8125rem] font-medium text-foreground transition-colors hover:bg-field-hover [&_svg]:size-4 [&_svg]:shrink-0"
     >
       {icon}
       <span className="flex-1 truncate">{children}</span>

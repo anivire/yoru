@@ -82,7 +82,7 @@ function UrlField({ info }: { info: DataSourceInfo }) {
     <form onSubmit={submit}>
       <Field label={t('admin.sources.url')} hint={t('admin.sources.urlDefault', { url: info.defaultUrl })}>
         <div className="flex gap-2">
-          <Input value={value} onChange={(e) => setValue(e.target.value)} placeholder={info.defaultUrl} className="h-8 font-mono text-[13px]" inputMode="url" />
+          <Input value={value} onChange={(e) => setValue(e.target.value)} placeholder={info.defaultUrl} className="h-8 font-mono text-[0.8125rem]" inputMode="url" />
           {changed ? (
             <Button type="submit" size="sm" variant="secondary" loading={save.isPending}>
               {t('common.save')}
@@ -119,10 +119,12 @@ function SecretForm({
   if (isSet && !editing) {
     return (
       <div className="flex gap-2">
-        <div className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg bg-success-soft px-3 text-[13px] text-success">
+        <div className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg bg-success-soft px-3 text-[0.8125rem] text-success">
           <RiKey2Fill className="size-3.5 shrink-0" />
-          <span className="shrink-0 font-medium">{fromEnv ? t('admin.secret.setEnv') : t('admin.secret.set')}</span>
-          <span className="truncate font-mono tracking-[0.2em] opacity-60">••••••••••••</span>
+          {fromEnv ? <span className="shrink-0 font-medium">{t('admin.secret.setEnv')}</span> : null}
+          <span className="truncate font-mono text-lg leading-none tracking-[0.15em]" title={t('admin.secret.set')}>
+            ••••••••••••
+          </span>
         </div>
         <Button type="button" size="sm" variant="secondary" onClick={() => setEditing(true)}>
           {t('admin.secret.replace')}
@@ -152,7 +154,7 @@ function SecretForm({
         placeholder={placeholder}
         autoComplete="new-password"
         autoFocus={editing}
-        className="h-8 text-[13px]"
+        className="h-8 text-[0.8125rem]"
       />
       <Button type="submit" size="sm" variant="secondary" disabled={!value.trim()} loading={pending}>
         {t('common.save')}
@@ -218,10 +220,10 @@ function GithubExtras({ settings }: { settings: AdminSettings }) {
         }}
       >
         <Field label={t('admin.sources.repo')}>
-          <Input value={repo} onChange={(e) => setRepo(e.target.value)} placeholder={settings.github.defaultRepo} className="h-8 font-mono text-[13px]" />
+          <Input value={repo} onChange={(e) => setRepo(e.target.value)} placeholder={settings.github.defaultRepo} className="h-8 font-mono text-[0.8125rem]" />
         </Field>
         <Field label={t('admin.sources.branch')}>
-          <Input value={branch} onChange={(e) => setBranch(e.target.value)} placeholder={settings.github.defaultBranch} className="h-8 font-mono text-[13px]" />
+          <Input value={branch} onChange={(e) => setBranch(e.target.value)} placeholder={settings.github.defaultBranch} className="h-8 font-mono text-[0.8125rem]" />
         </Field>
         <Button type="submit" size="sm" variant="secondary" disabled={!changed} loading={save.isPending}>
           {t('common.save')}
@@ -268,7 +270,7 @@ function SourceCard({ info, settings }: { info: DataSourceInfo; settings: AdminS
       </div>
       <div>
         <div className="mb-1 text-xs font-medium text-subtle-foreground">{t('admin.sources.usedFor')}</div>
-        <ul className="flex flex-col gap-0.5 text-[13px] text-muted-foreground">
+        <ul className="flex flex-col gap-0.5 text-[0.8125rem] text-muted-foreground">
           {uses.map((u) => (
             <li key={u} className="flex gap-2">
               <span className="mt-[0.55em] size-1 shrink-0 rounded-full bg-subtle-foreground" />
@@ -276,7 +278,7 @@ function SourceCard({ info, settings }: { info: DataSourceInfo; settings: AdminS
             </li>
           ))}
         </ul>
-        {info.id === 'jikan' && !info.enabled ? <p className="mt-2 text-[13px] text-warning">{t('admin.sources.jikanOff')}</p> : null}
+        {info.id === 'jikan' && !info.enabled ? <p className="mt-2 text-[0.8125rem] text-warning">{t('admin.sources.jikanOff')}</p> : null}
       </div>
       <UrlField info={info} />
       {extras}
@@ -343,7 +345,7 @@ function OAuthProvider({ provider, settings }: { provider: ImportProvider; setti
       >
         <Field label={t('admin.oauthKeys.clientId')}>
           <div className="flex gap-2">
-            <Input value={clientId} onChange={(e) => setClientId(e.target.value)} className="h-8 font-mono text-[13px]" autoComplete="off" />
+            <Input value={clientId} onChange={(e) => setClientId(e.target.value)} className="h-8 font-mono text-[0.8125rem]" autoComplete="off" />
             {clientId.trim() !== info.clientId ? (
               <Button type="submit" size="sm" variant="secondary" loading={save.isPending}>
                 {t('common.save')}

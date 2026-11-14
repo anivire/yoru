@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { ANIME_TYPES } from '@yoru/shared'
 import { Button, EmptyState, Input, Select, cn } from '@yoru/ui'
-import { RiCloseFill, RiSearchFill as SearchIcon } from '@remixicon/react'
+import { RiBroadcastFill, RiCloseFill, RiSearchFill as SearchIcon, RiSortDesc, RiTvFill } from '@remixicon/react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
@@ -77,7 +77,7 @@ export function SearchPage() {
       <div className="mb-8 flex flex-col gap-3">
         <div className="relative">
           <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
-          <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder={t('search.placeholder')} className="h-11 rounded-xl pl-10 text-[15px]" autoFocus />
+          <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder={t('search.placeholder')} className="h-11 rounded-xl pl-10 text-[0.9375rem]" autoFocus />
           {input ? (
             <button type="button" onClick={() => setInput('')} className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-1 text-subtle-foreground hover:text-foreground">
               <RiCloseFill className="size-4" />
@@ -87,14 +87,16 @@ export function SearchPage() {
         <div className="flex flex-wrap gap-2">
           <Select
             size="sm"
-            className="w-36"
+            className="w-40"
+            icon={<RiTvFill />}
             value={filters.type ?? ANY}
             onValueChange={(v) => setFilter('type', v)}
             options={[{ value: ANY, label: `${t('search.type')}: ${t('common.any')}` }, ...ANIME_TYPES.slice(0, 6).map((v) => ({ value: v, label: t(`type.${v}`) }))]}
           />
           <Select
             size="sm"
-            className="w-40"
+            className="w-44"
+            icon={<RiBroadcastFill />}
             value={filters.status ?? ANY}
             onValueChange={(v) => setFilter('status', v)}
             options={[{ value: ANY, label: `${t('search.status')}: ${t('common.any')}` }, ...STATUSES.filter((v) => !basic || v !== 'upcoming').map((v) => ({ value: v, label: t(`airing.${v}`) }))]}
@@ -102,7 +104,8 @@ export function SearchPage() {
           {basic ? null : (
             <Select
               size="sm"
-              className="w-48"
+              className="w-56"
+              icon={<RiSortDesc />}
               value={filters.order_by ?? ANY}
               onValueChange={(v) => setFilter('order_by', v)}
               options={[{ value: ANY, label: `${t('search.order')}: ${t('common.any')}` }, ...ORDERS.map((v) => ({ value: v, label: t(`order.${v}`) }))]}
@@ -126,7 +129,7 @@ export function SearchPage() {
                   aria-pressed={active}
                   onClick={() => toggleGenre(String(g.id))}
                   className={cn(
-                    'inline-flex h-7 cursor-pointer items-center rounded-full px-3 text-[13px] font-medium transition-colors',
+                    'inline-flex h-7 cursor-pointer items-center rounded-full px-3 text-[0.8125rem] font-medium transition-colors',
                     active ? 'bg-accent text-accent-foreground' : 'bg-field text-muted-foreground hover:bg-field-hover hover:text-foreground',
                   )}
                 >
@@ -135,7 +138,7 @@ export function SearchPage() {
               )
             })}
             {tags.length > TAG_LIMIT ? (
-              <button type="button" onClick={() => setAllTags(!allTags)} className="inline-flex h-7 cursor-pointer items-center px-2 text-[13px] font-medium text-subtle-foreground hover:text-foreground">
+              <button type="button" onClick={() => setAllTags(!allTags)} className="inline-flex h-7 cursor-pointer items-center px-2 text-[0.8125rem] font-medium text-subtle-foreground hover:text-foreground">
                 {allTags ? t('search.lessTags') : t('search.moreTags', { count: tags.length - TAG_LIMIT })}
               </button>
             ) : null}

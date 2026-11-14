@@ -6,7 +6,7 @@ import { cachePurgeExpired } from '../lib/http'
 import { purgeExpiredSessions } from '../lib/auth'
 import { getSetting, setSetting } from '../lib/settings'
 import { getAnimeRow, setLatestEpisode } from '../services/anime'
-import { type A365Translation, TYPE_TO_KIND, anime365, seriesTitle } from '../services/anime365'
+import { type A365Translation, RELEASE_TYPES, anime365, seriesTitle } from '../services/anime365'
 import { PROVIDER } from '../services/provider'
 
 const PAGE = 100
@@ -68,8 +68,8 @@ function rememberMapping(t: A365Translation, malId: number) {
 
 export async function checkReleases() {
   let created = 0
-  for (const type of Object.keys(TYPE_TO_KIND)) {
-    const kind = TYPE_TO_KIND[type]!
+  for (const type of RELEASE_TYPES) {
+    const kind = type === 'voiceRu' ? 'voice' : 'sub'
     const rows = await fetchNew(type)
     for (const t of rows) {
       const malId = t.series?.myAnimeListId

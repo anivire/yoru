@@ -64,8 +64,9 @@ interface A365Embed {
   subtitlesVttUrl?: string
 }
 
-export const KIND_TO_TYPE: Record<StreamKind, string> = { sub: 'subRu', voice: 'voiceRu' }
-export const TYPE_TO_KIND: Record<string, StreamKind> = { subRu: 'sub', voiceRu: 'voice' }
+export const KIND_TO_TYPE: Record<StreamKind, string> = { sub: 'subRu', voice: 'voiceRu', subEn: 'subEn', voiceEn: 'voiceEn', raw: 'raw' }
+export const TYPE_TO_KIND: Record<string, StreamKind> = { subRu: 'sub', voiceRu: 'voice', subEn: 'subEn', voiceEn: 'voiceEn', raw: 'raw' }
+export const RELEASE_TYPES = ['subRu', 'voiceRu'] as const
 const MAIN_EPISODE_TYPES = ['tv', 'ova', 'ona', 'movie']
 const SERIES_FIELDS = 'id,myAnimeListId,anilistId,isAiring,isHentai,numberOfEpisodes,myAnimeListScore,season,year,type,typeTitle,titles,posterUrl,genres'
 const HOUR = 3_600_000

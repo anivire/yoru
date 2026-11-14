@@ -131,6 +131,8 @@ export function errorMessage(error: unknown, t: (key: string) => string): string
     SEANIME_EMPTY: 'settings.seanime.empty',
     SEANIME_NO_FILE: 'settings.seanime.invalid',
     SEANIME_TOO_LARGE: 'settings.seanime.tooLarge',
+    YORU_INVALID: 'settings.yoruFile.invalid',
+    YORU_EMPTY: 'settings.seanime.empty',
   }
   return map[error.message] ? t(map[error.message]!) : error.message
 }

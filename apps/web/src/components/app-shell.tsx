@@ -102,7 +102,7 @@ function LanguageItems() {
       <DropdownMenuLabel className="mt-1">{t('settings.language')}</DropdownMenuLabel>
       {LANGUAGES.map((l) => (
         <DropdownMenuItem key={l.value} onSelect={() => change(l.value)}>
-          <Flag locale={l.value} className="h-3 w-4 rounded-[2px]" />
+          <Flag locale={l.value} className="h-3 w-4 rounded-[0.125rem]" />
           <span className="flex-1">{l.label}</span>
           {l.value === user.locale ? <RiCheckFill className="text-accent!" /> : null}
         </DropdownMenuItem>
@@ -163,13 +163,11 @@ function UserMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="secondary" size="icon" aria-label={t('nav.account')}>
-          <span className="text-[13px] font-semibold uppercase">{user.username.slice(0, 1)}</span>
+          <span className="text-[0.8125rem] font-semibold uppercase">{user.username.slice(0, 1)}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-60">
         <ProfileLabel />
-        <LanguageItems />
-        <DropdownMenuLabel className="mt-1">{t('nav.account')}</DropdownMenuLabel>
         <AccountItems />
       </DropdownMenuContent>
     </DropdownMenu>
@@ -243,7 +241,7 @@ export function PageHeader({ title, description, actions }: { title: ReactNode; 
     <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        {description ? <p className="mt-1 text-[15px] text-muted-foreground">{description}</p> : null}
+        {description ? <p className="mt-1 text-[0.9375rem] text-muted-foreground">{description}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </div>
@@ -269,10 +267,10 @@ export function Section({
     <section className={cn('mt-10 first:mt-0', className)}>
       <div className="mb-4 flex items-end justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          {icon ? <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent [&_svg]:size-[18px]">{icon}</span> : null}
+          {icon ? <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent [&_svg]:size-[1.125rem]">{icon}</span> : null}
           <div className="min-w-0">
             <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
-            {hint ? <p className="text-[13px] text-muted-foreground">{hint}</p> : null}
+            {hint ? <p className="text-[0.8125rem] text-muted-foreground">{hint}</p> : null}
           </div>
         </div>
         {action}

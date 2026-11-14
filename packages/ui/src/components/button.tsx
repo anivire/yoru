@@ -18,9 +18,9 @@ export const buttonVariants = cva(
         link: 'h-auto px-0 text-accent underline-offset-4 hover:underline',
       },
       size: {
-        sm: 'h-8 rounded-md px-3 text-[13px] [&_svg]:size-3.5',
+        sm: 'h-8 rounded-md px-3 text-[0.8125rem] [&_svg]:size-3.5',
         md: 'h-9 rounded-lg px-4 text-sm [&_svg]:size-4',
-        lg: 'h-11 rounded-full px-6 text-[15px] [&_svg]:size-4',
+        lg: 'h-11 rounded-full px-6 text-[0.9375rem] [&_svg]:size-4',
         icon: 'size-9 rounded-lg [&_svg]:size-4',
         'icon-sm': 'size-8 rounded-md [&_svg]:size-3.5',
       },

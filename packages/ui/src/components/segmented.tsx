@@ -37,7 +37,7 @@ export function Segmented<T extends string>({
             onClick={() => onChange(option.value)}
             className={cn(
               'inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg font-medium transition-colors [&_svg]:shrink-0',
-              size === 'sm' ? 'h-7 px-2.5 text-[13px] [&_svg]:size-3.5' : 'h-8 px-3.5 text-sm [&_svg]:size-4',
+              size === 'sm' ? 'h-7 px-2.5 text-[0.8125rem] [&_svg]:size-3.5' : 'h-8 px-3.5 text-sm [&_svg]:size-4',
               active
                 ? 'bg-raised text-foreground shadow-sm shadow-black/20 dark:bg-foreground/[0.12]'
                 : 'text-muted-foreground hover:text-foreground',
@@ -46,7 +46,7 @@ export function Segmented<T extends string>({
             {option.icon}
             {option.label}
             {option.count !== undefined ? (
-              <span className={cn('font-mono text-[11px]', active ? 'text-muted-foreground' : 'text-subtle-foreground')}>
+              <span className={cn('font-mono text-[0.6875rem]', active ? 'text-muted-foreground' : 'text-subtle-foreground')}>
                 {option.count}
               </span>
             ) : null}

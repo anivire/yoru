@@ -23,7 +23,7 @@ export function NotificationsPopover() {
         <Button variant="secondary" size="icon" aria-label={t('notifications.title')} className="relative">
           <RiNotification3Fill />
           {unread ? (
-            <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-accent px-1 font-mono text-[10px] font-semibold leading-4 text-accent-foreground">
+            <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-accent px-1 font-mono text-[0.625rem] font-semibold leading-4 text-accent-foreground">
               {unread > 99 ? '99+' : unread}
             </span>
           ) : null}
@@ -62,13 +62,13 @@ export function NotificationsPopover() {
                     {!n.readAt ? <StatusDot tone="accent" /> : null}
                     <span className="truncate text-sm font-medium">{n.animeTitle}</span>
                   </div>
-                  <div className="mt-0.5 text-[13px] text-muted-foreground">{t('notifications.released', { episode: n.episode })}</div>
+                  <div className="mt-0.5 text-[0.8125rem] text-muted-foreground">{t('notifications.released', { episode: n.episode })}</div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                     <Badge size="sm" variant={n.kind === 'sub' ? 'info' : 'warning'}>
                       {t(`notifications.${n.kind}`)}
                     </Badge>
                     {n.author ? <span className="truncate text-xs text-subtle-foreground">{n.author}</span> : null}
-                    <span className="ml-auto font-mono text-[11px] text-subtle-foreground">{relativeTime(n.createdAt)}</span>
+                    <span className="ml-auto font-mono text-[0.6875rem] text-subtle-foreground">{relativeTime(n.createdAt)}</span>
                   </div>
                 </div>
               </Link>

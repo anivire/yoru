@@ -29,7 +29,7 @@ function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number 
           </div>
         ) : null}
         <div className="min-w-0">
-          <div className="text-[15px] font-medium text-muted-foreground">{label}</div>
+          <div className="text-[0.9375rem] font-medium text-muted-foreground">{label}</div>
           <h1 className="mt-1 line-clamp-2 text-3xl font-semibold tracking-tight sm:text-4xl">{anime.title}</h1>
           {anime.titleEnglish && anime.titleEnglish !== anime.title ? <div className="mt-1 truncate text-muted-foreground">{anime.titleEnglish}</div> : null}
           <div className="mt-5 flex gap-2">
