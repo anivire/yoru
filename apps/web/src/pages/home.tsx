@@ -5,38 +5,68 @@ import { RiCalendarScheduleFill, RiDownload2Fill, RiPlayCircleFill, RiPlayLargeF
 import { Fragment, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
-import { AnimeCard, ContinueCard, PosterGrid, Rail, UpcomingCard, UpcomingGrid } from '../components/anime-cards'
+import { AnimeCard, ContinueCard, PosterGrid, Rail, Score, UpcomingCard, UpcomingGrid } from '../components/anime-cards'
 import { ActivityHeatmap } from '../components/activity'
-import { HomeSkeleton } from '../components/skeletons'
+import { HomeSkeleton, TextLine } from '../components/skeletons'
 import { Page, Section } from '../components/app-shell'
 import { api } from '../lib/api'
 import { useAppearance } from '../lib/appearance'
 import type { HomeSectionId } from '../lib/navigation'
 import { keys } from '../lib/queries'
+import { seasonLabel, typeLabel } from '../lib/format'
 import { HeroBackdrop } from '../components/hero-backdrop'
 
 function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number | null; label: string }) {
   const { t } = useTranslation()
+  const details = useQuery({ queryKey: keys.anime(anime.malId), queryFn: () => api.anime(anime.malId), staleTime: 10 * 60_000 })
+  const synopsis = details.data?.anime.synopsis
+  const genres = (details.data?.anime.genres.length ? details.data.anime.genres : anime.genres).slice(0, 4)
+  const meta = [typeLabel(anime.type), anime.episodes ? `${anime.episodes} ${t('common.episodes')}` : null, seasonLabel(anime)].filter(Boolean)
   return (
     <div className="relative isolate -mt-(--header-h) pt-(--header-h)">
       <HeroBackdrop src={anime.imageUrl} />
-      <div className="mx-auto flex max-w-(--page-max) items-end gap-6 px-4 pb-6 pt-6 sm:px-6">
-        {anime.imageUrl ? (
-          <div className="hidden aspect-[2/3] w-36 shrink-0 overflow-hidden rounded-xl bg-muted shadow-2xl sm:block">
-            <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" />
-          </div>
-        ) : null}
-        <div className="min-w-0">
-          <div className="text-[0.9375rem] font-medium text-muted-foreground">{label}</div>
-          <h1 className="mt-1 line-clamp-2 text-3xl font-semibold tracking-tight sm:text-4xl">{anime.title}</h1>
-          {anime.titleEnglish && anime.titleEnglish !== anime.title ? <div className="mt-1 truncate text-muted-foreground">{anime.titleEnglish}</div> : null}
-          <div className="mt-5 flex gap-2">
-            <Button asChild variant="accent" size="lg">
-              <Link viewTransition to={`/anime/${anime.malId}${episode ? `?episode=${episode}` : ''}`}>
-                <RiPlayLargeFill />
-                {episode ? `${t('common.episode')} ${episode}` : t('common.open')}
-              </Link>
-            </Button>
+      <div className="mx-auto max-w-(--page-max) px-4 pb-12 pt-6 sm:px-6">
+        <div className="mb-6 flex h-1 items-center text-[0.9375rem] font-medium text-muted-foreground">{label}</div>
+        <div className="flex items-end gap-6">
+          <Link viewTransition to={`/anime/${anime.malId}`} className="hidden shrink-0 sm:block">
+            <div className="aspect-[2/3] w-44 overflow-hidden rounded-xl bg-muted shadow-2xl">
+              {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" /> : null}
+            </div>
+          </Link>
+          <div className="flex min-w-0 max-w-2xl flex-col gap-3">
+            <h1 className="line-clamp-2 text-3xl font-semibold tracking-tight sm:text-4xl">{anime.title}</h1>
+            {genres.length ? (
+              <div className="flex flex-wrap gap-1.5">
+                {genres.map((g) => (
+                  <span key={g} className="inline-flex h-6 items-center rounded-full bg-foreground/10 px-2.5 text-xs font-medium text-foreground/90">
+                    {g}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              {anime.score ? <Score value={anime.score} /> : null}
+              {meta.map((m) => (
+                <span key={m}>{m}</span>
+              ))}
+            </div>
+            {synopsis ? (
+              <p className="line-clamp-3 text-[0.9375rem] leading-relaxed text-foreground/80">{synopsis}</p>
+            ) : details.isPending ? (
+              <div className="text-[0.9375rem] leading-relaxed">
+                <TextLine />
+                <TextLine />
+                <TextLine bar="w-2/3" />
+              </div>
+            ) : null}
+            <div className="mt-1">
+              <Button asChild variant="accent" size="lg">
+                <Link viewTransition to={`/anime/${anime.malId}${episode ? `?episode=${episode}` : ''}`}>
+                  <RiPlayLargeFill />
+                  {episode ? `${t('common.episode')} ${episode}` : t('common.open')}
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </div>

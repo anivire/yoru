@@ -83,13 +83,27 @@ export function UpcomingCardSkeleton() {
 export function HomeSkeleton() {
   return (
     <>
-      <div className="mx-auto flex max-w-(--page-max) items-end gap-6 px-4 pb-6 pt-6 sm:px-6">
-        <Skeleton className="hidden aspect-[2/3] w-36 shrink-0 rounded-xl sm:block" />
-        <div className="w-full min-w-0">
+      <div className="mx-auto max-w-(--page-max) px-4 pb-12 pt-6 sm:px-6">
+        <div className="mb-6 flex h-1 items-center">
           <TextLine className="text-[0.9375rem]" bar="w-40" />
-          <TextLine className="mt-1 text-3xl sm:text-4xl" bar="w-2/3" />
-          <TextLine className="mt-1" bar="w-1/3" />
-          <Skeleton className="mt-5 h-11 w-36 rounded-full" />
+        </div>
+        <div className="flex items-end gap-6">
+          <Skeleton className="hidden aspect-[2/3] w-44 shrink-0 rounded-xl sm:block" />
+          <div className="flex w-full max-w-2xl min-w-0 flex-col gap-3">
+            <TextLine className="text-3xl sm:text-4xl" bar="w-2/3" />
+            <div className="flex gap-1.5">
+              {[16, 20, 14].map((w) => (
+                <Skeleton key={w} className="h-6 rounded-full" style={{ width: `${w * 0.25}rem` }} />
+              ))}
+            </div>
+            <TextLine className="text-sm" bar="w-48" />
+            <div className="text-[0.9375rem] leading-relaxed">
+              <TextLine />
+              <TextLine />
+              <TextLine bar="w-2/3" />
+            </div>
+            <Skeleton className="mt-1 h-11 w-36 rounded-full" />
+          </div>
         </div>
       </div>
       <div className="mx-auto w-full max-w-(--page-max) px-4 pb-8 pt-4 sm:px-6 sm:pt-8">
