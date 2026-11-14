@@ -219,6 +219,15 @@
     }
   }
 
+  html:has(:fullscreen) {
+    scrollbar-gutter: auto;
+    overflow: hidden;
+  }
+
+  :fullscreen {
+    overflow: hidden;
+  }
+
   ::selection {
     background: var(--accent-soft);
   }
