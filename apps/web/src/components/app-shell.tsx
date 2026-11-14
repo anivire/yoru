@@ -175,7 +175,7 @@ function UserMenu() {
   )
 }
 
-function useHeader() {
+export function useHeader() {
   const ref = useRef<HTMLElement>(null)
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {

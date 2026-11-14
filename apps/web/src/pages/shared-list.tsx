@@ -1,10 +1,11 @@
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
 import { LIST_STATUSES, type ListStatus } from '@yoru/shared'
-import { EmptyState, Logo, Segmented } from '@yoru/ui'
+import { EmptyState, Logo, Segmented, cn } from '@yoru/ui'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
 import { AnimeCard, PosterGrid } from '../components/anime-cards'
+import { useHeader } from '../components/app-shell'
 import { Footer } from '../components/footer'
 import { PosterGridSkeleton } from '../components/skeletons'
 import { api } from '../lib/api'
@@ -14,6 +15,7 @@ const PAGE_SIZE = 48
 export function SharedListPage() {
   const { t } = useTranslation()
   const { token = '' } = useParams()
+  const header = useHeader()
   const [status, setStatus] = useState<'all' | ListStatus>('all')
   const query = useInfiniteQuery({
     queryKey: ['public-list', token, status],
@@ -47,9 +49,16 @@ export function SharedListPage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="px-2 pt-2 sm:px-3">
-        <div className="mx-auto flex h-12 max-w-(--page-max) items-center pl-3.5 sm:h-14 sm:px-3">
-          <Logo className="[&>span]:text-[0.9375rem] [&_svg]:size-6 sm:[&>span]:text-[17px] sm:[&_svg]:size-7" />
+      <header ref={header.ref} className="sticky top-0 z-40 pt-2">
+        <div className="mx-auto max-w-(--page-max) px-4 sm:px-6">
+          <div
+            className={cn(
+              'flex h-12 items-center rounded-full pl-3.5 pr-1.5 transition-[background-color,backdrop-filter] duration-300 sm:h-14 sm:pl-4 sm:pr-2.5',
+              header.scrolled ? 'bg-background/55 backdrop-blur-2xl backdrop-saturate-150' : 'bg-transparent',
+            )}
+          >
+            <Logo className="[&>span]:text-[0.9375rem] [&_svg]:size-6 sm:[&>span]:text-[17px] sm:[&_svg]:size-7" />
+          </div>
         </div>
       </header>
       <main className="mx-auto w-full max-w-(--page-max) flex-1 px-4 pb-8 pt-4 sm:px-6 sm:pt-8">

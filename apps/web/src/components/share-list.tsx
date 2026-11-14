@@ -36,7 +36,7 @@ export function ShareListButton() {
           {t('lists.share.button')}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[min(92vw,24rem)] p-4">
+      <PopoverContent align="end" className="w-[min(92vw,24rem)] p-4" onOpenAutoFocus={(e) => e.preventDefault()}>
         <div className="text-sm font-semibold">{t('lists.share.title')}</div>
         <p className="mt-1 text-[0.8125rem] text-muted-foreground">{t('lists.share.hint')}</p>
         {share.isPending ? (
