@@ -65,10 +65,11 @@ function today() {
   return new Date().toISOString().slice(0, 10)
 }
 
-export function saveEntry(userId: number, malId: number, input: ListEntryInput, total: number | null): ListEntry {
+export function saveEntry(userId: number, malId: number, input: ListEntryInput, total: number | null, aired: number | null = null): ListEntry {
   const existing = getEntry(userId, malId)
   let progress = input.progress ?? existing?.progress ?? 0
   if (total && progress > total) progress = total
+  if (aired !== null && progress > aired) progress = Math.max(aired, existing?.progress ?? 0)
   let status = input.status
   if (input.progress !== undefined && total && progress >= total && (status === 'watching' || status === 'rewatching')) {
     status = 'completed'

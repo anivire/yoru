@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, type User } from '@yoru/shared'
-import { Badge, Button, Card, CardContent, Code, Field, Input, Segmented, Switch, toast } from '@yoru/ui'
-import { ArrowDownUp, Bell, Download, FileBraces, FileCode, FileSpreadsheet, KeyRound, Palette, Shield, TriangleAlert, UserRound } from 'lucide-react'
+import { Button, Card, CardContent, Code, Field, Input, Segmented, Switch, toast } from '@yoru/ui'
+import { ArrowDownUp, Bell, Check, Download, FileBraces, FileCode, FileSpreadsheet, KeyRound, Palette, Shield, TriangleAlert, UserRound } from 'lucide-react'
 import { type FormEvent, type ReactNode, useEffect, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
@@ -46,18 +46,23 @@ function Block({ title, description, children }: { title: ReactNode; description
 
 function AppearanceTab() {
   const { t } = useTranslation()
-  const { stretch, setStretch } = useAppearance()
+  const { stretch, setStretch, expandSynopsis, setExpandSynopsis } = useAppearance()
   return (
     <>
       <Block title={t('settings.layout')}>
-        <Card>
-          <label className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4">
-            <span>
-              <span className="block text-sm">{t('settings.stretch')}</span>
-              <span className="block text-[13px] text-muted-foreground">{t('settings.stretchHint')}</span>
-            </span>
-            <Switch checked={stretch} onCheckedChange={setStretch} />
-          </label>
+        <Card className="py-1">
+          {[
+            { key: 'stretch', checked: stretch, onChange: setStretch },
+            { key: 'expandSynopsis', checked: expandSynopsis, onChange: setExpandSynopsis },
+          ].map((o) => (
+            <label key={o.key} className="flex cursor-pointer items-center justify-between gap-4 px-5 py-3">
+              <span>
+                <span className="block text-sm">{t(`settings.${o.key}`)}</span>
+                <span className="block text-[13px] text-muted-foreground">{t(`settings.${o.key}Hint`)}</span>
+              </span>
+              <Switch checked={o.checked} onCheckedChange={o.onChange} />
+            </label>
+          ))}
         </Card>
       </Block>
       <Block title={t('settings.colorScheme')}>
@@ -97,33 +102,43 @@ function AccountTab() {
         />
       </Block>
       <Block title={t('settings.token')} description={<Trans i18nKey="settings.tokenHint" components={{ code: <Code /> }} />}>
-        <Card>
-          <CardContent className="flex flex-col gap-3">
-            {user.hasOwnAnime365Token ? (
-              <div className="flex items-center justify-between gap-3">
-                <Badge variant="success">
-                  <KeyRound />
-                  {t('settings.tokenSet')}
-                </Badge>
-                <Button size="sm" variant="danger" onClick={() => update.mutate({ anime365Token: null })}>
-                  {t('settings.tokenClear')}
-                </Button>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Card className="flex flex-col gap-4 p-4">
+            <div className="flex items-center gap-3">
+              <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent">
+                <KeyRound className="size-[18px]" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="font-medium">Anime365</div>
+                {user.hasOwnAnime365Token ? (
+                  <div className="flex items-center gap-1 text-xs text-success">
+                    <Check className="size-3" />
+                    {t('settings.tokenSet')}
+                  </div>
+                ) : (
+                  <div className="text-xs text-muted-foreground">{t('settings.tokenNotSet')}</div>
+                )}
               </div>
-            ) : null}
+              {user.hasOwnAnime365Token ? (
+                <Button size="sm" variant="ghost" onClick={() => update.mutate({ anime365Token: null })}>
+                  {t('common.delete')}
+                </Button>
+              ) : null}
+            </div>
             <form
-              className="flex gap-2"
+              className="mt-auto flex gap-2"
               onSubmit={(e) => {
                 e.preventDefault()
                 update.mutate({ anime365Token: token.trim() }, { onSuccess: () => setToken('') })
               }}
             >
-              <Input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="access_token" autoComplete="off" />
-              <Button type="submit" variant="primary" disabled={!token.trim()} loading={update.isPending}>
+              <Input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="access_token" autoComplete="off" className="h-8 text-[13px]" />
+              <Button type="submit" variant="secondary" size="sm" disabled={!token.trim()} loading={update.isPending}>
                 {t('common.save')}
               </Button>
             </form>
-          </CardContent>
-        </Card>
+          </Card>
+        </div>
       </Block>
       <Block title={t('settings.password')}>
         <Card>

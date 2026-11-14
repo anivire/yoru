@@ -14,7 +14,7 @@ import { watchProgress } from '../db/schema'
 import { type AppEnv, requireAuth } from '../lib/auth'
 import { badRequest } from '../lib/http'
 import { intParam, parseBody } from '../lib/validate'
-import { ensureAnime, getAnimeRow } from '../services/anime'
+import { airedEpisodes, ensureAnime, getAnimeRow } from '../services/anime'
 import { exportList } from '../services/export'
 import { homeData } from '../services/home'
 import { type ListFilters, allEntries, deleteEntry, filterEntries, listCounts, markWatched, saveEntry } from '../services/lists'
@@ -52,7 +52,7 @@ export const listRoutes = new Hono<AppEnv>()
     const malId = intParam(c, 'malId')
     const input = await parseBody(c, listEntryInputSchema)
     const row = getAnimeRow(malId) ?? (await ensureAnime(malId))
-    return c.json(saveEntry(c.get('user').id, malId, input, row.episodes))
+    return c.json(saveEntry(c.get('user').id, malId, input, row.episodes, airedEpisodes(row)))
   })
   .delete('/:malId', (c) => {
     deleteEntry(c.get('user').id, intParam(c, 'malId'))
@@ -88,4 +88,4 @@ export const progressRoutes = new Hono<AppEnv>()
     return c.json({ ok: true })
   })
 
-export const homeRoutes = new Hono<AppEnv>().use(requireAuth).get('/', (c) => c.json(homeData(c.get('user').id)))
+export const homeRoutes = new Hono<AppEnv>().use(requireAuth).get('/', async (c) => c.json(await homeData(c.get('user').id)))

@@ -7,21 +7,23 @@ interface Appearance {
   theme: ThemePreset
   scheme: ColorScheme
   stretch: boolean
+  expandSynopsis: boolean
   setTheme: (theme: ThemePreset) => void
   setScheme: (scheme: ColorScheme) => void
   setStretch: (stretch: boolean) => void
+  setExpandSynopsis: (expand: boolean) => void
 }
 
 const AppearanceContext = createContext<Appearance | null>(null)
 
-function load(): { theme: ThemePreset; scheme: ColorScheme; stretch: boolean } {
+function load(): { theme: ThemePreset; scheme: ColorScheme; stretch: boolean; expandSynopsis: boolean } {
   try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') as { theme?: string; scheme?: string; stretch?: boolean }
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') as { theme?: string; scheme?: string; stretch?: boolean; expandSynopsis?: boolean }
     const theme = THEME_PRESETS.some((t) => t.id === raw.theme) ? (raw.theme as ThemePreset) : DEFAULT_THEME
     const scheme = raw.scheme === 'light' || raw.scheme === 'dark' || raw.scheme === 'system' ? raw.scheme : DEFAULT_SCHEME
-    return { theme, scheme, stretch: raw.stretch === true }
+    return { theme, scheme, stretch: raw.stretch === true, expandSynopsis: raw.expandSynopsis !== false }
   } catch {
-    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, stretch: false }
+    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, stretch: false, expandSynopsis: true }
   }
 }
 
@@ -49,6 +51,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
         setTheme: (theme) => setState((s) => ({ ...s, theme })),
         setScheme: (scheme) => setState((s) => ({ ...s, scheme })),
         setStretch: (stretch) => setState((s) => ({ ...s, stretch })),
+        setExpandSynopsis: (expandSynopsis) => setState((s) => ({ ...s, expandSynopsis })),
       }}
     >
       {children}

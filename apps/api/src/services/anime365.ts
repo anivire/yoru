@@ -1,4 +1,4 @@
-import type { StreamKind, StreamSource } from '@yoru/shared'
+import type { Genre, StreamKind, StreamSource } from '@yoru/shared'
 import { env } from '../env'
 import { UpstreamError, cached } from '../lib/http'
 
@@ -127,6 +127,21 @@ export const anime365 = {
     const query = { isActive: 1, fields: SERIES_FIELDS, ...params }
     const key = new URLSearchParams(Object.entries(query).map(([k, v]) => [k, String(v)])).toString()
     return cached(`a365:list:${key}`, HOUR,() => api<A365Series[]>('/series', query))
+  },
+
+  genres(): Promise<Genre[]> {
+    return cached('a365:genres', 24 * HOUR, async () => {
+      const rows = await api<A365Series[]>('/series', { limit: 500, isActive: 1, fields: 'genres' })
+      const counts = new Map<number, Genre>()
+      for (const s of rows) {
+        for (const g of s.genres ?? []) {
+          const entry = counts.get(g.id) ?? { id: g.id, name: g.title, count: 0 }
+          entry.count++
+          counts.set(g.id, entry)
+        }
+      }
+      return [...counts.values()].sort((a, b) => b.count - a.count)
+    })
   },
 
   series(id: number): Promise<A365Series> {

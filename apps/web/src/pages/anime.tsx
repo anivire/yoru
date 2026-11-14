@@ -1,14 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AnimeDetails } from '@yoru/shared'
-import { Badge, Button, EmptyState, Skeleton, cn } from '@yoru/ui'
+import { Badge, Button, EmptyState, Image, cn } from '@yoru/ui'
 import { CalendarClock, ExternalLink, Star } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
 import { Page } from '../components/app-shell'
 import { ListEditor } from '../components/list-editor'
+import { AnimePageSkeleton } from '../components/skeletons'
 import { WatchSection } from '../components/watch-section'
 import { api } from '../lib/api'
+import { useAppearance } from '../lib/appearance'
 import { formatDate, formatDateTime, relativeTime, seasonLabel, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
 
@@ -55,7 +57,7 @@ function Synopsis({ text, open, onToggle }: { text: string; open: boolean; onTog
       >
         {text}
       </p>
-      {open || overflows ? (
+      {(open ? text.length > 280 : overflows) ? (
         <button type="button" onClick={onToggle} className="cursor-pointer self-start text-[13px] font-medium text-foreground hover:text-accent">
           {open ? t('anime.less') : t('anime.more')}
         </button>
@@ -66,7 +68,8 @@ function Synopsis({ text, open, onToggle }: { text: string; open: boolean; onTog
 
 function Header({ anime, children }: { anime: AnimeDetails; children: React.ReactNode }) {
   const { t } = useTranslation()
-  const [open, setOpen] = useState(false)
+  const { expandSynopsis } = useAppearance()
+  const [open, setOpen] = useState(expandSynopsis)
   const meta = [typeLabel(anime.type), anime.episodes ? `${anime.episodes} ${t('common.episodes')}` : null, anime.duration, seasonLabel(anime)].filter(Boolean)
   const facts = [
     anime.studios.length ? { label: t('anime.studios'), value: anime.studios.join(', ') } : null,
@@ -81,7 +84,9 @@ function Header({ anime, children }: { anime: AnimeDetails; children: React.Reac
       </div>
       <div className="mx-auto max-w-7xl px-4 py-10 wide:max-w-none sm:px-6">
         <div className="flex flex-col gap-6 sm:flex-row">
-          <img src={anime.imageUrl ?? undefined} alt="" className="aspect-[2/3] w-40 shrink-0 self-start rounded-xl bg-muted object-cover shadow-2xl sm:w-48" />
+          <div className="aspect-[2/3] w-40 shrink-0 self-start overflow-hidden rounded-xl bg-muted shadow-2xl sm:w-48">
+            {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" /> : null}
+          </div>
           <div className={cn('flex min-w-0 flex-1 flex-col gap-3', !open && 'sm:h-72')}>
             <div>
               <h1 className="line-clamp-2 text-3xl font-semibold tracking-tight sm:text-4xl">{anime.title}</h1>
@@ -157,20 +162,7 @@ export function AnimePage() {
   const malId = Number(useParams().id)
   const { data, isPending, isError, error } = useQuery({ queryKey: keys.anime(malId), queryFn: () => api.anime(malId), enabled: malId > 0 })
 
-  if (isPending) {
-    return (
-      <Page>
-        <div className="flex gap-6">
-          <Skeleton className="aspect-[2/3] w-48 rounded-xl" />
-          <div className="flex-1 space-y-3">
-            <Skeleton className="h-9 w-2/3" />
-            <Skeleton className="h-5 w-1/3" />
-            <Skeleton className="h-20 w-full" />
-          </div>
-        </div>
-      </Page>
-    )
-  }
+  if (isPending) return <AnimePageSkeleton />
   if (isError || !data) {
     return (
       <Page>
@@ -182,7 +174,12 @@ export function AnimePage() {
   return (
     <>
       <Header anime={data.anime}>
-        <ListEditor malId={malId} entry={data.entry} total={data.anime.episodes} />
+        <ListEditor
+          malId={malId}
+          entry={data.entry}
+          total={data.anime.episodes}
+          aired={data.anime.status === 'finished' ? data.anime.episodes : data.anime.status === 'upcoming' ? 0 : data.anime.latestEpisode}
+        />
       </Header>
       <Page>
         <h2 className="mb-4 text-xl font-semibold tracking-tight">{t('anime.streaming')}</h2>

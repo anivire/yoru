@@ -129,6 +129,12 @@ export function upsertJikanSummaries(items: JikanAnime[]): AnimeSummary[] {
   })
 }
 
+export function airedEpisodes(row: AnimeRow): number | null {
+  if (row.status === 'finished') return row.episodes
+  if (row.status === 'upcoming') return 0
+  return row.latestEpisode
+}
+
 export function getAnimeRow(malId: number): AnimeRow | undefined {
   return db.select().from(anime).where(eq(anime.malId, malId)).get()
 }

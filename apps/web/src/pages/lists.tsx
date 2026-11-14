@@ -1,23 +1,12 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { EXPORT_FORMATS, LIST_STATUSES, type ListEntryWithAnime, type ListStatus } from '@yoru/shared'
-import {
-  Badge,
-  Button,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  EmptyState,
-  Input,
-  Segmented,
-  Select,
-  cn,
-} from '@yoru/ui'
+import { Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, EmptyState, Image, Input, Segmented, Select, cn } from '@yoru/ui'
 import { Download, FileDown, LayoutGrid, Rows3, Search, Star } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router'
-import { AnimeCard, PosterGrid, PosterGridSkeleton } from '../components/anime-cards'
+import { AnimeCard, PosterGrid } from '../components/anime-cards'
+import { ListTableSkeleton, PosterGridSkeleton } from '../components/skeletons'
 import { Page, PageHeader } from '../components/app-shell'
 import { api } from '../lib/api'
 import { formatDate, typeLabel } from '../lib/format'
@@ -53,7 +42,7 @@ function ListTable({ items }: { items: ListEntryWithAnime[] }) {
             <tr key={e.malId} className="hover:bg-muted/60">
               <td className="px-4 py-2.5">
                 <Link to={`/anime/${e.malId}`} className="flex items-center gap-3">
-                  {e.anime.imageUrl ? <img src={e.anime.imageUrl} alt="" loading="lazy" className="h-12 w-8 shrink-0 rounded object-cover" /> : null}
+                  {e.anime.imageUrl ? <Image src={e.anime.imageUrl} alt="" loading="lazy" className="h-12 w-8 shrink-0 rounded object-cover" /> : null}
                   <div className="min-w-0">
                     <div className="truncate font-medium hover:text-accent">{e.anime.title}</div>
                     <div className="text-xs text-muted-foreground">{[typeLabel(e.anime.type), e.anime.year].filter(Boolean).join(' · ')}</div>
@@ -75,7 +64,7 @@ function ListTable({ items }: { items: ListEntryWithAnime[] }) {
                     {e.score}
                   </span>
                 ) : (
-                  <span className="text-subtle-foreground">—</span>
+                  <span className="text-subtle-foreground">{t('anime.noScore')}</span>
                 )}
               </td>
               <td className="hidden px-4 py-2.5 font-mono text-xs text-muted-foreground lg:table-cell">{formatDate(e.updatedAt)}</td>
@@ -202,7 +191,11 @@ export function ListsPage() {
       </div>
 
       {isPending ? (
-        <PosterGridSkeleton />
+        view === 'table' ? (
+          <ListTableSkeleton />
+        ) : (
+          <PosterGridSkeleton />
+        )
       ) : !data?.items.length ? (
         <EmptyState mood="sleepy" title={t('lists.empty')} />
       ) : view === 'table' ? (

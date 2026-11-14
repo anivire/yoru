@@ -7,11 +7,13 @@ import { setLocale } from './lib/i18n'
 import { useMe } from './lib/queries'
 import { AdminPage } from './pages/admin'
 import { AnimePage } from './pages/anime'
+import { DiscoverPage } from './pages/discover'
 import { HomePage } from './pages/home'
 import { InvitePage } from './pages/invite'
 import { ListsPage } from './pages/lists'
 import { LoginPage } from './pages/login'
 import { NotFoundPage } from './pages/not-found'
+import { SchedulePage } from './pages/schedule'
 import { SearchPage } from './pages/search'
 import { SettingsPage } from './pages/settings'
 
@@ -78,6 +80,8 @@ export const router = createBrowserRouter([
         element: <RequireAuth />,
         children: [
           { index: true, element: <HomePage /> },
+          { path: 'discover', element: <DiscoverPage /> },
+          { path: 'schedule', element: <SchedulePage /> },
           { path: 'search', element: <SearchPage /> },
           { path: 'lists', element: <ListsPage /> },
           { path: 'anime/:id', element: <AnimePage /> },

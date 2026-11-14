@@ -177,6 +177,21 @@ export interface UpcomingItem {
   anime: AnimeSummary
   episode: number | null
   airingAt: string
+  bannerUrl: string | null
+}
+
+export interface ScheduleItem {
+  anime: AnimeSummary
+  episode: number
+  airingAt: string
+  listStatus: ListStatus | null
+}
+
+export interface RecentItem {
+  anime: AnimeSummary
+  episode: number
+  at: string
+  kind: StreamKind
 }
 
 export interface HomeData {
@@ -210,6 +225,17 @@ export interface Invite {
   expiresAt: string | null
   usedAt: string | null
   usedBy: string | null
+}
+
+export interface VersionInfo {
+  version: string
+  commit: string | null
+  commitUrl: string | null
+  repoUrl: string
+  latest: { commit: string; message: string; date: string | null; url: string } | null
+  behindBy: number | null
+  updateAvailable: boolean
+  compareUrl: string | null
 }
 
 export interface AdminUser {

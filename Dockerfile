@@ -1,7 +1,7 @@
 FROM node:22-bookworm-slim AS build
 WORKDIR /app
 ENV NX_DAEMON=false NX_NO_CLOUD=true
-RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ git && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json ./
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
@@ -10,6 +10,8 @@ COPY packages/ui/package.json packages/ui/
 RUN npm ci
 COPY . .
 RUN npx nx run-many -t build --projects=api,web
+ARG GIT_COMMIT=
+RUN node -p "require('./package.json').version" > VERSION \n    && (if [ -n "$GIT_COMMIT" ]; then echo "$GIT_COMMIT"; else git rev-parse HEAD 2>/dev/null || true; fi) > COMMIT
 
 FROM node:22-bookworm-slim
 WORKDIR /app
@@ -25,6 +27,7 @@ COPY --from=build /app/node_modules/file-uri-to-path node_modules/file-uri-to-pa
 COPY --from=build /app/apps/api/dist dist
 COPY --from=build /app/apps/api/drizzle drizzle
 COPY --from=build /app/apps/web/dist web
+COPY --from=build /app/VERSION /app/COMMIT ./
 VOLUME /data
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"

@@ -10,6 +10,7 @@ import { episodeList } from '../services/episodes'
 import { jikan } from '../services/jikan'
 import { getEntry, toEntry } from '../services/lists'
 import { resolveMatch, setManualMatch } from '../services/provider'
+import { shikimori } from '../services/shikimori'
 
 const A365_PAGE = 24
 const SEARCH_PARAMS = ['type', 'status', 'genres', 'order_by', 'sort', 'rating', 'min_score', 'start_date', 'end_date'] as const
@@ -30,13 +31,16 @@ export const animeRoutes = new Hono<AppEnv>()
       const query: Record<string, string | number> = { limit: A365_PAGE, offset: (page - 1) * A365_PAGE }
       const type = c.req.query('type')
       const status = c.req.query('status')
+      const genres = (c.req.query('genres') ?? '').split(',').map(Number).filter((n) => Number.isInteger(n) && n > 0)
       if (q) query.query = q
+      else if (genres.length) query.chips = `genre@=${genres.join(',')}`
       if (type) query.type = type
       if (status === 'airing' || (!q && !filtered)) query.isAiring = 1
       if (status === 'complete') query.isAiring = 0
       const rows = status === 'upcoming' ? [] : await anime365.list(query)
+      const matching = q && genres.length ? rows.filter((s) => genres.every((g) => s.genres?.some((x) => x.id === g))) : rows
       const body: SearchResult = {
-        items: upsertA365Summaries(rows),
+        items: upsertA365Summaries(matching),
         pagination: { page, hasNextPage: rows.length === A365_PAGE, total: null },
         source: 'anime365',
       }
@@ -58,7 +62,7 @@ export const animeRoutes = new Hono<AppEnv>()
     }
   })
   .get('/genres', async (c) => {
-    if (metadataSource() === 'anime365') return c.json([] as Genre[])
+    if (metadataSource() === 'anime365') return c.json(await anime365.genres().catch(() => [] as Genre[]))
     const genres = await jikan.genres().catch(() => [])
     const body: Genre[] = genres.map((g) => ({ id: g.mal_id, name: g.name, count: g.count }))
     return c.json(body)
@@ -88,6 +92,10 @@ export const animeRoutes = new Hono<AppEnv>()
   .get('/:id/episodes', async (c) => {
     const row = await ensureAnime(intParam(c, 'id'))
     return c.json(await episodeList(c.get('user').id, row))
+  })
+  .get('/:id/banner', async (c) => {
+    const shots = await shikimori.screenshots(intParam(c, 'id')).catch(() => [] as string[])
+    return c.json({ url: shots[0] ?? null })
   })
   .get('/:id/match', async (c) => c.json(await resolveMatch(intParam(c, 'id'))))
   .put('/:id/match', async (c) => {

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ProviderMatch } from '@yoru/shared'
-import { Badge, Button, Dialog, DialogContent, DialogTrigger, Input, Spinner, cn } from '@yoru/ui'
+import { Badge, Button, Dialog, DialogContent, DialogTrigger, Image, Input, Spinner, cn } from '@yoru/ui'
 import { Link2, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -56,7 +56,7 @@ export function MatchDialog({ malId, match, defaultQuery }: { malId: number; mat
                   onClick={() => set.mutate(c.providerId)}
                   className={cn('flex cursor-pointer items-center gap-3 rounded-lg p-2 text-left hover:bg-muted', match?.providerId === c.providerId && 'bg-accent-soft')}
                 >
-                  {c.posterUrl ? <img src={c.posterUrl} alt="" className="h-14 w-10 shrink-0 rounded object-cover" loading="lazy" /> : null}
+                  {c.posterUrl ? <Image src={c.posterUrl} alt="" className="h-14 w-10 shrink-0 rounded object-cover" loading="lazy" /> : null}
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-medium">{c.title}</div>
                     <div className="text-xs text-muted-foreground">{[c.type, c.year, c.episodes ? `${c.episodes} ${t('common.episodes')}` : null].filter(Boolean).join(' · ')}</div>

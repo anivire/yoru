@@ -1,4 +1,4 @@
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Button,
   DropdownMenu,
@@ -10,7 +10,7 @@ import {
   Logo,
   cn,
 } from '@yoru/ui'
-import { LogOut, Search, Settings, Shield, User as UserIcon } from 'lucide-react'
+import { ArrowUpCircle, LogOut, Search, Settings, Shield, User as UserIcon } from 'lucide-react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink, useNavigate } from 'react-router'
@@ -34,6 +34,21 @@ function NavItem({ to, children, end }: { to: string; children: ReactNode; end?:
     >
       {children}
     </NavLink>
+  )
+}
+
+function NavItems() {
+  const { t } = useTranslation()
+  return (
+    <>
+      <NavItem to="/" end>
+        {t('nav.home')}
+      </NavItem>
+      <NavItem to="/discover">{t('nav.discover')}</NavItem>
+      <NavItem to="/schedule">{t('nav.schedule')}</NavItem>
+      <NavItem to="/search">{t('nav.search')}</NavItem>
+      <NavItem to="/lists">{t('nav.lists')}</NavItem>
+    </>
   )
 }
 
@@ -81,6 +96,43 @@ function UserMenu() {
   )
 }
 
+function Footer() {
+  const { t } = useTranslation()
+  const { data } = useQuery({ queryKey: ['version'], queryFn: api.version, staleTime: 30 * 60_000 })
+  return (
+    <footer className="flex flex-wrap items-center justify-center gap-x-2 gap-y-2 py-6 text-sm text-muted-foreground">
+      <span>
+        yoru · <span className="text-foreground">Anime365</span> · Jikan
+      </span>
+      {data ? (
+        <span className="inline-flex items-center gap-1.5">
+          <span>·</span>
+          <a href={data.repoUrl} target="_blank" rel="noreferrer" className="hover:text-foreground">
+            v{data.version}
+          </a>
+          {data.commit && data.commitUrl ? (
+            <a href={data.commitUrl} target="_blank" rel="noreferrer" className="font-mono text-xs text-subtle-foreground hover:text-foreground">
+              {data.commit.slice(0, 7)}
+            </a>
+          ) : null}
+        </span>
+      ) : null}
+      {data?.updateAvailable ? (
+        <a
+          href={data.compareUrl ?? data.repoUrl}
+          target="_blank"
+          rel="noreferrer"
+          title={data.latest?.message}
+          className="inline-flex h-6 items-center gap-1.5 rounded-full bg-accent-soft px-2.5 text-xs font-medium text-accent hover:bg-accent hover:text-accent-foreground"
+        >
+          <ArrowUpCircle className="size-3.5" />
+          {data.behindBy ? t('version.updateCount', { count: data.behindBy }) : t('version.update')}
+        </a>
+      ) : null}
+    </footer>
+  )
+}
+
 function useHeader() {
   const ref = useRef<HTMLElement>(null)
   const [scrolled, setScrolled] = useState(false)
@@ -114,15 +166,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Link to="/" className="shrink-0">
             <Logo />
           </Link>
-          <nav className="mx-auto hidden items-center gap-1 sm:flex">
-            <NavItem to="/" end>
-              {t('nav.home')}
-            </NavItem>
-            <NavItem to="/search">{t('nav.search')}</NavItem>
-            <NavItem to="/lists">{t('nav.lists')}</NavItem>
+          <nav className="mx-auto hidden items-center gap-1 md:flex">
+            <NavItems />
           </nav>
-          <div className="ml-auto flex items-center gap-2 sm:ml-0">
-            <Button asChild variant="ghost" size="icon" className="sm:hidden">
+          <div className="ml-auto flex items-center gap-2 md:ml-0">
+            <Button asChild variant="ghost" size="icon" className="md:hidden">
               <Link to="/search" aria-label={t('nav.search')}>
                 <Search />
               </Link>
@@ -132,18 +180,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             <LanguageMenu />
           </div>
         </div>
-        <nav className="flex items-center gap-1 overflow-x-auto px-4 pb-2 scrollbar-none sm:hidden">
-          <NavItem to="/" end>
-            {t('nav.home')}
-          </NavItem>
-          <NavItem to="/search">{t('nav.search')}</NavItem>
-          <NavItem to="/lists">{t('nav.lists')}</NavItem>
+        <nav className="flex items-center gap-1 overflow-x-auto px-4 pb-2 scrollbar-none md:hidden">
+          <NavItems />
         </nav>
       </header>
       <main className="flex-1">{children}</main>
-      <footer className="py-6 text-center text-sm text-muted-foreground">
-        yoru · <span className="text-foreground">Anime365</span> · Jikan
-      </footer>
+      <Footer />
       <QuickAppearance />
     </div>
   )

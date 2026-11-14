@@ -2,6 +2,7 @@ import type {
   AdminSettings,
   AdminUser,
   AnimePage,
+  AnimeSummary,
   Episode,
   Genre,
   HomeData,
@@ -14,11 +15,14 @@ import type {
   NotificationList,
   ProviderCandidate,
   ProviderMatch,
+  RecentItem,
+  ScheduleItem,
   SearchResult,
   StreamKind,
   StreamResult,
   Translation,
   User,
+  VersionInfo,
 } from '@yoru/shared'
 
 export class ApiError extends Error {
@@ -68,6 +72,13 @@ export const api = {
     request<User>('PATCH', '/me/settings', patch),
 
   home: () => get<HomeData>('/home'),
+  version: () => get<VersionInfo>('/version'),
+  discoverCollection: (name: 'hero' | 'top' | 'anons') => get<AnimeSummary[]>(`/discover/${name}`),
+  discoverRecent: () => get<RecentItem[]>('/discover/recent'),
+  trending: (genre: number | null) => get<AnimeSummary[]>(`/discover/trending${qs({ genre: genre ?? undefined })}`),
+  discoverGenres: () => get<Genre[]>('/discover/genres'),
+  schedule: () => get<ScheduleItem[]>('/schedule'),
+  banner: (malId: number) => get<{ url: string | null }>(`/anime/${malId}/banner`),
   search: (params: Record<string, string | number | undefined>) => get<SearchResult>(`/anime/search${qs(params)}`),
   genres: () => get<Genre[]>('/anime/genres'),
   anime: (malId: number) => get<AnimePage>(`/anime/${malId}`),

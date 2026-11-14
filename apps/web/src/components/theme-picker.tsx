@@ -60,7 +60,7 @@ export function SchemePicker({ compact }: { compact?: boolean }) {
           <div className={cn('overflow-hidden rounded-lg', compact ? 'h-23' : 'h-46')}>
             {o.value === 'system' ? (
               <div className="relative h-full w-full">
-                <div className="absolute inset-0">
+                <div className="absolute inset-0 [clip-path:inset(0_49.5%_0_0)]">
                   <SchemePreview scheme="light" />
                 </div>
                 <div className="absolute inset-0 [clip-path:inset(0_0_0_50%)]">
@@ -81,7 +81,7 @@ export function SchemePicker({ compact }: { compact?: boolean }) {
 function Orb({ colors, active, mode }: { colors: readonly [string, string]; active: boolean; mode: 'light' | 'dark' }) {
   return (
     <span
-      className={cn('relative inline-block rounded-full shadow-md transition-[scale] duration-200 ease-out will-change-[scale]', active && 'scale-110')}
+      className={cn('relative inline-block rounded-full shadow-md transition-[scale] duration-200 ease-out transform-gpu backface-hidden will-change-transform', active && 'scale-110')}
       style={{
         width: 'var(--orb)',
         height: 'var(--orb)',

@@ -27,7 +27,7 @@ export const env = {
   anime365Token: str('ANIME365_TOKEN'),
   jikanUrl: str('JIKAN_URL', 'https://api.jikan.moe/v4').replace(/\/+$/, ''),
   metadataSource: str('METADATA_SOURCE', 'jikan'),
-  shikimoriUrl:str('SHIKIMORI_URL', 'https://shikimori.io').replace(/\/+$/, ''),
+  shikimoriUrl: str('SHIKIMORI_URL', 'https://shikimori.io').replace(/\/+$/, ''),
   releasePollMinutes: int('RELEASE_POLL_MINUTES', 5),
   oauth: {
     anilist: { clientId: str('ANILIST_CLIENT_ID'), clientSecret: str('ANILIST_CLIENT_SECRET') },
@@ -35,6 +35,11 @@ export const env = {
     mal: { clientId: str('MAL_CLIENT_ID'), clientSecret: str('MAL_CLIENT_SECRET') },
   },
   userAgent: str('USER_AGENT', 'Yoru'),
+  appVersion: str('APP_VERSION'),
+  gitCommit: str('GIT_COMMIT'),
+  githubRepo: str('GITHUB_REPO', 'anivire/yoru'),
+  githubBranch: str('GITHUB_BRANCH', 'master'),
+  githubToken: str('GITHUB_TOKEN'),
 }
 
 export const secureCookies = env.appUrl.startsWith('https://')

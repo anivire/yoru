@@ -1,6 +1,9 @@
 services:
   yoru:
-    build: .
+    build:
+      context: .
+      args:
+        GIT_COMMIT: ${GIT_COMMIT:-}
     restart: unless-stopped
     ports:
       - "3000"
@@ -18,6 +21,9 @@ services:
       MAL_CLIENT_ID: ${MAL_CLIENT_ID:-}
       MAL_CLIENT_SECRET: ${MAL_CLIENT_SECRET:-}
       METADATA_SOURCE: ${METADATA_SOURCE:-jikan}
+      GITHUB_REPO: ${GITHUB_REPO:-anivire/yoru}
+      GITHUB_BRANCH: ${GITHUB_BRANCH:-master}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       JIKAN_URL: ${JIKAN_URL:-https://api.jikan.moe/v4}
       HTTPS_PROXY: ${HTTPS_PROXY:-}
       RELEASE_POLL_MINUTES: ${RELEASE_POLL_MINUTES:-5}

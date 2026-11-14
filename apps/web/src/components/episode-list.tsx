@@ -1,5 +1,5 @@
 import type { Episode } from '@yoru/shared'
-import { Badge, Skeleton, cn } from '@yoru/ui'
+import { Badge, Image, Skeleton, cn } from '@yoru/ui'
 import { Check, LayoutGrid, List } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -95,7 +95,7 @@ export function EpisodeList({
                 >
                   <div className={cn('relative aspect-video w-36 shrink-0 overflow-hidden rounded-lg', e.imageUrl ? 'bg-muted' : active ? 'bg-accent/20' : 'bg-field')}>
                     {e.imageUrl ? (
-                      <img src={e.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" />
+                      <Image src={e.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" />
                     ) : (
                       <span className={cn('absolute inset-0 grid place-items-center font-mono text-2xl font-semibold', active ? 'text-accent' : 'text-subtle-foreground')}>{e.number}</span>
                     )}

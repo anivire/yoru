@@ -8,14 +8,17 @@ import { secureHeaders } from 'hono/secure-headers'
 import { env } from './env'
 import type { AppEnv } from './lib/auth'
 import { UpstreamError } from './lib/http'
+import { requireAuth } from './lib/auth'
 import { adminRoutes } from './routes/admin'
 import { animeRoutes } from './routes/anime'
 import { authRoutes } from './routes/auth'
+import { discoverRoutes, scheduleRoutes } from './routes/discover'
 import { importRoutes } from './routes/import'
 import { homeRoutes, listRoutes, progressRoutes } from './routes/list'
 import { meRoutes } from './routes/me'
 import { notificationRoutes } from './routes/notifications'
 import { streamRoutes } from './routes/stream'
+import { versionInfo } from './services/version'
 
 export const app = new Hono<AppEnv>()
 
@@ -23,6 +26,7 @@ app.use(logger((line) => (line.includes('/api/progress') ? undefined : console.l
 app.use(secureHeaders({ crossOriginEmbedderPolicy: false, crossOriginResourcePolicy: false, contentSecurityPolicy: undefined }))
 
 app.get('/api/health', (c) => c.json({ ok: true }))
+app.get('/api/version', requireAuth, async (c) => c.json(await versionInfo()))
 app.route('/api/auth', authRoutes)
 app.route('/api/me', meRoutes)
 app.route('/api/admin', adminRoutes)
@@ -33,6 +37,8 @@ app.route('/api/home', homeRoutes)
 app.route('/api/stream', streamRoutes)
 app.route('/api/notifications', notificationRoutes)
 app.route('/api/import', importRoutes)
+app.route('/api/discover', discoverRoutes)
+app.route('/api/schedule', scheduleRoutes)
 app.all('/api/*', (c) => c.json({ error: 'Not found' }, 404))
 
 if (env.webDist && fs.existsSync(env.webDist)) {

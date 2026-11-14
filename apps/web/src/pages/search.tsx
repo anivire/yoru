@@ -1,17 +1,19 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { ANIME_TYPES } from '@yoru/shared'
-import { Button, EmptyState, Input, Select } from '@yoru/ui'
+import { Button, EmptyState, Input, Select, cn } from '@yoru/ui'
 import { Search as SearchIcon, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
-import { AnimeCard, PosterGrid, PosterGridSkeleton } from '../components/anime-cards'
+import { AnimeCard, PosterGrid } from '../components/anime-cards'
+import { PosterGridSkeleton } from '../components/skeletons'
 import { Page, PageHeader } from '../components/app-shell'
 import { api } from '../lib/api'
 
 const ANY = '__any'
 const ORDERS = ['popularity', 'score', 'start_date', 'title', 'members'] as const
 const STATUSES = ['airing', 'complete', 'upcoming'] as const
+const TAG_LIMIT = 16
 
 export function SearchPage() {
   const { t } = useTranslation()
@@ -57,6 +59,16 @@ export function SearchPage() {
   const items = [...new Map((results.data?.pages.flatMap((p) => p.items) ?? []).map((a) => [a.malId, a])).values()]
   const filtered = Object.values(filters).some(Boolean)
   const basic = results.data?.pages[0]?.source === 'anime365'
+  const [allTags, setAllTags] = useState(false)
+  const selectedGenres = (filters.genres ?? '').split(',').filter(Boolean)
+  const tags = genres.data ?? []
+  const visibleTags = allTags ? tags : tags.filter((g, i) => i < TAG_LIMIT || selectedGenres.includes(String(g.id)))
+  const toggleGenre = (id: string) => {
+    const next = new Set(selectedGenres)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setFilter('genres', next.size ? [...next].join(',') : ANY)
+  }
 
   return (
     <Page>
@@ -86,18 +98,6 @@ export function SearchPage() {
             onValueChange={(v) => setFilter('status', v)}
             options={[{ value: ANY, label: `${t('search.status')}: ${t('common.any')}` }, ...STATUSES.filter((v) => !basic || v !== 'upcoming').map((v) => ({ value: v, label: t(`airing.${v}`) }))]}
           />
-          {basic || !genres.data?.length ? null : (
-            <Select
-              size="sm"
-              className="w-44"
-              value={filters.genres ?? ANY}
-              onValueChange={(v) => setFilter('genres', v)}
-              options={[
-                { value: ANY, label: `${t('search.genre')}: ${t('common.any')}` },
-                ...genres.data.map((g) => ({ value: String(g.id), label: g.name })),
-              ]}
-            />
-          )}
           {basic ? null : (
             <Select
               size="sm"
@@ -114,6 +114,32 @@ export function SearchPage() {
             </Button>
           ) : null}
         </div>
+        {tags.length ? (
+          <div className="flex flex-wrap gap-1.5">
+            {visibleTags.map((g) => {
+              const active = selectedGenres.includes(String(g.id))
+              return (
+                <button
+                  key={g.id}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => toggleGenre(String(g.id))}
+                  className={cn(
+                    'inline-flex h-7 cursor-pointer items-center rounded-full px-3 text-[13px] font-medium transition-colors',
+                    active ? 'bg-accent text-accent-foreground' : 'bg-field text-muted-foreground hover:bg-field-hover hover:text-foreground',
+                  )}
+                >
+                  {g.name}
+                </button>
+              )
+            })}
+            {tags.length > TAG_LIMIT ? (
+              <button type="button" onClick={() => setAllTags(!allTags)} className="inline-flex h-7 cursor-pointer items-center px-2 text-[13px] font-medium text-subtle-foreground hover:text-foreground">
+                {allTags ? t('search.lessTags') : t('search.moreTags', { count: tags.length - TAG_LIMIT })}
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       <h2 className="mb-4 text-xl font-semibold tracking-tight">{q || filtered ? t('search.results') : t('search.seasonNow')}</h2>

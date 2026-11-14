@@ -3,7 +3,8 @@ import { Dialog as D, DropdownMenu as M, Popover as P, Select as S, Switch as Sw
 import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '../lib/cn'
 
-export const panel = 'z-50 rounded-xl bg-raised text-foreground shadow-2xl shadow-black/30 animate-pop'
+const surface = 'z-50 rounded-xl bg-raised text-foreground shadow-2xl shadow-black/30'
+export const panel = `${surface} animate-pop`
 
 export const Popover = P.Root
 export const PopoverTrigger = P.Trigger
@@ -30,9 +31,9 @@ export function DialogContent({
 }: ComponentProps<typeof D.Content> & { title: ReactNode; description?: ReactNode }) {
   return (
     <D.Portal>
-      <D.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] animate-pop" />
+      <D.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] animate-fade" />
       <D.Content
-        className={cn(panel, 'fixed left-1/2 top-1/2 flex max-h-[85vh] w-[min(92vw,32rem)] -translate-x-1/2 -translate-y-1/2 flex-col', className)}
+        className={cn(surface, 'fixed left-1/2 top-1/2 flex max-h-[85vh] animate-zoom w-[min(92vw,32rem)] -translate-x-1/2 -translate-y-1/2 flex-col', className)}
         {...props}
       >
         <div className="flex items-start justify-between gap-4 px-5 pb-1 pt-4">

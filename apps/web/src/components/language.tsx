@@ -68,7 +68,7 @@ export function LanguageMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={t('settings.language')}>
+        <Button variant="secondary" size="icon" aria-label={t('settings.language')} className="rounded-full">
           <Flag locale={user.locale} />
         </Button>
       </DropdownMenuTrigger>

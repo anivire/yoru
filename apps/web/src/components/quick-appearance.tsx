@@ -11,7 +11,7 @@ export function QuickAppearance() {
         <button
           type="button"
           aria-label={t('settings.appearance')}
-          className="fixed bottom-5 right-5 z-40 grid size-12 cursor-pointer place-items-center rounded-full bg-raised text-foreground shadow-xl transition-[scale] duration-200 ease-out will-change-[scale] hover:scale-105"
+          className="fixed bottom-5 right-5 z-40 grid size-12 cursor-pointer place-items-center rounded-full bg-raised text-foreground shadow-xl transition-[scale] duration-200 ease-out transform-gpu backface-hidden will-change-transform hover:scale-105"
         >
           <Palette className="size-5" />
         </button>

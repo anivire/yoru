@@ -2,7 +2,6 @@ node_modules
 **/node_modules
 **/dist
 .nx
-.git
 data
 **/data
 .env

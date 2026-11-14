@@ -6,6 +6,7 @@ import { cacheGet } from '../lib/http'
 import { ensureAnime, nextAiringAt, toSummary } from './anime'
 import type { JikanEpisodeVideo, JikanList } from './jikan'
 import { allEntries } from './lists'
+import { cachedBanner, shikimori, warmBanners } from './shikimori'
 
 const ACTIVE = new Set(['watching', 'rewatching', 'paused', 'planning'])
 const refreshing = new Set<number>()
@@ -26,7 +27,8 @@ function cachedEpisodeImage(malId: number, episode: number): string | null {
   return video?.images?.jpg?.image_url ?? null
 }
 
-export function homeData(userId: number): HomeData {
+export async function homeData(userId: number): Promise<HomeData> {
+  const calendar = new Map((await shikimori.calendar().catch(() => [])).map((e) => [e.anime.id, e]))
   const entries = allEntries(userId)
   const byMal = new Map(entries.map((e) => [e.malId, e]))
 
@@ -77,12 +79,20 @@ export function homeData(userId: number): HomeData {
   for (const { anime: a } of rows) {
     const entry = byMal.get(a.malId)
     if (!entry || !ACTIVE.has(entry.status)) continue
+    const scheduled = calendar.get(a.malId)
+    if (scheduled && Date.parse(scheduled.next_episode_at) > Date.now()) {
+      upcoming.push({ anime: toSummary(a), episode: scheduled.next_episode, airingAt: new Date(scheduled.next_episode_at).toISOString(), bannerUrl: null })
+      continue
+    }
     const at = nextAiringAt(a)
     if (!at) continue
     const next = (a.latestEpisode ?? 0) + 1
-    upcoming.push({ anime: toSummary(a), episode: a.episodes && next > a.episodes ? null : next, airingAt: at.toISOString() })
+    upcoming.push({ anime: toSummary(a), episode: a.episodes && next > a.episodes ? null : next, airingAt: at.toISOString(), bannerUrl: null })
   }
   upcoming.sort((x, y) => x.airingAt.localeCompare(y.airingAt))
+  const soon = upcoming.slice(0, 12)
+  warmBanners(soon.map((u) => u.anime.malId))
+  for (const item of soon) item.bannerUrl = cachedBanner(item.anime.malId) ?? null
 
   const watching = entries
     .filter((e) => e.status === 'watching' || e.status === 'rewatching')
@@ -95,5 +105,5 @@ export function homeData(userId: number): HomeData {
     .map((a) => a.malId)
   refreshInBackground(stale)
 
-  return { continueWatching, upcoming: upcoming.slice(0, 12), watching }
+  return { continueWatching, upcoming: soon, watching }
 }
