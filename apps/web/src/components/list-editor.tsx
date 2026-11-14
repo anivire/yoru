@@ -1,6 +1,6 @@
 import { LIST_STATUSES, type ListEntry, type ListStatus } from '@yoru/shared'
 import { Button, Popover, PopoverClose, PopoverContent, PopoverTrigger, Select, Tooltip } from '@yoru/ui'
-import { EpisodeCount, scoreColor } from './anime-cards'
+import { EpisodeCount } from './anime-cards'
 import { RiAddFill, RiArrowDownSFill, RiBookmark3Fill, RiDeleteBin6Fill, RiEdit2Fill, RiRepeatFill, RiStarFill, RiSubtractFill } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
 import { useDeleteEntry, useSaveEntry } from '../lib/queries'
@@ -61,7 +61,7 @@ function EntryControls({ malId, entry, total, aired }: { malId: number; entry: L
         className="w-full"
         value={entry.score ? String(Math.round(entry.score)) : '0'}
         onValueChange={(v) => save.mutate({ status: entry.status, score: Number(v) || null })}
-        icon={<RiStarFill style={entry.score ? { color: scoreColor(entry.score) } : undefined} />}
+        icon={<RiStarFill className={entry.score ? 'text-amber-500' : undefined} />}
         options={[{ value: '0', label: t('anime.noScore') }, ...Array.from({ length: 10 }, (_, i) => ({ value: String(10 - i), label: String(10 - i) }))]}
       />
       <Tooltip content={t('anime.rewatches')}>

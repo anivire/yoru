@@ -40,14 +40,43 @@ export function formatScore(value: number, digits = 1) {
   return Number.isInteger(value) ? String(value) : value.toFixed(digits)
 }
 
-export function Score({ value, className, digits = 1, title }: { value: number; className?: string; surface?: 'dark' | 'theme'; digits?: number; title?: string }) {
+export function Score({
+  value,
+  className,
+  surface = 'dark',
+  digits = 1,
+  title,
+  colored,
+}: {
+  value: number
+  className?: string
+  surface?: 'dark' | 'theme'
+  digits?: number
+  title?: string
+  colored?: boolean
+}) {
+  if (colored) {
+    return (
+      <span
+        title={title}
+        style={{ backgroundColor: scoreColor(value) }}
+        className={cn('inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs font-bold tabular-nums text-neutral-950 shadow-sm shadow-black/20', className)}
+      >
+        <RiStarFill className="size-3 fill-current" />
+        {formatScore(value, digits)}
+      </span>
+    )
+  }
   return (
     <span
       title={title}
-      style={{ backgroundColor: scoreColor(value) }}
-      className={cn('inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs font-bold tabular-nums text-neutral-950 shadow-sm shadow-black/20', className)}
+      className={cn(
+        'inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs font-semibold tabular-nums',
+        surface === 'dark' ? 'bg-black/55 text-white backdrop-blur-md' : 'bg-field text-foreground',
+        className,
+      )}
     >
-      <RiStarFill className="size-3 fill-current" />
+      <RiStarFill className={cn('size-3', surface === 'dark' ? 'text-amber-400' : 'text-amber-500')} />
       {formatScore(value, digits)}
     </span>
   )
@@ -71,6 +100,7 @@ export function AnimeCard({
   subtitle,
   rewatches,
   userScore,
+  coloredScore,
 }: {
   anime: AnimeSummary
   progress?: number
@@ -80,6 +110,7 @@ export function AnimeCard({
   subtitle?: ReactNode
   rewatches?: number
   userScore?: number | null
+  coloredScore?: boolean
 }) {
   const { t } = useTranslation()
   const total = anime.episodes
@@ -96,7 +127,7 @@ export function AnimeCard({
             className="absolute inset-0 h-full w-full zoom-layer object-cover transition-transform duration-300 ease-out group-hover:[--zoom:1.05]"
           />
         ) : null}
-        <div className="absolute inset-0 flex flex-col justify-end gap-1.5 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-2.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+        <div className="absolute inset-0 flex flex-col justify-end gap-1.5 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-2.5 pr-11 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
           {anime.genres.length ? (
             <div className="flex max-h-[2.75rem] flex-wrap gap-1 overflow-hidden">
               {anime.genres.slice(0, 3).map((g) => (
@@ -136,7 +167,7 @@ export function AnimeCard({
           </div>
           {badge ??
             (userScore ? (
-              <Score value={userScore} title={t('anime.yourScore')} className="shrink-0 ring-1 ring-white/25" />
+              <Score value={userScore} colored={coloredScore} title={t('anime.yourScore')} className="shrink-0" />
             ) : anime.score ? (
               <Score value={anime.score} className="shrink-0" />
             ) : null)}
@@ -157,7 +188,7 @@ export function AnimeCard({
       </div>
       </Link>
       <div className="pointer-events-none absolute inset-x-0 top-0 aspect-[2/3]">
-        <QuickEdit malId={anime.malId} className="pointer-events-auto absolute right-2 top-10" />
+        <QuickEdit malId={anime.malId} className="pointer-events-auto absolute bottom-2.5 right-2.5 [@media(hover:none)]:bottom-6" />
       </div>
     </div>
   )

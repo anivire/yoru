@@ -232,7 +232,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0">{body}</div>
         <div className="lg:relative">
-          <div className="h-[26rem] lg:absolute lg:inset-0 lg:h-auto">
+          <div className="flex max-h-[26rem] flex-col lg:absolute lg:inset-0 lg:max-h-none">
             <EpisodeList episodes={list} current={episode ?? 0} loading={episodes.isPending} onSelect={goTo} />
           </div>
         </div>

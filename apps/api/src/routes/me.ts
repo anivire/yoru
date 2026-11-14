@@ -1,10 +1,10 @@
-import { and, desc, eq, gt } from 'drizzle-orm'
+import { and, desc, eq, gt, ne } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import { Hono } from 'hono'
-import { type AccountInfo, userSettingsSchema } from '@yoru/shared'
+import { type AccountInfo, type SessionInfo, userSettingsSchema } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { invites, sessions, users } from '../db/schema'
-import { type AppEnv, requireAuth, toUser } from '../lib/auth'
+import { type AppEnv, currentSessionId, destroySession, requireAuth, toUser } from '../lib/auth'
 import { parseBody } from '../lib/validate'
 
 const inviter = alias(users, 'inviter')
@@ -31,6 +31,33 @@ export const meRoutes = new Hono<AppEnv>()
       activeSessions: active.length,
     }
     return c.json(body)
+  })
+  .get('/sessions', (c) => {
+    const current = currentSessionId(c)
+    const rows = db
+      .select()
+      .from(sessions)
+      .where(and(eq(sessions.userId, c.get('user').id), gt(sessions.expiresAt, now())))
+      .orderBy(desc(sessions.lastSeenAt), desc(sessions.createdAt))
+      .all()
+    const body: SessionInfo[] = rows
+      .map((s) => ({ id: s.id, current: s.id === current, createdAt: s.createdAt, lastSeenAt: s.lastSeenAt, userAgent: s.userAgent, ip: s.ip }))
+      .sort((a, b) => Number(b.current) - Number(a.current))
+    return c.json(body)
+  })
+  .delete('/sessions/:id', (c) => {
+    const id = c.req.param('id')
+    if (id === currentSessionId(c)) {
+      destroySession(c)
+      return c.json({ ok: true, signedOut: true })
+    }
+    db.delete(sessions).where(and(eq(sessions.id, id), eq(sessions.userId, c.get('user').id))).run()
+    return c.json({ ok: true, signedOut: false })
+  })
+  .delete('/sessions', (c) => {
+    const current = currentSessionId(c) ?? ''
+    db.delete(sessions).where(and(eq(sessions.userId, c.get('user').id), ne(sessions.id, current))).run()
+    return c.json({ ok: true })
   })
   .patch('/settings', async (c) => {
   const input = await parseBody(c, userSettingsSchema)

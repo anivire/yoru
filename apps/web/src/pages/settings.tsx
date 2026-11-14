@@ -7,6 +7,7 @@ import { Trans, useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { Page, PageHeader } from '../components/app-shell'
 import { HomeLayoutSettings, NavigationSettings } from '../components/layout-settings'
+import { SessionsList } from '../components/sessions'
 import { Flag, LANGUAGES, useChangeLanguage } from '../components/language'
 import { PROVIDER_NAMES, ProviderIcon } from '../components/providers'
 import { SchemePicker, ThemePicker } from '../components/theme-picker'
@@ -109,7 +110,6 @@ function AccountInfoCard() {
     [t('settings.accountInfo.createdAt'), formatDate(user.createdAt, { dateStyle: 'long', timeStyle: 'short' })],
     [t('settings.accountInfo.invitedBy'), info.data ? (info.data.invitedBy ?? none) : '…'],
     [t('settings.accountInfo.lastLogin'), info.data ? (info.data.lastLoginAt ? formatDate(info.data.lastLoginAt, { dateStyle: 'long', timeStyle: 'short' }) : none) : '…'],
-    [t('settings.accountInfo.sessions'), info.data ? info.data.activeSessions : '…'],
   ]
   return (
     <Card className="flex flex-col gap-4 p-4">
@@ -149,6 +149,9 @@ function AccountTab() {
     <>
       <Block title={t('settings.accountInfo.title')}>
         <AccountInfoCard />
+      </Block>
+      <Block title={t('settings.sessions.title')} description={t('settings.sessions.hint')}>
+        <SessionsList />
       </Block>
       <Block title={t('settings.password')}>
         <Card>
@@ -314,8 +317,8 @@ function SeanimeImport() {
         </div>
         <div className="flex flex-col gap-1 text-[0.8125rem] text-muted-foreground">
           {paths.map(([os, path]) => (
-            <div key={os} className="flex flex-wrap items-center gap-2">
-              <span className="w-16 shrink-0 text-subtle-foreground">{os}</span>
+            <div key={os} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+              <span className="shrink-0 text-subtle-foreground sm:w-16">{os}</span>
               <Code>{path}</Code>
             </div>
           ))}

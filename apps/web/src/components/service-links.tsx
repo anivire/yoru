@@ -44,8 +44,8 @@ export function LinkButton({ href, icon, children }: { href: string; icon: React
       className="group flex h-9 min-w-0 items-center gap-2.5 rounded-lg px-2.5 text-[0.8125rem] font-medium text-foreground transition-colors hover:bg-field-hover [&_svg]:size-4 [&_svg]:shrink-0"
     >
       {icon}
-      <span className="flex-1 truncate">{children}</span>
-      <RiExternalLinkFill className="size-3.5! text-subtle-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+      <span className="flex-1 truncate text-left">{children}</span>
+      <RiExternalLinkFill className="size-3.5! text-subtle-foreground transition-colors group-hover:text-foreground" />
     </a>
   )
 }

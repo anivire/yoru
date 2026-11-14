@@ -55,13 +55,13 @@ function Synopsis({ text, open, onToggle }: { text: string; open: boolean; onTog
     <div ref={wrapRef} className={cn('flex w-full max-w-3xl flex-col gap-1', !open && 'sm:min-h-0 sm:flex-1 sm:basis-0')}>
       <p
         ref={textRef}
-        className="whitespace-pre-line text-[0.9375rem] leading-relaxed text-foreground/80"
+        className="whitespace-pre-line text-left text-[0.9375rem] leading-relaxed text-foreground/80"
         style={open ? undefined : { display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: lines, overflow: 'hidden' }}
       >
         {text}
       </p>
       {(open ? text.length > 280 : overflows) ? (
-        <button type="button" onClick={onToggle} className="cursor-pointer self-center text-[0.8125rem] font-medium text-foreground hover:text-accent sm:self-start">
+        <button type="button" onClick={onToggle} className="cursor-pointer self-start text-[0.8125rem] font-medium text-foreground hover:text-accent">
           {open ? t('anime.less') : t('anime.more')}
         </button>
       ) : null}
@@ -100,7 +100,7 @@ function TrailerButton({ url }: { url: string }) {
         >
           <RiYoutubeFill className="text-[#ff0033]" />
           <span className="flex-1 truncate">{t('anime.trailer')}</span>
-          <RiPlayCircleFill className="text-subtle-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+          <RiPlayCircleFill className="size-3.5! text-subtle-foreground transition-colors group-hover:text-foreground" />
         </button>
       </DialogTrigger>
       <DialogContent title={t('anime.trailer')} className="w-[min(94vw,56rem)]">

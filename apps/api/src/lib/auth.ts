@@ -32,10 +32,24 @@ export function toUser(row: UserRow): User {
   }
 }
 
+export function clientIp(c: Context): string | null {
+  return c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || c.req.header('x-real-ip') || null
+}
+
+export function currentSessionId(c: Context): string | null {
+  const token = getCookie(c, SESSION_COOKIE)
+  return token ? sha256(token) : null
+}
+
+const SEEN_EVERY_MS = 5 * 60_000
+
 export function createSession(c: Context, userId: number) {
   const token = randomToken()
   const expires = new Date(Date.now() + env.sessionDays * 86_400_000)
-  db.insert(sessions).values({ id: sha256(token), userId, expiresAt: expires.toISOString(), createdAt: now() }).run()
+  const at = now()
+  db.insert(sessions)
+    .values({ id: sha256(token), userId, expiresAt: expires.toISOString(), createdAt: at, lastSeenAt: at, userAgent: c.req.header('user-agent')?.slice(0, 400) ?? null, ip: clientIp(c) })
+    .run()
   setCookie(c, SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: 'Lax',
@@ -58,12 +72,16 @@ export function purgeExpiredSessions() {
 export function sessionUser(c: Context): UserRow | null {
   const token = getCookie(c, SESSION_COOKIE)
   if (!token) return null
+  const id = sha256(token)
   const row = db
-    .select({ user: users })
+    .select({ user: users, lastSeenAt: sessions.lastSeenAt })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
-    .where(and(eq(sessions.id, sha256(token)), gt(sessions.expiresAt, now())))
+    .where(and(eq(sessions.id, id), gt(sessions.expiresAt, now())))
     .get()
+  if (row && (!row.lastSeenAt || Date.now() - Date.parse(row.lastSeenAt) > SEEN_EVERY_MS)) {
+    db.update(sessions).set({ lastSeenAt: now(), ip: clientIp(c) }).where(eq(sessions.id, id)).run()
+  }
   return row?.user ?? null
 }
 

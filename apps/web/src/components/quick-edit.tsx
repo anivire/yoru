@@ -27,11 +27,11 @@ export function QuickEdit({ malId, className }: { malId: number; className?: str
           aria-label={t('anime.editEntry')}
           title={t('anime.editEntry')}
           className={cn(
-            'grid size-8 cursor-pointer place-items-center rounded-full bg-black/60 text-white opacity-0 backdrop-blur-md transition-opacity hover:bg-black/80 focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100 [@media(hover:none)]:opacity-100',
+            'grid size-7 cursor-pointer place-items-center rounded-lg bg-white/20 text-white opacity-0 backdrop-blur-md transition-[opacity,background-color] hover:bg-white/35 focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:bg-white/35 data-[state=open]:opacity-100 [@media(hover:none)]:bg-black/55 [@media(hover:none)]:opacity-100',
             className,
           )}
         >
-          <RiEdit2Fill className="size-4" />
+          <RiEdit2Fill className="size-3.5" />
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className={page.data && entry ? EDITOR_PANEL_CLASS : CHOICE_PANEL_CLASS}>

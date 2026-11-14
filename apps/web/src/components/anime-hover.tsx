@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AnimeSummary } from '@yoru/shared'
 import { HoverCard, HoverCardContent, HoverCardTrigger, Image } from '@yoru/ui'
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useState, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { seasonLabel, typeLabel } from '../lib/format'
@@ -9,7 +9,25 @@ import { keys } from '../lib/queries'
 import { Score } from './anime-cards'
 import { TextLine } from './skeletons'
 
-export function AnimeHoverCard({ anime, footer, children }: { anime: AnimeSummary; footer?: ReactNode; children: ReactNode }) {
+const DESKTOP_HOVER = '(hover: hover) and (pointer: fine) and (min-width: 64rem)'
+
+function useDesktopHover() {
+  return useSyncExternalStore(
+    (notify) => {
+      const media = window.matchMedia(DESKTOP_HOVER)
+      media.addEventListener('change', notify)
+      return () => media.removeEventListener('change', notify)
+    },
+    () => window.matchMedia(DESKTOP_HOVER).matches,
+  )
+}
+
+export function AnimeHoverCard(props: { anime: AnimeSummary; footer?: ReactNode; children: ReactNode }) {
+  const desktop = useDesktopHover()
+  return desktop ? <HoverPreview {...props} /> : <>{props.children}</>
+}
+
+function HoverPreview({ anime, footer, children }: { anime: AnimeSummary; footer?: ReactNode; children: ReactNode }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const details = useQuery({ queryKey: keys.anime(anime.malId), queryFn: () => api.anime(anime.malId), enabled: open, staleTime: 10 * 60_000 })

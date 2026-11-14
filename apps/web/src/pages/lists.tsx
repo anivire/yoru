@@ -67,7 +67,7 @@ function ListTable({ items }: { items: ListEntryWithAnime[] }) {
               </td>
               <td className="hidden px-4 py-2.5 sm:table-cell">
                 {e.score ? (
-                  <Score value={e.score} className="h-5 px-1.5 text-[0.75rem]" />
+                  <Score value={e.score} colored className="h-5 px-1.5 text-[0.75rem]" />
                 ) : (
                   <span className="text-subtle-foreground">{t('anime.noScore')}</span>
                 )}
@@ -251,6 +251,7 @@ export function ListsPage() {
               status={status === 'all' ? e.status : undefined}
               rewatches={e.rewatches}
               userScore={e.score}
+              coloredScore
               newEpisodes={(e.status === 'watching' || e.status === 'rewatching') && e.latestEpisode && e.latestEpisode > e.progress ? e.latestEpisode - e.progress : undefined}
             />
           ))}

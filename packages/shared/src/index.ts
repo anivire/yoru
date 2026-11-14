@@ -37,6 +37,15 @@ export interface User {
   createdAt: string
 }
 
+export interface SessionInfo {
+  id: string
+  current: boolean
+  createdAt: string
+  lastSeenAt: string | null
+  userAgent: string | null
+  ip: string | null
+}
+
 export interface AccountInfo {
   invitedBy: string | null
   lastLoginAt: string | null

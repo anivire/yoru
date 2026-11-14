@@ -1,5 +1,6 @@
 import type {
   AccountInfo,
+  SessionInfo,
   AnimeLink,
   ActivityData,
   AdminSettings,
@@ -68,6 +69,9 @@ function qs(params: Record<string, string | number | undefined | null>) {
 export const api = {
   me: () => get<User>('/auth/me'),
   account: () => get<AccountInfo>('/me/account'),
+  sessions: () => get<SessionInfo[]>('/me/sessions'),
+  revokeSession: (id: string) => request<{ ok: true; signedOut: boolean }>('DELETE', '/me/sessions/' + encodeURIComponent(id)),
+  revokeOtherSessions: () => request<{ ok: true }>('DELETE', '/me/sessions'),
   login: (username: string, password: string) => request<User>('POST', '/auth/login', { username, password }),
   logout: () => request<{ ok: true }>('POST', '/auth/logout'),
   invite: (code: string) => get<{ valid: boolean; role: string | null }>(`/auth/invite/${encodeURIComponent(code)}`),

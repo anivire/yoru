@@ -15,8 +15,8 @@ function twinkle(animated: boolean, delay = 0): CSSProperties | undefined {
 function Ears({ droop }: { droop: boolean }) {
   return (
     <g fill={BODY_FILL} stroke={BODY_FILL} strokeWidth={4} strokeLinejoin="round">
-      <path d={droop ? 'M24.5 13.2C17 12.6 10.6 17.4 8.6 28.6C8 32.8 11.6 35 14.2 31.6C16.2 28.6 17.6 24.2 20.5 18.5Z' : 'M15 25L16.5 7.5L29 14Z'} />
-      <path d={droop ? 'M39.5 13.2C47 12.6 53.4 17.4 55.4 28.6C56 32.8 52.4 35 49.8 31.6C47.8 28.6 46.4 24.2 43.5 18.5Z' : 'M49 25L47.5 7.5L35 14Z'} />
+      <path d="M15 25L16.5 7.5L29 14Z" transform={droop ? 'translate(0 3) rotate(-18 21 22)' : undefined} />
+      <path d="M49 25L47.5 7.5L35 14Z" transform={droop ? 'translate(0 3) rotate(18 43 22)' : undefined} />
     </g>
   )
 }
