@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
   Logo,
   cn,
+  useSlidingIndicator,
 } from '@yoru/ui'
 import { RiLogoutBoxRFill, RiMenuFill, RiSearchFill, RiSettings3Fill, RiShieldFill } from '@remixicon/react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
@@ -29,8 +30,8 @@ function NavItem({ to, children, end, label }: { to: string; children: ReactNode
       title={label}
       className={({ isActive }) =>
         cn(
-          'inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors [&_svg]:size-4 [&_svg]:shrink-0',
-          isActive ? 'bg-muted text-foreground [&_svg]:text-accent' : 'text-muted-foreground hover:text-foreground',
+          'relative inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors [&_svg]:size-4 [&_svg]:shrink-0',
+          isActive ? 'text-foreground [&_svg]:text-accent' : 'text-muted-foreground hover:text-foreground',
         )
       }
     >
@@ -58,6 +59,19 @@ function NavItems() {
         </NavItem>
       ))}
     </>
+  )
+}
+
+function DesktopNav() {
+  const ref = useRef<HTMLElement>(null)
+  const { pathname } = useLocation()
+  const { pageWidth, hiddenNav } = useAppearance()
+  const indicator = useSlidingIndicator(ref, '[aria-current="page"]', `${pathname}|${pageWidth}|${hiddenNav.join()}`)
+  return (
+    <nav ref={ref} className="relative mx-auto hidden items-center gap-1 md:flex">
+      <span aria-hidden style={indicator} className="pointer-events-none absolute rounded-lg bg-muted duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]" />
+      <NavItems />
+    </nav>
   )
 }
 
@@ -192,9 +206,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Link viewTransition to="/" className="shrink-0">
             <Logo />
           </Link>
-          <nav className="mx-auto hidden items-center gap-1 md:flex">
-            <NavItems />
-          </nav>
+          <DesktopNav />
           <div className="ml-auto flex items-center gap-2 md:ml-0">
             <Button asChild variant="ghost" size="icon" className="md:hidden">
               <Link viewTransition to="/search" aria-label={t('nav.search')}>

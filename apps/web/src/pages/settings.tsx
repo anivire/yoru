@@ -473,17 +473,19 @@ export function SettingsPage() {
       <PageHeader title={t('settings.title')} />
       <Segmented
         value={tab}
-        onChange={(v) => navigate(`/settings/${v}`, { replace: true, viewTransition: true })}
+        onChange={(v) => navigate(`/settings/${v}`, { replace: true })}
         options={TABS.map((v) => {
           const Icon = TAB_ICONS[v]
           return { value: v, label: t(`settings.${v}`), icon: <Icon /> }
         })}
         className="mb-8 grid w-full grid-cols-2 sm:inline-flex sm:w-auto"
       />
-      {tab === 'appearance' ? <AppearanceTab /> : null}
-      {tab === 'account' ? <AccountTab /> : null}
-      {tab === 'notifications' ? <NotificationsTab /> : null}
-      {tab === 'import' ? <ImportTab /> : null}
+      <div key={tab} className="animate-fade">
+        {tab === 'appearance' ? <AppearanceTab /> : null}
+        {tab === 'account' ? <AccountTab /> : null}
+        {tab === 'notifications' ? <NotificationsTab /> : null}
+        {tab === 'import' ? <ImportTab /> : null}
+      </div>
     </Page>
   )
 }
