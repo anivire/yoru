@@ -3,6 +3,7 @@ import { Badge, Button, Card, Field, Input, LogoMark, Mascot } from '@yoru/ui'
 import { type FormEvent, type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router'
+import { Footer } from '../components/footer'
 import { api } from '../lib/api'
 import { errorMessage, keys, useMe } from '../lib/queries'
 
@@ -10,7 +11,7 @@ export function AuthLayout({ tagline, title, subtitle, children }: { tagline?: R
   return (
     <div className="grid min-h-dvh place-items-center px-4 py-10">
       <div className="w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center gap-3 text-center">
+        <div className="mb-8 flex flex-col items-center gap-1 text-center">
           <LogoMark size={72} />
           <div>
             <div className="text-3xl font-semibold tracking-tight">yoru</div>
@@ -26,6 +27,7 @@ export function AuthLayout({ tagline, title, subtitle, children }: { tagline?: R
           ) : null}
           {children}
         </Card>
+        <Footer scope="public" className="pb-0 pt-5 text-[13px]" />
       </div>
     </div>
   )

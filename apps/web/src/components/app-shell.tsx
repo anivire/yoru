@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   Button,
   DropdownMenu,
@@ -10,7 +10,7 @@ import {
   Logo,
   cn,
 } from '@yoru/ui'
-import { ArrowUpCircle, LogOut, Search, Settings, Shield } from 'lucide-react'
+import { LogOut, Search, Settings, Shield } from 'lucide-react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink, useNavigate } from 'react-router'
@@ -18,6 +18,7 @@ import { api } from '../lib/api'
 import { keys, useUser } from '../lib/queries'
 import { LanguageMenu } from './language'
 import { NotificationsPopover } from './notifications'
+import { Footer } from './footer'
 import { QuickAppearance } from './quick-appearance'
 
 function NavItem({ to, children, end }: { to: string; children: ReactNode; end?: boolean }) {
@@ -98,43 +99,6 @@ function UserMenu() {
   )
 }
 
-function Footer() {
-  const { t } = useTranslation()
-  const { data } = useQuery({ queryKey: ['version'], queryFn: api.version, staleTime: 30 * 60_000 })
-  return (
-    <footer className="flex flex-wrap items-center justify-center gap-x-2 gap-y-2 py-6 text-sm text-muted-foreground">
-      <span>
-        yoru · <span className="text-foreground">Anime365</span> · Jikan
-      </span>
-      {data ? (
-        <span className="inline-flex items-center gap-1.5">
-          <span>·</span>
-          <a href={data.repoUrl} target="_blank" rel="noreferrer" className="hover:text-foreground">
-            v{data.version}
-          </a>
-          {data.commit && data.commitUrl ? (
-            <a href={data.commitUrl} target="_blank" rel="noreferrer" className="font-mono text-xs text-subtle-foreground hover:text-foreground">
-              {data.commit.slice(0, 7)}
-            </a>
-          ) : null}
-        </span>
-      ) : null}
-      {data?.updateAvailable ? (
-        <a
-          href={data.compareUrl ?? data.repoUrl}
-          target="_blank"
-          rel="noreferrer"
-          title={data.latest?.message}
-          className="inline-flex h-6 items-center gap-1.5 rounded-full bg-accent-soft px-2.5 text-xs font-medium text-accent hover:bg-accent hover:text-accent-foreground"
-        >
-          <ArrowUpCircle className="size-3.5" />
-          {data.behindBy ? t('version.updateCount', { count: data.behindBy }) : t('version.update')}
-        </a>
-      ) : null}
-    </footer>
-  )
-}
-
 function useHeader() {
   const ref = useRef<HTMLElement>(null)
   const [scrolled, setScrolled] = useState(false)
@@ -187,7 +151,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
       </header>
       <main className="flex-1">{children}</main>
-      <Footer />
+      <Footer scope="app" />
       <QuickAppearance />
     </div>
   )

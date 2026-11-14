@@ -8,7 +8,7 @@ import { secureHeaders } from 'hono/secure-headers'
 import { env } from './env'
 import type { AppEnv } from './lib/auth'
 import { UpstreamError } from './lib/http'
-import { requireAuth } from './lib/auth'
+import { sessionUser } from './lib/auth'
 import { adminRoutes } from './routes/admin'
 import { animeRoutes } from './routes/anime'
 import { authRoutes } from './routes/auth'
@@ -26,7 +26,7 @@ app.use(logger((line) => (line.includes('/api/progress') ? undefined : console.l
 app.use(secureHeaders({ crossOriginEmbedderPolicy: false, crossOriginResourcePolicy: false, contentSecurityPolicy: undefined }))
 
 app.get('/api/health', (c) => c.json({ ok: true }))
-app.get('/api/version', requireAuth, async (c) => c.json(await versionInfo()))
+app.get('/api/version', async (c) => c.json(await versionInfo(Boolean(sessionUser(c)))))
 app.route('/api/auth', authRoutes)
 app.route('/api/me', meRoutes)
 app.route('/api/admin', adminRoutes)
