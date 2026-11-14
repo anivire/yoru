@@ -52,6 +52,7 @@ export function SearchPage() {
   const results = useInfiniteQuery({
     queryKey: ['search', q, filters, params.get('sort')],
     queryFn: ({ pageParam }) => api.search({ q, ...filters, sort: params.get('sort') ?? undefined, page: pageParam }),
+    staleTime: 5 * 60_000,
     initialPageParam: 1,
     getNextPageParam: (last) => (last.pagination.hasNextPage ? last.pagination.page + 1 : undefined),
   })

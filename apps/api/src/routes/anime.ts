@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { createMiddleware } from 'hono/factory'
 import { type AnimePage, type Genre, type ProviderCandidate, type SearchResult, providerMatchSchema } from '@yoru/shared'
 import { type AppEnv, requireAuth } from '../lib/auth'
 import { UpstreamError } from '../lib/http'
@@ -14,11 +15,27 @@ import { resolveMatch, setManualMatch } from '../services/provider'
 import { shikimori } from '../services/shikimori'
 
 const A365_PAGE = 24
+const RESPONSE_TTL = 10 * 60_000
+const RESPONSE_LIMIT = 500
+const responses = new Map<string, { at: number; body: string }>()
+
+const cacheResponse = createMiddleware<AppEnv>(async (c, next) => {
+  const key = `${metadataSource()}:${c.req.path}?${new URL(c.req.url).searchParams.toString()}`
+  const hit = responses.get(key)
+  if (hit && Date.now() - hit.at < RESPONSE_TTL) {
+    return c.body(hit.body, 200, { 'Content-Type': 'application/json', 'Cache-Control': 'private, max-age=300' })
+  }
+  await next()
+  if (!c.res.ok) return
+  responses.set(key, { at: Date.now(), body: await c.res.clone().text() })
+  if (responses.size > RESPONSE_LIMIT) responses.delete(responses.keys().next().value!)
+  c.res.headers.set('Cache-Control', 'private, max-age=300')
+})
 const SEARCH_PARAMS = ['type', 'status', 'genres', 'order_by', 'sort', 'rating', 'min_score', 'start_date', 'end_date'] as const
 
 export const animeRoutes = new Hono<AppEnv>()
   .use(requireAuth)
-  .get('/search', async (c) => {
+  .get('/search', cacheResponse, async (c) => {
     const q = c.req.query('q')?.trim() ?? ''
     const page = Math.max(1, Number(c.req.query('page')) || 1)
     const params = new URLSearchParams({ page: String(page), limit: '24', sfw: 'true' })
@@ -62,7 +79,7 @@ export const animeRoutes = new Hono<AppEnv>()
       return c.json(body)
     }
   })
-  .get('/genres', async (c) => {
+  .get('/genres', cacheResponse, async (c) => {
     if (metadataSource() === 'anime365') return c.json(await anime365.genres().catch(() => [] as Genre[]))
     const genres = await jikan.genres().catch(() => [])
     const body: Genre[] = genres.map((g) => ({ id: g.mal_id, name: g.name, count: g.count }))

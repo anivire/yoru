@@ -1,7 +1,7 @@
-import { and, desc, eq, inArray } from 'drizzle-orm'
+import { and, desc, eq, inArray, max } from 'drizzle-orm'
 import type { ContinueItem, HomeData, UpcomingItem } from '@yoru/shared'
 import { db } from '../db/client'
-import { anime, listEntries, providerReleases, watchProgress } from '../db/schema'
+import { activity, anime, listEntries, providerReleases, watchProgress } from '../db/schema'
 import { cacheGet } from '../lib/http'
 import { ensureAnime, nextAiringAt, toSummary } from './anime'
 import type { JikanEpisodeVideo, JikanList } from './jikan'
@@ -151,9 +151,21 @@ export async function homeData(userId: number): Promise<HomeData> {
   warmBanners(soon.map((u) => u.anime.malId))
   for (const item of soon) item.bannerUrl = cachedBanner(item.anime.malId) ?? null
 
+  const lastWatched = new Map<number, string>()
+  for (const { progress: p } of progressRows) {
+    if ((lastWatched.get(p.malId) ?? '') < p.updatedAt) lastWatched.set(p.malId, p.updatedAt)
+  }
+  for (const row of db
+    .select({ malId: activity.malId, at: max(activity.createdAt) })
+    .from(activity)
+    .where(and(eq(activity.userId, userId), eq(activity.source, 'watch')))
+    .groupBy(activity.malId)
+    .all()) {
+    if (row.at && (lastWatched.get(row.malId) ?? '') < row.at) lastWatched.set(row.malId, row.at)
+  }
   const watching = entries
     .filter((e) => e.status === 'watching' || e.status === 'rewatching')
-    .sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
+    .sort((x, y) => (lastWatched.get(y.malId) ?? '').localeCompare(lastWatched.get(x.malId) ?? '') || y.updatedAt.localeCompare(x.updatedAt))
 
   const stale = rows
     .map((r) => r.anime)
