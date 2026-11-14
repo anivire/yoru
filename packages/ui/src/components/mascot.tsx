@@ -169,10 +169,28 @@ export function Mascot({
   )
 }
 
+const MARK_BODY = 'M32 11C44.2 11 53 20 53 32V51.5C53 55.6 48.6 57.7 45.6 55L42 51.8L36.4 56.4C33.8 58.5 30.2 58.5 27.6 56.4L22 51.8L18.4 55C15.4 57.7 11 55.6 11 51.5V32C11 20 19.8 11 32 11Z'
+
+export function LogoMark({ size = 28, className }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" className={cn('shrink-0', className)} aria-hidden>
+      <g fill="var(--logo)" stroke="var(--logo)" strokeWidth={4} strokeLinejoin="round">
+        <path d="M15 25L16.5 7.5L29 14Z" />
+        <path d="M49 25L47.5 7.5L35 14Z" />
+      </g>
+      <path d={MARK_BODY} fill="var(--logo)" />
+      <g fill="var(--logo-ink)">
+        <rect x={20.5} y={27} width={7} height={12} rx={3.5} />
+        <rect x={36.5} y={27} width={7} height={12} rx={3.5} />
+      </g>
+    </svg>
+  )
+}
+
 export function Logo({ className, size = 28 }: { className?: string; size?: number }) {
   return (
     <span className={cn('inline-flex items-center gap-2', className)}>
-      <Mascot size={size} animated={false} />
+      <LogoMark size={size} />
       <span className="text-[17px] font-semibold tracking-tight">yoru</span>
     </span>
   )
