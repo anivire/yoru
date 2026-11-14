@@ -1,6 +1,12 @@
 import type { AnimeSummary } from '@yoru/shared'
 import { i18n } from './i18n'
 
+export function exportFormatName(format: string): string {
+  if (format === 'mal-xml') return 'MAL XML'
+  if (format === 'yoru') return 'yoru'
+  return format.toUpperCase()
+}
+
 export function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
   const s = Math.floor(seconds % 60)

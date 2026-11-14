@@ -9,7 +9,7 @@ import { AnimeCard, EpisodeCount, PosterGrid, Score } from '../components/anime-
 import { ListTableSkeleton, PosterGridSkeleton } from '../components/skeletons'
 import { Page, PageHeader } from '../components/app-shell'
 import { api } from '../lib/api'
-import { formatDate, typeLabel } from '../lib/format'
+import { exportFormatName, formatDate, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
 
 const ANY = '__any'
@@ -156,7 +156,7 @@ export function ListsPage() {
                 {EXPORT_FORMATS.map((f) => (
                   <DropdownMenuItem key={f} asChild>
                     <a href={api.exportUrl(f)} download>
-                      {f === 'mal-xml' ? 'MAL XML' : f.toUpperCase()}
+                      {exportFormatName(f)}
                     </a>
                   </DropdownMenuItem>
                 ))}

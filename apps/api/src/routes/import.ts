@@ -1,8 +1,8 @@
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { IMPORT_PROVIDERS, type ImportProvider, type ImportSource, type ImportStatus } from '@yoru/shared'
 import { db } from '../db/client'
-import { imports } from '../db/schema'
+import { imports, watchProgress } from '../db/schema'
 import { env } from '../env'
 import { type AppEnv, requireAuth } from '../lib/auth'
 import { badRequest } from '../lib/http'
@@ -52,8 +52,22 @@ export const importRoutes = new Hono<AppEnv>()
     const file = body.file
     if (!(file instanceof File)) badRequest('YORU_INVALID')
     if (file.size > MAX_FILE_BYTES) badRequest('SEANIME_TOO_LARGE')
-    const items = parseYoruExport(Buffer.from(await file.arrayBuffer()))
-    return c.json(applyImport(c.get('user').id, 'yoru', items))
+    const { items, progress } = parseYoruExport(Buffer.from(await file.arrayBuffer()))
+    const userId = c.get('user').id
+    const result = applyImport(userId, 'yoru', items)
+    db.transaction((tx) => {
+      for (const p of progress) {
+        tx.insert(watchProgress)
+          .values({ userId, ...p })
+          .onConflictDoUpdate({
+            target: [watchProgress.userId, watchProgress.malId, watchProgress.episode],
+            set: { position: p.position, duration: p.duration, updatedAt: p.updatedAt },
+            setWhere: sql`${watchProgress.updatedAt} < ${p.updatedAt}`,
+          })
+          .run()
+      }
+    })
+    return c.json(result)
   })
   .get('/:provider/start', (c) => {
     const provider = providerParam(c.req.param('provider'))

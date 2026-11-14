@@ -13,7 +13,7 @@ export const IMPORT_PROVIDERS = ['anilist', 'shikimori', 'mal'] as const
 export type ImportProvider = (typeof IMPORT_PROVIDERS)[number]
 export type ImportSource = ImportProvider | 'seanime' | 'yoru'
 
-export const EXPORT_FORMATS = ['json', 'csv', 'mal-xml'] as const
+export const EXPORT_FORMATS = ['yoru', 'json', 'csv', 'mal-xml'] as const
 export type ExportFormat = (typeof EXPORT_FORMATS)[number]
 
 export const METADATA_SOURCES = ['jikan', 'anime365'] as const

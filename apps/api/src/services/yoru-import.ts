@@ -21,15 +21,25 @@ const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v : null)
 const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null)
 const date = (v: unknown) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v) ? v.slice(0, 10) : null)
 
-export function parseYoruExport(buffer: Buffer): ImportItem[] {
-  let data: { format?: unknown; entries?: unknown }
+export interface YoruProgress {
+  malId: number
+  episode: number
+  position: number
+  duration: number
+  updatedAt: string
+}
+
+export function parseYoruExport(buffer: Buffer): { items: ImportItem[]; progress: YoruProgress[] } {
+  let data: unknown
   try {
-    data = JSON.parse(buffer.toString('utf8').replace(/^﻿/, ''))
+    data = JSON.parse(buffer.toString('utf8').replace(/^\uFEFF/, ''))
   } catch {
     badRequest('YORU_INVALID')
   }
-  if (data?.format !== 'yoru-list' || !Array.isArray(data.entries)) badRequest('YORU_INVALID')
-  const items = (data.entries as YoruEntry[]).flatMap((e): ImportItem[] => {
+  const envelope = data as { format?: unknown; entries?: unknown; watchProgress?: unknown }
+  const entries = Array.isArray(data) ? data : envelope?.format === 'yoru-list' && Array.isArray(envelope.entries) ? envelope.entries : null
+  if (!entries) badRequest('YORU_INVALID')
+  const items = (entries as YoruEntry[]).flatMap((e): ImportItem[] => {
     const malId = num(e.malId)
     const status = LIST_STATUSES.includes(e.status as ListStatus) ? (e.status as ListStatus) : null
     if (!malId || !status) return []
@@ -51,5 +61,12 @@ export function parseYoruExport(buffer: Buffer): ImportItem[] {
     ]
   })
   if (!items.length) badRequest('YORU_EMPTY')
-  return items
+  const known = new Set(items.map((i) => i.malId))
+  const progress = (Array.isArray(envelope?.watchProgress) ? (envelope.watchProgress as Record<string, unknown>[]) : []).flatMap((p): YoruProgress[] => {
+    const malId = num(p.malId)
+    const episode = num(p.episode)
+    if (!malId || !episode || !known.has(malId)) return []
+    return [{ malId, episode, position: Math.max(0, num(p.position) ?? 0), duration: Math.max(0, num(p.duration) ?? 0), updatedAt: str(p.updatedAt) ?? new Date().toISOString() }]
+  })
+  return { items, progress }
 }

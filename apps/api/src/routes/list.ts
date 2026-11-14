@@ -58,7 +58,15 @@ export const listRoutes = new Hono<AppEnv>()
     const format = c.req.query('format') as ExportFormat
     if (!EXPORT_FORMATS.includes(format)) badRequest('Unknown format')
     const user = c.get('user')
-    const file = exportList(format, allEntries(user.id), user.username)
+    const progress =
+      format === 'yoru'
+        ? db
+            .select({ malId: watchProgress.malId, episode: watchProgress.episode, position: watchProgress.position, duration: watchProgress.duration, updatedAt: watchProgress.updatedAt })
+            .from(watchProgress)
+            .where(eq(watchProgress.userId, user.id))
+            .all()
+        : []
+    const file = exportList(format, allEntries(user.id), user.username, progress)
     return c.body(file.body, 200, {
       'Content-Type': file.type,
       'Content-Disposition': `attachment; filename="${file.filename}"`,

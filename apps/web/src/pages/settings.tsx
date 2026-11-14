@@ -13,13 +13,13 @@ import { PROVIDER_NAMES, ProviderIcon } from '../components/providers'
 import { SchemePicker, ThemePicker } from '../components/theme-picker'
 import { api } from '../lib/api'
 import { PAGE_WIDTHS, useAppearance } from '../lib/appearance'
-import { formatDate } from '../lib/format'
+import { exportFormatName, formatDate } from '../lib/format'
 import { errorMessage, keys, useUser } from '../lib/queries'
 
 const TABS = ['appearance', 'account', 'notifications', 'import'] as const
 type Tab = (typeof TABS)[number]
 
-const EXPORT_ICONS = { json: RiBracesFill, csv: RiFileExcel2Fill, 'mal-xml': RiFileCodeFill } satisfies Record<ExportFormat, unknown>
+const EXPORT_ICONS = { yoru: RiBracesFill, json: RiBracesFill, csv: RiFileExcel2Fill, 'mal-xml': RiFileCodeFill } satisfies Record<ExportFormat, unknown>
 
 const TAB_ICONS = { appearance: RiPaletteFill, account: RiUser3Fill, notifications: RiNotification3Fill, import: RiArrowUpDownFill } satisfies Record<Tab, unknown>
 
@@ -445,15 +445,15 @@ function ImportTab() {
         </div>
       </Block>
       <Block title={t('settings.exportTitle')} description={t('settings.exportHint')}>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {EXPORT_FORMATS.map((f) => {
             const Icon = EXPORT_ICONS[f]
-            const name = f === 'mal-xml' ? 'MAL XML' : f.toUpperCase()
+            const name = exportFormatName(f)
             return (
               <Card key={f} className="flex flex-col gap-4 p-4">
                 <div className="flex items-center gap-3">
                   <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent">
-                    <Icon className="size-[1.125rem]" />
+                    {f === 'yoru' ? <LogoMark size={24} /> : <Icon className="size-[1.125rem]" />}
                   </span>
                   <div className="min-w-0">
                     <div className="font-medium">{name}</div>

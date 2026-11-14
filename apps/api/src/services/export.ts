@@ -33,32 +33,49 @@ function malDate(value: string | null): string {
   return value ? value.slice(0, 10) : '0000-00-00'
 }
 
-function toJson(items: ListEntryWithAnime[], username: string): string {
+export interface ExportProgress {
+  malId: number
+  episode: number
+  position: number
+  duration: number
+  updatedAt: string
+}
+
+function entryJson(e: ListEntryWithAnime) {
+  return {
+    malId: e.malId,
+    title: e.anime.title,
+    titleEnglish: e.anime.titleEnglish,
+    type: e.anime.type,
+    episodes: e.anime.episodes,
+    status: e.status,
+    progress: e.progress,
+    score: e.score,
+    rewatches: e.rewatches,
+    notes: e.notes,
+    startedAt: e.startedAt,
+    completedAt: e.completedAt,
+    updatedAt: e.updatedAt,
+  }
+}
+
+function toYoru(items: ListEntryWithAnime[], username: string, progress: ExportProgress[]): string {
   return JSON.stringify(
     {
       format: 'yoru-list',
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
       user: username,
-      entries: items.map((e) => ({
-        malId: e.malId,
-        title: e.anime.title,
-        titleEnglish: e.anime.titleEnglish,
-        type: e.anime.type,
-        episodes: e.anime.episodes,
-        status: e.status,
-        progress: e.progress,
-        score: e.score,
-        rewatches: e.rewatches,
-        notes: e.notes,
-        startedAt: e.startedAt,
-        completedAt: e.completedAt,
-        updatedAt: e.updatedAt,
-      })),
+      entries: items.map(entryJson),
+      watchProgress: progress,
     },
     null,
     2,
   )
+}
+
+function toJson(items: ListEntryWithAnime[]): string {
+  return JSON.stringify(items.map(entryJson), null, 2)
 }
 
 function toCsv(items: ListEntryWithAnime[]): string {
@@ -118,11 +135,13 @@ ${entries.join('\n')}
 `
 }
 
-export function exportList(format: ExportFormat, items: ListEntryWithAnime[], username: string) {
+export function exportList(format: ExportFormat, items: ListEntryWithAnime[], username: string, progress: ExportProgress[] = []) {
   const stamp = new Date().toISOString().slice(0, 10)
   switch (format) {
+    case 'yoru':
+      return { body: toYoru(items, username, progress), type: 'application/json', filename: `yoru-${username}-${stamp}.yoru.json` }
     case 'json':
-      return { body: toJson(items, username), type: 'application/json', filename: `yoru-${username}-${stamp}.json` }
+      return { body: toJson(items), type: 'application/json', filename: `yoru-${username}-${stamp}.json` }
     case 'csv':
       return { body: toCsv(items), type: 'text/csv; charset=utf-8', filename: `yoru-${username}-${stamp}.csv` }
     case 'mal-xml':

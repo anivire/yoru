@@ -347,7 +347,7 @@ export const en: Messages = {
     fileImportHint: 'Lists from apps that are not tied to an online account',
     yoruFile: {
       hint: 'JSON export from yoru, e.g. from another server',
-      note: 'Use a file downloaded via Export → JSON. Existing entries are updated.',
+      note: 'Use a file downloaded via Export → yoru, episode progress included. Existing entries are updated.',
       invalid: 'Not a yoru export: a yoru-list JSON file is required',
     },
     seanime: {
@@ -365,7 +365,8 @@ export const en: Messages = {
     exportHint: 'Download your lists as a file to keep a backup or move them to another service',
     download: 'Download {{name}}',
     exportFormat: {
-      json: 'Full backup of your yoru lists',
+      yoru: 'Full backup with episode progress, imports back into yoru',
+      json: 'Plain JSON list for other apps',
       csv: 'Spreadsheet for Excel and Google Sheets',
       'mal-xml': 'Imports into MyAnimeList, Shikimori and AniList',
     },
