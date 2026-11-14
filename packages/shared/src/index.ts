@@ -198,6 +198,9 @@ export interface ScheduleItem {
   episode: number
   airingAt: string
   listStatus: ListStatus | null
+  aired: boolean
+  available: boolean
+  estimated: boolean
 }
 
 export interface RecentItem {

@@ -1,8 +1,8 @@
 import type { ListStatus, RecentItem, ScheduleItem } from '@yoru/shared'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import { db } from '../db/client'
 import { cached } from '../lib/http'
-import { listEntries } from '../db/schema'
+import { anime, listEntries } from '../db/schema'
 import type { AnimeSummary } from '@yoru/shared'
 import { ensureAnime, getAnimeRow, toSummary, upsertA365Summaries } from './anime'
 import { TYPE_TO_KIND, anime365 } from './anime365'
@@ -26,7 +26,17 @@ function a365Date(value: string | undefined): string {
   return new Date(`${value.replace(' ', 'T')}+03:00`).toISOString()
 }
 
-export async function schedule(userId: number): Promise<ScheduleItem[]> {
+const DAY = 86_400_000
+const WEEK = 7 * DAY
+const WEEKLY_KINDS = new Set(['tv', 'ona', 'tv_special'])
+const MAX_RANGE = 70 * DAY
+
+export async function schedule(userId: number, fromIso?: string, toIso?: string): Promise<ScheduleItem[]> {
+  const now = Date.now()
+  let from = Date.parse(fromIso ?? '') || now - 7 * DAY
+  let to = Date.parse(toIso ?? '') || now + 28 * DAY
+  if (to < from) [from, to] = [to, from]
+  if (to - from > MAX_RANGE) to = from + MAX_RANGE
   const entries = await shikimori.calendar()
   const statuses = new Map(
     db
@@ -37,14 +47,41 @@ export async function schedule(userId: number): Promise<ScheduleItem[]> {
       .map((e) => [e.malId, e.status as ListStatus]),
   )
   const summaries = fillMissing(shikiSummaries(entries.map((e) => e.anime)))
-  return entries
-    .map((e, i) => ({
-      anime: summaries[i]!,
-      episode: e.next_episode,
-      airingAt: new Date(e.next_episode_at).toISOString(),
-      listStatus: statuses.get(e.anime.id) ?? null,
-    }))
-    .sort((a, b) => a.airingAt.localeCompare(b.airingAt))
+  const available = new Map(
+    entries.length
+      ? db
+          .select({ malId: anime.malId, latest: anime.latestEpisode })
+          .from(anime)
+          .where(inArray(anime.malId, entries.map((e) => e.anime.id)))
+          .all()
+          .map((r) => [r.malId, r.latest ?? 0])
+      : [],
+  )
+  const items: ScheduleItem[] = []
+  entries.forEach((e, i) => {
+    const summary = summaries[i]!
+    const base = Date.parse(e.next_episode_at)
+    if (!Number.isFinite(base)) return
+    const total = e.anime.episodes || 0
+    const weekly = WEEKLY_KINDS.has(e.anime.kind ?? '')
+    const push = (episode: number, at: number, estimated: boolean) => {
+      if (at < from || at > to || episode < 1) return
+      items.push({
+        anime: summary,
+        episode,
+        airingAt: new Date(at).toISOString(),
+        listStatus: statuses.get(e.anime.id) ?? null,
+        aired: at <= now,
+        available: (available.get(e.anime.id) ?? 0) >= episode,
+        estimated,
+      })
+    }
+    push(e.next_episode, base, false)
+    if (!weekly) return
+    for (let k = 1; e.next_episode - k >= 1 && base - k * WEEK >= from; k++) push(e.next_episode - k, base - k * WEEK, true)
+    for (let k = 1; (!total || e.next_episode + k <= total) && base + k * WEEK <= to; k++) push(e.next_episode + k, base + k * WEEK, true)
+  })
+  return items.sort((x, y) => x.airingAt.localeCompare(y.airingAt))
 }
 
 export function recentReleases(): Promise<RecentItem[]> {

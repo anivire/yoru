@@ -18,4 +18,6 @@ export const discoverRoutes = new Hono<AppEnv>()
     return c.json(await collection(name).catch(() => []))
   })
 
-export const scheduleRoutes = new Hono<AppEnv>().use(requireAuth).get('/', async (c) => c.json(await schedule(c.get('user').id)))
+export const scheduleRoutes = new Hono<AppEnv>()
+  .use(requireAuth)
+  .get('/', async (c) => c.json(await schedule(c.get('user').id, c.req.query('from'), c.req.query('to'))))

@@ -184,30 +184,51 @@ export function AnimePageSkeleton() {
   )
 }
 
+function ScheduleEntrySkeleton() {
+  return (
+    <div className="flex items-center gap-2 p-1">
+      <Skeleton className="aspect-[2/3] w-7 shrink-0 rounded-md" />
+      <div className="min-w-0 flex-1 leading-tight">
+        <TextLine className="text-xs" bar="w-4/5" />
+        <TextLine className="mt-0.5 text-[11px]" bar="w-1/2" />
+      </div>
+    </div>
+  )
+}
+
 export function ScheduleSkeleton() {
   return (
-    <div className="flex flex-col gap-8">
-      {[6, 3].map((count, d) => (
-        <section key={d}>
-          <TextLine className="mb-3 text-lg font-semibold" bar="w-64" />
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: count }, (_, i) => (
-              <div key={i} className="flex items-center gap-4 rounded-xl bg-surface p-2.5 pr-4">
-                <Skeleton className="aspect-[2/3] w-20 shrink-0 rounded-lg" />
-                <div className="min-w-0 flex-1">
-                  <div className="text-[15px] leading-snug">
-                    <TextLine />
-                    <TextLine bar="w-2/3" />
-                  </div>
-                  <TextLine className="mt-1 text-[13px]" bar="w-1/3" />
-                </div>
-                <TextLine className="font-mono text-sm" bar="w-14" />
-              </div>
-            ))}
-          </div>
-        </section>
-      ))}
-    </div>
+    <>
+      <div className="hidden md:block">
+        <div className="mb-2 grid grid-cols-7 gap-2 px-1">
+          {Array.from({ length: 7 }, (_, i) => (
+            <TextLine key={i} className="text-xs" bar="w-6" />
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-2">
+          {Array.from({ length: 35 }, (_, i) => (
+            <div key={i} className="flex min-h-28 flex-col gap-0.5 rounded-xl bg-surface p-1.5">
+              <Skeleton className="mx-1 mb-0.5 size-6 rounded-full" />
+              {Array.from({ length: (i * 7) % 3 }, (_, j) => (
+                <ScheduleEntrySkeleton key={j} />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="flex flex-col gap-6 md:hidden">
+        {[4, 2].map((count, d) => (
+          <section key={d}>
+            <TextLine className="mb-2 text-sm font-semibold" bar="w-48" />
+            <div className="flex flex-col gap-0.5 rounded-xl bg-surface p-1.5">
+              {Array.from({ length: count }, (_, i) => (
+                <ScheduleEntrySkeleton key={i} />
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    </>
   )
 }
 
