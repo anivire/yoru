@@ -322,7 +322,7 @@ export function SettingsPage() {
           const Icon = TAB_ICONS[v]
           return { value: v, label: t(`settings.${v}`), icon: <Icon /> }
         })}
-        className="mb-8"
+        className="mb-8 grid w-full grid-cols-2 sm:inline-flex sm:w-auto"
       />
       {tab === 'appearance' ? <AppearanceTab /> : null}
       {tab === 'account' ? <AccountTab /> : null}

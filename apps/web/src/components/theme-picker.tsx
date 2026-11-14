@@ -1,5 +1,5 @@
 import { type ColorScheme, THEME_PRESETS, cn } from '@yoru/ui'
-import { Moon, Sun } from 'lucide-react'
+import { Check, Moon, Sun } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAppearance } from '../lib/appearance'
 
@@ -46,7 +46,7 @@ export function SchemePicker({ compact }: { compact?: boolean }) {
     { value: 'dark', label: t('settings.dark') },
   ]
   return (
-    <div className={cn('grid grid-cols-3', compact ? 'gap-2' : 'gap-4')}>
+    <div className={cn('grid', compact ? 'grid-cols-3 gap-2' : 'grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-4')}>
       {options.map((o) => (
         <button
           key={o.value}
@@ -54,10 +54,11 @@ export function SchemePicker({ compact }: { compact?: boolean }) {
           onClick={() => setScheme(o.value)}
           className={cn(
             'group cursor-pointer rounded-xl p-1.5 text-center transition-colors',
+            !compact && 'flex items-center gap-3 text-left sm:block sm:text-center',
             scheme === o.value ? 'bg-accent-soft' : 'bg-surface hover:bg-field',
           )}
         >
-          <div className={cn('overflow-hidden rounded-lg', compact ? 'h-23' : 'h-46')}>
+          <div className={cn('overflow-hidden rounded-lg', compact ? 'h-23' : 'h-20 w-28 shrink-0 sm:h-46 sm:w-auto')}>
             {o.value === 'system' ? (
               <div className="relative h-full w-full">
                 <div className="absolute inset-0 [clip-path:inset(0_49.5%_0_0)]">
@@ -71,7 +72,8 @@ export function SchemePicker({ compact }: { compact?: boolean }) {
               <SchemePreview scheme={o.value} />
             )}
           </div>
-          <div className={cn('pt-1.5 text-[13px]', scheme === o.value ? 'font-medium text-foreground' : 'text-muted-foreground')}>{o.label}</div>
+          <div className={cn(compact ? 'pt-1.5 text-[13px]' : 'flex-1 text-sm sm:pt-1.5 sm:text-[13px]', scheme === o.value ? 'font-medium text-foreground' : 'text-muted-foreground')}>{o.label}</div>
+          {!compact && scheme === o.value ? <Check className="mr-2 size-4 text-accent sm:hidden" /> : null}
         </button>
       ))}
     </div>
@@ -101,7 +103,7 @@ export function ThemePicker({ compact }: { compact?: boolean }) {
   const { theme, setTheme, scheme } = useAppearance()
   const dark = scheme === 'dark' || (scheme === 'system' && document.documentElement.classList.contains('dark'))
   return (
-    <div className={cn('grid', compact ? 'grid-cols-3 gap-2' : 'grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4')} style={{ ['--orb' as string]: compact ? '22px' : '56px' }}>
+    <div className={cn('grid', compact ? 'grid-cols-3 gap-2 [--orb:22px]' : 'grid-cols-2 gap-2 [--orb:44px] sm:gap-4 sm:[--orb:56px] md:grid-cols-3 lg:grid-cols-4')}>
       {THEME_PRESETS.map((p) => {
         const active = p.id === theme
         return (
@@ -111,7 +113,7 @@ export function ThemePicker({ compact }: { compact?: boolean }) {
             onClick={() => setTheme(p.id)}
             className={cn(
               'flex cursor-pointer flex-col rounded-xl transition-colors',
-              compact ? 'items-center gap-1.5 p-2' : 'gap-4 p-4',
+              compact ? 'items-center gap-1.5 p-2' : 'gap-3 p-3 sm:gap-4 sm:p-4',
               active ? 'bg-accent-soft' : 'bg-surface hover:bg-field',
             )}
           >
