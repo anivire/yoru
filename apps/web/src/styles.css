@@ -7,6 +7,10 @@
 
 @custom-variant wide (&:where([data-wide], [data-wide] *));
 
+:root {
+  --page-max: 80rem;
+}
+
 body {
   min-height: 100dvh;
 }

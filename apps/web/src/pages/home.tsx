@@ -18,7 +18,7 @@ function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number 
         <img src={anime.imageUrl} alt="" className="absolute inset-0 -z-10 h-full w-full scale-110 object-cover object-[50%_30%] opacity-50 blur-xl" />
       ) : null}
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/70 to-background/20" />
-      <div className="mx-auto flex max-w-7xl wide:max-w-none items-end gap-6 px-4 pb-6 pt-6 sm:px-6">
+      <div className="mx-auto flex max-w-(--page-max) items-end gap-6 px-4 pb-6 pt-6 sm:px-6">
         {anime.imageUrl ? (
           <div className="hidden aspect-[2/3] w-36 shrink-0 overflow-hidden rounded-xl bg-muted shadow-2xl sm:block">
             <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" />

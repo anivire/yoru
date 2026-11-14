@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, type User } from '@yoru/shared'
-import { Button, Card, CardContent, Code, Field, Input, Segmented, Switch, toast } from '@yoru/ui'
+import { Button, Card, CardContent, Code, Field, Input, Segmented, StepSlider, Switch, toast } from '@yoru/ui'
 import { ArrowDownUp, Bell, Check, Download, FileBraces, FileCode, FileSpreadsheet, Palette, Shield, TriangleAlert, UserRound } from 'lucide-react'
 import { type FormEvent, type ReactNode, useEffect, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
@@ -10,7 +10,7 @@ import { Flag, LANGUAGES, useChangeLanguage } from '../components/language'
 import { PROVIDER_NAMES, ProviderIcon } from '../components/providers'
 import { SchemePicker, ThemePicker } from '../components/theme-picker'
 import { api } from '../lib/api'
-import { useAppearance } from '../lib/appearance'
+import { PAGE_WIDTHS, useAppearance } from '../lib/appearance'
 import { formatDate } from '../lib/format'
 import { errorMessage, keys, useUser } from '../lib/queries'
 
@@ -46,23 +46,31 @@ function Block({ title, description, children }: { title: ReactNode; description
 
 function AppearanceTab() {
   const { t } = useTranslation()
-  const { stretch, setStretch, expandSynopsis, setExpandSynopsis } = useAppearance()
+  const { pageWidth, setPageWidth, expandSynopsis, setExpandSynopsis } = useAppearance()
   return (
     <>
       <Block title={t('settings.layout')}>
         <Card className="py-1">
-          {[
-            { key: 'stretch', checked: stretch, onChange: setStretch },
-            { key: 'expandSynopsis', checked: expandSynopsis, onChange: setExpandSynopsis },
-          ].map((o) => (
-            <label key={o.key} className="flex cursor-pointer items-center justify-between gap-4 px-5 py-3">
-              <span>
-                <span className="block text-sm">{t(`settings.${o.key}`)}</span>
-                <span className="block text-[13px] text-muted-foreground">{t(`settings.${o.key}Hint`)}</span>
-              </span>
-              <Switch checked={o.checked} onCheckedChange={o.onChange} />
-            </label>
-          ))}
+          <div className="flex flex-col gap-3 px-5 py-4">
+            <span>
+              <span className="block text-sm">{t('settings.pageWidth')}</span>
+              <span className="block text-[13px] text-muted-foreground">{t('settings.pageWidthHint')}</span>
+            </span>
+            <StepSlider
+              value={pageWidth}
+              onChange={setPageWidth}
+              label={t('settings.pageWidth')}
+              options={PAGE_WIDTHS.map((w) => ({ value: w.value, label: w.label ?? t('settings.pageWidthFull') }))}
+              className="max-w-xl"
+            />
+          </div>
+          <label className="flex cursor-pointer items-center justify-between gap-4 px-5 py-3">
+            <span>
+              <span className="block text-sm">{t('settings.expandSynopsis')}</span>
+              <span className="block text-[13px] text-muted-foreground">{t('settings.expandSynopsisHint')}</span>
+            </span>
+            <Switch checked={expandSynopsis} onCheckedChange={setExpandSynopsis} />
+          </label>
         </Card>
       </Block>
       <Block title={t('settings.colorScheme')}>

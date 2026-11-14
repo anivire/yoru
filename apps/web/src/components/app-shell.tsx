@@ -206,7 +206,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         ref={header.ref}
         className={cn('sticky top-0 z-40 transition-[background-color,backdrop-filter] duration-200', header.scrolled ? 'bg-background/80 backdrop-blur-xl' : 'bg-transparent')}
       >
-        <div className="mx-auto flex h-16 max-w-7xl wide:max-w-none items-center gap-4 px-4 sm:px-6">
+        <div className="mx-auto flex h-16 max-w-(--page-max) items-center gap-4 px-4 sm:px-6">
           <Link to="/" className="shrink-0">
             <Logo />
           </Link>
@@ -236,7 +236,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 export function Page({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn('mx-auto w-full max-w-7xl wide:max-w-none px-4 pb-8 pt-4 sm:px-6 sm:pt-8', className)}>{children}</div>
+  return <div className={cn('mx-auto w-full max-w-(--page-max) px-4 pb-8 pt-4 sm:px-6 sm:pt-8', className)}>{children}</div>
 }
 
 export function PageHeader({ title, description, actions }: { title: ReactNode; description?: ReactNode; actions?: ReactNode }) {

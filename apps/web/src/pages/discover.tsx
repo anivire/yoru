@@ -58,7 +58,7 @@ function Hero({ items }: { items: AnimeSummary[] }) {
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-background/10" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/40" />
       </div>
-      <div className="mx-auto max-w-7xl px-4 pb-12 pt-6 wide:max-w-none sm:px-6">
+      <div className="mx-auto max-w-(--page-max) px-4 pb-12 pt-6 sm:px-6">
         <div className="mb-6 flex gap-1.5">
           {items.map((item, i) => (
             <button
@@ -117,7 +117,7 @@ function Hero({ items }: { items: AnimeSummary[] }) {
 
 function HeroSkeleton() {
   return (
-    <div className="mx-auto max-w-7xl px-4 pb-12 pt-6 wide:max-w-none sm:px-6">
+    <div className="mx-auto max-w-(--page-max) px-4 pb-12 pt-6 sm:px-6">
       <div className="mb-6 flex gap-1.5">
         {Array.from({ length: 10 }, (_, i) => (
           <Skeleton key={i} className={cn('h-1 rounded-full', i === 0 ? 'w-8' : 'w-4')} />
