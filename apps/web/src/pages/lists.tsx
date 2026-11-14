@@ -26,26 +26,26 @@ const STATUS_TONE: Record<ListStatus, 'accent' | 'info' | 'success' | 'warning' 
 function ListTable({ items }: { items: ListEntryWithAnime[] }) {
   const { t } = useTranslation()
   return (
-    <div className="overflow-hidden rounded-xl bg-surface">
-      <table className="w-full text-sm">
+    <div className="@container overflow-hidden rounded-xl bg-surface">
+      <table className="w-full table-fixed text-sm">
         <thead className="bg-inset text-left text-xs text-muted-foreground">
           <tr>
-            <th className="px-4 py-2.5 font-medium">{t('search.title')}</th>
-            <th className="hidden px-4 py-2.5 font-medium md:table-cell">{t('search.status')}</th>
-            <th className="px-4 py-2.5 font-medium">{t('lists.progress')}</th>
-            <th className="hidden px-4 py-2.5 font-medium sm:table-cell">{t('lists.score')}</th>
-            <th className="hidden px-4 py-2.5 font-medium lg:table-cell">{t('lists.updated')}</th>
+            <th className="px-4 py-2.5 font-medium">{t('lists.name')}</th>
+            <th className="hidden w-36 px-4 py-2.5 font-medium @2xl:table-cell">{t('search.status')}</th>
+            <th className="w-24 px-4 py-2.5 font-medium">{t('lists.progress')}</th>
+            <th className="hidden w-24 px-4 py-2.5 font-medium @md:table-cell">{t('lists.score')}</th>
+            <th className="hidden w-40 px-4 py-2.5 font-medium @4xl:table-cell">{t('lists.updated')}</th>
           </tr>
         </thead>
         <tbody>
           {items.map((e) => (
-            <tr key={e.malId} className="hover:bg-muted/60">
+            <tr key={e.malId} className="even:bg-field/60 hover:bg-muted">
               <td className="px-4 py-2.5">
-                <Link to={`/anime/${e.malId}`} className="flex items-center gap-3">
+                <Link to={`/anime/${e.malId}`} className="flex min-w-0 items-center gap-3">
                   {e.anime.imageUrl ? <Image src={e.anime.imageUrl} alt="" loading="lazy" className="h-12 w-8 shrink-0 rounded object-cover" /> : null}
                   <div className="min-w-0">
                     <div className="truncate font-medium hover:text-accent">{e.anime.title}</div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <div className="flex min-w-0 items-center gap-1 truncate text-xs text-muted-foreground">
                       {[typeLabel(e.anime.type), e.anime.year].filter(Boolean).join(' · ')}
                       {e.rewatches ? (
                         <span className="inline-flex items-center gap-0.5" title={t('anime.rewatches')}>
@@ -57,7 +57,7 @@ function ListTable({ items }: { items: ListEntryWithAnime[] }) {
                   </div>
                 </Link>
               </td>
-              <td className="hidden px-4 py-2.5 md:table-cell">
+              <td className="hidden px-4 py-2.5 @2xl:table-cell">
                 <Badge size="sm" variant={STATUS_TONE[e.status]}>
                   {t(`status.${e.status}`)}
                 </Badge>
@@ -65,14 +65,14 @@ function ListTable({ items }: { items: ListEntryWithAnime[] }) {
               <td className="px-4 py-2.5 font-mono text-[0.8125rem]">
                 <EpisodeCount current={e.progress} total={e.anime.episodes} />
               </td>
-              <td className="hidden px-4 py-2.5 sm:table-cell">
+              <td className="hidden px-4 py-2.5 @md:table-cell">
                 {e.score ? (
                   <Score value={e.score} colored className="h-5 px-1.5 text-[0.75rem]" />
                 ) : (
                   <span className="text-subtle-foreground">{t('anime.noScore')}</span>
                 )}
               </td>
-              <td className="hidden px-4 py-2.5 font-mono text-xs text-muted-foreground lg:table-cell">{formatDate(e.updatedAt)}</td>
+              <td className="hidden px-4 py-2.5 font-mono text-xs text-muted-foreground @4xl:table-cell">{formatDate(e.updatedAt)}</td>
             </tr>
           ))}
         </tbody>

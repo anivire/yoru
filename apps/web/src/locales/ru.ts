@@ -177,6 +177,7 @@ export const ru = {
     dropped: 'Брошено',
   },
   lists: {
+    name: 'Название',
     title: 'Мои списки',
     sortBy: 'Сортировать по',
     filter: 'Фильтр по названию…',

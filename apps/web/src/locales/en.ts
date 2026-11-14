@@ -179,6 +179,7 @@ export const en: Messages = {
     dropped: 'Dropped',
   },
   lists: {
+    name: 'Title',
     title: 'My lists',
     sortBy: 'Sort by',
     filter: 'Filter by title…',

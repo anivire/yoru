@@ -20,11 +20,13 @@ import { keys, useUser } from '../lib/queries'
 import { NotificationsPopover } from './notifications'
 import { Footer } from './footer'
 
-function NavItem({ to, children, end }: { to: string; children: ReactNode; end?: boolean }) {
+function NavItem({ to, children, end, label }: { to: string; children: ReactNode; end?: boolean; label?: string }) {
   return (
     <NavLink
       to={to}
       end={end}
+      aria-label={label}
+      title={label}
       className={({ isActive }) =>
         cn(
           'inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors [&_svg]:size-4 [&_svg]:shrink-0',
@@ -45,12 +47,14 @@ function useVisibleNav() {
 function NavItems() {
   const { t } = useTranslation()
   const nav = useVisibleNav()
+  const { pageWidth } = useAppearance()
+  const iconOnly = pageWidth === '3xl'
   return (
     <>
       {nav.map((n) => (
-        <NavItem key={n.to} to={n.to} end={n.end}>
+        <NavItem key={n.to} to={n.to} end={n.end} label={iconOnly ? t(`nav.${n.key}`) : undefined}>
           <n.icon />
-          {t(`nav.${n.key}`)}
+          {iconOnly ? null : t(`nav.${n.key}`)}
         </NavItem>
       ))}
     </>

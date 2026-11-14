@@ -237,7 +237,7 @@ export function ListTableSkeleton({ rows = 10 }: { rows?: number }) {
         <TextLine className="text-xs" bar="w-24" />
       </div>
       {Array.from({ length: rows }, (_, i) => (
-        <div key={i} className="flex items-center gap-3 px-4 py-2.5">
+        <div key={i} className="flex items-center gap-3 px-4 py-2.5 even:bg-field/60">
           <Skeleton className="h-12 w-8 shrink-0 rounded" />
           <div className="min-w-0 flex-1">
             <TextLine className="text-sm" bar="w-1/3" />
