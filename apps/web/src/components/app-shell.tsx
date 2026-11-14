@@ -251,13 +251,30 @@ export function PageHeader({ title, description, actions }: { title: ReactNode; 
   )
 }
 
-export function Section({ title, hint, action, children, className }: { title: ReactNode; hint?: ReactNode; action?: ReactNode; children: ReactNode; className?: string }) {
+export function Section({
+  title,
+  hint,
+  icon,
+  action,
+  children,
+  className,
+}: {
+  title: ReactNode
+  hint?: ReactNode
+  icon?: ReactNode
+  action?: ReactNode
+  children: ReactNode
+  className?: string
+}) {
   return (
     <section className={cn('mt-10 first:mt-0', className)}>
       <div className="mb-4 flex items-end justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
-          {hint ? <p className="text-[13px] text-muted-foreground">{hint}</p> : null}
+        <div className="flex min-w-0 items-center gap-3">
+          {icon ? <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent [&_svg]:size-[18px]">{icon}</span> : null}
+          <div className="min-w-0">
+            <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+            {hint ? <p className="text-[13px] text-muted-foreground">{hint}</p> : null}
+          </div>
         </div>
         {action}
       </div>

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AnimeSummary, HomeData } from '@yoru/shared'
 import { Button, EmptyState, Image } from '@yoru/ui'
-import { Download, Play, Search } from 'lucide-react'
+import { CalendarClock, CirclePlay, Download, Play, Search, Tv } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { AnimeCard, ContinueCard, PosterGrid, Rail, UpcomingCard, UpcomingGrid } from '../components/anime-cards'
@@ -89,7 +89,7 @@ export function HomePage() {
         ) : null}
 
         {data?.continueWatching.length ? (
-          <Section title={t('home.continue')}>
+          <Section title={t('home.continue')} icon={<CirclePlay />}>
             <Rail>
               {data.continueWatching.map((item) => (
                 <ContinueCard key={item.anime.malId} item={item} />
@@ -101,6 +101,7 @@ export function HomePage() {
         {data?.upcoming.length ? (
           <Section
             title={t('home.upcoming')}
+            icon={<CalendarClock />}
             hint={t('home.upcomingHint')}
             action={
               <Button asChild variant="ghost" size="sm">
@@ -121,6 +122,7 @@ export function HomePage() {
         {data?.watching.length ? (
           <Section
             title={t('home.watching')}
+            icon={<Tv />}
             action={
               <Button asChild variant="ghost" size="sm">
                 <Link to="/lists?status=watching">{t('common.viewAll')}</Link>

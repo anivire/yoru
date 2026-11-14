@@ -41,11 +41,14 @@ export function PosterRailSkeleton({ count = 8 }: { count?: number }) {
   )
 }
 
-export function SectionTitleSkeleton({ hint }: { hint?: boolean }) {
+export function SectionTitleSkeleton({ hint, icon }: { hint?: boolean; icon?: boolean }) {
   return (
-    <div className="mb-4">
-      <TextLine className="text-xl font-semibold" bar="w-56" />
-      {hint ? <TextLine className="text-[13px]" bar="w-32" /> : null}
+    <div className="mb-4 flex items-center gap-3">
+      {icon ? <Skeleton className="size-9 shrink-0 rounded-xl" /> : null}
+      <div>
+        <TextLine className="text-xl font-semibold" bar="w-56" />
+        {hint ? <TextLine className="text-[13px]" bar="w-32" /> : null}
+      </div>
     </div>
   )
 }
@@ -91,7 +94,7 @@ export function HomeSkeleton() {
       </div>
       <div className="mx-auto w-full max-w-(--page-max) px-4 pb-8 pt-4 sm:px-6 sm:pt-8">
         <section>
-          <SectionTitleSkeleton />
+          <SectionTitleSkeleton icon />
           <Rail>
             {Array.from({ length: 4 }, (_, i) => (
               <ContinueCardSkeleton key={i} />
@@ -99,7 +102,7 @@ export function HomeSkeleton() {
           </Rail>
         </section>
         <section className="mt-10">
-          <SectionTitleSkeleton hint />
+          <SectionTitleSkeleton hint icon />
           <UpcomingGrid>
             {Array.from({ length: 4 }, (_, i) => (
               <UpcomingCardSkeleton key={i} />
@@ -107,7 +110,7 @@ export function HomeSkeleton() {
           </UpcomingGrid>
         </section>
         <section className="mt-10">
-          <SectionTitleSkeleton />
+          <SectionTitleSkeleton icon />
           <PosterGridSkeleton count={6} />
         </section>
       </div>
