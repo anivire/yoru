@@ -9,6 +9,7 @@ import { AnimeCard, Rail, Score } from '../components/anime-cards'
 import { Page, Section } from '../components/app-shell'
 import { AnimeCardSkeleton, PosterRailSkeleton, SectionTitleSkeleton, TextLine } from '../components/skeletons'
 import { api } from '../lib/api'
+import { HeroBackdrop } from '../components/hero-backdrop'
 import { relativeTime, seasonLabel, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
 
@@ -47,17 +48,11 @@ function Hero({ items }: { items: AnimeSummary[] }) {
 
   return (
     <div
-      className="relative isolate -mt-(--header-h) overflow-hidden pt-(--header-h)"
+      className="relative isolate -mt-(--header-h) pt-(--header-h)"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="absolute inset-0 -z-10">
-        {background ? (
-          <img key={background} src={background} alt="" className={cn('h-full w-full animate-fade object-cover', !banner.data?.url && 'scale-110 object-[50%_25%] blur-xl')} />
-        ) : null}
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-background/10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/40" />
-      </div>
+      <HeroBackdrop src={background ?? null} />
       <div className="mx-auto max-w-(--page-max) px-4 pb-12 pt-6 sm:px-6">
         <div className="mb-6 flex gap-1.5">
           {items.map((item, i) => (

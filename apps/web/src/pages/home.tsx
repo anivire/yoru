@@ -13,15 +13,13 @@ import { api } from '../lib/api'
 import { useAppearance } from '../lib/appearance'
 import type { HomeSectionId } from '../lib/navigation'
 import { keys } from '../lib/queries'
+import { HeroBackdrop } from '../components/hero-backdrop'
 
 function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number | null; label: string }) {
   const { t } = useTranslation()
   return (
-    <div className="relative isolate -mt-(--header-h) overflow-hidden pt-(--header-h)">
-      {anime.imageUrl ? (
-        <img src={anime.imageUrl} alt="" className="absolute inset-0 -z-10 h-full w-full scale-110 object-cover object-[50%_30%] opacity-50 blur-xl" />
-      ) : null}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/70 to-background/20" />
+    <div className="relative isolate -mt-(--header-h) pt-(--header-h)">
+      <HeroBackdrop src={anime.imageUrl} />
       <div className="mx-auto flex max-w-(--page-max) items-end gap-6 px-4 pb-6 pt-6 sm:px-6">
         {anime.imageUrl ? (
           <div className="hidden aspect-[2/3] w-36 shrink-0 overflow-hidden rounded-xl bg-muted shadow-2xl sm:block">
