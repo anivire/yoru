@@ -35,6 +35,7 @@ export interface User {
   notifyVoice: boolean
   notifyPremieres: boolean
   hasOwnAnime365Token: boolean
+  hasSharedAnime365Token: boolean
   createdAt: string
 }
 

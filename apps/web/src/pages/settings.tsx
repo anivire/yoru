@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, type User } from '@yoru/shared'
 import { Badge, Button, Card, CardContent, Code, Field, Input, LogoMark, Segmented, Skeleton, Spinner, StepSlider, Switch, toast } from '@yoru/ui'
-import { RiAlertFill, RiArrowUpDownFill, RiBracesFill, RiCheckFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiNotification3Fill, RiPaletteFill, RiShieldFill, RiUser3Fill } from '@remixicon/react'
+import { RiAlertFill, RiArrowUpDownFill, RiBracesFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiLockFill, RiNotification3Fill, RiPaletteFill, RiShieldFill, RiUser3Fill } from '@remixicon/react'
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
@@ -118,7 +118,10 @@ function AccountInfoCard() {
     <Card className="flex flex-col gap-4 p-4">
       <div className="flex flex-col gap-1.5">
         <span className="text-[0.8125rem] font-medium">{t('settings.accountInfo.username')}</span>
-        <div className="flex h-9 cursor-default select-text items-center rounded-lg bg-field px-3 text-sm font-medium">{user.username}</div>
+        <div className="flex h-9 cursor-default select-text items-center gap-2 rounded-lg bg-field px-3 text-sm font-medium">
+          <RiLockFill className="size-4 shrink-0 text-subtle-foreground" />
+          {user.username}
+        </div>
       </div>
       <dl className="grid gap-x-6 gap-y-2.5 text-sm sm:grid-cols-2">
         {rows.map(([label, value]) => (
@@ -166,10 +169,10 @@ function AccountTab() {
               }}
             >
               <Field label={t('settings.currentPassword')} error={password.error ? errorMessage(password.error, t) : undefined}>
-                <Input type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
+                <Input type="password" autoComplete="current-password" placeholder={t('settings.currentPasswordPlaceholder')} value={current} onChange={(e) => setCurrent(e.target.value)} required />
               </Field>
               <Field label={t('settings.newPassword')}>
-                <Input type="password" autoComplete="new-password" minLength={8} value={next} onChange={(e) => setNext(e.target.value)} required />
+                <Input type="password" autoComplete="new-password" minLength={8} placeholder={t('settings.newPasswordPlaceholder')} value={next} onChange={(e) => setNext(e.target.value)} required />
               </Field>
               <Button type="submit" variant="secondary" loading={password.isPending}>
                 {t('settings.changePassword')}
@@ -187,12 +190,11 @@ function AccountTab() {
             <div className="min-w-0 flex-1">
               <div className="font-medium">Anime365</div>
               {user.hasOwnAnime365Token ? (
-                <div className="flex items-center gap-1 text-xs text-success">
-                  <RiCheckFill className="size-3" />
-                  {t('settings.tokenSet')}
-                </div>
-              ) : (
+                <div className="text-xs text-success">{t('settings.tokenSet')}</div>
+              ) : user.hasSharedAnime365Token ? (
                 <div className="text-xs text-muted-foreground">{t('settings.tokenNotSet')}</div>
+              ) : (
+                <div className="text-xs text-danger">{t('settings.tokenMissing')}</div>
               )}
             </div>
           </div>

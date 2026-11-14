@@ -8,6 +8,7 @@ import { db, now } from '../db/client'
 import { sessions, users } from '../db/schema'
 import { env, secureCookies } from '../env'
 import { randomToken, sha256 } from './crypto'
+import { getSetting } from './settings'
 
 export const SESSION_COOKIE = 'yoru_session'
 
@@ -29,6 +30,7 @@ export function toUser(row: UserRow): User {
     notifyVoice: row.notifyVoice,
     notifyPremieres: row.notifyPremieres,
     hasOwnAnime365Token: Boolean(row.anime365Token),
+    hasSharedAnime365Token: Boolean(getSetting('anime365_token') || env.anime365Token),
     createdAt: row.createdAt,
   }
 }
