@@ -2,6 +2,7 @@ import type { Messages } from './ru'
 
 export const en: Messages = {
   nav: {
+    menu: 'Menu',
     home: 'Home',
     search: 'Search',
     discover: 'Discover',

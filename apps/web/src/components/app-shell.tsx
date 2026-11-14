@@ -9,13 +9,13 @@ import {
   Logo,
   cn,
 } from '@yoru/ui'
-import { LogOut, Search, Settings, Shield } from 'lucide-react'
+import { CalendarDays, Check, Compass, House, LibraryBig, LogOut, Menu, Search, Settings, Shield } from 'lucide-react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, NavLink, useNavigate } from 'react-router'
+import { Link, NavLink, matchPath, useLocation, useNavigate } from 'react-router'
 import { api } from '../lib/api'
 import { keys, useUser } from '../lib/queries'
-import { LanguageMenu } from './language'
+import { Flag, LANGUAGES, LanguageMenu, useChangeLanguage } from './language'
 import { NotificationsPopover } from './notifications'
 import { Footer } from './footer'
 
@@ -48,6 +48,54 @@ function NavItems() {
       <NavItem to="/search">{t('nav.search')}</NavItem>
       <NavItem to="/lists">{t('nav.lists')}</NavItem>
     </>
+  )
+}
+
+const NAV = [
+  { to: '/', key: 'home', icon: House, end: true },
+  { to: '/discover', key: 'discover', icon: Compass },
+  { to: '/schedule', key: 'schedule', icon: CalendarDays },
+  { to: '/search', key: 'search', icon: Search },
+  { to: '/lists', key: 'lists', icon: LibraryBig },
+] as const
+
+function MobileMenu() {
+  const { t } = useTranslation()
+  const user = useUser()
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const change = useChangeLanguage()
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="secondary" size="icon" aria-label={t('nav.menu')} className="rounded-full">
+          <Menu />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-60">
+        {NAV.map(({ to, key, icon: Icon, ...rest }) => {
+          const active = Boolean(matchPath({ path: to, end: 'end' in rest }, pathname))
+          return (
+            <DropdownMenuItem
+              key={to}
+              onSelect={() => navigate(to)}
+              className={cn(active && 'bg-accent-soft text-accent data-[highlighted]:bg-accent-soft [&_svg]:text-accent')}
+            >
+              <Icon />
+              {t(`nav.${key}`)}
+            </DropdownMenuItem>
+          )
+        })}
+        <DropdownMenuLabel className="mt-1">{t('settings.language')}</DropdownMenuLabel>
+        {LANGUAGES.map((l) => (
+          <DropdownMenuItem key={l.value} onSelect={() => change(l.value)}>
+            <Flag locale={l.value} />
+            <span className="flex-1">{l.label}</span>
+            {l.value === user.locale ? <Check className="text-accent!" /> : null}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
@@ -140,12 +188,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Button>
             <NotificationsPopover />
             <UserMenu />
-            <LanguageMenu />
+            <div className="hidden md:block">
+              <LanguageMenu />
+            </div>
+            <div className="md:hidden">
+              <MobileMenu />
+            </div>
           </div>
         </div>
-        <nav className="flex items-center gap-1 overflow-x-auto px-4 pb-2 scrollbar-none md:hidden">
-          <NavItems />
-        </nav>
       </header>
       <main className="flex-1">{children}</main>
       <Footer scope="app" />

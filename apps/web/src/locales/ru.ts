@@ -3,6 +3,7 @@ export const ru = {
     home: 'Главная',
     search: 'Поиск',
     discover: 'Обзор',
+    menu: 'Меню',
     schedule: 'Расписание',
     lists: 'Мои списки',
     settings: 'Настройки',
