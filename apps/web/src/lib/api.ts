@@ -1,4 +1,5 @@
 import type {
+  AnimeLink,
   AdminSettings,
   AdminUser,
   AnimePage,
@@ -84,6 +85,7 @@ export const api = {
   anime: (malId: number) => get<AnimePage>(`/anime/${malId}`),
   episodes: (malId: number) => get<Episode[]>(`/anime/${malId}/episodes`),
   match: (malId: number) => get<ProviderMatch>(`/anime/${malId}/match`),
+  links: (malId: number) => get<AnimeLink[]>(`/anime/${malId}/links`),
   setMatch: (malId: number, providerId: number | null) => request<ProviderMatch>('PUT', `/anime/${malId}/match`, { providerId }),
   matchSearch: (q: string) => get<ProviderCandidate[]>(`/anime/match/search${qs({ q })}`),
 

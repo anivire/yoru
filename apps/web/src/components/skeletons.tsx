@@ -123,6 +123,11 @@ export function AnimePageSkeleton() {
           <div className="flex w-40 shrink-0 flex-col gap-2 self-start sm:w-48">
             <Skeleton className="aspect-[2/3] w-full rounded-xl" />
             <Skeleton className="h-8 w-full rounded-md" />
+            <div className="mt-1 flex flex-col gap-1.5">
+              {[0, 1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-8 w-full rounded-md" />
+              ))}
+            </div>
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-3">
             <div>
@@ -147,9 +152,6 @@ export function AnimePageSkeleton() {
               <TextLine bar="w-3/5" />
             </div>
           </div>
-        </div>
-        <div className="mt-6 flex flex-wrap items-center gap-2">
-          <Skeleton className="h-9 w-40 rounded-lg" />
         </div>
       </div>
       <div className="mx-auto w-full max-w-7xl px-4 py-8 wide:max-w-none sm:px-6">

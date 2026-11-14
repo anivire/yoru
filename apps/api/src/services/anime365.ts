@@ -26,6 +26,7 @@ export interface A365Series {
   descriptions?: { source: string; value: string }[]
   genres?: { id: number; title: string }[]
   episodes?: A365Episode[]
+  links?: { title: string; url: string }[]
 }
 
 export interface A365Episode {

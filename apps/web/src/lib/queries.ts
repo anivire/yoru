@@ -20,6 +20,7 @@ export const keys = {
   anime: (id: number) => ['anime', id] as const,
   episodes: (id: number) => ['episodes', id] as const,
   match: (id: number) => ['match', id] as const,
+  links: (id: number) => ['links', id] as const,
   list: (params: object) => ['list', params] as const,
   notifications: ['notifications'] as const,
 }

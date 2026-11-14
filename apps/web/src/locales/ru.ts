@@ -164,6 +164,9 @@ export const ru = {
   },
   anime: {
     noScore: 'Нет',
+    status: 'Статус',
+    rewatchesShort: 'Пересмотры',
+    remove: 'Убрать из списка',
     rewatches: 'Сколько раз пересмотрено',
     add: 'Добавить в список',
     inList: 'В списке',

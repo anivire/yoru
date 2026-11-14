@@ -9,6 +9,7 @@ import { anime365, seriesTitle } from '../services/anime365'
 import { episodeList } from '../services/episodes'
 import { jikan } from '../services/jikan'
 import { getEntry, toEntry } from '../services/lists'
+import { animeLinks } from '../services/links'
 import { resolveMatch, setManualMatch } from '../services/provider'
 import { shikimori } from '../services/shikimori'
 
@@ -98,6 +99,7 @@ export const animeRoutes = new Hono<AppEnv>()
     return c.json({ url: shots[0] ?? null })
   })
   .get('/:id/match', async (c) => c.json(await resolveMatch(intParam(c, 'id'))))
+  .get('/:id/links', async (c) => c.json(await animeLinks(intParam(c, 'id'))))
   .put('/:id/match', async (c) => {
     const { providerId } = await parseBody(c, providerMatchSchema)
     return c.json(await setManualMatch(intParam(c, 'id'), providerId))

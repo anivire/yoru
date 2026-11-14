@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AnimeDetails } from '@yoru/shared'
-import { Badge, Button, EmptyState, Image, cn } from '@yoru/ui'
+import { Badge, EmptyState, Image, cn } from '@yoru/ui'
 import { CalendarClock, Clapperboard, Star } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
 import { Page } from '../components/app-shell'
-import { ListEditor } from '../components/list-editor'
+import { ListButton } from '../components/list-editor'
+import { LinkButton, ServiceLinks } from '../components/service-links'
 import { AnimePageSkeleton } from '../components/skeletons'
 import { WatchSection } from '../components/watch-section'
 import { api } from '../lib/api'
@@ -66,18 +67,7 @@ function Synopsis({ text, open, onToggle }: { text: string; open: boolean; onTog
   )
 }
 
-function MalIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden>
-      <rect width="24" height="24" rx="5" fill="#2e51a2" />
-      <text x="12" y="15.4" textAnchor="middle" fontSize="8.5" fontWeight="800" fill="#fff" fontFamily="Arial, sans-serif">
-        MAL
-      </text>
-    </svg>
-  )
-}
-
-function Header({ anime, children }: { anime: AnimeDetails; children: React.ReactNode }) {
+function Header({ anime, listButton }: { anime: AnimeDetails; listButton: React.ReactNode }) {
   const { t } = useTranslation()
   const { expandSynopsis } = useAppearance()
   const [open, setOpen] = useState(expandSynopsis)
@@ -99,20 +89,15 @@ function Header({ anime, children }: { anime: AnimeDetails; children: React.Reac
             <div className="aspect-[2/3] w-full overflow-hidden rounded-xl bg-muted shadow-2xl">
               {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" /> : null}
             </div>
-            <Button asChild variant="secondary" size="sm" className="w-full">
-              <a href={`https://myanimelist.net/anime/${anime.malId}`} target="_blank" rel="noreferrer">
-                <MalIcon />
-                MyAnimeList
-              </a>
-            </Button>
-            {anime.trailerUrl ? (
-              <Button asChild variant="secondary" size="sm" className="w-full">
-                <a href={anime.trailerUrl} target="_blank" rel="noreferrer">
-                  <Clapperboard />
+            {listButton}
+            <div className="mt-1 flex flex-col gap-1.5">
+              <ServiceLinks malId={anime.malId} />
+              {anime.trailerUrl ? (
+                <LinkButton href={anime.trailerUrl} icon={<Clapperboard />}>
                   {t('anime.trailer')}
-                </a>
-              </Button>
-            ) : null}
+                </LinkButton>
+              ) : null}
+            </div>
           </div>
           <div className={cn('flex min-w-0 flex-1 flex-col gap-3', !open && 'sm:h-72')}>
             <div>
@@ -153,18 +138,15 @@ function Header({ anime, children }: { anime: AnimeDetails; children: React.Reac
             {anime.synopsis ? <Synopsis text={anime.synopsis} open={open} onToggle={() => setOpen(!open)} /> : null}
           </div>
         </div>
-        <div className="mt-6 flex flex-wrap items-center gap-2">
-          {children}
-          {facts.length ? (
-            <div className="flex flex-wrap gap-x-6 gap-y-1 text-[13px] text-muted-foreground sm:ml-auto">
-              {facts.map((f) => (
-                <span key={f.label}>
-                  {f.label}: <span className="text-foreground">{f.value}</span>
-                </span>
-              ))}
-            </div>
-          ) : null}
-        </div>
+        {facts.length ? (
+          <div className="mt-6 flex flex-wrap justify-end gap-x-6 gap-y-1 text-[13px] text-muted-foreground">
+            {facts.map((f) => (
+              <span key={f.label}>
+                {f.label}: <span className="text-foreground">{f.value}</span>
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
     </div>
   )
@@ -186,14 +168,17 @@ export function AnimePage() {
 
   return (
     <>
-      <Header anime={data.anime}>
-        <ListEditor
-          malId={malId}
-          entry={data.entry}
-          total={data.anime.episodes}
-          aired={data.anime.status === 'finished' ? data.anime.episodes : data.anime.status === 'upcoming' ? 0 : data.anime.latestEpisode}
-        />
-      </Header>
+      <Header
+        anime={data.anime}
+        listButton={
+          <ListButton
+            malId={malId}
+            entry={data.entry}
+            total={data.anime.episodes}
+            aired={data.anime.status === 'finished' ? data.anime.episodes : data.anime.status === 'upcoming' ? 0 : data.anime.latestEpisode}
+          />
+        }
+      />
       <Page>
         <h2 className="mb-4 text-xl font-semibold tracking-tight">{t('anime.streaming')}</h2>
         <WatchSection anime={data.anime} entry={data.entry} />
