@@ -13,8 +13,8 @@ export type NavKey = (typeof NAV)[number]['key']
 export const HOME_SECTIONS = [
   { id: 'continue', label: 'home.continue', icon: RiPlayCircleFill },
   { id: 'upcoming', label: 'home.upcoming', icon: RiCalendarScheduleFill },
-  { id: 'activity', label: 'home.activity', icon: RiPulseFill },
   { id: 'watching', label: 'home.watching', icon: RiTv2Fill },
+  { id: 'activity', label: 'home.activity', icon: RiPulseFill },
 ] as const
 
 export type HomeSectionId = (typeof HOME_SECTIONS)[number]['id']
