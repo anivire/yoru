@@ -144,17 +144,16 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
             className={cn(
               'absolute inset-0 h-full w-full object-cover transition-[scale] duration-300 ease-out transform-gpu backface-hidden will-change-transform group-hover:scale-[1.04]',
               !item.episodeImageUrl && 'object-[50%_25%]',
-              item.pending && 'grayscale-[70%]',
             )}
           />
         ) : null}
         {item.pending ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/55 px-4 text-center text-white">
-            <span className="grid size-11 place-items-center rounded-full bg-warning/90 text-black shadow-lg">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-b from-warning/45 to-warning/25 px-4 text-center text-white backdrop-blur-[6px] [text-shadow:0_1px_6px_rgb(0_0_0/0.45)]">
+            <span className="grid size-11 place-items-center rounded-full bg-warning text-black shadow-lg [text-shadow:none]">
               <Clock className="size-5" />
             </span>
             <span className="text-sm font-semibold">{t('home.awaitingTitle')}</span>
-            <span className="text-[11px] leading-snug text-white/75">{t('home.awaitingText')}</span>
+            <span className="text-[11px] leading-snug text-white/90">{t('home.awaitingText')}</span>
           </div>
         ) : (
           <>

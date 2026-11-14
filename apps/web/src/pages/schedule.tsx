@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import type { ScheduleItem } from '@yoru/shared'
-import { Button, EmptyState, Image, Segmented, cn } from '@yoru/ui'
+import { Button, EmptyState, Image, Popover, PopoverContent, PopoverTrigger, Segmented, cn } from '@yoru/ui'
 import { Check, ChevronLeft, ChevronRight, Clock } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -30,6 +30,26 @@ function monthGrid(month: Date) {
   return { start, end: new Date(end.getTime() + DAY - 1), days }
 }
 
+const CELL_LIMIT = 3
+
+function StatusMark({ item }: { item: ScheduleItem }) {
+  if (item.available) {
+    return (
+      <span className="grid size-4 shrink-0 place-items-center rounded-full bg-success text-white">
+        <Check className="size-2.5" strokeWidth={3.5} />
+      </span>
+    )
+  }
+  if (item.aired) {
+    return (
+      <span className="grid size-4 shrink-0 place-items-center rounded-full bg-warning text-black">
+        <Clock className="size-2.5" strokeWidth={3} />
+      </span>
+    )
+  }
+  return null
+}
+
 function EntryRow({ item }: { item: ScheduleItem }) {
   const { t } = useTranslation()
   const time = new Date(item.airingAt).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })
@@ -38,16 +58,19 @@ function EntryRow({ item }: { item: ScheduleItem }) {
     <Link
       to={`/anime/${item.anime.malId}${item.available ? `?episode=${item.episode}` : ''}`}
       title={[item.anime.title, state, item.estimated ? t('schedule.estimatedHint') : null].filter(Boolean).join(' · ')}
-      className={cn('group flex items-center gap-2 rounded-lg p-1 transition-colors hover:bg-field', item.aired && !item.available && 'opacity-70')}
+      className={cn(
+        'group flex items-center gap-2 rounded-lg p-1 transition-colors',
+        item.available ? 'bg-success-soft hover:bg-success/25' : item.aired ? 'bg-warning-soft hover:bg-warning/25' : 'hover:bg-field',
+      )}
     >
-      <div className="relative aspect-[2/3] w-7 shrink-0 overflow-hidden rounded-md bg-muted">
-        {item.anime.imageUrl ? <Image src={item.anime.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" /> : null}
+      <div className="relative shrink-0">
+        <div className="aspect-[2/3] w-7 overflow-hidden rounded-md bg-muted">
+          {item.anime.imageUrl ? <Image src={item.anime.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" /> : null}
+        </div>
+        {item.listStatus ? <span className="absolute -left-1 -top-1 size-2.5 rounded-full bg-accent shadow-[0_0_0_2px_var(--surface)]" /> : null}
       </div>
       <div className="min-w-0 flex-1 leading-tight">
-        <div className="flex items-center gap-1">
-          {item.listStatus ? <span className="size-1.5 shrink-0 rounded-full bg-accent" /> : null}
-          <span className="truncate text-xs font-medium group-hover:text-accent">{item.anime.title}</span>
-        </div>
+        <div className="truncate text-xs font-medium group-hover:text-accent">{item.anime.title}</div>
         <div className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
           <span className="font-mono">
             {item.estimated ? '~' : ''}
@@ -55,10 +78,42 @@ function EntryRow({ item }: { item: ScheduleItem }) {
           </span>
           <span>·</span>
           <span className="truncate">{t('schedule.episodeShort', { episode: item.episode })}</span>
-          {item.available ? <Check className="size-3 shrink-0 text-success" /> : item.aired ? <Clock className="size-3 shrink-0 text-warning" /> : null}
         </div>
       </div>
+      <StatusMark item={item} />
     </Link>
+  )
+}
+
+function DayEntries({ day, items }: { day: Date; items: ScheduleItem[] }) {
+  const { t } = useTranslation()
+  const visible = items.slice(0, CELL_LIMIT)
+  const rest = items.length - visible.length
+  return (
+    <div className="flex flex-col gap-0.5">
+      {visible.map((item) => (
+        <EntryRow key={`${item.anime.malId}-${item.episode}`} item={item} />
+      ))}
+      {rest > 0 ? (
+        <Popover>
+          <PopoverTrigger asChild>
+            <button type="button" className="cursor-pointer rounded-lg px-2 py-1 text-left text-[11px] font-medium text-muted-foreground hover:bg-field hover:text-foreground">
+              {t('schedule.more', { count: rest })}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-80 p-2">
+            <div className="px-1.5 pb-1.5 pt-1 text-xs font-semibold first-letter:uppercase">
+              {day.toLocaleDateString(i18n.language, { weekday: 'long', day: 'numeric', month: 'long' })}
+            </div>
+            <div className="flex max-h-[60vh] flex-col gap-0.5 overflow-y-auto">
+              {items.map((item) => (
+                <EntryRow key={`${item.anime.malId}-${item.episode}`} item={item} />
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      ) : null}
+    </div>
   )
 }
 
@@ -161,10 +216,8 @@ export function SchedulePage() {
                       </span>
                       {items.length ? <span className="text-[11px] text-subtle-foreground">{items.length}</span> : null}
                     </div>
-                    <div className={cn('flex flex-col gap-0.5', !inMonth && 'opacity-60')}>
-                      {items.map((item) => (
-                        <EntryRow key={`${item.anime.malId}-${item.episode}`} item={item} />
-                      ))}
+                    <div className={cn(!inMonth && 'opacity-60')}>
+                      <DayEntries day={day} items={items} />
                     </div>
                   </div>
                 )
@@ -194,21 +247,25 @@ export function SchedulePage() {
             )}
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <span className="size-1.5 rounded-full bg-accent" />
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-medium">
+            <span className="inline-flex h-7 items-center gap-2 rounded-full bg-accent-soft px-3 text-accent">
+              <span className="size-2.5 rounded-full bg-accent" />
               {t('schedule.inListHint')}
             </span>
-            <span className="flex items-center gap-1.5">
-              <Check className="size-3 text-success" />
+            <span className="inline-flex h-7 items-center gap-2 rounded-full bg-success-soft px-3 text-success">
+              <span className="grid size-4 place-items-center rounded-full bg-success text-white">
+                <Check className="size-2.5" strokeWidth={3.5} />
+              </span>
               {t('schedule.availableHint')}
             </span>
-            <span className="flex items-center gap-1.5">
-              <Clock className="size-3 text-warning" />
+            <span className="inline-flex h-7 items-center gap-2 rounded-full bg-warning-soft px-3 text-warning">
+              <span className="grid size-4 place-items-center rounded-full bg-warning text-black">
+                <Clock className="size-2.5" strokeWidth={3} />
+              </span>
               {t('schedule.awaitingHint')}
             </span>
-            <span className="flex items-center gap-1.5">
-              <span className="font-mono">~</span>
+            <span className="inline-flex h-7 items-center gap-2 rounded-full bg-field px-3 text-muted-foreground">
+              <span className="font-mono text-foreground">~</span>
               {t('schedule.estimatedHint')}
             </span>
           </div>
