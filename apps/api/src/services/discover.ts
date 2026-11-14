@@ -123,13 +123,33 @@ export function isCollection(value: string): value is Collection {
   return value in COLLECTIONS
 }
 
-export async function collection(name: Collection): Promise<AnimeSummary[]> {
-  const { season, ...params } = { season: undefined, ...COLLECTIONS[name] }
-  const rows = await shikimori.animes({ ...params, ...(season ? { season: currentSeason() } : {}) })
-  return fillMissing(shikiSummaries(rows))
+const RESPONSE_TTL = 10 * 60_000
+const responses = new Map<string, { at: number; value: Promise<unknown> }>()
+
+export function memoized<T>(key: string, load: () => Promise<T>): Promise<T> {
+  const hit = responses.get(key)
+  if (hit && Date.now() - hit.at < RESPONSE_TTL) return hit.value as Promise<T>
+  const value = load()
+  responses.set(key, { at: Date.now(), value })
+  value.catch(() => responses.delete(key))
+  return value
 }
 
-export async function trending(genre: number | null) {
-  const rows = await shikimori.animes({ season: currentSeason(), order: 'popularity', ...(genre ? { genre } : {}) })
-  return fillMissing(shikiSummaries(rows))
+export function clearDiscoverCache() {
+  responses.clear()
+}
+
+export function collection(name: Collection): Promise<AnimeSummary[]> {
+  return memoized(`collection:${name}`, async () => {
+    const { season, ...params } = { season: undefined, ...COLLECTIONS[name] }
+    const rows = await shikimori.animes({ ...params, ...(season ? { season: currentSeason() } : {}) })
+    return fillMissing(shikiSummaries(rows))
+  })
+}
+
+export function trending(genre: number | null): Promise<AnimeSummary[]> {
+  return memoized(`trending:${genre ?? 'all'}`, async () => {
+    const rows = await shikimori.animes({ season: currentSeason(), order: 'popularity', ...(genre ? { genre } : {}) })
+    return fillMissing(shikiSummaries(rows))
+  })
 }

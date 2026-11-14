@@ -20,6 +20,7 @@ import { randomToken } from '../lib/crypto'
 import { getSetting, metadataSource, setSetting } from '../lib/settings'
 import { githubConfig, oauthConfig, setSourceEnabled, setSourceUrl } from '../lib/sources'
 import { intParam, parseBody } from '../lib/validate'
+import { clearDiscoverCache } from '../services/discover'
 import { providerEnabled, redirectUri } from '../services/importers'
 import { resetSourceStatus, sourceInfos } from '../services/sources'
 
@@ -127,5 +128,6 @@ export const adminRoutes = new Hono<AppEnv>()
       if (patch.clientId !== undefined) setSetting(`oauth.${provider}.clientId`, patch.clientId || null)
       if (patch.clientSecret !== undefined) setSetting(`oauth.${provider}.clientSecret`, patch.clientSecret || null)
     }
+    clearDiscoverCache()
     return c.json({ ok: true })
   })
