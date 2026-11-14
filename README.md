@@ -8,6 +8,8 @@ A self-hosted anime tracker and player built around [Anime365](https://smotret-a
 
 </div>
 
+![yoru home page](docs/screenshot.jpg)
+
 ## Features
 
 - **Player** with Anime365 translations: pick subtitles or voice-over, choose the author, resume where you stopped.

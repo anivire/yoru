@@ -9,7 +9,7 @@ import { useUser } from '../lib/queries'
 import { TLink } from './transition-link'
 
 const SOURCES = [
-  { name: 'Anime365', url: 'https://anime365.ru' },
+  { name: 'Anime365', url: 'https://smotret-anime.app' },
   { name: 'Shikimori', url: 'https://shikimori.one' },
   { name: 'MyAnimeList', url: 'https://myanimelist.net' },
   { name: 'Jikan', url: 'https://jikan.moe' },
