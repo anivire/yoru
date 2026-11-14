@@ -5,6 +5,7 @@ import { Toaster } from '@yoru/ui'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router/dom'
+import { UpdateWatcher } from './components/update-watcher'
 import { AppearanceProvider } from './lib/appearance'
 import { queryClient } from './lib/queries'
 import { router } from './router'
@@ -15,6 +16,7 @@ createRoot(document.getElementById('root')!).render(
       <AppearanceProvider>
         <RouterProvider router={router} />
         <Toaster />
+        <UpdateWatcher />
       </AppearanceProvider>
     </QueryClientProvider>
   </StrictMode>,

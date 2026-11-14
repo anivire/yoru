@@ -84,6 +84,10 @@ async function latestInfo(commit: string | null) {
   })
 }
 
+export function buildInfo() {
+  return { version: current.version, commit: current.commit }
+}
+
 export async function versionInfo(withUpdates: boolean): Promise<VersionInfo> {
   const repoUrl = `https://github.com/${githubConfig().repo}`
   const info = withUpdates ? await latestInfo(current.commit).catch(() => null) : null

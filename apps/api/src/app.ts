@@ -19,7 +19,7 @@ import { homeRoutes, listRoutes, progressRoutes } from './routes/list'
 import { meRoutes } from './routes/me'
 import { notificationRoutes } from './routes/notifications'
 import { streamRoutes } from './routes/stream'
-import { versionInfo } from './services/version'
+import { buildInfo, versionInfo } from './services/version'
 
 export const app = new Hono<AppEnv>()
 
@@ -27,6 +27,10 @@ app.use(logger((line) => (line.includes('/api/progress') ? undefined : console.l
 app.use(secureHeaders({ crossOriginEmbedderPolicy: false, crossOriginResourcePolicy: false, contentSecurityPolicy: undefined }))
 
 app.get('/api/health', (c) => c.json({ ok: true }))
+app.get('/api/build', (c) => {
+  c.header('Cache-Control', 'no-store')
+  return c.json(buildInfo())
+})
 app.get('/api/version', async (c) => c.json(await versionInfo(Boolean(sessionUser(c)))))
 app.route('/api/auth', authRoutes)
 app.route('/api/me', meRoutes)

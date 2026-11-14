@@ -58,6 +58,7 @@ export function Toaster() {
         classNames: {
           toast: '!rounded-xl !border-0 !bg-raised !text-foreground !shadow-2xl !font-sans',
           description: '!text-muted-foreground',
+          actionButton: '!h-7 !rounded-lg !bg-accent !px-3 !text-xs !font-medium !text-accent-foreground',
         },
       }}
     />

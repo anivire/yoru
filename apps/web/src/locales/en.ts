@@ -27,6 +27,9 @@ export const en: Messages = {
     selfHost: 'Self-hosting guide',
   },
   version: {
+    deployed: 'A new version of yoru is out',
+    deployedText: 'Reload the page to get the changes',
+    reload: 'Reload',
     update: 'Update available',
     updateCount: 'Update available: {{count}} new commits',
   },
