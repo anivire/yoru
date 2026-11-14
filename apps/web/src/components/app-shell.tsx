@@ -65,7 +65,7 @@ function MobileMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" size="icon" aria-label={t('nav.menu')} className="rounded-full">
+        <Button variant="secondary" size="icon" aria-label={t('nav.menu')}>
           <RiMenuFill />
         </Button>
       </DropdownMenuTrigger>
@@ -162,7 +162,7 @@ function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" size="icon" aria-label={t('nav.account')} className="rounded-full">
+        <Button variant="secondary" size="icon" aria-label={t('nav.account')}>
           <span className="text-[13px] font-semibold uppercase">{user.username.slice(0, 1)}</span>
         </Button>
       </DropdownMenuTrigger>

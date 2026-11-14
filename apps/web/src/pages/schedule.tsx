@@ -75,17 +75,21 @@ function EntryRow({ item }: { item: ScheduleItem }) {
   const footer = (
     <div
       className={cn(
-        'flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs',
+        'flex items-stretch gap-2.5 rounded-lg p-2.5 text-xs',
         item.available ? 'bg-success-soft text-success' : item.aired ? 'bg-warning-soft text-warning' : 'bg-field text-muted-foreground',
       )}
     >
-      <span className={cn('h-4 w-1 shrink-0 rounded-full', item.available ? 'bg-success' : item.aired ? 'bg-warning' : 'bg-subtle-foreground')} />
-      <span className="font-semibold">{t('schedule.episodeShort', { episode: item.episode })}</span>
-      <span className="opacity-80">
-        {day}, {item.estimated ? '~' : ''}
-        {time}
-      </span>
-      {state ? <span className="ml-auto text-right font-medium">{state}</span> : null}
+      <span className={cn('w-1 shrink-0 rounded-full', item.available ? 'bg-success' : item.aired ? 'bg-warning' : 'bg-subtle-foreground')} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="whitespace-nowrap font-semibold">{t('schedule.episodeShort', { episode: item.episode })}</span>
+          {state ? <span className="truncate font-medium">{state}</span> : null}
+        </div>
+        <div className="mt-0.5 whitespace-nowrap opacity-80">
+          {day}, {item.estimated ? '~' : ''}
+          {time}
+        </div>
+      </div>
     </div>
   )
   return (

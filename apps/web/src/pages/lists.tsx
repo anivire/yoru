@@ -1,8 +1,8 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
 import { EXPORT_FORMATS, LIST_STATUSES, type ListEntryWithAnime, type ListStatus } from '@yoru/shared'
 import { Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, EmptyState, Image, Input, Segmented, Select, cn } from '@yoru/ui'
 import { RiDownload2Fill, RiFileDownloadFill, RiLayoutGridFill, RiLayoutRowFill, RiRepeatFill, RiSearchFill, RiStarFill } from '@remixicon/react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router'
 import { AnimeCard, PosterGrid } from '../components/anime-cards'
@@ -84,6 +84,8 @@ function ListTable({ items }: { items: ListEntryWithAnime[] }) {
   )
 }
 
+const PAGE_SIZE = 48
+
 export function ListsPage() {
   const { t } = useTranslation()
   const [params, setParams] = useSearchParams()
@@ -102,13 +104,31 @@ export function ListsPage() {
     else next.set(key, value)
     setParams(next, { replace: true })
   }
-  const { data, isPending } = useQuery({ queryKey: keys.list(filters), queryFn: () => api.list(filters), placeholderData: keepPreviousData })
-  const all = useQuery({ queryKey: keys.list({}), queryFn: () => api.list({}) })
-  const years = useMemo(
-    () => [...new Set((all.data?.items ?? []).map((e) => e.anime.year).filter((y): y is number => Boolean(y)))].sort((a, b) => b - a),
-    [all.data],
-  )
-  const types = useMemo(() => [...new Set((all.data?.items ?? []).map((e) => e.anime.type).filter((v): v is string => Boolean(v)))], [all.data])
+  const query = useInfiniteQuery({
+    queryKey: keys.list(filters),
+    queryFn: ({ pageParam }) => api.list({ ...filters, offset: pageParam, limit: PAGE_SIZE }),
+    initialPageParam: 0,
+    getNextPageParam: (last) => (last.offset + last.items.length < last.total ? last.offset + last.items.length : undefined),
+    placeholderData: keepPreviousData,
+  })
+  const { isPending, hasNextPage, isFetchingNextPage, fetchNextPage } = query
+  const first = query.data?.pages[0]
+  const items = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data])
+  const years = first?.facets.years ?? []
+  const types = first?.facets.types ?? []
+  const sentinel = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = sentinel.current
+    if (!el || !hasNextPage) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting && !isFetchingNextPage) void fetchNextPage()
+      },
+      { rootMargin: '800px 0px' },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, items.length])
 
   const switchView = (v: 'grid' | 'table') => {
     setView(v)
@@ -152,8 +172,8 @@ export function ListsPage() {
         value={status}
         onChange={(v) => set('status', v)}
         options={[
-          { value: 'all', label: t('common.all'), count: data?.counts.all },
-          ...LIST_STATUSES.map((s) => ({ value: s, label: t(`status.${s}`), count: data?.counts.byStatus[s] })),
+          { value: 'all', label: t('common.all'), count: first?.counts.all },
+          ...LIST_STATUSES.map((s) => ({ value: s, label: t(`status.${s}`), count: first?.counts.byStatus[s] })),
         ]}
       />
 
@@ -204,24 +224,30 @@ export function ListsPage() {
         ) : (
           <PosterGridSkeleton />
         )
-      ) : !data?.items.length ? (
+      ) : !items.length ? (
         <EmptyState mood="sleepy" title={t('lists.empty')} />
       ) : view === 'table' ? (
-        <ListTable items={data.items} />
+        <ListTable items={items} />
       ) : (
         <PosterGrid>
-          {data.items.map((e) => (
+          {items.map((e) => (
             <AnimeCard
               key={e.malId}
               anime={e.anime}
               progress={e.progress}
               status={status === 'all' ? e.status : undefined}
               rewatches={e.rewatches}
+              userScore={e.score}
               newEpisodes={(e.status === 'watching' || e.status === 'rewatching') && e.latestEpisode && e.latestEpisode > e.progress ? e.latestEpisode - e.progress : undefined}
             />
           ))}
         </PosterGrid>
       )}
+      {hasNextPage ? (
+        <div ref={sentinel} className="mt-6">
+          {isFetchingNextPage ? view === 'table' ? <ListTableSkeleton rows={4} /> : <PosterGridSkeleton count={6} /> : <div className="h-px" />}
+        </div>
+      ) : null}
     </Page>
   )
 }

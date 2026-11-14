@@ -48,8 +48,17 @@ function Block({ title, description, children }: { title: ReactNode; description
 function AppearanceTab() {
   const { t } = useTranslation()
   const { pageWidth, setPageWidth, expandSynopsis, setExpandSynopsis } = useAppearance()
+  const user = useUser()
+  const changeLanguage = useChangeLanguage()
   return (
     <>
+      <Block title={t('settings.language')}>
+        <Segmented
+          value={user.locale}
+          onChange={changeLanguage}
+          options={LANGUAGES.map((l) => ({ ...l, icon: <Flag locale={l.value} /> }))}
+        />
+      </Block>
       <Block title={t('settings.layout')}>
         <Card className="py-1">
           <div className="flex flex-col gap-3 px-5 py-4">
@@ -93,7 +102,6 @@ function AccountTab() {
   const { t } = useTranslation()
   const user = useUser()
   const update = useUpdateUser()
-  const changeLanguage = useChangeLanguage()
   const [token, setToken] = useState('')
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
@@ -108,13 +116,6 @@ function AccountTab() {
 
   return (
     <>
-      <Block title={t('settings.language')}>
-        <Segmented
-          value={user.locale}
-          onChange={changeLanguage}
-          options={LANGUAGES.map((l) => ({ ...l, icon: <Flag locale={l.value} /> }))}
-        />
-      </Block>
       <Block title={t('settings.token')} description={<Trans i18nKey="settings.tokenHint" components={{ code: <Code /> }} />}>
         <div className="grid gap-3 sm:grid-cols-2">
           <Card className="flex flex-col gap-4 p-4">

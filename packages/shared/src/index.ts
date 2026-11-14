@@ -316,6 +316,9 @@ export interface ListCounts {
 export interface ListResponse {
   items: ListEntryWithAnime[]
   counts: ListCounts
+  total: number
+  offset: number
+  facets: { years: number[]; types: string[] }
 }
 
 export const loginSchema = z.object({

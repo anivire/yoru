@@ -192,6 +192,7 @@ export const en: Messages = {
     updated: 'Updated',
   },
   anime: {
+    yourScore: 'Your score',
     rewatchedTimes_one: 'Rewatched {{count}} time',
     rewatchedTimes_few: 'Rewatched {{count}} times',
     rewatchedTimes_many: 'Rewatched {{count}} times',
@@ -263,14 +264,13 @@ export const en: Messages = {
     voice: 'voice-over',
   },
   settings: {
+    dragToReorder: 'Drag to reorder',
     homeLayout: 'Home page',
     homeLayoutHint: 'Section order and which ones to show',
     heroBanner: 'Top banner',
     heroBannerHint: 'Large card with the anime you are watching',
     navigation: 'Navigation',
     navigationHint: 'Which tabs to show in the header and menu',
-    moveUp: 'Move up',
-    moveDown: 'Move down',
     title: 'Settings',
     appearance: 'Appearance',
     account: 'Account',

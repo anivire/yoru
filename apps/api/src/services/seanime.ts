@@ -91,7 +91,7 @@ function toItem(e: SeanimeEntry): ImportItem {
     rewatches: e.repeat ?? 0,
     notes: e.notes || null,
     startedAt: isoDate(e.startedAt) ?? stamp(e.createdAt),
-    completedAt: isoDate(e.completedAt) ?? (e.status === 'COMPLETED' ? stamp(e.updatedAt) : null),
+    completedAt: isoDate(e.completedAt) ?? (e.status === 'COMPLETED' ? stamp(e.createdAt) : null),
   }
 }
 

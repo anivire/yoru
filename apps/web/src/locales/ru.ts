@@ -190,6 +190,7 @@ export const ru = {
     updated: 'Изменено',
   },
   anime: {
+    yourScore: 'Ваша оценка',
     rewatchedTimes_one: 'Пересмотрено {{count}} раз',
     rewatchedTimes_few: 'Пересмотрено {{count}} раза',
     rewatchedTimes_many: 'Пересмотрено {{count}} раз',
@@ -261,14 +262,13 @@ export const ru = {
     voice: 'озвучка',
   },
   settings: {
+    dragToReorder: 'Перетащите, чтобы изменить порядок',
     homeLayout: 'Главная страница',
     homeLayoutHint: 'Порядок разделов и какие из них показывать',
     heroBanner: 'Баннер наверху',
     heroBannerHint: 'Крупная карточка с аниме, которое вы смотрите',
     navigation: 'Навигация',
     navigationHint: 'Какие вкладки показывать в шапке и в меню',
-    moveUp: 'Выше',
-    moveDown: 'Ниже',
     title: 'Настройки',
     appearance: 'Внешний вид',
     account: 'Аккаунт',

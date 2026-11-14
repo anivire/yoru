@@ -32,6 +32,7 @@ export function AnimeCard({
   badge,
   subtitle,
   rewatches,
+  userScore,
 }: {
   anime: AnimeSummary
   progress?: number
@@ -40,6 +41,7 @@ export function AnimeCard({
   badge?: ReactNode
   subtitle?: ReactNode
   rewatches?: number
+  userScore?: number | null
 }) {
   const { t } = useTranslation()
   const total = anime.episodes
@@ -93,7 +95,15 @@ export function AnimeCard({
               </Badge>
             ) : null}
           </div>
-          {badge ?? (anime.score ? <Score value={anime.score} className="shrink-0" /> : null)}
+          {badge ??
+            (userScore ? (
+              <span title={t('anime.yourScore')} className="inline-flex h-6 shrink-0 items-center gap-1 rounded-full bg-accent px-2 text-xs font-semibold tabular-nums text-accent-foreground">
+                <RiStarFill className="size-3" />
+                {Number.isInteger(userScore) ? userScore : userScore.toFixed(1)}
+              </span>
+            ) : anime.score ? (
+              <Score value={anime.score} className="shrink-0" />
+            ) : null)}
         </div>
       </div>
       <div className="min-w-0 px-0.5">
@@ -144,11 +154,12 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
             className={cn(
               'absolute inset-0 h-full w-full zoom-layer object-cover transition-transform duration-300 ease-out group-hover:[--zoom:1.04]',
               !item.episodeImageUrl && 'object-[50%_25%]',
+              item.pending && 'blur-md [--zoom:1.2] group-hover:[--zoom:1.2]',
             )}
           />
         ) : null}
         {item.pending ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/80 bg-[linear-gradient(to_bottom,color-mix(in_oklab,var(--warning)_18%,transparent),transparent_60%)] px-4 text-center text-white backdrop-blur-[6px]">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/80 bg-[linear-gradient(to_bottom,color-mix(in_oklab,var(--warning)_18%,transparent),transparent_60%)] px-4 text-center text-white">
             <span className="grid size-11 place-items-center rounded-full bg-warning text-black shadow-lg [text-shadow:none]">
               <RiTimeFill className="size-5" />
             </span>

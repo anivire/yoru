@@ -21,6 +21,8 @@ import { homeData } from '../services/home'
 import { type ListFilters, allEntries, deleteEntry, filterEntries, listCounts, markWatched, saveEntry } from '../services/lists'
 
 const SORTS = ['updated', 'title', 'score', 'progress', 'year', 'added'] as const
+const DEFAULT_PAGE = 48
+const MAX_PAGE = 200
 
 export const listRoutes = new Hono<AppEnv>()
   .use(requireAuth)
@@ -36,7 +38,20 @@ export const listRoutes = new Hono<AppEnv>()
       year: Number(c.req.query('year')) || undefined,
       sort: sort && SORTS.includes(sort) ? sort : 'score',
     }
-    const body: ListResponse = { items: filterEntries(allEntries(userId), filters), counts: listCounts(userId) }
+    const all = allEntries(userId)
+    const filtered = filterEntries(all, filters)
+    const offset = Math.max(0, Number(c.req.query('offset')) || 0)
+    const limit = Math.min(MAX_PAGE, Math.max(1, Number(c.req.query('limit')) || DEFAULT_PAGE))
+    const body: ListResponse = {
+      items: filtered.slice(offset, offset + limit),
+      counts: listCounts(userId),
+      total: filtered.length,
+      offset,
+      facets: {
+        years: [...new Set(all.map((e) => e.anime.year).filter((y): y is number => Boolean(y)))].sort((a, b) => b - a),
+        types: [...new Set(all.map((e) => e.anime.type).filter((v): v is string => Boolean(v)))],
+      },
+    }
     return c.json(body)
   })
   .get('/export', (c) => {
