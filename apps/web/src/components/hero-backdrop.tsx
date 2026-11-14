@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 
 const FADE_MS = 700
 
+let lastShown: string | null = null
+
 interface Layer {
   src: string
   shown: boolean
@@ -19,7 +21,7 @@ function preload(src: string): Promise<void> {
 }
 
 export function HeroBackdrop({ src }: { src: string | null }) {
-  const [layers, setLayers] = useState<Layer[]>([])
+  const [layers, setLayers] = useState<Layer[]>(() => (lastShown ? [{ src: lastShown, shown: true }] : []))
 
   useEffect(() => {
     if (!src) return
@@ -30,6 +32,7 @@ export function HeroBackdrop({ src }: { src: string | null }) {
       setLayers((prev) => (prev.at(-1)?.src === src ? prev : [...prev.filter((l) => l.shown && l.src !== src), { src, shown: false }]))
       requestAnimationFrame(() => requestAnimationFrame(() => {
         if (cancelled) return
+        lastShown = src
         setLayers((prev) => prev.map((l) => (l.src === src ? { ...l, shown: true } : l)))
         timer = window.setTimeout(() => setLayers((prev) => (prev.at(-1)?.src === src ? prev.slice(-1) : prev)), FADE_MS)
       }))
