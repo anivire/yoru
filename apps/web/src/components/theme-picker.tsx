@@ -83,7 +83,7 @@ export function SchemePicker({ compact }: { compact?: boolean }) {
 function Orb({ colors, active, mode }: { colors: readonly [string, string]; active: boolean; mode: 'light' | 'dark' }) {
   return (
     <span
-      className={cn('relative inline-block rounded-full shadow-md zoom-layer transition-transform duration-200 ease-out', active && '[--zoom:1.1]')}
+      className={cn('relative inline-block rounded-full shadow-md transition-[scale] duration-200 ease-out', active && 'scale-110')}
       style={{
         width: 'var(--orb)',
         height: 'var(--orb)',

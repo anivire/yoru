@@ -95,8 +95,6 @@ function Extras({ mood, animated }: { mood: MascotMood; animated: boolean }) {
           <circle cx={59.2} cy={5.8} r={3.1} style={twinkle(animated, 0.6)} />
         </g>
       )
-    case 'error':
-      return <path d="M61.5 25C63.5 27.8 64.7 29.6 64.7 31.1A3.2 3.2 0 0 1 58.3 31.1C58.3 29.6 59.5 27.8 61.5 25Z" fill={BODY_FILL} />
     default:
       return null
   }

@@ -159,7 +159,7 @@ export function HomePage() {
             title={t('home.emptyTitle')}
             description={t('home.emptyText')}
             action={
-              <div className="flex gap-2">
+              <div className="flex w-full max-w-xs flex-col gap-2 sm:w-auto sm:max-w-none sm:flex-row">
                 <Button asChild variant="primary">
                   <TLink to="/search">
                     <RiSearchFill />
