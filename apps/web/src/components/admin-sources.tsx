@@ -80,7 +80,7 @@ function UrlField({ info }: { info: DataSourceInfo }) {
   }
   return (
     <form onSubmit={submit}>
-      <Field label={t('admin.sources.url')} hint={t('admin.sources.urlDefault', { url: info.defaultUrl })}>
+      <Field label={t('admin.sources.url')}>
         <div className="flex gap-2">
           <Input value={value} onChange={(e) => setValue(e.target.value)} placeholder={info.defaultUrl} className="h-8 font-mono text-[0.8125rem]" inputMode="url" />
           {changed ? (

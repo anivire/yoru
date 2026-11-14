@@ -431,7 +431,6 @@ export const en: Messages = {
       off: 'Disabled',
       usedFor: 'Used for',
       url: 'API URL',
-      urlDefault: 'Default: {{url}}',
       reset: 'Reset',
       anime365: ['Video, dubs and subtitles', 'Released episodes and new episode notifications', 'Aired recently on Discover', 'Anime metadata when Jikan is off', 'Links to AniList, AniDB, Kinopoisk and Crunchyroll'],
       jikan: ['Synopses, posters, studios, trailers and rating', 'Weekly airing times', 'Episode titles and thumbnails', 'Search with genre filters and sorting'],
