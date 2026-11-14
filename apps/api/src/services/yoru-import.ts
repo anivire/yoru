@@ -6,6 +6,7 @@ interface YoruEntry {
   malId?: unknown
   title?: unknown
   titleEnglish?: unknown
+  imageUrl?: unknown
   type?: unknown
   episodes?: unknown
   status?: unknown
@@ -48,6 +49,7 @@ export function parseYoruExport(buffer: Buffer): { items: ImportItem[]; progress
         malId,
         title: str(e.title) ?? `#${malId}`,
         titleEnglish: str(e.titleEnglish),
+        imageUrl: str(e.imageUrl)?.startsWith('http') ? str(e.imageUrl) : null,
         type: str(e.type),
         episodes: num(e.episodes),
         status,

@@ -46,6 +46,7 @@ function entryJson(e: ListEntryWithAnime) {
     malId: e.malId,
     title: e.anime.title,
     titleEnglish: e.anime.titleEnglish,
+    imageUrl: e.anime.imageUrl,
     type: e.anime.type,
     episodes: e.anime.episodes,
     status: e.status,

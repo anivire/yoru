@@ -162,9 +162,12 @@ export async function ensureAnime(malId: number, opts: { force?: boolean } = {})
     upsertAnime(fromJikan(data), { details: true })
   } catch (error) {
     if (error instanceof UpstreamError && error.status === 404 && !row) throw error
-    if (row) return row
+    if (row?.imageUrl) return row
     const data = await fetchFromA365(malId).catch(() => null)
-    if (!data) throw error
+    if (!data) {
+      if (row) return row
+      throw error
+    }
     upsertAnime(data)
   }
   return getAnimeRow(malId)!

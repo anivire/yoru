@@ -5,6 +5,7 @@ import { app } from './app'
 import { db, now, runMigrations } from './db/client'
 import { invites, users } from './db/schema'
 import { env } from './env'
+import { startAnimeBackfill } from './jobs/anime-backfill'
 import { startReleaseWatcher } from './jobs/release-watcher'
 import { hashPassword, randomToken } from './lib/crypto'
 
@@ -32,6 +33,7 @@ async function bootstrapAdmin() {
 runMigrations()
 await bootstrapAdmin()
 startReleaseWatcher()
+startAnimeBackfill()
 
 serve({ fetch: app.fetch, port: env.port, hostname: env.host }, (info) => {
   console.log(`[yoru] api listening on http://${info.address}:${info.port}`)
