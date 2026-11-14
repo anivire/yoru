@@ -71,8 +71,8 @@ export function Lightbox({ src, title, closeLabel, children }: { src: string; ti
         <D.Overlay className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm animate-fade" />
         <D.Content aria-describedby={undefined} className="fixed inset-0 z-50 outline-none">
           <D.Title className="sr-only">{title}</D.Title>
-          <D.Close aria-label={closeLabel} className="grid size-full cursor-zoom-out place-items-center p-4 sm:p-8">
-            <img src={src} alt={title} className="max-h-full max-w-full animate-zoom rounded-xl object-contain shadow-2xl" />
+          <D.Close aria-label={closeLabel} className="flex size-full cursor-zoom-out items-center justify-center p-4 sm:p-8">
+            <img src={src} alt={title} className="max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] animate-zoom rounded-xl object-contain shadow-2xl sm:max-h-[calc(100dvh-4rem)] sm:max-w-[calc(100vw-4rem)]" />
           </D.Close>
           <D.Close aria-label={closeLabel} className="absolute right-4 top-4 grid size-9 cursor-pointer place-items-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70">
             <RiCloseFill className="size-5" />
