@@ -5,6 +5,7 @@ import { Download, Play, Search } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { AnimeCard, ContinueCard, PosterGrid, Rail, UpcomingCard, UpcomingGrid } from '../components/anime-cards'
+import { ActivityHeatmap } from '../components/activity'
 import { HomeSkeleton } from '../components/skeletons'
 import { Page, Section } from '../components/app-shell'
 import { api } from '../lib/api'
@@ -114,6 +115,8 @@ export function HomePage() {
             </UpcomingGrid>
           </Section>
         ) : null}
+
+        {!empty ? <ActivityHeatmap /> : null}
 
         {data?.watching.length ? (
           <Section

@@ -1,5 +1,6 @@
 import type {
   AnimeLink,
+  ActivityData,
   AdminSettings,
   AdminSettingsInput,
   AdminUser,
@@ -75,6 +76,7 @@ export const api = {
     request<User>('PATCH', '/me/settings', patch),
 
   home: () => get<HomeData>('/home'),
+  activity: (tz: string) => get<ActivityData>(`/home/activity${qs({ tz })}`),
   version: () => get<VersionInfo>('/version'),
   discoverCollection: (name: 'hero' | 'top' | 'anons') => get<AnimeSummary[]>(`/discover/${name}`),
   discoverRecent: () => get<RecentItem[]>('/discover/recent'),

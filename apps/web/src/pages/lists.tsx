@@ -178,10 +178,10 @@ export function ListsPage() {
         />
         <Select
           size="sm"
-          className="w-52"
+          className="w-64"
           value={filters.sort}
           onValueChange={(v) => set('sort', v === 'score' ? undefined : v)}
-          options={SORTS.map((s) => ({ value: s, label: t(`order.${s}`) }))}
+          options={SORTS.map((s) => ({ value: s, label: `${t('lists.sortBy')}: ${t(`order.${s}`).toLowerCase()}` }))}
         />
         <div className="flex rounded-lg bg-inset p-0.5">
           {(['grid', 'table'] as const).map((v) => (

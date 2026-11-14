@@ -96,6 +96,14 @@ export const watchProgress = sqliteTable('watch_progress', {
   index('watch_progress_user_updated_idx').on(t.userId, t.updatedAt),
 ])
 
+export const activity = sqliteTable('activity', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  malId: integer('mal_id').notNull(),
+  episode: integer('episode').notNull(),
+  createdAt: text('created_at').notNull(),
+}, (t) => [index('activity_user_created_idx').on(t.userId, t.createdAt)])
+
 export const providerMappings = sqliteTable('provider_mappings', {
   provider: text('provider').notNull(),
   malId: integer('mal_id').notNull(),

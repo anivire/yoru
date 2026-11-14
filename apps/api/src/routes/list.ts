@@ -16,6 +16,7 @@ import { badRequest } from '../lib/http'
 import { intParam, parseBody } from '../lib/validate'
 import { airedEpisodes, ensureAnime, getAnimeRow } from '../services/anime'
 import { exportList } from '../services/export'
+import { activityData, logEpisodes } from '../services/activity'
 import { homeData } from '../services/home'
 import { type ListFilters, allEntries, deleteEntry, filterEntries, listCounts, markWatched, saveEntry } from '../services/lists'
 
@@ -72,7 +73,10 @@ export const progressRoutes = new Hono<AppEnv>()
       .onConflictDoUpdate({ target: [watchProgress.userId, watchProgress.malId, watchProgress.episode], set: values })
       .run()
     const row = getAnimeRow(malId) ?? (await ensureAnime(malId))
-    if (duration > 0 && position / duration >= 0.85) markWatched(userId, malId, episode, row.episodes)
+    if (duration > 0 && position / duration >= 0.85) {
+      logEpisodes(userId, malId, [episode])
+      markWatched(userId, malId, episode, row.episodes)
+    }
     return c.json({ ok: true })
   })
   .delete('/:malId/:episode', (c) => {
@@ -88,4 +92,7 @@ export const progressRoutes = new Hono<AppEnv>()
     return c.json({ ok: true })
   })
 
-export const homeRoutes = new Hono<AppEnv>().use(requireAuth).get('/', async (c) => c.json(await homeData(c.get('user').id)))
+export const homeRoutes = new Hono<AppEnv>()
+  .use(requireAuth)
+  .get('/', async (c) => c.json(await homeData(c.get('user').id)))
+  .get('/activity', (c) => c.json(activityData(c.get('user').id, c.req.query('tz'))))

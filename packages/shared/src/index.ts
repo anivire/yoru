@@ -205,6 +205,14 @@ export interface RecentItem {
   kind: StreamKind
 }
 
+export interface ActivityData {
+  days: { date: string; count: number }[]
+  total: number
+  currentStreak: number
+  longestStreak: number
+  today: string
+}
+
 export interface HomeData {
   continueWatching: ContinueItem[]
   upcoming: UpcomingItem[]

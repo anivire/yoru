@@ -81,6 +81,11 @@ export function AnimeCard({
                 {t('home.newEpisodes', { count: newEpisodes })}
               </Badge>
             ) : null}
+            {rewatches ? (
+              <Badge size="sm" variant="solid" className="bg-info text-white" title={t('anime.rewatchedTimes', { count: rewatches })}>
+                <Repeat className="size-3" />×{rewatches}
+              </Badge>
+            ) : null}
             {anime.airing ? (
               <Badge size="sm" variant="solid" className="bg-black/55 text-white backdrop-blur-md">
                 <span className="size-1.5 rounded-full bg-success" />
@@ -104,12 +109,6 @@ export function AnimeCard({
             <span className="truncate">{[typeLabel(anime.type), seasonLabel(anime)].filter(Boolean).join(' · ')}</span>
           )}
           {status ? <span className="truncate">· {t(`status.${status}`)}</span> : null}
-          {rewatches ? (
-            <span className="inline-flex shrink-0 items-center gap-0.5" title={t('anime.rewatches')}>
-              · <Repeat className="size-3" />
-              {rewatches}
-            </span>
-          ) : null}
         </div>
       </div>
     </Link>

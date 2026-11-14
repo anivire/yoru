@@ -10,6 +10,7 @@ import {
 import { db, now } from '../db/client'
 import { anime, listEntries } from '../db/schema'
 import { toSummary } from './anime'
+import { logEpisodes } from './activity'
 
 type EntryRow = typeof listEntries.$inferSelect
 
@@ -85,6 +86,10 @@ export function saveEntry(userId: number, malId: number, input: ListEntryInput, 
         : existing?.completedAt ?? null
   const rewatches =
     input.rewatches ?? (existing && existing.status === 'rewatching' && status === 'completed' ? existing.rewatches + 1 : existing?.rewatches ?? 0)
+  if (input.progress !== undefined && progress > (existing?.progress ?? 0)) {
+    const from = (existing?.progress ?? 0) + 1
+    logEpisodes(userId, malId, Array.from({ length: progress - from + 1 }, (_, i) => from + i))
+  }
   const values = {
     userId,
     malId,

@@ -49,21 +49,23 @@ export async function homeData(userId: number): Promise<HomeData> {
     const entry = byMal.get(p.malId)
     if (!entry || !ACTIVE.has(entry.status)) continue
     const finished = p.duration > 0 && p.position / p.duration > 0.9
-    let episode = p.episode
-    let position = p.position
-    if (finished) {
-      episode = p.episode + 1
+    let episode = finished ? p.episode + 1 : p.episode
+    let position = finished ? 0 : p.position
+    let duration = finished ? 0 : p.duration
+    if (entry.progress + 1 > episode) {
+      episode = entry.progress + 1
       position = 0
-      const limit = a.episodes ?? a.latestEpisode
-      if (limit && episode > limit) continue
+      duration = 0
     }
+    const limit = a.status === 'finished' ? a.episodes : (a.latestEpisode ?? a.episodes)
+    if (limit && episode > limit) continue
     continueWatching.push({
       anime: toSummary(a),
       episode,
       episodeTitle: null,
       episodeImageUrl: cachedEpisodeImage(a.malId, episode),
       position,
-      duration: finished ? 0 : p.duration,
+      duration,
       updatedAt: p.updatedAt,
     })
     if (continueWatching.length >= 8) break
