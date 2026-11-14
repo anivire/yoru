@@ -182,6 +182,7 @@ export interface ContinueItem {
   position: number
   duration: number
   updatedAt: string
+  fresh: boolean
 }
 
 export interface UpcomingItem {

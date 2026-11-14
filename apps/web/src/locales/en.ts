@@ -64,6 +64,7 @@ export const en: Messages = {
     usernameTaken: 'Username is taken',
   },
   home: {
+    newEpisode: 'New episode',
     activity: 'Activity',
     activityHint_one: '{{count}} episode in the last year',
     activityHint_few: '{{count}} episodes in the last year',

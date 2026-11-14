@@ -150,6 +150,11 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
             <Play className="ml-0.5 size-5 fill-current" />
           </span>
         </div>
+        {item.fresh ? (
+          <Badge size="sm" variant="solid" className="absolute left-2 top-2.5 bg-accent text-accent-foreground">
+            {t('home.newEpisode')}
+          </Badge>
+        ) : null}
         {item.duration ? (
           <div className="absolute inset-x-3 bottom-3 flex items-center gap-2">
             <Progress value={item.position / item.duration} className="h-1 bg-white/25" />

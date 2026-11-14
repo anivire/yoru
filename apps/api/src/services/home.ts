@@ -1,7 +1,7 @@
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, inArray } from 'drizzle-orm'
 import type { ContinueItem, HomeData, UpcomingItem } from '@yoru/shared'
 import { db } from '../db/client'
-import { anime, listEntries, watchProgress } from '../db/schema'
+import { anime, listEntries, providerReleases, watchProgress } from '../db/schema'
 import { cacheGet } from '../lib/http'
 import { ensureAnime, nextAiringAt, toSummary } from './anime'
 import type { JikanEpisodeVideo, JikanList } from './jikan'
@@ -67,9 +67,49 @@ export async function homeData(userId: number): Promise<HomeData> {
       position,
       duration,
       updatedAt: p.updatedAt,
+      fresh: false,
     })
-    if (continueWatching.length >= 8) break
   }
+
+  for (const e of entries) {
+    if (seen.has(e.malId) || (e.status !== 'watching' && e.status !== 'rewatching')) continue
+    if (!e.latestEpisode || e.latestEpisode <= e.progress) continue
+    seen.add(e.malId)
+    const episode = e.progress + 1
+    continueWatching.push({
+      anime: e.anime,
+      episode,
+      episodeTitle: null,
+      episodeImageUrl: cachedEpisodeImage(e.malId, episode),
+      position: 0,
+      duration: 0,
+      updatedAt: e.updatedAt,
+      fresh: false,
+    })
+  }
+
+  const released = new Map<string, string>()
+  if (continueWatching.length) {
+    const rows = db
+      .select({ malId: providerReleases.malId, episode: providerReleases.episode, releasedAt: providerReleases.releasedAt })
+      .from(providerReleases)
+      .where(inArray(providerReleases.malId, continueWatching.map((c) => c.anime.malId)))
+      .all()
+    for (const r of rows) {
+      const key = `${r.malId}:${r.episode}`
+      const prev = released.get(key)
+      if (!prev || r.releasedAt < prev) released.set(key, r.releasedAt)
+    }
+  }
+  for (const item of continueWatching) {
+    const at = released.get(`${item.anime.malId}:${item.episode}`)
+    if (at && at > item.updatedAt && item.position === 0) {
+      item.fresh = true
+      item.updatedAt = at
+    }
+  }
+  continueWatching.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+  continueWatching.splice(12)
 
   const upcoming: UpcomingItem[] = []
   const rows = db
