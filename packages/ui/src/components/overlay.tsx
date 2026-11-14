@@ -153,7 +153,7 @@ export function Select({
           <S.Value placeholder={placeholder} />
         </span>
         <S.Icon>
-          <RiArrowDownSFill className="text-muted-foreground" />
+          <RiArrowDownSFill className="-mr-1 size-5! text-muted-foreground" />
         </S.Icon>
       </S.Trigger>
       <S.Portal>

@@ -171,7 +171,7 @@ export function ListEditor({
         <Button variant="accent" size="sm" className="w-full">
           {entry ? <RiBookmark3Fill /> : <RiAddFill />}
           <span className="flex-1 truncate text-left">{entry ? t(`status.${entry.status}`) : t('anime.add')}</span>
-          <RiArrowDownSFill className="opacity-70" />
+          <RiArrowDownSFill className="-mr-1 size-5! opacity-70" />
         </Button>
         )}
       </PopoverTrigger>
