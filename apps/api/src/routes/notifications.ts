@@ -32,6 +32,7 @@ export const notificationRoutes = new Hono<AppEnv>()
         id: n.id,
         malId: n.malId,
         episode: n.episode,
+        type: n.type,
         kind: n.kind,
         author: n.author,
         animeTitle: title ?? `#${n.malId}`,

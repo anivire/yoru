@@ -226,9 +226,12 @@ function NotificationsTab() {
   return (
     <Block title={t('settings.notifications')} description={t('settings.notifyHint')}>
       <Card className="py-1">
-        {(['notifySub', 'notifyVoice'] as const).map((key) => (
+        {(['notifySub', 'notifyVoice', 'notifyPremieres'] as const).map((key) => (
           <label key={key} className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4">
-            <span className="text-sm">{t(`settings.${key}`)}</span>
+            <span>
+              <span className="block text-sm">{t(`settings.${key}`)}</span>
+              {key === 'notifyPremieres' ? <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.notifyPremieresHint')}</span> : null}
+            </span>
             <Switch checked={user[key]} onCheckedChange={(v) => update.mutate({ [key]: v })} />
           </label>
         ))}

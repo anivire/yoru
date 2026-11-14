@@ -33,6 +33,7 @@ export interface User {
   locale: Locale
   notifySub: boolean
   notifyVoice: boolean
+  notifyPremieres: boolean
   hasOwnAnime365Token: boolean
   createdAt: string
 }
@@ -241,6 +242,7 @@ export interface HomeData {
 
 export interface Notification {
   id: number
+  type: 'episode' | 'premiere'
   malId: number
   episode: number
   kind: StreamKind
@@ -382,6 +384,7 @@ export const userSettingsSchema = z.object({
   locale: z.enum(LOCALES).optional(),
   notifySub: z.boolean().optional(),
   notifyVoice: z.boolean().optional(),
+  notifyPremieres: z.boolean().optional(),
   anime365Token: z.string().trim().max(512).nullable().optional(),
 })
 

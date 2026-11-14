@@ -62,8 +62,13 @@ export function NotificationsPopover() {
                     {!n.readAt ? <StatusDot tone="accent" /> : null}
                     <span className="truncate text-sm font-medium">{n.animeTitle}</span>
                   </div>
-                  <div className="mt-0.5 text-[0.8125rem] text-muted-foreground">{t('notifications.released', { episode: n.episode })}</div>
+                  <div className="mt-0.5 text-[0.8125rem] text-muted-foreground">{n.type === 'premiere' ? t('notifications.premiere') : t('notifications.released', { episode: n.episode })}</div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                    {n.type === 'premiere' ? (
+                      <Badge size="sm" variant="accent">
+                        {t('notifications.premiereBadge')}
+                      </Badge>
+                    ) : null}
                     <Badge size="sm" variant={n.kind === 'sub' ? 'info' : 'warning'}>
                       {t(`notifications.${n.kind}`)}
                     </Badge>

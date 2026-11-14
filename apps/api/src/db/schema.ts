@@ -8,6 +8,7 @@ export const users = sqliteTable('users', {
   locale: text('locale', { enum: ['ru', 'en'] }).notNull().default('ru'),
   notifySub: integer('notify_sub', { mode: 'boolean' }).notNull().default(true),
   notifyVoice: integer('notify_voice', { mode: 'boolean' }).notNull().default(true),
+  notifyPremieres: integer('notify_premieres', { mode: 'boolean' }).notNull().default(true),
   anime365Token: text('anime365_token'),
   createdAt: text('created_at').notNull(),
 }, (t) => [uniqueIndex('users_username_idx').on(t.username)])
@@ -136,6 +137,7 @@ export const notifications = sqliteTable('notifications', {
   malId: integer('mal_id').notNull(),
   episode: integer('episode').notNull(),
   kind: text('kind', { enum: ['sub', 'voice'] }).notNull(),
+  type: text('type', { enum: ['episode', 'premiere'] }).notNull().default('episode'),
   author: text('author'),
   createdAt: text('created_at').notNull(),
   readAt: text('read_at'),

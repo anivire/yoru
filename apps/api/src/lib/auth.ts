@@ -27,6 +27,7 @@ export function toUser(row: UserRow): User {
     locale: row.locale,
     notifySub: row.notifySub,
     notifyVoice: row.notifyVoice,
+    notifyPremieres: row.notifyPremieres,
     hasOwnAnime365Token: Boolean(row.anime365Token),
     createdAt: row.createdAt,
   }

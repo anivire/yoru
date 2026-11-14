@@ -1,11 +1,11 @@
-import { and, eq, inArray, lt } from 'drizzle-orm'
+import { and, eq, inArray, lt, notInArray, sql } from 'drizzle-orm'
 import { db, now } from '../db/client'
 import { listEntries, notifications, providerMappings, providerReleases, users } from '../db/schema'
 import { env } from '../env'
 import { cachePurgeExpired } from '../lib/http'
 import { purgeExpiredSessions } from '../lib/auth'
 import { getSetting, setSetting } from '../lib/settings'
-import { getAnimeRow, setLatestEpisode } from '../services/anime'
+import { getAnimeRow, setLatestEpisode, upsertA365Summaries } from '../services/anime'
 import { type A365Translation, RELEASE_TYPES, anime365, seriesTitle } from '../services/anime365'
 import { PROVIDER } from '../services/provider'
 
@@ -58,6 +58,42 @@ function notifyUsers(malId: number, episode: number, kind: 'sub' | 'voice', auth
   return targets.length
 }
 
+function a365Time(value: string | undefined): number {
+  return Date.parse((value ?? '').replace(' ', 'T') + '+03:00')
+}
+
+function isPremiere(t: A365Translation, malId: number): boolean {
+  const ep = t.episode
+  if (!ep || Number(ep.episodeInt) !== 1 || !t.series || t.series.isHentai) return false
+  const recentTitle = t.series.isAiring === 1 || (t.series.year ?? 0) >= new Date().getFullYear() - 1
+  if (!recentTitle) return false
+  const firstUpload = a365Time(ep.firstUploadedDateTime)
+  if (!Number.isFinite(firstUpload) || Date.now() - firstUpload > RECENT_MS) return false
+  const releases = db
+    .select({ n: sql<number>`count(*)` })
+    .from(providerReleases)
+    .where(and(eq(providerReleases.malId, malId), eq(providerReleases.provider, PROVIDER)))
+    .get()
+  return (releases?.n ?? 0) === 1
+}
+
+function notifyPremiere(t: A365Translation, malId: number, kind: 'sub' | 'voice', author: string | null) {
+  if (t.series) upsertA365Summaries([t.series])
+  const inList = db.select({ userId: listEntries.userId }).from(listEntries).where(eq(listEntries.malId, malId))
+  const targets = db
+    .select({ id: users.id })
+    .from(users)
+    .where(and(eq(users.notifyPremieres, true), notInArray(users.id, inList)))
+    .all()
+  for (const { id } of targets) {
+    db.insert(notifications)
+      .values({ userId: id, malId, episode: 1, kind, type: 'premiere', author, createdAt: now() })
+      .onConflictDoNothing()
+      .run()
+  }
+  return targets.length
+}
+
 function rememberMapping(t: A365Translation, malId: number) {
   if (!t.series) return
   db.insert(providerMappings)
@@ -85,9 +121,10 @@ export async function checkReleases() {
         .onConflictDoNothing()
         .run()
       if (!inserted.changes) continue
-      const activeAt = Date.parse((t.activeDateTime ?? '').replace(' ', 'T') + '+03:00')
+      const activeAt = a365Time(t.activeDateTime)
       if (Number.isFinite(activeAt) && Date.now() - activeAt > RECENT_MS) continue
       created += notifyUsers(malId, episode, kind, author)
+      if (isPremiere(t, malId)) created += notifyPremiere(t, malId, kind, author)
     }
   }
   return created

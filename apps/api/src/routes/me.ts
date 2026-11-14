@@ -66,6 +66,7 @@ export const meRoutes = new Hono<AppEnv>()
   if (input.locale) patch.locale = input.locale
   if (input.notifySub !== undefined) patch.notifySub = input.notifySub
   if (input.notifyVoice !== undefined) patch.notifyVoice = input.notifyVoice
+  if (input.notifyPremieres !== undefined) patch.notifyPremieres = input.notifyPremieres
   if (input.anime365Token !== undefined) patch.anime365Token = input.anime365Token || null
   if (Object.keys(patch).length) db.update(users).set(patch).where(eq(users.id, user.id)).run()
   return c.json(toUser(db.select().from(users).where(eq(users.id, user.id)).get()!))
