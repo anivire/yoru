@@ -67,7 +67,7 @@ function Synopsis({ text, open, onToggle }: { text: string; open: boolean; onTog
   )
 }
 
-function Header({ anime, addButton, editor }: { anime: AnimeDetails; addButton: React.ReactNode; editor: React.ReactNode }) {
+function Header({ anime, listButton }: { anime: AnimeDetails; listButton: React.ReactNode }) {
   const { t } = useTranslation()
   const { expandSynopsis } = useAppearance()
   const [open, setOpen] = useState(expandSynopsis)
@@ -89,7 +89,7 @@ function Header({ anime, addButton, editor }: { anime: AnimeDetails; addButton: 
             <div className="aspect-[2/3] w-full overflow-hidden rounded-xl bg-muted shadow-2xl">
               {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" /> : null}
             </div>
-            {addButton}
+            {listButton}
             <div className="mt-1 grid grid-cols-2 gap-1.5 sm:grid-cols-1">
               <ServiceLinks malId={anime.malId} />
               {anime.trailerUrl ? (
@@ -138,18 +138,13 @@ function Header({ anime, addButton, editor }: { anime: AnimeDetails; addButton: 
             {anime.synopsis ? <Synopsis text={anime.synopsis} open={open} onToggle={() => setOpen(!open)} /> : null}
           </div>
         </div>
-        {editor || facts.length ? (
-          <div className="mt-6 flex flex-wrap items-center gap-2">
-            {editor}
-            {facts.length ? (
-              <div className="flex flex-wrap gap-x-6 gap-y-1 text-[13px] text-muted-foreground sm:ml-auto">
-                {facts.map((f) => (
-                  <span key={f.label}>
-                    {f.label}: <span className="text-foreground">{f.value}</span>
-                  </span>
-                ))}
-              </div>
-            ) : null}
+        {facts.length ? (
+          <div className="mt-6 flex flex-wrap justify-end gap-x-6 gap-y-1 text-[13px] text-muted-foreground">
+            {facts.map((f) => (
+              <span key={f.label}>
+                {f.label}: <span className="text-foreground">{f.value}</span>
+              </span>
+            ))}
           </div>
         ) : null}
       </div>
@@ -175,16 +170,13 @@ export function AnimePage() {
     <>
       <Header
         anime={data.anime}
-        addButton={data.entry ? null : <ListEditor malId={malId} entry={null} total={data.anime.episodes} aired={null} />}
-        editor={
-          data.entry ? (
-            <ListEditor
-              malId={malId}
-              entry={data.entry}
-              total={data.anime.episodes}
-              aired={data.anime.status === 'finished' ? data.anime.episodes : data.anime.status === 'upcoming' ? 0 : data.anime.latestEpisode}
-            />
-          ) : null
+        listButton={
+          <ListEditor
+            malId={malId}
+            entry={data.entry}
+            total={data.anime.episodes}
+            aired={data.anime.status === 'finished' ? data.anime.episodes : data.anime.status === 'upcoming' ? 0 : data.anime.latestEpisode}
+          />
         }
       />
       <Page>

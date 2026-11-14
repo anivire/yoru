@@ -1,42 +1,13 @@
 import { LIST_STATUSES, type ListEntry, type ListStatus } from '@yoru/shared'
 import { Button, Popover, PopoverClose, PopoverContent, PopoverTrigger, Select, Tooltip } from '@yoru/ui'
-import { ChevronDown, Minus, Plus, Repeat, Star, Trash2 } from 'lucide-react'
+import { BookmarkCheck, ChevronDown, Minus, Plus, Repeat, Star, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useDeleteEntry, useSaveEntry } from '../lib/queries'
 
-export function ListEditor({ malId, entry, total, aired }: { malId: number; entry: ListEntry | null; total: number | null; aired: number | null }) {
+function EntryControls({ malId, entry, total, aired }: { malId: number; entry: ListEntry; total: number | null; aired: number | null }) {
   const { t } = useTranslation()
   const save = useSaveEntry(malId)
   const remove = useDeleteEntry(malId)
-
-  if (!entry) {
-    return (
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="accent" size="sm" className="w-full" loading={save.isPending}>
-            <Plus />
-            <span className="flex-1 truncate text-left">{t('anime.add')}</span>
-            <ChevronDown className="opacity-70" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] min-w-56 p-1.5">
-          <div className="px-3 pb-1 pt-2 text-xs font-medium text-subtle-foreground">{t('anime.chooseStatus')}</div>
-          {LIST_STATUSES.map((status) => (
-            <PopoverClose key={status} asChild>
-              <button
-                type="button"
-                onClick={() => save.mutate({ status })}
-                className="flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
-              >
-                {t(`status.${status}`)}
-              </button>
-            </PopoverClose>
-          ))}
-        </PopoverContent>
-      </Popover>
-    )
-  }
-
   const limit = aired ?? total
   const setProgress = (value: number) => {
     const progress = Math.max(0, limit !== null ? Math.min(limit, value) : value)
@@ -47,7 +18,7 @@ export function ListEditor({ malId, entry, total, aired }: { malId: number; entr
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Select
-        className="w-44"
+        className="w-full"
         value={entry.status}
         onValueChange={(v) => save.mutate({ status: v as ListStatus })}
         options={LIST_STATUSES.map((s) => ({ value: s, label: t(`status.${s}`) }))}
@@ -107,7 +78,7 @@ export function ListEditor({ malId, entry, total, aired }: { malId: number; entr
             <Trash2 />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-64 p-3" align="start">
+        <PopoverContent className="w-64 p-3" align="end">
           <p className="text-sm">{t('anime.removeConfirm')}</p>
           <div className="mt-3 flex justify-end gap-2">
             <PopoverClose asChild>
@@ -122,5 +93,41 @@ export function ListEditor({ malId, entry, total, aired }: { malId: number; entr
         </PopoverContent>
       </Popover>
     </div>
+  )
+}
+
+export function ListEditor({ malId, entry, total, aired }: { malId: number; entry: ListEntry | null; total: number | null; aired: number | null }) {
+  const { t } = useTranslation()
+  const save = useSaveEntry(malId)
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="accent" size="sm" className="w-full" loading={save.isPending}>
+          {entry ? <BookmarkCheck /> : <Plus />}
+          <span className="flex-1 truncate text-left">{entry ? t(`status.${entry.status}`) : t('anime.add')}</span>
+          <ChevronDown className="opacity-70" />
+        </Button>
+      </PopoverTrigger>
+      {entry ? (
+        <PopoverContent align="start" className="w-[min(28rem,calc(100vw-2rem))] p-3">
+          <EntryControls malId={malId} entry={entry} total={total} aired={aired} />
+        </PopoverContent>
+      ) : (
+        <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] min-w-56 p-1.5">
+          <div className="px-3 pb-1 pt-2 text-xs font-medium text-subtle-foreground">{t('anime.chooseStatus')}</div>
+          {LIST_STATUSES.map((status) => (
+            <button
+              key={status}
+              type="button"
+              onClick={() => save.mutate({ status })}
+              className="flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
+            >
+              {t(`status.${status}`)}
+            </button>
+          ))}
+        </PopoverContent>
+      )}
+    </Popover>
   )
 }
