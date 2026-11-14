@@ -91,7 +91,7 @@ function MobileMenu() {
         <DropdownMenuLabel className="mt-1">{t('settings.language')}</DropdownMenuLabel>
         {LANGUAGES.map((l) => (
           <DropdownMenuItem key={l.value} onSelect={() => change(l.value)}>
-            <Flag locale={l.value} />
+            <Flag locale={l.value} className="h-3 w-4 rounded-[2px]" />
             <span className="flex-1">{l.label}</span>
             {l.value === user.locale ? <Check className="text-accent!" /> : null}
           </DropdownMenuItem>
@@ -228,7 +228,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 export function Page({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn('mx-auto w-full max-w-7xl wide:max-w-none px-4 py-8 sm:px-6', className)}>{children}</div>
+  return <div className={cn('mx-auto w-full max-w-7xl wide:max-w-none px-4 pb-8 pt-4 sm:px-6 sm:pt-8', className)}>{children}</div>
 }
 
 export function PageHeader({ title, description, actions }: { title: ReactNode; description?: ReactNode; actions?: ReactNode }) {

@@ -83,7 +83,7 @@ function Header({ anime, addButton, editor }: { anime: AnimeDetails; addButton: 
         {anime.imageUrl ? <img src={anime.imageUrl} alt="" className="h-full w-full scale-110 object-cover object-[50%_25%] opacity-50 blur-xl" /> : null}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/20" />
       </div>
-      <div className="mx-auto max-w-7xl px-4 py-10 wide:max-w-none sm:px-6">
+      <div className="mx-auto max-w-7xl px-4 pb-10 pt-4 wide:max-w-none sm:px-6 sm:pt-10">
         <div className="flex flex-col gap-6 sm:flex-row">
           <div className="flex w-full shrink-0 flex-col gap-2 self-start sm:w-48">
             <div className="aspect-[2/3] w-full overflow-hidden rounded-xl bg-muted shadow-2xl">

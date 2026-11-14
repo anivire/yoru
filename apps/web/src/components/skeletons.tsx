@@ -89,7 +89,7 @@ export function HomeSkeleton() {
           <Skeleton className="mt-5 h-11 w-36 rounded-full" />
         </div>
       </div>
-      <div className="mx-auto w-full max-w-7xl px-4 py-8 wide:max-w-none sm:px-6">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-4 wide:max-w-none sm:px-6 sm:pt-8">
         <section>
           <SectionTitleSkeleton />
           <Rail>
@@ -118,7 +118,7 @@ export function HomeSkeleton() {
 export function AnimePageSkeleton() {
   return (
     <>
-      <div className="mx-auto max-w-7xl px-4 py-10 wide:max-w-none sm:px-6">
+      <div className="mx-auto max-w-7xl px-4 pb-10 pt-4 wide:max-w-none sm:px-6 sm:pt-10">
         <div className="flex flex-col gap-6 sm:flex-row">
           <div className="flex w-full shrink-0 flex-col gap-2 self-start sm:w-48">
             <Skeleton className="aspect-[2/3] w-full rounded-xl" />
@@ -154,7 +154,7 @@ export function AnimePageSkeleton() {
           </div>
         </div>
       </div>
-      <div className="mx-auto w-full max-w-7xl px-4 py-8 wide:max-w-none sm:px-6">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-4 wide:max-w-none sm:px-6 sm:pt-8">
         <TextLine className="mb-4 text-xl font-semibold" bar="w-40" />
         <div className="mb-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
           <Skeleton className="h-8 w-full rounded-md sm:w-36" />
