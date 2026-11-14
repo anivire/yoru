@@ -345,7 +345,6 @@
 @keyframes yoru-page-in {
   from {
     opacity: 0;
-    transform: translateY(0.375rem);
   }
 }
 
@@ -356,11 +355,11 @@
 }
 
 ::view-transition-old(root) {
-  animation: yoru-page-out 140ms ease-in both;
+  animation: yoru-page-out 200ms ease-out both;
 }
 
 ::view-transition-new(root) {
-  animation: yoru-page-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: yoru-page-in 200ms ease-out both;
 }
 
 ::view-transition-group(site-header),
