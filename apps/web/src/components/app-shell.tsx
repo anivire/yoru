@@ -127,7 +127,7 @@ function ProfileLabel() {
   )
 }
 
-function AccountItems() {
+function AccountItems({ settings = true }: { settings?: boolean }) {
   const go = useTransitionNavigate()
   const { t } = useTranslation()
   const user = useUser()
@@ -141,10 +141,12 @@ function AccountItems() {
   }
   return (
     <>
-      <DropdownMenuItem onSelect={() => go('/settings')}>
-        <RiSettings3Fill />
-        {t('nav.settings')}
-      </DropdownMenuItem>
+      {settings ? (
+        <DropdownMenuItem onSelect={() => go('/settings')}>
+          <RiSettings3Fill />
+          {t('nav.settings')}
+        </DropdownMenuItem>
+      ) : null}
       {user.role === 'admin' ? (
         <DropdownMenuItem onSelect={() => go('/admin')}>
           <RiShieldFill />
@@ -162,24 +164,56 @@ function AccountItems() {
 function UserMenu({ side = 'bottom', rail = false }: { side?: 'bottom' | 'left' | 'right'; rail?: boolean }) {
   const { t } = useTranslation()
   const user = useUser()
+  const trigger = (
+    <DropdownMenuTrigger asChild>
+      {rail ? (
+        <button type="button" aria-label={t('nav.account')} className={RAIL_BUTTON}>
+          <RiUser3Fill />
+        </button>
+      ) : (
+        <Button variant="secondary" size="icon" aria-label={t('nav.account')} className="rounded-full">
+          <span className="text-[0.8125rem] font-semibold uppercase">{user.username.slice(0, 1)}</span>
+        </Button>
+      )}
+    </DropdownMenuTrigger>
+  )
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        {rail ? (
-          <button type="button" aria-label={t('nav.account')} className={RAIL_BUTTON}>
-            <RiUser3Fill />
-          </button>
-        ) : (
-          <Button variant="secondary" size="icon" aria-label={t('nav.account')} className="rounded-full">
-            <span className="text-[0.8125rem] font-semibold uppercase">{user.username.slice(0, 1)}</span>
-          </Button>
-        )}
-      </DropdownMenuTrigger>
+      {rail && side !== 'bottom' ? (
+        <Tooltip content={t('nav.account')} side={side}>
+          {trigger}
+        </Tooltip>
+      ) : (
+        trigger
+      )}
       <DropdownMenuContent side={side} className="w-60">
         <ProfileLabel />
-        <AccountItems />
+        <AccountItems settings={false} />
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+function SettingsButton({ rail = false, side = 'bottom' }: { rail?: boolean; side?: 'bottom' | 'left' | 'right' }) {
+  const { t } = useTranslation()
+  const active = Boolean(matchPath({ path: '/settings', end: false }, useLocation().pathname))
+  if (!rail) {
+    return (
+      <Tooltip content={t('nav.settings')} side={side}>
+        <Button asChild variant="secondary" size="icon" className={cn('rounded-full', active && 'text-accent')}>
+          <TLink to="/settings" aria-label={t('nav.settings')}>
+            <RiSettings3Fill />
+          </TLink>
+        </Button>
+      </Tooltip>
+    )
+  }
+  return (
+    <Tooltip content={t('nav.settings')} side={side}>
+      <TLink to="/settings" aria-label={t('nav.settings')} className={cn(RAIL_BUTTON, active && 'bg-muted text-foreground [&_svg]:text-accent')}>
+        <RiSettings3Fill />
+      </TLink>
+    </Tooltip>
   )
 }
 
@@ -223,6 +257,7 @@ function SideRail({ position }: { position: Exclude<NavPosition, 'top'> }) {
         })}
       </nav>
       <div className="mt-auto flex flex-col items-center gap-2">
+        <SettingsButton side={side} rail />
         <NotificationsPopover side={side} rail />
         <UserMenu side={side} rail />
       </div>
@@ -276,6 +311,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <RiSearchFill />
                 </TLink>
               </Button>
+              <div className="hidden md:block">
+                <SettingsButton />
+              </div>
               <NotificationsPopover />
               <div className="hidden md:block">
                 <UserMenu />

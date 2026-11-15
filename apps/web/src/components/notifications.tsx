@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Badge, Button, Image, Mascot, Popover, PopoverContent, PopoverTrigger, StatusDot, cn } from '@yoru/ui'
+import { Badge, Button, Image, Mascot, Popover, PopoverContent, PopoverTrigger, StatusDot, Tooltip, cn } from '@yoru/ui'
 import { RiCheckDoubleFill, RiDeleteBin6Fill, RiNotification3Fill } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
@@ -21,9 +21,8 @@ export function NotificationsPopover({ side = 'bottom', rail = false }: { side?:
   const readOne = useMutation({ mutationFn: (id: number) => api.readNotifications([id]), onSuccess: refresh })
   const unread = data?.unread ?? 0
 
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
+  const trigger = (
+    <PopoverTrigger asChild>
         <Button
           variant="secondary"
           size="icon"
@@ -38,6 +37,17 @@ export function NotificationsPopover({ side = 'bottom', rail = false }: { side?:
           ) : null}
         </Button>
       </PopoverTrigger>
+  )
+
+  return (
+    <Popover>
+      {rail && side !== 'bottom' ? (
+        <Tooltip content={t('notifications.title')} side={side}>
+          {trigger}
+        </Tooltip>
+      ) : (
+        trigger
+      )}
       <PopoverContent className="w-[min(24rem,calc(100vw-1.5rem))] p-0" side={side} align="end" collisionPadding={12}>
         <div className="flex items-center justify-between px-3 pb-1 pt-2.5">
           <span className="px-1 text-sm font-medium">{t('notifications.title')}</span>
