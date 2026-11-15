@@ -210,6 +210,11 @@
     font-feature-settings: 'cv11', 'ss01';
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scrollbar-gutter: stable;
+  }
+
+  html body[data-scroll-locked] {
+    margin-right: 0 !important;
   }
 
   @media (min-width: 40rem) {

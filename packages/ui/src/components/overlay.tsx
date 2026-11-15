@@ -14,7 +14,6 @@ export const PopoverClose = P.Close
 export function PopoverContent({ className, align = 'end', sideOffset = 8, ...props }: ComponentProps<typeof P.Content>) {
   return (
     <P.Portal>
-      <P.Content align={align} sideOffset={sideOffset} className={cn(panel, 'w-80 overflow-hidden', className)} {...props} />
       <P.Content data-foley-enter="hover" align={align} sideOffset={sideOffset} className={cn(panel, 'w-80 overflow-hidden', className)} {...props} />
     </P.Portal>
   )
@@ -85,13 +84,14 @@ export function Lightbox({ src, title, closeLabel, children }: { src: string; ti
   )
 }
 
-export const DropdownMenu = M.Root
+export function DropdownMenu({ modal = false, ...props }: ComponentProps<typeof M.Root>) {
+  return <M.Root modal={modal} {...props} />
+}
 export const DropdownMenuTrigger = M.Trigger
 
 export function DropdownMenuContent({ className, align = 'end', sideOffset = 6, ...props }: ComponentProps<typeof M.Content>) {
   return (
     <M.Portal>
-      <M.Content align={align} sideOffset={sideOffset} className={cn(panel, 'min-w-44 p-1.5', className)} {...props} />
       <M.Content data-foley-enter="hover" align={align} sideOffset={sideOffset} className={cn(panel, 'min-w-44 p-1.5', className)} {...props} />
     </M.Portal>
   )
@@ -169,7 +169,6 @@ export function Select({
         </S.Icon>
       </S.Trigger>
       <S.Portal>
-        <S.Content position="popper" sideOffset={6} className={cn(panel, 'max-h-80 min-w-[var(--radix-select-trigger-width)] overflow-hidden')}>
         <S.Content data-foley-enter="hover" position="popper" sideOffset={6} className={cn(panel, 'max-h-80 min-w-[var(--radix-select-trigger-width)] overflow-hidden')}>
           <S.Viewport className="p-1.5">
             {options.map((o) => (
