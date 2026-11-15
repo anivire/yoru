@@ -287,19 +287,16 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
           }}
           options={STREAM_KINDS.map((k) => ({ value: k, label: t(`player.${k}`) }))}
         />
-        <div className="flex justify-end sm:order-last sm:ml-auto">
-          {libria ? null : <MatchDialog malId={malId} match={match.data} defaultQuery={anime.title} />}
-        </div>
         {libria ? (
           <Select
-            className="col-span-3 h-10 w-full min-w-0 rounded-xl px-3.5 sm:w-72"
+            className="col-span-3 h-10 w-full min-w-0 rounded-xl px-3.5 max-sm:order-1 sm:w-72"
             disabled
             value="anilibria"
             onValueChange={() => undefined}
             options={[{ value: 'anilibria', label: 'AniLibria', hint: libriaRelease.data?.title ?? undefined }]}
           />
         ) : (
-        <div className="col-span-3 flex min-w-0 gap-2">
+        <div className="col-span-3 flex min-w-0 gap-2 max-sm:order-1">
           <Select
             className="h-10 w-full min-w-0 flex-1 rounded-xl px-3.5 sm:w-72 sm:flex-none"
             disabled={!translations.data?.length}
@@ -335,6 +332,9 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
           </Tooltip>
         </div>
         )}
+        <div className="flex justify-end sm:ml-auto">
+          {libria ? null : <MatchDialog malId={malId} match={match.data} defaultQuery={anime.title} />}
+        </div>
       </div>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0">{body}</div>
