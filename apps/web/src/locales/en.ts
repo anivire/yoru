@@ -32,7 +32,7 @@ export const en: Messages = {
     deployedText: 'Reload the page to get the changes',
     reload: 'Reload',
     update: 'Update available',
-    updateCount: 'Update available: {{count}} new commits',
+    updateTo: 'Update available: v{{version}}',
   },
   common: {
     close: 'Close',

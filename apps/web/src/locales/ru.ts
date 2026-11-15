@@ -30,7 +30,7 @@ export const ru = {
     deployedText: 'Обновите страницу, чтобы получить изменения',
     reload: 'Обновить',
     update: 'Доступно обновление',
-    updateCount: 'Доступно обновление: новых коммитов {{count}}',
+    updateTo: 'Доступно обновление до v{{version}}',
   },
   common: {
     close: 'Закрыть',

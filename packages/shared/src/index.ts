@@ -319,7 +319,7 @@ export interface VersionInfo {
   commit: string | null
   commitUrl: string | null
   repoUrl: string
-  latest: { commit: string; message: string; date: string | null; url: string } | null
+  latest: { commit: string; version: string | null; message: string; date: string | null; url: string } | null
   behindBy: number | null
   updateAvailable: boolean
   compareUrl: string | null

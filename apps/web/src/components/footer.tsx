@@ -75,7 +75,7 @@ function VersionBadge({ scope }: { scope: 'app' | 'public' }) {
           className="inline-flex h-6 items-center gap-1.5 rounded-full bg-accent-soft px-2.5 text-xs font-medium text-accent hover:bg-accent hover:text-accent-foreground"
         >
           <RiArrowUpCircleFill className="size-3.5" />
-          {data.behindBy ? t('version.updateCount', { count: data.behindBy }) : t('version.update')}
+          {data.latest?.version && data.latest.version !== data.version ? t('version.updateTo', { version: data.latest.version }) : t('version.update')}
         </a>
       ) : null}
     </span>

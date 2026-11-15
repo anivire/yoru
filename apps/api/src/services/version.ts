@@ -62,6 +62,17 @@ interface GithubCommit {
   commit: { message: string; committer?: { date?: string } }
 }
 
+async function versionAt(sha: string): Promise<string | null> {
+  const file = await github<{ content?: string }>(`/contents/package.json?ref=${sha}`).catch(() => null)
+  if (!file?.content) return null
+  try {
+    const pkg = JSON.parse(Buffer.from(file.content, 'base64').toString('utf8')) as { version?: string }
+    return pkg.version ?? null
+  } catch {
+    return null
+  }
+}
+
 async function latestInfo(commit: string | null) {
   const { repo, branch } = githubConfig()
   if (!sourceEnabled('github')) throw new Error('GitHub is disabled')
@@ -72,9 +83,11 @@ async function latestInfo(commit: string | null) {
       const compare = await github<{ ahead_by: number }>(`/compare/${commit}...${head.sha}`).catch(() => null)
       behindBy = compare ? compare.ahead_by : null
     }
+    const version = commit === head.sha ? current.version : await versionAt(head.sha)
     return {
       latest: {
         commit: head.sha,
+        version,
         message: head.commit.message.split('\n')[0] ?? '',
         date: head.commit.committer?.date ?? null,
         url: head.html_url,
