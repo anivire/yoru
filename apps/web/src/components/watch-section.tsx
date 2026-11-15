@@ -75,7 +75,8 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
   const malId = anime.malId
   const title = useAnimeTitle()
   const [params, setParams] = useSearchParams()
-  const { defaultKind, preferredAuthors, setPreferredAuthors } = useAppearance()
+  const { defaultKind, preferredAuthors, setPreferredAuthors, pageWidth } = useAppearance()
+  const side = pageWidth !== '3xl' && pageWidth !== '4xl'
   const source = parseSource(params.get('source')) ?? parseSource(localStorage.getItem(sourceKey(malId))) ?? 'anime365'
   const libria = source === 'anilibria'
   const kind = libria ? 'voice' : (parseKind(params.get('kind')) ?? parseKind(localStorage.getItem(kindKey(malId))) ?? defaultKind)
@@ -334,10 +335,10 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
           {libria ? null : <MatchDialog malId={malId} match={match.data} defaultQuery={anime.title} />}
         </div>
       </div>
-      <div className="grid gap-5 desk:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className={cn('grid gap-5', side && 'desk:grid-cols-[minmax(0,1fr)_22rem]')}>
         <div className="min-w-0">{body}</div>
-        <div className="desk:relative">
-          <div className="flex max-h-[26rem] flex-col desk:absolute desk:inset-0 desk:max-h-none">
+        <div className={cn(side && 'desk:relative')}>
+          <div className={cn('flex max-h-[26rem] flex-col', side && 'desk:absolute desk:inset-0 desk:max-h-none')}>
             <EpisodeList episodes={list} current={episode ?? 0} loading={episodes.isPending} onSelect={goTo} />
           </div>
         </div>
