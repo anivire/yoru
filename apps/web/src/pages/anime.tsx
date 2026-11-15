@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AnimeDetails, ListEntry } from '@yoru/shared'
-import { Badge, Dialog, DialogContent, DialogTrigger, EmptyState, Image, Lightbox, Tooltip, cn } from '@yoru/ui'
-import { RiCalendarScheduleFill, RiClapperboardFill, RiYoutubeFill } from '@remixicon/react'
+import { Badge, Dialog, DialogContent, DialogTrigger, EmptyState, Image, Lightbox, cn } from '@yoru/ui'
+import { RiCalendarScheduleFill, RiClapperboardFill, RiPlayFill } from '@remixicon/react'
 import { EpisodeCount, Score } from '../components/anime-cards'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -9,7 +9,7 @@ import { useParams } from 'react-router'
 import { Page } from '../components/app-shell'
 import { ListEditor } from '../components/list-editor'
 import { airedLimit } from '../components/quick-edit'
-import { LinkButton, LinkGroup, LinkTile, ServiceLinks } from '../components/service-links'
+import { LinkList, LinkLogo, LinkRow, ServiceLinks } from '../components/service-links'
 import { AnimePageSkeleton } from '../components/skeletons'
 import { WatchSection } from '../components/watch-section'
 import { api } from '../lib/api'
@@ -88,20 +88,30 @@ function TrailerButton({ url }: { url: string }) {
   const id = youtubeId(url)
   if (!id) {
     return (
-      <LinkButton href={url} icon={<RiClapperboardFill />}>
-        {t('anime.trailer')}
-      </LinkButton>
+      <LinkRow
+        href={url}
+        external
+        label={t('anime.trailer')}
+        logo={
+          <LinkLogo color="#ff0033">
+            <RiClapperboardFill />
+          </LinkLogo>
+        }
+      />
     )
   }
   return (
     <Dialog>
-      <Tooltip content={t('anime.trailer')}>
-        <DialogTrigger asChild>
-          <LinkTile label={t('anime.trailer')}>
-            <RiYoutubeFill className="text-[#ff0033]" />
-          </LinkTile>
-        </DialogTrigger>
-      </Tooltip>
+      <DialogTrigger asChild>
+        <LinkRow
+          label={t('anime.trailer')}
+          logo={
+            <LinkLogo color="#ff0033">
+              <RiPlayFill />
+            </LinkLogo>
+          }
+        />
+      </DialogTrigger>
       <DialogContent title={t('anime.trailer')} className="w-[min(94vw,56rem)]">
         <div className="p-4 pt-2">
           <div className="aspect-video overflow-hidden rounded-lg bg-black">
@@ -122,10 +132,10 @@ function TrailerButton({ url }: { url: string }) {
 function Links({ anime, className }: { anime: AnimeDetails; className?: string }) {
   return (
     <div className={className}>
-      <LinkGroup>
+      <LinkList className="max-sm:grid max-sm:grid-cols-2">
         <ServiceLinks malId={anime.malId} />
         {anime.trailerUrl ? <TrailerButton url={anime.trailerUrl} /> : null}
-      </LinkGroup>
+      </LinkList>
     </div>
   )
 }
