@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { type AdminSettings, type AdminSettingsInput, DATA_SOURCES, type DataSourceId, type DataSourceInfo, IMPORT_PROVIDERS, type ImportProvider } from '@yoru/shared'
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Code, Field, Input, Skeleton, Spinner, StatusDot, Switch, toast } from '@yoru/ui'
 import { RiKey2Fill } from '@remixicon/react'
-import { type FormEvent, type ReactNode, useState } from 'react'
+import { type FormEvent, type ReactNode, useId, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { errorMessage } from '../lib/queries'
@@ -19,6 +19,24 @@ function GithubMark() {
   )
 }
 
+function AniSkipMark() {
+  const id = useId()
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="size-[70%]">
+      <defs>
+        <linearGradient id={id} x1="2" y1="4" x2="22" y2="16" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#ab5ac6" />
+          <stop offset="1" stopColor="#1f98d8" />
+        </linearGradient>
+      </defs>
+      <g fill="none" stroke={`url(#${id})`} strokeWidth="2.1" strokeLinejoin="round" strokeLinecap="round">
+        <path d="M2.4 4.7v14.6L14.6 12Z" />
+        <path d="M9.4 4.7 21.6 12 9.4 19.3" />
+      </g>
+    </svg>
+  )
+}
+
 function SourceIcon({ id }: { id: DataSourceId }) {
   if (id === 'anime365') return <Anime365Mark />
   if (id === 'jikan') return <ProviderIcon provider="mal" />
@@ -26,10 +44,8 @@ function SourceIcon({ id }: { id: DataSourceId }) {
   if (id === 'anilist') return <ProviderIcon provider="anilist" />
   if (id === 'aniskip') {
     return (
-      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#d97706] text-white">
-        <svg viewBox="0 0 24 24" aria-hidden className="size-[55%] translate-x-[6%]">
-          <path d="M7 5.5v13L18 12Z" fill="currentColor" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
-        </svg>
+      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white">
+        <AniSkipMark />
       </span>
     )
   }
