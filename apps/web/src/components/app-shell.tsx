@@ -262,6 +262,7 @@ function SideRail({ position }: { position: 'left' | 'right' }) {
   return (
     <RailProvider value={{ labels: navLabels !== 'off', expanded, fill: true }}>
       <aside
+        data-app-chrome
         ref={ref}
         onPointerOver={(e) => {
           if (navLabels === 'hover' && (e.target as Element).closest('a, button')) setHovered(true)
@@ -330,7 +331,7 @@ function BottomDock() {
   const nav = useVisibleNav()
   const indicator = useSlidingIndicator(ref, '[aria-current="page"]', `${pathname}|${hiddenNav.join()}|bottom`)
   return (
-    <aside className="pointer-events-none fixed inset-x-0 bottom-3 z-40 hidden justify-center px-4 [view-transition-name:site-rail] md:flex">
+    <aside data-app-chrome className="pointer-events-none fixed inset-x-0 bottom-3 z-40 hidden justify-center px-4 [view-transition-name:site-rail] md:flex">
       <div className="pointer-events-auto flex h-14 items-center gap-1 rounded-full bg-background/70 px-2 backdrop-blur-2xl backdrop-saturate-150">
         <TLink to="/" aria-label="yoru" className="grid size-11 place-items-center">
           <LogoMark size={26} />
@@ -408,7 +409,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     >
       {rail ? <SideRail position={rail} /> : null}
       {dock ? <BottomDock /> : null}
-      <header ref={header.ref} className={cn('sticky top-0 z-40 pt-2', (rail || dock) && 'md:hidden')}>
+      <header data-app-chrome ref={header.ref} className={cn('sticky top-0 z-40 pt-2', (rail || dock) && 'md:hidden')}>
         <div className="page-frame px-4 sm:px-6">
           <div
             className={cn(

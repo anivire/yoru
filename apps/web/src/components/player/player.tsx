@@ -36,6 +36,10 @@ function pickSource(sources: StreamSource[]): StreamSource {
 
 type Menu = null | 'root' | 'quality' | 'speed' | 'subs'
 
+const SAFE_SIDES = { paddingLeft: 'max(1rem, env(safe-area-inset-left))', paddingRight: 'max(1rem, env(safe-area-inset-right))' }
+const SAFE_TOP = { ...SAFE_SIDES, paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }
+const SAFE_BOTTOM = { ...SAFE_SIDES, paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }
+
 type FullscreenDocument = Document & { webkitFullscreenElement?: Element | null; webkitExitFullscreen?: () => void }
 type FullscreenElement = HTMLElement & { webkitRequestFullscreen?: () => void }
 type IosVideo = HTMLVideoElement & { webkitEnterFullscreen?: () => void }
@@ -259,12 +263,22 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
     const root = document.documentElement
     const previous = root.style.overflow
     root.style.overflow = 'hidden'
+    root.setAttribute('data-player-stretched', '')
+    const viewport = document.querySelector<HTMLMetaElement>('meta[name="viewport"]')
+    const previousViewport = viewport?.content
+    if (viewport && previousViewport && !previousViewport.includes('viewport-fit')) viewport.content = `${previousViewport}, viewport-fit=cover`
+    const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+    const previousThemeColor = themeColor?.content
+    if (themeColor) themeColor.content = '#000000'
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setStretched(false)
     }
     window.addEventListener('keydown', onKey)
     return () => {
       root.style.overflow = previous
+      root.removeAttribute('data-player-stretched')
+      if (viewport && previousViewport) viewport.content = previousViewport
+      if (themeColor && previousThemeColor) themeColor.content = previousThemeColor
       window.removeEventListener('keydown', onKey)
     }
   }, [stretched])
@@ -402,12 +416,12 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         </button>
       ) : null}
 
-      <div className={cn('pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 to-transparent px-3 pb-8 pt-2.5 transition-opacity sm:px-5 sm:pb-10 sm:pt-4', controls ? 'opacity-100' : 'opacity-0')}>
+      <div style={stretched ? SAFE_TOP : undefined} className={cn('pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 to-transparent px-3 pb-8 pt-2.5 transition-opacity sm:px-5 sm:pb-10 sm:pt-4', controls ? 'opacity-100' : 'opacity-0')}>
         <div className="truncate text-xs text-white/70 sm:text-[0.8125rem]">{subtitle}</div>
         <div className="truncate text-sm font-medium sm:text-[0.9375rem]">{title}</div>
       </div>
 
-      <div className={cn('absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-2 pb-1.5 pt-10 transition-opacity sm:px-4 sm:pb-3 sm:pt-14', controls ? 'opacity-100' : 'pointer-events-none opacity-0')}>
+      <div style={stretched ? SAFE_BOTTOM : undefined} className={cn('absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-2 pb-1.5 pt-10 transition-opacity sm:px-4 sm:pb-3 sm:pt-14', controls ? 'opacity-100' : 'pointer-events-none opacity-0')}>
         <div
           className="group/seek relative mb-2 flex h-4 cursor-pointer items-center"
           onMouseMove={(e) => {
