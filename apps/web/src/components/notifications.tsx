@@ -7,7 +7,10 @@ import { relativeTime } from '../lib/format'
 import { keys } from '../lib/queries'
 import { TLink } from './transition-link'
 
-export function NotificationsPopover({ side = 'bottom' }: { side?: 'bottom' | 'left' | 'right' }) {
+export const RAIL_BUTTON =
+  'relative grid size-11 cursor-pointer place-items-center rounded-xl text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent data-[state=open]:bg-muted data-[state=open]:text-foreground [&_svg]:size-5'
+
+export function NotificationsPopover({ side = 'bottom', rail = false }: { side?: 'bottom' | 'left' | 'right'; rail?: boolean }) {
   const { t } = useTranslation()
   const client = useQueryClient()
   const { data } = useQuery({ queryKey: keys.notifications, queryFn: api.notifications, refetchInterval: 60_000, refetchOnWindowFocus: true })
@@ -20,7 +23,12 @@ export function NotificationsPopover({ side = 'bottom' }: { side?: 'bottom' | 'l
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="secondary" size="icon" aria-label={t('notifications.title')} className="relative rounded-full">
+        <Button
+          variant="secondary"
+          size="icon"
+          aria-label={t('notifications.title')}
+          className={rail ? RAIL_BUTTON + ' bg-transparent hover:bg-transparent' : 'relative rounded-full'}
+        >
           <RiNotification3Fill />
           {unread ? (
             <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-accent px-1 font-mono text-[0.625rem] font-semibold leading-4 text-accent-foreground">

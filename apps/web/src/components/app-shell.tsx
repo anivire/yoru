@@ -12,7 +12,7 @@ import {
   cn,
   useSlidingIndicator,
 } from '@yoru/ui'
-import { RiLogoutBoxRFill, RiMenuFill, RiSearchFill, RiSettings3Fill, RiShieldFill } from '@remixicon/react'
+import { RiLogoutBoxRFill, RiMenuFill, RiSearchFill, RiSettings3Fill, RiShieldFill, RiUser3Fill } from '@remixicon/react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { matchPath, useLocation, useNavigate } from 'react-router'
@@ -20,7 +20,7 @@ import { api } from '../lib/api'
 import { type NavPosition, useAppearance } from '../lib/appearance'
 import { NAV } from '../lib/navigation'
 import { keys, useUser } from '../lib/queries'
-import { NotificationsPopover } from './notifications'
+import { NotificationsPopover, RAIL_BUTTON } from './notifications'
 import { Footer } from './footer'
 import { TLink, TNavLink, useTransitionNavigate } from './transition-link'
 
@@ -159,15 +159,21 @@ function AccountItems() {
   )
 }
 
-function UserMenu({ side = 'bottom' }: { side?: 'bottom' | 'left' | 'right' }) {
+function UserMenu({ side = 'bottom', rail = false }: { side?: 'bottom' | 'left' | 'right'; rail?: boolean }) {
   const { t } = useTranslation()
   const user = useUser()
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" size="icon" aria-label={t('nav.account')} className="rounded-full">
-          <span className="text-[0.8125rem] font-semibold uppercase">{user.username.slice(0, 1)}</span>
-        </Button>
+        {rail ? (
+          <button type="button" aria-label={t('nav.account')} className={RAIL_BUTTON}>
+            <RiUser3Fill />
+          </button>
+        ) : (
+          <Button variant="secondary" size="icon" aria-label={t('nav.account')} className="rounded-full">
+            <span className="text-[0.8125rem] font-semibold uppercase">{user.username.slice(0, 1)}</span>
+          </Button>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent side={side} className="w-60">
         <ProfileLabel />
@@ -188,7 +194,7 @@ function SideRail({ position }: { position: Exclude<NavPosition, 'top'> }) {
   return (
     <aside
       className={cn(
-        'fixed inset-y-0 z-40 hidden w-16 flex-col items-center bg-surface py-3 [view-transition-name:site-rail] md:flex',
+        'fixed inset-y-0 z-40 hidden w-16 flex-col items-center py-3 [view-transition-name:site-rail] md:flex',
         position === 'left' ? 'left-0' : 'right-0',
       )}
     >
@@ -217,8 +223,8 @@ function SideRail({ position }: { position: Exclude<NavPosition, 'top'> }) {
         })}
       </nav>
       <div className="mt-auto flex flex-col items-center gap-2">
-        <NotificationsPopover side={side} />
-        <UserMenu side={side} />
+        <NotificationsPopover side={side} rail />
+        <UserMenu side={side} rail />
       </div>
     </aside>
   )
@@ -250,7 +256,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { navPosition } = useAppearance()
   const rail = navPosition === 'top' ? null : navPosition
   return (
-    <div className={cn('flex min-h-dvh flex-col', rail === 'left' && 'md:pl-16', rail === 'right' && 'md:pr-16')}>
+    <div className="flex min-h-dvh flex-col">
       {rail ? <SideRail position={rail} /> : null}
       <header ref={header.ref} className={cn('sticky top-0 z-40 pt-2', rail && 'md:hidden')}>
         <div className="mx-auto max-w-(--page-max) px-4 sm:px-6">
