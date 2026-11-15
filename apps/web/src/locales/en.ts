@@ -335,6 +335,8 @@ export const en: Messages = {
       english: 'English',
       japanese: 'Japanese',
       russian: 'Russian',
+      russianNote: 'Russian titles come from Anime365 and Shikimori. This works while at least one of them is enabled in admin.',
+      russianLocked: 'Russian titles are unavailable: Shikimori is disabled and metadata comes from Jikan. Enable Shikimori or Anime365 as the metadata source in admin.',
     },
     navPosition: {
       title: 'Navigation bar',

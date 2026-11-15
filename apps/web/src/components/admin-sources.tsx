@@ -71,7 +71,7 @@ function SourceStatus({ info }: { info: DataSourceInfo }) {
 
 function UrlField({ info }: { info: DataSourceInfo }) {
   const { t } = useTranslation()
-  const save = useSaveSettings()
+  const save = useSaveSettings([['me']])
   const [value, setValue] = useState(info.customUrl ? info.url : '')
   useEffect(() => setValue(info.customUrl ? info.url : ''), [info.url, info.customUrl])
   const changed = value.trim() !== (info.customUrl ? info.url : '')

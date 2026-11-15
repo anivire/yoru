@@ -36,6 +36,7 @@ export interface User {
   notifyPremieres: boolean
   hasOwnAnime365Token: boolean
   hasSharedAnime365Token: boolean
+  russianTitles: boolean
   createdAt: string
 }
 

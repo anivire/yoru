@@ -333,6 +333,8 @@ export const ru = {
       english: 'Английский',
       japanese: 'Японский',
       russian: 'Русский',
+      russianNote: 'Русские названия приходят из Anime365 и Shikimori. Работает, пока хотя бы один из них включён в управлении.',
+      russianLocked: 'Русские названия недоступны: Shikimori отключён, а метаданные берутся из Jikan. Включите Shikimori или Anime365 как источник метаданных в управлении.',
     },
     navPosition: {
       title: 'Расположение панели',

@@ -7,6 +7,8 @@ export interface SegmentedOption<T extends string> {
   label: ReactNode
   icon?: ReactNode
   count?: number
+  disabled?: boolean
+  title?: string
 }
 
 export function Segmented<T extends string>({
@@ -43,11 +45,14 @@ export function Segmented<T extends string>({
             type="button"
             role="tab"
             aria-selected={active}
+            disabled={option.disabled}
+            title={option.title}
             onClick={() => onChange(option.value)}
             className={cn(
               'relative inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg font-medium transition-colors [&_svg]:shrink-0',
               size === 'sm' ? 'h-7 px-2.5 text-[0.8125rem] [&_svg]:size-3.5' : 'h-8 px-3.5 text-sm [&_svg]:size-4',
               active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground',
+              'disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-muted-foreground',
             )}
           >
             {option.icon}

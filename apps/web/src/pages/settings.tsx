@@ -68,11 +68,25 @@ function AppearanceTab() {
       </Block>
       <Block title={t('settings.titleLanguage.title')} description={t('settings.titleLanguage.hint')}>
         <Segmented
-          value={titleLanguage}
+          value={titleLanguage === 'russian' && !user.russianTitles ? 'romaji' : titleLanguage}
           onChange={setTitleLanguage}
-          options={TITLE_LANGUAGES.map((v) => ({ value: v, label: t(`settings.titleLanguage.${v}`), icon: <Flag locale={TITLE_FLAGS[v]} /> }))}
+          options={TITLE_LANGUAGES.map((v) => ({
+            value: v,
+            label: t(`settings.titleLanguage.${v}`),
+            icon: <Flag locale={TITLE_FLAGS[v]} />,
+            disabled: v === 'russian' && !user.russianTitles,
+            title: v === 'russian' && !user.russianTitles ? t('settings.titleLanguage.russianLocked') : undefined,
+          }))}
           className="grid w-full grid-cols-2 sm:inline-flex sm:w-auto"
         />
+        {!user.russianTitles ? (
+          <p className="mt-3 flex items-center gap-2 text-[0.8125rem] text-warning">
+            <RiLockFill className="size-3.5 shrink-0" />
+            {t('settings.titleLanguage.russianLocked')}
+          </p>
+        ) : titleLanguage === 'russian' ? (
+          <p className="mt-3 text-[0.8125rem] text-muted-foreground">{t('settings.titleLanguage.russianNote')}</p>
+        ) : null}
       </Block>
       <Block title={t('settings.layout')}>
         <Card className="py-1">
