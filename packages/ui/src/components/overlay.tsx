@@ -129,6 +129,7 @@ export function Select({
   icon,
   disabled,
   size = 'md',
+  prefix,
 }: {
   value: string | undefined
   onValueChange: (value: string) => void
@@ -138,7 +139,9 @@ export function Select({
   icon?: ReactNode
   disabled?: boolean
   size?: 'sm' | 'md'
+  prefix?: ReactNode
 }) {
+  const selected = prefix ? options.find((o) => o.value === value) : undefined
   return (
     <S.Root value={value} onValueChange={onValueChange} disabled={disabled}>
       <S.Trigger
@@ -150,7 +153,13 @@ export function Select({
       >
         {icon ? <span className="text-muted-foreground">{icon}</span> : null}
         <span className="min-w-0 flex-1 truncate">
-          <S.Value placeholder={placeholder} />
+          <S.Value placeholder={placeholder}>
+            {selected ? (
+              <>
+                {prefix}: {typeof selected.label === 'string' ? selected.label.toLocaleLowerCase() : selected.label}
+              </>
+            ) : undefined}
+          </S.Value>
         </span>
         <S.Icon>
           <RiArrowDownSFill className="-mr-1 size-5! text-muted-foreground" />

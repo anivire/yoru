@@ -82,7 +82,8 @@ export function ListFilterBar({
           icon={<RiSortDesc />}
           value={filters.sort}
           onValueChange={(v) => set('sort', v === 'score' ? undefined : v)}
-          options={SORTS.map((s) => ({ value: s, label: `${t('lists.sortBy')}: ${t(`order.${s}`).toLowerCase()}` }))}
+          prefix={t('lists.sortBy')}
+          options={SORTS.map((s) => ({ value: s, label: t(`order.${s}`) }))}
         />
         {children}
       </div>

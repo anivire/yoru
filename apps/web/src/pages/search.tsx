@@ -107,7 +107,8 @@ export function SearchPage() {
               icon={<RiSortDesc />}
               value={filters.order_by ?? ANY}
               onValueChange={(v) => setFilter('order_by', v)}
-              options={[{ value: ANY, label: `${t('search.order')}: ${t('common.any')}` }, ...ORDERS.map((v) => ({ value: v, label: t(`order.${v}`) }))]}
+              prefix={t('search.order')}
+              options={[{ value: ANY, label: t('common.any') }, ...ORDERS.map((v) => ({ value: v, label: t(`order.${v}`) }))]}
             />
           )}
           {filtered ? (
