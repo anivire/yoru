@@ -1,9 +1,10 @@
 import { LIST_STATUSES, type ListEntry, type ListStatus } from '@yoru/shared'
-import { Button, Popover, PopoverClose, PopoverContent, PopoverTrigger, Select, Tooltip } from '@yoru/ui'
+import { Button, cn, Popover, PopoverClose, PopoverContent, PopoverTrigger, Select, Tooltip } from '@yoru/ui'
 import { EpisodeCount } from './anime-cards'
-import { RiAddFill, RiArrowDownSFill, RiBookmark3Fill, RiDeleteBin6Fill, RiEdit2Fill, RiRepeatFill, RiStarFill, RiSubtractFill } from '@remixicon/react'
+import { RiAddFill, RiArrowDownSFill, RiDeleteBin6Fill, RiEdit2Fill, RiRepeatFill, RiStarFill, RiSubtractFill } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
 import { useDeleteEntry, useSaveEntry } from '../lib/queries'
+import { STATUS_META, StatusIcon, StatusLabel, TONE_SOLID } from '../lib/list-status'
 
 function DateField({ label, value, onChange }: { label: string; value: string | null; onChange: (value: string | null) => void }) {
   return (
@@ -37,7 +38,7 @@ function EntryControls({ malId, entry, total, aired }: { malId: number; entry: L
         className="w-full"
         value={entry.status}
         onValueChange={(v) => save.mutate({ status: v as ListStatus })}
-        options={LIST_STATUSES.map((s) => ({ value: s, label: t(`status.${s}`) }))}
+        options={LIST_STATUSES.map((s) => ({ value: s, label: <StatusLabel status={s} /> }))}
       />
       <div className="grid grid-cols-1 gap-2 min-[22rem]:grid-cols-3">
       <div className="flex h-9 items-center justify-between rounded-lg bg-field">
@@ -129,8 +130,9 @@ function StatusChoice({ malId }: { malId: number }) {
           key={status}
           type="button"
           onClick={() => save.mutate({ status })}
-          className="flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
+          className="flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
         >
+          <StatusIcon status={status} />
           {t(`status.${status}`)}
         </button>
       ))}
@@ -168,8 +170,8 @@ export function ListEditor({
             <RiEdit2Fill />
           </Button>
         ) : (
-        <Button variant="accent" size="sm" className="w-full">
-          {entry ? <RiBookmark3Fill /> : <RiAddFill />}
+        <Button variant="accent" size="sm" className={cn('w-full', entry && TONE_SOLID[STATUS_META[entry.status].tone])}>
+          {entry ? <StatusIcon status={entry.status} className="text-current" /> : <RiAddFill />}
           <span className="flex-1 truncate text-left">{entry ? t(`status.${entry.status}`) : t('anime.add')}</span>
           <RiArrowDownSFill className="-mr-1 size-5! opacity-70" />
         </Button>

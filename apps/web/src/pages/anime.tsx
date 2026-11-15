@@ -5,6 +5,7 @@ import { RiCalendarScheduleFill, RiClapperboardFill, RiPlayFill } from '@remixic
 import { EpisodeCount, GLASS_CHIP, Score } from '../components/anime-cards'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { StatusBadge } from '../lib/list-status'
 import { useParams } from 'react-router'
 import { Page } from '../components/app-shell'
 import { ListEditor } from '../components/list-editor'
@@ -151,7 +152,7 @@ function MobileEntryRow({ anime, entry }: { anime: AnimeDetails; entry: ListEntr
       <div className={entry ? '' : 'w-full max-w-64'}>
         <ListEditor malId={anime.malId} entry={entry} total={anime.episodes} aired={airedLimit(anime)} compact={Boolean(entry)} />
       </div>
-      {entry ? <span className="text-sm font-semibold">{t(`status.${entry.status}`)}</span> : null}
+      {entry ? <StatusBadge status={entry.status} className="h-7 gap-1.5 pl-2 pr-3 text-sm [&_svg]:size-4" /> : null}
     </div>
   )
 }

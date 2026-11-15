@@ -8,6 +8,7 @@ import { useAppearance } from '../lib/appearance'
 import { QuickEdit } from './quick-edit'
 import { TLink } from './transition-link'
 import { AnimeTitle } from '../lib/anime-title'
+import { StatusText } from '../lib/list-status'
 
 export function Poster({ src, alt, className }: { src: string | null; alt: string; className?: string }) {
   return (
@@ -152,8 +153,9 @@ export function AnimeCard({
         <div className="absolute inset-x-2 top-2.5 flex items-start justify-between gap-1">
           <div className="flex flex-wrap gap-1">
             {rewatches ? (
-              <Badge size="sm" variant="solid" className="bg-info text-white" title={t('anime.rewatchedTimes', { count: rewatches })}>
-                <RiRepeatFill className="size-3" />×{rewatches}
+              <Badge size="sm" variant="solid" className="gap-1 bg-black/55 text-white tabular-nums backdrop-blur-md" title={t('anime.rewatchedTimes', { count: rewatches })}>
+                <RiRepeatFill className="size-3" />
+                {rewatches}
               </Badge>
             ) : null}
             {anime.airing ? (
@@ -181,7 +183,7 @@ export function AnimeCard({
           ) : (
             <span className="truncate">{[typeLabel(anime.type), seasonLabel(anime)].filter(Boolean).join(' · ')}</span>
           )}
-          {status ? <span className="truncate">· {t(`status.${status}`)}</span> : null}
+          {status ? <StatusText status={status} /> : null}
         </div>
       </div>
       </CardLink>

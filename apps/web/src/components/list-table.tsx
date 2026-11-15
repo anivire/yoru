@@ -1,5 +1,5 @@
-import type { ListEntryWithAnime, ListStatus } from '@yoru/shared'
-import { Image, Progress, StatusDot, cn } from '@yoru/ui'
+import type { ListEntryWithAnime } from '@yoru/shared'
+import { Image, Progress, cn } from '@yoru/ui'
 import { RiLayoutGridFill, RiLayoutRowFill, RiRepeatFill, RiStarFill } from '@remixicon/react'
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -7,6 +7,7 @@ import { formatDate, typeLabel } from '../lib/format'
 import { EpisodeCount, scoreColor } from './anime-cards'
 import { TLink } from './transition-link'
 import { AnimeTitle } from '../lib/anime-title'
+import { STATUS_META, StatusIcon, TONE_TEXT } from '../lib/list-status'
 
 export type ListView = 'grid' | 'table'
 
@@ -55,15 +56,6 @@ function RowLink({ malId, external, className, children }: { malId: number; exte
   )
 }
 
-const STATUS_TONE: Record<ListStatus, 'accent' | 'info' | 'success' | 'warning' | 'danger' | 'neutral'> = {
-  watching: 'accent',
-  rewatching: 'accent',
-  planning: 'info',
-  completed: 'success',
-  paused: 'warning',
-  dropped: 'danger',
-}
-
 const TABLE_COLS =
   'grid items-center gap-x-4 grid-cols-[minmax(0,1fr)_5.5rem] @md:grid-cols-[minmax(0,1fr)_6rem_3.5rem] @2xl:grid-cols-[minmax(0,1fr)_8.5rem_6.5rem_3.5rem] @4xl:grid-cols-[minmax(0,1fr)_8.5rem_7rem_3.5rem_7.5rem]'
 
@@ -98,8 +90,8 @@ export function ListTable({ items, external }: { items: ListEntryWithAnime[]; ex
                 </div>
               </div>
             </div>
-            <span className="hidden min-w-0 items-center gap-2 text-[0.8125rem] text-muted-foreground @2xl:flex">
-              <StatusDot tone={STATUS_TONE[e.status]} />
+            <span className={cn('hidden min-w-0 items-center gap-2 text-[0.8125rem] font-medium @2xl:flex', TONE_TEXT[STATUS_META[e.status].tone])}>
+              <StatusIcon status={e.status} />
               <span className="truncate">{t(`status.${e.status}`)}</span>
             </span>
             <div className="flex flex-col gap-1.5">

@@ -115,7 +115,7 @@ export function ListsPage() {
               key={e.malId}
               anime={e.anime}
               progress={e.progress}
-              status={status === 'all' ? e.status : undefined}
+              status={e.status}
               rewatches={e.rewatches}
               userScore={e.score}
               coloredScore
