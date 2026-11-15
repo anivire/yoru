@@ -1,6 +1,6 @@
 import type { ListEntryWithAnime } from '@yoru/shared'
-import { Image, Progress, cn } from '@yoru/ui'
-import { RiLayoutGridFill, RiLayoutRowFill, RiRepeatFill, RiStarFill } from '@remixicon/react'
+import { Image, Progress, StarIcon, cn } from '@yoru/ui'
+import { RiLayoutGridFill, RiLayoutRowFill, RiRepeatFill } from '@remixicon/react'
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatDate, typeLabel } from '../lib/format'
@@ -101,7 +101,7 @@ export function ListTable({ items, external }: { items: ListEntryWithAnime[]; ex
             <span className="hidden @md:block">
               {e.score ? (
                 <span className="inline-flex items-center gap-1 text-[0.8125rem] font-semibold tabular-nums">
-                  <RiStarFill className="size-3.5" style={{ color: scoreColor(e.score) }} />
+                  <StarIcon className="size-3.5" style={{ color: scoreColor(e.score) }} />
                   {e.score}
                 </span>
               ) : (

@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { type AnimeDetails, type Episode, type ListEntry, STREAM_KINDS, type StreamKind } from '@yoru/shared'
-import { Button, Mascot, Select, Spinner, Tooltip, cn } from '@yoru/ui'
-import { RiClosedCaptioningFill, RiMicFill, RiSettings3Fill, RiStarFill, RiStarLine, RiVolumeUpFill } from '@remixicon/react'
+import { Button, Mascot, Select, Spinner, StarIcon, Tooltip, cn } from '@yoru/ui'
+import { RiClosedCaptioningFill, RiMicFill, RiSettings3Fill, RiVolumeUpFill } from '@remixicon/react'
 import { type ReactNode, useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
@@ -344,7 +344,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
               }}
               className={cn('size-10 shrink-0 rounded-xl', favorite && 'text-accent')}
             >
-              {favorite ? <RiStarFill /> : <RiStarLine />}
+              {favorite ? <StarIcon /> : <StarIcon outline />}
             </Button>
           </Tooltip>
         </div>

@@ -1,6 +1,6 @@
 import type { AnimeSummary, ContinueItem, ListStatus, UpcomingItem } from '@yoru/shared'
-import { Badge, Image, Progress, Tooltip, cn } from '@yoru/ui'
-import { RiArrowLeftSLine, RiArrowRightSLine, RiPlayLargeFill, RiRepeatFill, RiStarFill, RiTimeFill } from '@remixicon/react'
+import { Badge, Image, Progress, StarIcon, Tooltip, cn } from '@yoru/ui'
+import { RiArrowLeftSLine, RiArrowRightSLine, RiPlayLargeFill, RiRepeatFill, RiTimeFill } from '@remixicon/react'
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import { Children, type CSSProperties, type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -67,7 +67,7 @@ export function Score({
         style={{ backgroundColor: scoreColor(value) }}
         className={cn('inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs font-bold tabular-nums text-neutral-950 shadow-sm shadow-black/20', className)}
       >
-        <RiStarFill className="size-3 fill-current" />
+        <StarIcon className="size-3 fill-current" />
         {formatScore(value, digits)}
       </span>
     )
@@ -81,7 +81,7 @@ export function Score({
         className,
       )}
     >
-      <RiStarFill className={cn('size-3', surface === 'dark' ? 'text-amber-400' : 'text-amber-500')} />
+      <StarIcon className={cn('size-3', surface === 'dark' ? 'text-amber-400' : 'text-amber-500')} />
       {formatScore(value, digits)}
     </span>
   )
