@@ -86,6 +86,18 @@ function fromJikan(j: JikanAnime): AnimeInsert {
   }
 }
 
+const SEASON_START_MONTH: Record<string, number> = { зима: 0, весна: 3, лето: 6, осень: 9 }
+
+function a365Status(s: A365Series): string {
+  if (s.isAiring) return 'airing'
+  const [seasonName, seasonYear] = (s.season ?? '').toLowerCase().split(' ')
+  const month = seasonName ? SEASON_START_MONTH[seasonName] : undefined
+  const year = Number(seasonYear) || s.year
+  if (month !== undefined && year && Date.UTC(year, month, 1) > Date.now()) return 'upcoming'
+  if (s.episodes && !s.episodes.length) return 'upcoming'
+  return 'finished'
+}
+
 function fromA365(s: A365Series, malId: number): AnimeInsert {
   const [seasonName] = (s.season ?? '').toLowerCase().split(' ')
   return {
@@ -98,7 +110,7 @@ function fromA365(s: A365Series, malId: number): AnimeInsert {
     imageUrl: s.posterUrl ? absoluteA365Url(s.posterUrl) : null,
     type: normalizeType(s.type),
     episodes: s.numberOfEpisodes || null,
-    status: s.isAiring ? 'airing' : 'finished',
+    status: a365Status(s),
     airing: Boolean(s.isAiring),
     year: s.year ?? null,
     season: (seasonName && SEASONS[seasonName]) || null,
