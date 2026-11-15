@@ -1,7 +1,7 @@
 {
   "name": "@yoru/shared",
   "private": true,
-  "version": "0.44.5",
+  "version": "0.44.6",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
