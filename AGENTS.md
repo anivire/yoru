@@ -59,7 +59,7 @@ The owner tests the deployed site's update checker, which compares the running c
 
 1. Typecheck and build.
 2. Bump the version in every workspace: `npm version X.Y.Z --no-git-tag-version --workspaces --include-workspace-root`. Patch for fixes and small tweaks, minor for features or new dependencies, major only on request.
-3. Commit with a plain sentence subject, no version number and no conventional-commit prefix (e.g. `Add a bottom navigation bar option`). Keep unrelated changes in separate commits.
+3. Commit with a Conventional Commits subject: `type: summary`, lowercase, imperative, no trailing period and no version number (e.g. `feat: add a bottom navigation bar option`). Types: `feat` for new behaviour, `fix` for bug fixes, `perf` for speedups, `refactor` for code changes without behaviour change, `style` for visual tweaks to existing UI, `docs` for documentation, `chore` for version bumps, dependencies and tooling, `build` for Docker and build setup. An optional scope is fine (`fix(import): …`). Keep unrelated changes in separate commits.
 4. Push to `origin master`.
 
 When the owner says not to push yet, leave the changes uncommitted until they confirm.
