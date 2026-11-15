@@ -7,6 +7,7 @@ import { Trans, useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { errorMessage } from '../lib/queries'
 import { PROVIDER_NAMES, ProviderIcon } from './providers'
+import { ANIME365_LOGO } from '../lib/logos'
 
 const SOURCE_NAMES: Record<DataSourceId, string> = { anime365: 'Anime365', jikan: 'Jikan', shikimori: 'Shikimori', anilist: 'AniList', github: 'GitHub' }
 
@@ -22,7 +23,7 @@ function SourceIcon({ id }: { id: DataSourceId }) {
   if (id === 'anime365') {
     return (
       <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-white">
-        <img src="/anime365.webp" alt="" className="size-7 object-contain" />
+        <img src={ANIME365_LOGO} alt="" className="size-7 object-contain" />
       </span>
     )
   }

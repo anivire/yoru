@@ -13,6 +13,7 @@ import { Player } from './player/player'
 import { TLink } from './transition-link'
 import { useAppearance } from '../lib/appearance'
 import { useAnimeTitle } from '../lib/anime-title'
+import { ANIME365_LOGO } from '../lib/logos'
 
 function kindKey(malId: number) {
   return `yoru:kind:${malId}`
@@ -264,7 +265,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
             localStorage.setItem(sourceKey(malId), v)
             setParam({ source: v })
           }}
-          icon={libria ? <LibriaMark /> : <img src="/anime365.webp" alt="" className="size-4 rounded-sm bg-white object-contain" />}
+          icon={libria ? <LibriaMark /> : <img src={ANIME365_LOGO} alt="" className="size-4 rounded-sm bg-white object-contain" />}
           options={[
             { value: 'anime365', label: 'Anime365' },
             { value: 'anilibria', label: 'AniLibria' },

@@ -22,6 +22,7 @@ import { useDocumentTitle } from '../lib/title'
 
 import { PlayerTab } from '../components/player-settings'
 import { SoundsTab } from '../components/sound-settings'
+import { ANIME365_LOGO, SEANIME_LOGO } from '../lib/logos'
 
 const TABS = ['appearance', 'player', 'sounds', 'account', 'notifications', 'import'] as const
 type Tab = (typeof TABS)[number]
@@ -196,7 +197,7 @@ function AccountTab() {
         <Card className="flex flex-col gap-4 p-4">
           <div className="flex items-center gap-3">
             <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-white">
-              <img src="/anime365.webp" alt="" className="size-7 object-contain" />
+              <img src={ANIME365_LOGO} alt="" className="size-7 object-contain" />
             </span>
             <div className="min-w-0 flex-1">
               <div className="font-medium">Anime365</div>
@@ -314,7 +315,7 @@ function SeanimeImport() {
       <div className="flex min-w-0 flex-col gap-3">
         <div className="flex items-center gap-3">
           <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-black">
-            <img src="/seanime.webp" alt="" className="size-7 object-contain" />
+            <img src={SEANIME_LOGO} alt="" className="size-7 object-contain" />
           </span>
           <div className="min-w-0">
             <div className="font-medium">Seanime</div>
