@@ -85,9 +85,23 @@ function MobileMenu() {
   const { t } = useTranslation()
   const nav = useVisibleNav()
   const { pathname } = useLocation()
+  const [open, setOpen] = useState(false)
+  const tap = useRef<{ wasOpen: boolean } | null>(null)
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger
+        asChild
+        onPointerDown={(e) => {
+          if (e.pointerType === 'mouse') return
+          tap.current = { wasOpen: open }
+          e.preventDefault()
+        }}
+        onClick={() => {
+          if (!tap.current) return
+          setOpen(!tap.current.wasOpen)
+          tap.current = null
+        }}
+      >
         <Button variant="secondary" size="icon" aria-label={t('nav.menu')} className="rounded-full">
           <RiMenuFill />
         </Button>
