@@ -32,6 +32,14 @@ function pickSource(sources: StreamSource[]): StreamSource {
 
 type Menu = null | 'root' | 'quality' | 'speed' | 'subs'
 
+type FullscreenDocument = Document & { webkitFullscreenElement?: Element | null; webkitExitFullscreen?: () => void }
+type FullscreenElement = HTMLElement & { webkitRequestFullscreen?: () => void }
+type IosVideo = HTMLVideoElement & { webkitEnterFullscreen?: () => void }
+
+function fullscreenElement() {
+  return document.fullscreenElement ?? (document as FullscreenDocument).webkitFullscreenElement ?? null
+}
+
 export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPlay, onProgress, onEnded, onNext, onPrev }: PlayerProps) {
   const { t } = useTranslation()
   const rootRef = useRef<HTMLDivElement>(null)
@@ -144,9 +152,13 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   }, [rate])
 
   useEffect(() => {
-    const onFs = () => setFullscreen(document.fullscreenElement === rootRef.current)
+    const onFs = () => setFullscreen(fullscreenElement() === rootRef.current)
     document.addEventListener('fullscreenchange', onFs)
-    return () => document.removeEventListener('fullscreenchange', onFs)
+    document.addEventListener('webkitfullscreenchange', onFs)
+    return () => {
+      document.removeEventListener('fullscreenchange', onFs)
+      document.removeEventListener('webkitfullscreenchange', onFs)
+    }
   }, [])
 
   useEffect(() => {
@@ -183,8 +195,18 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   }, [])
 
   const toggleFullscreen = useCallback(() => {
-    if (document.fullscreenElement) void document.exitFullscreen()
-    else void rootRef.current?.requestFullscreen()
+    const doc = document as FullscreenDocument
+    if (fullscreenElement()) {
+      if (doc.exitFullscreen) void doc.exitFullscreen().catch(() => undefined)
+      else doc.webkitExitFullscreen?.()
+      return
+    }
+    const root = rootRef.current as FullscreenElement | null
+    const video = videoRef.current as IosVideo | null
+    const native = () => video?.webkitEnterFullscreen?.()
+    if (root?.requestFullscreen) void root.requestFullscreen().catch(native)
+    else if (root?.webkitRequestFullscreen) root.webkitRequestFullscreen()
+    else native()
   }, [])
 
   const setSubs = (on: boolean) => {
