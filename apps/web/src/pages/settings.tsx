@@ -19,7 +19,7 @@ import { errorMessage, keys, useUser } from '../lib/queries'
 import { TLink } from '../components/transition-link'
 import { useDocumentTitle } from '../lib/title'
 
-const TITLE_FLAGS = { romaji: 'ja', english: 'en', japanese: 'ja', russian: 'ru' } as const satisfies Record<TitleLanguage, 'ja' | 'en' | 'ru'>
+const TITLE_FLAGS = { romaji: 'romaji', english: 'en', japanese: 'ja', russian: 'ru' } as const satisfies Record<TitleLanguage, 'ja' | 'romaji' | 'en' | 'ru'>
 import { PlayerTab } from '../components/player-settings'
 
 const TABS = ['appearance', 'player', 'account', 'notifications', 'import'] as const
