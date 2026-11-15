@@ -59,7 +59,7 @@ function AppearanceTab() {
   const changeLanguage = useChangeLanguage()
   return (
     <>
-      <Block title={t('settings.language')}>
+      <Block title={t('settings.language')} description={t('settings.languageHint')}>
         <Segmented
           value={user.locale}
           onChange={changeLanguage}
