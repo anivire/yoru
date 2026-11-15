@@ -308,6 +308,14 @@ export const en: Messages = {
     voice: 'voice-over',
   },
   settings: {
+    titleLanguage: {
+      title: 'Title language',
+      hint: 'Which language to show anime titles in. Falls back to romaji when a title is missing.',
+      romaji: 'Romaji',
+      english: 'English',
+      japanese: 'Japanese',
+      russian: 'Russian',
+    },
     navPosition: {
       title: 'Navigation bar',
       hint: 'Show navigation at the top or on the side. On phones it always stays at the top.',

@@ -6,6 +6,7 @@ import { api } from '../lib/api'
 import { relativeTime } from '../lib/format'
 import { keys } from '../lib/queries'
 import { TLink } from './transition-link'
+import { AnimeTitle } from '../lib/anime-title'
 
 export const RAIL_BUTTON =
   'relative grid size-11 cursor-pointer place-items-center rounded-xl text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent data-[state=open]:bg-muted data-[state=open]:text-foreground [&_svg]:size-5'
@@ -68,7 +69,7 @@ export function NotificationsPopover({ side = 'bottom', rail = false }: { side?:
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     {!n.readAt ? <StatusDot tone="accent" /> : null}
-                    <span className="truncate text-sm font-medium">{n.animeTitle}</span>
+                    <span className="truncate text-sm font-medium"><AnimeTitle anime={n.titles} /></span>
                   </div>
                   <div className="mt-0.5 text-[0.8125rem] text-muted-foreground">{n.type === 'premiere' ? t('notifications.premiere') : t('notifications.released', { episode: n.episode })}</div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">

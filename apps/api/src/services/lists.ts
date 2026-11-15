@@ -138,7 +138,7 @@ export function filterEntries(items: ListEntryWithAnime[], f: ListFilters): List
     if (f.year && e.anime.year !== f.year) return false
     if (f.genre && !e.anime.genres.includes(f.genre)) return false
     if (q) {
-      const hay = [e.anime.title, e.anime.titleEnglish, e.anime.titleJapanese].filter(Boolean).join(' ').toLowerCase()
+      const hay = [e.anime.title, e.anime.titleEnglish, e.anime.titleJapanese, e.anime.titleRussian].filter(Boolean).join(' ').toLowerCase()
       if (!hay.includes(q)) return false
     }
     return true

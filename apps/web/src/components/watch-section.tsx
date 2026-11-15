@@ -12,6 +12,7 @@ import { MatchDialog } from './match-dialog'
 import { Player } from './player/player'
 import { TLink } from './transition-link'
 import { useAppearance } from '../lib/appearance'
+import { useAnimeTitle } from '../lib/anime-title'
 
 function kindKey(malId: number) {
   return `yoru:kind:${malId}`
@@ -56,6 +57,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
   const { t } = useTranslation()
   const client = useQueryClient()
   const malId = anime.malId
+  const title = useAnimeTitle()
   const [params, setParams] = useSearchParams()
   const { defaultKind, preferredAuthors } = useAppearance()
   const kind = parseKind(params.get('kind')) ?? parseKind(localStorage.getItem(kindKey(malId))) ?? defaultKind
@@ -187,7 +189,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
         startAt={startAt}
         autoPlay={params.get('autoplay') === '1'}
         title={current?.title ? `${t('common.episode')} ${episode} · ${current.title}` : `${t('common.episode')} ${episode}`}
-        subtitle={anime.title}
+        subtitle={title(anime)}
         onProgress={onProgress}
         onEnded={() => nextEpisode && setParam({ episode: String(nextEpisode), autoplay: '1' })}
         onNext={nextEpisode ? () => goTo(nextEpisode) : undefined}

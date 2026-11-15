@@ -7,6 +7,7 @@ import { formatDateTime, formatTime, relativeTime, seasonLabel, typeLabel } from
 import { useAppearance } from '../lib/appearance'
 import { QuickEdit } from './quick-edit'
 import { TLink } from './transition-link'
+import { AnimeTitle } from '../lib/anime-title'
 
 export function Poster({ src, alt, className }: { src: string | null; alt: string; className?: string }) {
   return (
@@ -169,7 +170,7 @@ export function AnimeCard({
         </div>
       </div>
       <div className="min-w-0 px-0.5">
-        <div className="line-clamp-2 text-sm font-medium leading-snug">{anime.title}</div>
+        <div className="line-clamp-2 text-sm font-medium leading-snug"><AnimeTitle anime={anime} /></div>
         <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
           {subtitle ? (
             <span className="truncate">{subtitle}</span>
@@ -284,7 +285,7 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
             </span>
           ) : null}
         </div>
-        <div className="truncate text-[0.8125rem] text-muted-foreground">{item.anime.title}</div>
+        <div className="truncate text-[0.8125rem] text-muted-foreground"><AnimeTitle anime={item.anime} /></div>
       </div>
     </TLink>
   )
@@ -311,7 +312,7 @@ export function UpcomingCard({ item }: { item: UpcomingItem }) {
         <span className="absolute bottom-2.5 left-3 font-mono text-[0.6875rem] text-white/90">{formatDateTime(item.airingAt)}</span>
       </div>
       <div className="min-w-0 px-0.5">
-        <div className="truncate text-sm font-medium">{item.anime.title}</div>
+        <div className="truncate text-sm font-medium"><AnimeTitle anime={item.anime} /></div>
         <div className="mt-0.5 flex items-baseline justify-between gap-2">
           <span className="text-base font-semibold">{item.episode ? `${t('common.episode')} ${item.episode}` : '—'}</span>
           <span className="shrink-0 text-[0.8125rem] text-muted-foreground">{relativeTime(item.airingAt)}</span>

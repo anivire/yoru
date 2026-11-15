@@ -16,6 +16,7 @@ import { seasonLabel, typeLabel } from '../lib/format'
 import { HeroBackdrop } from '../components/hero-backdrop'
 import { TLink } from '../components/transition-link'
 import { useDocumentTitle } from '../lib/title'
+import { AnimeTitle } from '../lib/anime-title'
 
 function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number | null; label: string }) {
   const { t } = useTranslation()
@@ -35,7 +36,7 @@ function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number 
             </div>
           </TLink>
           <div className="flex min-w-0 max-w-2xl flex-col gap-3">
-            <h1 className="line-clamp-2 text-3xl font-semibold tracking-tight sm:text-4xl">{anime.title}</h1>
+            <h1 className="line-clamp-2 text-3xl font-semibold tracking-tight sm:text-4xl"><AnimeTitle anime={anime} /></h1>
             {genres.length ? (
               <div className="flex flex-wrap gap-1.5">
                 {genres.map((g) => (

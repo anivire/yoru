@@ -46,6 +46,7 @@ export const anime = sqliteTable('anime', {
   title: text('title').notNull(),
   titleEnglish: text('title_english'),
   titleJapanese: text('title_japanese'),
+  titleRussian: text('title_russian'),
   synonyms: text('synonyms', { mode: 'json' }).$type<string[]>().notNull().default([]),
   imageUrl: text('image_url'),
   type: text('type'),

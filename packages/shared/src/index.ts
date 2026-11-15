@@ -54,11 +54,18 @@ export interface AccountInfo {
   activeSessions: number
 }
 
-export interface AnimeSummary {
-  malId: number
+export const TITLE_LANGUAGES = ['romaji', 'english', 'japanese', 'russian'] as const
+export type TitleLanguage = (typeof TITLE_LANGUAGES)[number]
+
+export interface AnimeTitles {
   title: string
   titleEnglish: string | null
   titleJapanese: string | null
+  titleRussian: string | null
+}
+
+export interface AnimeSummary extends AnimeTitles {
+  malId: number
   imageUrl: string | null
   type: string | null
   episodes: number | null
@@ -249,6 +256,7 @@ export interface Notification {
   kind: StreamKind
   author: string | null
   animeTitle: string
+  titles: AnimeTitles
   imageUrl: string | null
   createdAt: string
   readAt: string | null

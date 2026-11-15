@@ -43,6 +43,13 @@
       "when": 1794689810258,
       "tag": "0005_share_token",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1794733008264,
+      "tag": "0006_title_russian",
+      "breakpoints": true
     }
   ]
 }

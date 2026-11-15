@@ -14,7 +14,7 @@ export const notificationRoutes = new Hono<AppEnv>()
   .get('/', (c) => {
     const userId = c.get('user').id
     const items = db
-      .select({ n: notifications, title: anime.title, imageUrl: anime.imageUrl })
+      .select({ n: notifications, title: anime.title, titleEnglish: anime.titleEnglish, titleJapanese: anime.titleJapanese, titleRussian: anime.titleRussian, imageUrl: anime.imageUrl })
       .from(notifications)
       .leftJoin(anime, eq(anime.malId, notifications.malId))
       .where(eq(notifications.userId, userId))
@@ -28,7 +28,7 @@ export const notificationRoutes = new Hono<AppEnv>()
       .get()!.count
     const body: NotificationList = {
       unread,
-      items: items.map(({ n, title, imageUrl }) => ({
+      items: items.map(({ n, title, titleEnglish, titleJapanese, titleRussian, imageUrl }) => ({
         id: n.id,
         malId: n.malId,
         episode: n.episode,
@@ -36,6 +36,7 @@ export const notificationRoutes = new Hono<AppEnv>()
         kind: n.kind,
         author: n.author,
         animeTitle: title ?? `#${n.malId}`,
+        titles: { title: title ?? `#${n.malId}`, titleEnglish: titleEnglish ?? null, titleJapanese: titleJapanese ?? null, titleRussian: titleRussian || null },
         imageUrl: imageUrl ?? null,
         createdAt: n.createdAt,
         readAt: n.readAt,

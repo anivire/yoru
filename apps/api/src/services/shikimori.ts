@@ -87,6 +87,7 @@ function fromShiki(a: ShikiAnime) {
   return {
     malId: a.id,
     title: a.name,
+    titleRussian: a.russian || null,
     synonyms: a.russian ? [a.russian] : [],
     imageUrl: shikiUrl(a.image?.original),
     type: a.kind ?? null,
@@ -109,8 +110,9 @@ export function shikiSummaries(items: ShikiAnime[]): AnimeSummary[] {
     const row = existing.get(item.id)
     if (row) {
       const image = row.imageUrl ?? shikiUrl(item.image?.original)
-      if (image && !row.imageUrl) upsertAnime({ ...row, imageUrl: image })
-      return toSummary({ ...row, imageUrl: image })
+      const titleRussian = row.titleRussian || item.russian || row.titleRussian
+      if ((image && !row.imageUrl) || titleRussian !== row.titleRussian) upsertAnime({ ...row, imageUrl: image, titleRussian })
+      return toSummary({ ...row, imageUrl: image, titleRussian })
     }
     const data = fromShiki(item)
     upsertAnime(data, { onlyIfMissing: true })
@@ -145,6 +147,11 @@ export const shikimori = {
   calendar(): Promise<ShikiCalendarEntry[]> {
     if (!sourceEnabled('shikimori')) return disabled()
     return cached('shiki:calendar', HOUR, () => enqueue<ShikiCalendarEntry[]>('/calendar', { censored: 'true' }))
+  },
+
+  byIds(ids: number[]): Promise<ShikiAnime[]> {
+    if (!sourceEnabled('shikimori')) return disabled()
+    return enqueue<ShikiAnime[]>('/animes', { ids: ids.join(','), limit: ids.length, censored: 'false' })
   },
 
   animes(params: Record<string, string | number>): Promise<ShikiAnime[]> {

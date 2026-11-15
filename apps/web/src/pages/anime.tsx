@@ -17,6 +17,7 @@ import { useAppearance } from '../lib/appearance'
 import { formatDate, formatDateTime, relativeTime, seasonLabel, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
 import { useDocumentTitle } from '../lib/title'
+import { useAnimeTitle } from '../lib/anime-title'
 
 const MORE_SPACE = 24
 
@@ -147,6 +148,9 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
   const { t } = useTranslation()
   const { expandSynopsis } = useAppearance()
   const [open, setOpen] = useState(expandSynopsis)
+  const title = useAnimeTitle()
+  const mainTitle = title(anime)
+  const secondaryTitle = [anime.title, anime.titleEnglish].find((v) => v && v !== mainTitle) ?? null
   const meta = [typeLabel(anime.type), anime.episodes ? `${anime.episodes} ${t('common.episodes')}` : null, anime.duration, seasonLabel(anime)].filter(Boolean)
   const facts = [
     anime.studios.length ? { label: t('anime.studios'), value: anime.studios.join(', ') } : null,
@@ -174,11 +178,11 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
           </div>
           <div className={cn('flex w-full min-w-0 flex-1 flex-col items-center gap-3 text-center sm:items-stretch sm:text-left', !open && 'sm:h-72')}>
             <div className="w-full">
-              <h1 className="line-clamp-3 text-2xl font-semibold tracking-tight sm:line-clamp-2 sm:text-4xl">{anime.title}</h1>
-              {anime.titleEnglish && anime.titleEnglish !== anime.title ? (
-                <div className="mt-1 text-base font-medium text-muted-foreground sm:truncate sm:text-lg sm:font-normal">{anime.titleEnglish}</div>
+              <h1 className="line-clamp-3 text-2xl font-semibold tracking-tight sm:line-clamp-2 sm:text-4xl">{mainTitle}</h1>
+              {secondaryTitle ? (
+                <div className="mt-1 text-base font-medium text-muted-foreground sm:truncate sm:text-lg sm:font-normal">{secondaryTitle}</div>
               ) : null}
-              {anime.titleJapanese ? <div className="hidden truncate text-sm text-subtle-foreground sm:block">{anime.titleJapanese}</div> : null}
+              {anime.titleJapanese && anime.titleJapanese !== mainTitle ? <div className="hidden truncate text-sm text-subtle-foreground sm:block">{anime.titleJapanese}</div> : null}
             </div>
             <MobileEntryRow anime={anime} entry={entry} />
             <div className="flex flex-wrap items-center justify-center gap-2 text-sm sm:justify-start">
@@ -228,7 +232,8 @@ export function AnimePage() {
   const { t } = useTranslation()
   const malId = Number(useParams().id)
   const { data, isPending, isError, error } = useQuery({ queryKey: keys.anime(malId), queryFn: () => api.anime(malId), enabled: malId > 0 })
-  useDocumentTitle(data?.anime.title)
+  const title = useAnimeTitle()
+  useDocumentTitle(data ? title(data.anime) : undefined)
 
   if (isPending) return <AnimePageSkeleton />
   if (isError || !data) {

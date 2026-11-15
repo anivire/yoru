@@ -11,6 +11,7 @@ import { api } from '../lib/api'
 import { i18n } from '../lib/i18n'
 import { TLink } from '../components/transition-link'
 import { useDocumentTitle } from '../lib/title'
+import { AnimeTitle } from '../lib/anime-title'
 
 const DAY = 86_400_000
 const COLUMNS = 7
@@ -104,7 +105,7 @@ function EntryRow({ item }: { item: ScheduleItem }) {
           {item.anime.imageUrl ? <Image src={item.anime.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" /> : null}
         </div>
         <div className="min-w-0 flex-1 self-center leading-tight">
-          <div className={cn('truncate text-xs', item.listStatus ? 'font-semibold text-accent' : 'font-medium group-hover:text-accent')}>{item.anime.title}</div>
+          <div className={cn('truncate text-xs', item.listStatus ? 'font-semibold text-accent' : 'font-medium group-hover:text-accent')}><AnimeTitle anime={item.anime} /></div>
           <div className="mt-0.5 flex items-center gap-1 text-[0.6875rem] text-muted-foreground">
             <span className="font-mono">
               {item.estimated ? '~' : ''}

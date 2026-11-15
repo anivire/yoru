@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, type User } from '@yoru/shared'
+import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, TITLE_LANGUAGES, type User } from '@yoru/shared'
 import { Badge, Button, Card, CardContent, Code, Field, Input, LogoMark, Segmented, Skeleton, Spinner, StepSlider, Switch, toast } from '@yoru/ui'
 import { RiAlertFill, RiArrowUpDownFill, RiBracesFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiLockFill, RiNotification3Fill, RiPaletteFill, RiPlayCircleFill, RiShieldFill, RiUser3Fill } from '@remixicon/react'
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
@@ -52,7 +52,7 @@ export function Block({ title, description, children }: { title: ReactNode; desc
 
 function AppearanceTab() {
   const { t } = useTranslation()
-  const { pageWidth, setPageWidth, expandSynopsis, setExpandSynopsis } = useAppearance()
+  const { pageWidth, setPageWidth, expandSynopsis, setExpandSynopsis, titleLanguage, setTitleLanguage } = useAppearance()
   const user = useUser()
   const changeLanguage = useChangeLanguage()
   return (
@@ -62,6 +62,14 @@ function AppearanceTab() {
           value={user.locale}
           onChange={changeLanguage}
           options={LANGUAGES.map((l) => ({ ...l, icon: <Flag locale={l.value} /> }))}
+        />
+      </Block>
+      <Block title={t('settings.titleLanguage.title')} description={t('settings.titleLanguage.hint')}>
+        <Segmented
+          value={titleLanguage}
+          onChange={setTitleLanguage}
+          options={TITLE_LANGUAGES.map((v) => ({ value: v, label: t(`settings.titleLanguage.${v}`) }))}
+          className="grid w-full grid-cols-2 sm:inline-flex sm:w-auto"
         />
       </Block>
       <Block title={t('settings.layout')}>

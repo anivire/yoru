@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { formatDate, typeLabel } from '../lib/format'
 import { EpisodeCount, scoreColor } from './anime-cards'
 import { TLink } from './transition-link'
+import { AnimeTitle } from '../lib/anime-title'
 
 export type ListView = 'grid' | 'table'
 
@@ -85,7 +86,7 @@ export function ListTable({ items, external }: { items: ListEntryWithAnime[]; ex
                 {e.anime.imageUrl ? <Image src={e.anime.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" /> : null}
               </div>
               <div className="min-w-0">
-                <div className="truncate text-sm font-medium transition-colors group-hover:text-accent">{e.anime.title}</div>
+                <div className="truncate text-sm font-medium transition-colors group-hover:text-accent"><AnimeTitle anime={e.anime} /></div>
                 <div className="mt-0.5 flex min-w-0 items-center gap-1 truncate text-xs text-muted-foreground">
                   {[typeLabel(e.anime.type), e.anime.year].filter(Boolean).join(' · ')}
                   {e.rewatches ? (

@@ -1,4 +1,4 @@
-import { STREAM_KINDS, type StreamKind } from '@yoru/shared'
+import { STREAM_KINDS, type StreamKind, TITLE_LANGUAGES, type TitleLanguage } from '@yoru/shared'
 import { type ColorScheme, DEFAULT_SCHEME, DEFAULT_THEME, THEME_PRESETS, type ThemePreset, applyTheme, logoSvg } from '@yoru/ui'
 import { type ReactNode, createContext, useContext, useEffect, useState } from 'react'
 import { HOME_SECTIONS, type HomeSectionId, NAV, type NavKey } from './navigation'
@@ -40,6 +40,7 @@ interface State {
   defaultKind: StreamKind
   preferredAuthors: string[]
   navPosition: NavPosition
+  titleLanguage: TitleLanguage
 }
 
 const DEFAULT_SECTIONS: HomeSectionSetting[] = HOME_SECTIONS.map((s) => ({ id: s.id, visible: true }))
@@ -69,6 +70,7 @@ interface Appearance extends State {
   setDefaultKind: (kind: StreamKind) => void
   setPreferredAuthors: (authors: string[]) => void
   setNavPosition: (position: NavPosition) => void
+  setTitleLanguage: (language: TitleLanguage) => void
 }
 
 const AppearanceContext = createContext<Appearance | null>(null)
@@ -87,6 +89,7 @@ function load(): State {
       defaultKind?: string
       preferredAuthors?: unknown
       navPosition?: string
+      titleLanguage?: string
     }
     const theme = THEME_PRESETS.some((t) => t.id === raw.theme) ? (raw.theme as ThemePreset) : DEFAULT_THEME
     const scheme = raw.scheme === 'light' || raw.scheme === 'dark' || raw.scheme === 'system' ? raw.scheme : DEFAULT_SCHEME
@@ -104,9 +107,10 @@ function load(): State {
       defaultKind: STREAM_KINDS.includes(raw.defaultKind as StreamKind) ? (raw.defaultKind as StreamKind) : 'sub',
       preferredAuthors: Array.isArray(raw.preferredAuthors) ? raw.preferredAuthors.filter((a): a is string => typeof a === 'string' && Boolean(a.trim())) : [],
       navPosition: raw.navPosition === 'top' || raw.navPosition === 'right' ? raw.navPosition : 'left',
+      titleLanguage: TITLE_LANGUAGES.includes(raw.titleLanguage as TitleLanguage) ? (raw.titleLanguage as TitleLanguage) : 'romaji',
     }
   } catch {
-    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], defaultKind: 'sub', preferredAuthors: [], navPosition: 'left' }
+    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], defaultKind: 'sub', preferredAuthors: [], navPosition: 'left', titleLanguage: 'romaji' }
   }
 }
 
@@ -168,6 +172,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
         setDefaultKind: (defaultKind) => setState((s) => ({ ...s, defaultKind })),
         setPreferredAuthors: (preferredAuthors) => setState((s) => ({ ...s, preferredAuthors })),
         setNavPosition: (navPosition) => setState((s) => ({ ...s, navPosition })),
+        setTitleLanguage: (titleLanguage) => setState((s) => ({ ...s, titleLanguage })),
       }}
     >
       {children}

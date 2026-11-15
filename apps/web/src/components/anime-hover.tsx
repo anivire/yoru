@@ -8,6 +8,7 @@ import { seasonLabel, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
 import { Score } from './anime-cards'
 import { TextLine } from './skeletons'
+import { useAnimeTitle } from '../lib/anime-title'
 
 const DESKTOP_HOVER = '(hover: hover) and (pointer: fine) and (min-width: 64rem)'
 
@@ -28,12 +29,15 @@ export function AnimeHoverCard(props: { anime: AnimeSummary; footer?: ReactNode;
 }
 
 function HoverPreview({ anime, footer, children }: { anime: AnimeSummary; footer?: ReactNode; children: ReactNode }) {
+  const title = useAnimeTitle()
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const details = useQuery({ queryKey: keys.anime(anime.malId), queryFn: () => api.anime(anime.malId), enabled: open, staleTime: 10 * 60_000 })
   const data = details.data?.anime
   const genres = (data?.genres.length ? data.genres : anime.genres).slice(0, 4)
   const meta = [typeLabel(anime.type), seasonLabel(anime), anime.episodes ? `${anime.episodes} ${t('common.episodes')}` : null].filter(Boolean)
+  const main = title(anime)
+  const secondary = [anime.title, data?.titleEnglish].find((v) => v && v !== main) ?? null
   return (
     <HoverCard openDelay={350} closeDelay={120} open={open} onOpenChange={setOpen}>
       <HoverCardTrigger asChild>{children}</HoverCardTrigger>
@@ -43,8 +47,8 @@ function HoverPreview({ anime, footer, children }: { anime: AnimeSummary; footer
             {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" /> : null}
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-            <div className="line-clamp-2 text-sm font-semibold leading-snug">{anime.title}</div>
-            {data?.titleEnglish && data.titleEnglish !== anime.title ? <div className="truncate text-xs text-muted-foreground">{data.titleEnglish}</div> : null}
+            <div className="line-clamp-2 text-sm font-semibold leading-snug">{title(anime)}</div>
+            {secondary ? <div className="truncate text-xs text-muted-foreground">{secondary}</div> : null}
             <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
               {anime.score ? <Score value={anime.score} surface="theme" className="h-5 px-1.5" /> : null}
               {meta.map((m) => (

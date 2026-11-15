@@ -13,6 +13,7 @@ import { relativeTime, seasonLabel, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
 import { TLink } from '../components/transition-link'
 import { useDocumentTitle } from '../lib/title'
+import { AnimeTitle } from '../lib/anime-title'
 
 const SLIDE_MS = 8000
 
@@ -79,7 +80,7 @@ function Hero({ items }: { items: AnimeSummary[] }) {
             </div>
           </TLink>
           <div className="flex min-w-0 max-w-2xl flex-col gap-3">
-            <h1 className="line-clamp-2 text-3xl font-semibold tracking-tight sm:text-4xl">{anime.title}</h1>
+            <h1 className="line-clamp-2 text-3xl font-semibold tracking-tight sm:text-4xl"><AnimeTitle anime={anime} /></h1>
             {anime.genres.length ? (
               <div className="flex flex-wrap gap-1.5">
                 {anime.genres.slice(0, 4).map((g) => (

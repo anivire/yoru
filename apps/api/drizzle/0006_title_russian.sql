@@ -1,0 +1,1 @@
+ALTER TABLE `anime` ADD `title_russian` text;
