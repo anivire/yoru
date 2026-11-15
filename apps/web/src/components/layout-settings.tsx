@@ -1,11 +1,11 @@
-import { Card, Switch, cn } from '@yoru/ui'
+import { Card, Segmented, Switch, cn } from '@yoru/ui'
 import { DndContext, type DragEndEvent, KeyboardSensor, type Modifier, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { RiDraggable, RiImageFill, RiLayoutBottom2Fill, RiLayoutLeft2Fill, RiLayoutRight2Fill, RiLayoutTop2Fill, RiPaletteFill } from '@remixicon/react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { type HomeSectionSetting, type NavPosition, useAppearance } from '../lib/appearance'
+import { type HomeSectionSetting, type NavLabels, type NavPosition, useAppearance } from '../lib/appearance'
 import { HOME_SECTIONS, NAV } from '../lib/navigation'
 
 export const restrictToVertical: Modifier = ({ transform }) => ({ ...transform, x: 0 })
@@ -93,27 +93,42 @@ const NAV_POSITIONS = [
   { value: 'right', icon: RiLayoutRight2Fill },
 ] as const satisfies { value: NavPosition; icon: unknown }[]
 
+const NAV_LABELS = ['always', 'hover', 'off'] as const satisfies NavLabels[]
+
 export function NavPositionSettings() {
   const { t } = useTranslation()
-  const { navPosition, setNavPosition } = useAppearance()
+  const { navPosition, setNavPosition, navLabels, setNavLabels } = useAppearance()
   return (
-    <div role="radiogroup" aria-label={t('settings.navPosition.title')} className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
-      {NAV_POSITIONS.map(({ value, icon: Icon }) => (
-        <button
-          key={value}
-          type="button"
-          role="radio"
-          aria-checked={navPosition === value}
-          onClick={() => setNavPosition(value)}
-          className={cn(
-            'flex cursor-pointer flex-col items-center gap-2 rounded-xl px-3 py-4 text-sm font-medium transition-colors',
-            navPosition === value ? 'bg-accent-soft text-accent' : 'bg-surface text-foreground hover:bg-field',
-          )}
-        >
-          <Icon className="size-6" />
-          {t(`settings.navPosition.${value}`)}
-        </button>
-      ))}
+    <div className="flex flex-col gap-3">
+      <div role="radiogroup" aria-label={t('settings.navPosition.title')} className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
+        {NAV_POSITIONS.map(({ value, icon: Icon }) => (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={navPosition === value}
+            onClick={() => setNavPosition(value)}
+            className={cn(
+              'flex cursor-pointer flex-col items-center gap-2 rounded-xl px-3 py-4 text-sm font-medium transition-colors',
+              navPosition === value ? 'bg-accent-soft text-accent' : 'bg-surface text-foreground hover:bg-field',
+            )}
+          >
+            <Icon className="size-6" />
+            {t(`settings.navPosition.${value}`)}
+          </button>
+        ))}
+      </div>
+      {navPosition === 'left' || navPosition === 'right' ? (
+        <div className="hidden flex-wrap items-center justify-between gap-x-4 gap-y-2 md:flex">
+          <span className="text-sm">{t('settings.navLabels.title')}</span>
+          <Segmented
+            size="sm"
+            value={navLabels}
+            onChange={setNavLabels}
+            options={NAV_LABELS.map((value) => ({ value, label: t(`settings.navLabels.${value}`) }))}
+          />
+        </div>
+      ) : null}
     </div>
   )
 }

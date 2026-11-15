@@ -20,7 +20,8 @@ import { api } from '../lib/api'
 import { useAppearance } from '../lib/appearance'
 import { NAV } from '../lib/navigation'
 import { keys, useUser } from '../lib/queries'
-import { NotificationsPopover, RAIL_BUTTON, useNotificationSound } from './notifications'
+import { NotificationsPopover, useNotificationSound } from './notifications'
+import { RailLabel, RailProvider, RailTip, useRail, useRailButton } from './rail'
 import { Footer } from './footer'
 import { TLink, TNavLink, useTransitionNavigate } from './transition-link'
 import { AppearancePopover } from './appearance-panel'
@@ -165,11 +166,13 @@ function AccountItems({ settings = true }: { settings?: boolean }) {
 function UserMenu({ side = 'bottom', rail = false }: { side?: 'top' | 'bottom' | 'left' | 'right'; rail?: boolean }) {
   const { t } = useTranslation()
   const user = useUser()
+  const railButton = useRailButton()
   const trigger = (
     <DropdownMenuTrigger asChild>
       {rail ? (
-        <button type="button" aria-label={t('nav.account')} className={RAIL_BUTTON}>
+        <button type="button" aria-label={t('nav.account')} className={railButton}>
           <RiUser3Fill />
+          <RailLabel>{user.username}</RailLabel>
         </button>
       ) : (
         <Button variant="secondary" size="icon" aria-label={t('nav.account')} className="rounded-full">
@@ -181,9 +184,9 @@ function UserMenu({ side = 'bottom', rail = false }: { side?: 'top' | 'bottom' |
   return (
     <DropdownMenu>
       {rail && side !== 'bottom' ? (
-        <Tooltip content={t('nav.account')} side={side}>
+        <RailTip label={t('nav.account')} side={side}>
           {trigger}
-        </Tooltip>
+        </RailTip>
       ) : (
         trigger
       )}
@@ -198,6 +201,7 @@ function UserMenu({ side = 'bottom', rail = false }: { side?: 'top' | 'bottom' |
 function SettingsButton({ rail = false, side = 'bottom' }: { rail?: boolean; side?: 'top' | 'bottom' | 'left' | 'right' }) {
   const { t } = useTranslation()
   const active = Boolean(matchPath({ path: '/settings', end: false }, useLocation().pathname))
+  const railButton = useRailButton()
   if (!rail) {
     return (
       <Tooltip content={t('nav.settings')} side={side}>
@@ -210,60 +214,80 @@ function SettingsButton({ rail = false, side = 'bottom' }: { rail?: boolean; sid
     )
   }
   return (
-    <Tooltip content={t('nav.settings')} side={side}>
-      <TLink to="/settings" aria-label={t('nav.settings')} className={cn(RAIL_BUTTON, active && 'bg-muted text-foreground [&_svg]:text-accent')}>
+    <RailTip label={t('nav.settings')} side={side}>
+      <TLink to="/settings" aria-label={t('nav.settings')} className={cn(railButton, active && 'bg-muted text-foreground [&_svg]:text-accent')}>
         <RiSettings3Fill />
+        <RailLabel>{t('nav.settings')}</RailLabel>
       </TLink>
-    </Tooltip>
+    </RailTip>
   )
 }
 
 function SideRail({ position }: { position: 'left' | 'right' }) {
+  const { navLabels } = useAppearance()
+  const [hovered, setHovered] = useState(false)
+  const expanded = navLabels === 'always' || (navLabels === 'hover' && hovered)
+  return (
+    <RailProvider value={{ labels: navLabels !== 'off', expanded }}>
+      <aside
+        onPointerOver={(e) => {
+          if (navLabels === 'hover' && (e.target as Element).closest('a, button')) setHovered(true)
+        }}
+        onPointerLeave={() => setHovered(false)}
+        className={cn(
+          'fixed inset-y-0 z-40 hidden flex-col items-start px-1.5 py-3 transition-[width,background-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] [view-transition-name:site-rail] md:flex',
+          position === 'left' ? 'left-1' : 'right-1',
+          expanded ? 'w-44' : 'w-14',
+          navLabels === 'hover' && expanded && 'bg-background',
+        )}
+      >
+        <SideRailContent position={position} />
+      </aside>
+    </RailProvider>
+  )
+}
+
+function SideRailContent({ position }: { position: 'left' | 'right' }) {
   const { t } = useTranslation()
   const ref = useRef<HTMLElement>(null)
   const { pathname } = useLocation()
   const { hiddenNav, appearanceButton } = useAppearance()
+  const { expanded } = useRail()
+  const railButton = useRailButton()
   const nav = useVisibleNav()
-  const indicator = useSlidingIndicator(ref, '[aria-current="page"]', `${pathname}|${hiddenNav.join()}|${position}`)
+  const indicator = useSlidingIndicator(ref, '[aria-current="page"]', `${pathname}|${hiddenNav.join()}|${position}|${expanded}`)
   const side = position === 'left' ? 'right' : 'left'
   return (
-    <aside
-      className={cn(
-        'fixed inset-y-0 z-40 hidden w-14 flex-col items-center py-3 [view-transition-name:site-rail] md:flex',
-        position === 'left' ? 'left-1' : 'right-1',
-      )}
-    >
+    <>
       <TLink to="/" aria-label="yoru" className="grid size-11 place-items-center">
         <LogoMark size={30} />
       </TLink>
-      <nav ref={ref} className="relative mt-4 flex flex-col items-center gap-1">
+      <nav ref={ref} className="relative mt-4 flex w-full flex-col items-start gap-1">
         <span aria-hidden style={indicator} className="pointer-events-none absolute rounded-xl bg-muted duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]" />
         {nav.map((n) => {
           const active = Boolean(matchPath({ path: n.to, end: n.end }, pathname))
           return (
-            <Tooltip key={n.to} content={t(`nav.${n.key}`)} side={side}>
+            <RailTip key={n.to} label={t(`nav.${n.key}`)} side={side}>
               <TNavLink
                 to={n.to}
                 end={n.end}
                 aria-label={t(`nav.${n.key}`)}
-                className={cn(
-                  'relative grid size-11 place-items-center rounded-xl transition-colors [&_svg]:size-5',
-                  active ? 'text-foreground [&_svg]:text-accent' : 'text-muted-foreground hover:text-foreground',
-                )}
+                className={cn(railButton, active && 'text-foreground [&_svg]:text-accent')}
               >
                 <n.icon />
+                <RailLabel>{t(`nav.${n.key}`)}</RailLabel>
               </TNavLink>
-            </Tooltip>
+            </RailTip>
           )
         })}
       </nav>
-      <div className="mt-auto flex flex-col items-center gap-2">
+      <div className="mt-auto flex w-full flex-col items-start gap-2">
         {appearanceButton ? <AppearancePopover side={side} rail full /> : null}
         <SettingsButton side={side} rail />
         <NotificationsPopover side={side} rail />
         <UserMenu side={side} rail />
       </div>
-    </aside>
+    </>
   )
 }
 
@@ -335,7 +359,7 @@ export function useHeader() {
 export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useTranslation()
   const header = useHeader()
-  const { navPosition, appearanceButton } = useAppearance()
+  const { navPosition, navLabels, appearanceButton } = useAppearance()
   useNotificationSound()
   const rail = navPosition === 'left' || navPosition === 'right' ? navPosition : null
   const dock = navPosition === 'bottom'
@@ -343,9 +367,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div
       className={cn(
         'flex min-h-dvh flex-col',
-        rail === 'left' && 'md:[--rail-left:2.65rem]',
-        rail === 'right' && 'md:[--rail-right:2.65rem]',
-        rail && 'md:[--page-max:min(var(--page-max-setting),calc(100%-2.65rem))] md:[--page-top:1.125rem]',
+        rail && 'md:[--page-top:1.125rem]',
+        rail && navLabels !== 'always' && 'md:[--page-max:min(var(--page-max-setting),calc(100%-2.65rem))]',
+        rail && navLabels === 'always' && 'md:[--page-max:min(var(--page-max-setting),calc(100%-10.15rem))]',
+        rail === 'left' && (navLabels === 'always' ? 'md:[--rail-left:10.15rem]' : 'md:[--rail-left:2.65rem]'),
+        rail === 'right' && (navLabels === 'always' ? 'md:[--rail-right:10.15rem]' : 'md:[--rail-right:2.65rem]'),
         dock && 'md:pb-20 md:[--page-top:1.5rem]',
       )}
     >

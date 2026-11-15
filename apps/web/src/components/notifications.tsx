@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Badge, Button, Image, Mascot, Popover, PopoverContent, PopoverTrigger, StatusDot, Tooltip, cn } from '@yoru/ui'
+import { Badge, Button, Image, Mascot, Popover, PopoverContent, PopoverTrigger, StatusDot, cn } from '@yoru/ui'
 import { RiCheckDoubleFill, RiDeleteBin6Fill, RiNotification3Fill } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
@@ -9,9 +9,7 @@ import { cue } from '../lib/sounds'
 import { useEffect, useRef } from 'react'
 import { TLink } from './transition-link'
 import { AnimeTitle } from '../lib/anime-title'
-
-export const RAIL_BUTTON =
-  'relative grid size-11 cursor-pointer place-items-center rounded-xl text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent data-[state=open]:bg-muted data-[state=open]:text-foreground [&_svg]:size-5'
+import { RailLabel, RailTip, useRailButton } from './rail'
 
 export function useNotificationSound() {
   const { data } = useQuery({ queryKey: keys.notifications, queryFn: api.notifications, refetchInterval: 60_000, refetchOnWindowFocus: true })
@@ -33,6 +31,7 @@ export function NotificationsPopover({ side = 'bottom', rail = false }: { side?:
   const clear = useMutation({ mutationFn: api.clearNotifications, onSuccess: refresh })
   const readOne = useMutation({ mutationFn: (id: number) => api.readNotifications([id]), onSuccess: refresh })
   const unread = data?.unread ?? 0
+  const railButton = useRailButton()
 
   const trigger = (
     <PopoverTrigger asChild>
@@ -40,9 +39,10 @@ export function NotificationsPopover({ side = 'bottom', rail = false }: { side?:
           variant="secondary"
           size="icon"
           aria-label={t('notifications.title')}
-          className={rail ? RAIL_BUTTON + ' bg-transparent hover:bg-transparent' : 'relative rounded-full'}
+          className={rail ? railButton + ' bg-transparent hover:bg-transparent' : 'relative rounded-full'}
         >
           <RiNotification3Fill />
+          {rail ? <RailLabel>{t('notifications.title')}</RailLabel> : null}
           {unread ? (
             <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-accent px-1 font-mono text-[0.625rem] font-semibold leading-4 text-accent-foreground">
               {unread > 99 ? '99+' : unread}
@@ -55,9 +55,9 @@ export function NotificationsPopover({ side = 'bottom', rail = false }: { side?:
   return (
     <Popover>
       {rail && side !== 'bottom' ? (
-        <Tooltip content={t('notifications.title')} side={side}>
+        <RailTip label={t('notifications.title')} side={side}>
           {trigger}
-        </Tooltip>
+        </RailTip>
       ) : (
         trigger
       )}

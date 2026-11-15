@@ -349,6 +349,12 @@ export const en: Messages = {
       left: 'Left',
       right: 'Right',
     },
+    navLabels: {
+      title: 'Button labels',
+      always: 'Always',
+      hover: 'On hover',
+      off: 'Hidden',
+    },
     player: 'Player',
     sounds: 'Sounds',
     sound: {

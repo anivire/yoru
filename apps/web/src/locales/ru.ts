@@ -347,6 +347,12 @@ export const ru = {
       left: 'Слева',
       right: 'Справа',
     },
+    navLabels: {
+      title: 'Подписи кнопок',
+      always: 'Всегда',
+      hover: 'При наведении',
+      off: 'Скрыты',
+    },
     player: 'Плеер',
     sounds: 'Звуки',
     sound: {

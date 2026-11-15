@@ -1,5 +1,5 @@
 import { TITLE_LANGUAGES, type TitleLanguage } from '@yoru/shared'
-import { Button, Popover, PopoverContent, PopoverTrigger, Segmented, StepSlider, Switch, Tooltip, cn } from '@yoru/ui'
+import { Button, Popover, PopoverContent, PopoverTrigger, Segmented, StepSlider, Switch, cn } from '@yoru/ui'
 import { RiArrowRightSLine, RiLockFill, RiPaletteFill } from '@remixicon/react'
 import { type ReactNode, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -7,7 +7,7 @@ import { PAGE_WIDTHS, useAppearance } from '../lib/appearance'
 import { useMe } from '../lib/queries'
 import { Flag } from './language'
 import { HomeLayoutSettings, NavPositionSettings, NavigationSettings } from './layout-settings'
-import { RAIL_BUTTON } from './notifications'
+import { RailLabel, RailTip, useRailButton } from './rail'
 import { SchemePicker, ThemePicker } from './theme-picker'
 import { TLink } from './transition-link'
 
@@ -126,20 +126,22 @@ export function AppearancePopover({
 }) {
   const { t } = useTranslation()
   const open = usePopoverOpen()
+  const railButton = useRailButton()
   return (
     <Popover open={open} onOpenChange={setPopoverOpen}>
-      <Tooltip content={t('settings.appearance')} side={side}>
+      <RailTip label={t('settings.appearance')} side={side}>
         <PopoverTrigger asChild>
           <Button
             variant="secondary"
             size="icon"
             aria-label={t('settings.appearance')}
-            className={cn(rail ? RAIL_BUTTON + ' bg-transparent hover:bg-transparent' : 'rounded-full', className)}
+            className={cn(rail ? railButton + ' bg-transparent hover:bg-transparent' : 'rounded-full', className)}
           >
             <RiPaletteFill />
+            {rail ? <RailLabel>{t('settings.appearance')}</RailLabel> : null}
           </Button>
         </PopoverTrigger>
-      </Tooltip>
+      </RailTip>
       <PopoverContent
         side={side}
         align="end"
