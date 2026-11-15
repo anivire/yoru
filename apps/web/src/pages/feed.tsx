@@ -158,12 +158,12 @@ function DayHeader({ day, open, onToggle }: { day: Day; open: boolean; onToggle:
         aria-expanded={open}
         className="group flex min-w-0 flex-1 cursor-pointer items-baseline gap-2 border-b border-border pb-2 text-left"
       >
-        <span className="text-lg font-semibold tracking-tight">{relative ?? date}</span>
-        <span className="truncate text-[0.8125rem] text-muted-foreground">{relative ? `${date}, ${weekday}` : weekday}</span>
-        <span className="ml-auto shrink-0 text-xs text-subtle-foreground">{t('feed.eventsCount', { count: day.count })}</span>
         <span className="grid size-6 shrink-0 self-center place-items-center rounded-md text-muted-foreground transition-colors group-hover:bg-field group-hover:text-foreground" title={t(open ? 'feed.collapseDay' : 'feed.expandDay')}>
           <RiArrowDownSLine className={cn('size-4 transition-transform', !open && '-rotate-90')} />
         </span>
+        <span className="text-lg font-semibold tracking-tight">{relative ?? date}</span>
+        <span className="truncate text-[0.8125rem] text-muted-foreground">{relative ? `${date}, ${weekday}` : weekday}</span>
+        <span className="ml-auto shrink-0 text-xs text-subtle-foreground">{t('feed.eventsCount', { count: day.count })}</span>
       </button>
     </div>
   )
