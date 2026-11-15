@@ -1,5 +1,5 @@
 import type { AnimeSummary, ContinueItem, ListStatus, UpcomingItem } from '@yoru/shared'
-import { Badge, Image, Progress, cn } from '@yoru/ui'
+import { Badge, Image, Progress, Tooltip, cn } from '@yoru/ui'
 import { RiArrowLeftSLine, RiArrowRightSLine, RiPlayLargeFill, RiRepeatFill, RiStarFill, RiTimeFill } from '@remixicon/react'
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import { Children, type CSSProperties, type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
@@ -120,8 +120,16 @@ export function AnimeCard({
   const { t } = useTranslation()
   const total = anime.episodes
   const details = [typeLabel(anime.type), seasonLabel(anime), total ? `${total} ${t('common.episodes')}` : null].filter(Boolean).join(' · ')
+  const titleRef = useRef<HTMLDivElement>(null)
+  const [clamped, setClamped] = useState(false)
   return (
-    <div className="group relative">
+    <div
+      className="group relative"
+      onPointerEnter={() => {
+        const el = titleRef.current
+        if (el) setClamped(el.scrollHeight > el.clientHeight + 1)
+      }}
+    >
       <CardLink href={href} to={`/anime/${anime.malId}`}>
       <div className="relative isolate aspect-[2/3] overflow-hidden rounded-xl bg-muted shadow-sm transition-shadow duration-150 group-hover:shadow-xl group-hover:shadow-black/40">
         {anime.imageUrl ? (
@@ -175,7 +183,13 @@ export function AnimeCard({
         </div>
       </div>
       <div className="min-w-0 px-0.5">
-        <div className="line-clamp-2 text-sm font-medium leading-snug"><AnimeTitle anime={anime} /></div>
+        {clamped ? (
+          <Tooltip content={<AnimeTitle anime={anime} />}>
+            <div ref={titleRef} className="line-clamp-2 text-sm font-medium leading-snug"><AnimeTitle anime={anime} /></div>
+          </Tooltip>
+        ) : (
+          <div ref={titleRef} className="line-clamp-2 text-sm font-medium leading-snug"><AnimeTitle anime={anime} /></div>
+        )}
         <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
           {subtitle ? (
             <span className="truncate">{subtitle}</span>
