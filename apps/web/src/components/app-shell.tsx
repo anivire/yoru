@@ -194,8 +194,8 @@ function SideRail({ position }: { position: Exclude<NavPosition, 'top'> }) {
   return (
     <aside
       className={cn(
-        'fixed inset-y-0 z-40 hidden w-16 flex-col items-center py-3 [view-transition-name:site-rail] md:flex',
-        position === 'left' ? 'left-2' : 'right-2',
+        'fixed inset-y-0 z-40 hidden w-14 flex-col items-center py-3 [view-transition-name:site-rail] md:flex',
+        position === 'left' ? 'left-1' : 'right-1',
       )}
     >
       <TLink to="/" aria-label="yoru" className="grid size-11 place-items-center">
@@ -256,7 +256,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { navPosition } = useAppearance()
   const rail = navPosition === 'top' ? null : navPosition
   return (
-    <div className={cn('flex min-h-dvh flex-col', rail && 'md:[--page-max:min(var(--page-max-setting),calc(100%-8rem))]')}>
+    <div className={cn('flex min-h-dvh flex-col', rail && 'md:[--page-max:min(var(--page-max-setting),calc(100%-5.3rem))]')}>
       {rail ? <SideRail position={rail} /> : null}
       <header ref={header.ref} className={cn('sticky top-0 z-40 pt-2', rail && 'md:hidden')}>
         <div className="mx-auto max-w-(--page-max) px-4 sm:px-6">
