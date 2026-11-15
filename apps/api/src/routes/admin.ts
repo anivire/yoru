@@ -21,7 +21,7 @@ import { getSetting, metadataSource, setSetting } from '../lib/settings'
 import { githubConfig, oauthConfig, setSourceEnabled, setSourceUrl } from '../lib/sources'
 import { intParam, parseBody } from '../lib/validate'
 import { clearDiscoverCache } from '../services/discover'
-import { providerEnabled, redirectUri } from '../services/importers'
+import { oauthConfigured, providerEnabled, redirectUri } from '../services/importers'
 import { resetSourceStatus, sourceInfos } from '../services/sources'
 
 const usedByUser = alias(users, 'used_by_user')
@@ -93,7 +93,7 @@ export const adminRoutes = new Hono<AppEnv>()
           return [
             p,
             {
-              configured: Boolean(config.clientId && config.clientSecret),
+              configured: oauthConfigured(p),
               clientId: config.clientId,
               hasSecret: Boolean(config.clientSecret),
               fromEnv: config.fromEnv,

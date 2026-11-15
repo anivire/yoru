@@ -33,9 +33,13 @@ export function redirectUri(provider: ImportProvider) {
   return `${env.appUrl}/api/import/${provider}/callback`
 }
 
-export function providerEnabled(provider: ImportProvider) {
+export function oauthConfigured(provider: ImportProvider) {
   const c = oauthConfig(provider)
-  return Boolean(c.clientId && c.clientSecret) && (provider !== 'shikimori' || sourceEnabled('shikimori'))
+  return Boolean(c.clientId && (c.clientSecret || provider === 'mal'))
+}
+
+export function providerEnabled(provider: ImportProvider) {
+  return oauthConfigured(provider) && (provider !== 'shikimori' || sourceEnabled('shikimori'))
 }
 
 export function createAuthorizeUrl(userId: number, provider: ImportProvider): string {
@@ -295,13 +299,14 @@ async function fetchMal(code: string, verifier: string): Promise<ImportItem[]> {
   const { clientId, clientSecret } = oauthConfig('mal')
   const token = await postToken('https://myanimelist.net/v1/oauth2/token', {
     client_id: clientId,
-    client_secret: clientSecret,
+    ...(clientSecret ? { client_secret: clientSecret } : {}),
     grant_type: 'authorization_code',
     code,
     code_verifier: verifier,
     redirect_uri: redirectUri('mal'),
   }, false)
-  const fields = 'list_status{comments,num_times_rewatched},num_episodes,media_type,alternative_titles,main_picture'
+  const fields =
+    'list_status{status,score,num_episodes_watched,is_rewatching,start_date,finish_date,comments,num_times_rewatched},num_episodes,media_type,alternative_titles,main_picture'
   let url: string | undefined = `https://api.myanimelist.net/v2/users/@me/animelist?fields=${encodeURIComponent(fields)}&limit=1000&nsfw=true`
   const items: ImportItem[] = []
   while (url) {
