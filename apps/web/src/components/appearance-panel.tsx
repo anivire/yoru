@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { PAGE_WIDTHS, useAppearance } from '../lib/appearance'
 import { useMe } from '../lib/queries'
 import { Flag } from './language'
-import { HomeLayoutSettings, NavPositionSettings, NavigationSettings } from './layout-settings'
+import { BackdropPicker, HomeLayoutSettings, NavPositionSettings, NavigationSettings } from './layout-settings'
 import { RailLabel, RailTip, useRailButton } from './rail'
 import { SchemePicker, ThemePicker } from './theme-picker'
 import { TLink } from './transition-link'
@@ -76,6 +76,9 @@ function AppearancePanel({ full }: { full: boolean }) {
             <span className="text-sm">{t('settings.expandSynopsis')}</span>
             <Switch checked={expandSynopsis} onCheckedChange={setExpandSynopsis} />
           </label>
+          <Section title={t('settings.backdrop.title')}>
+            <BackdropPicker />
+          </Section>
           <Section title={t('settings.navPosition.title')}>
             <NavPositionSettings />
           </Section>

@@ -354,6 +354,12 @@ export const en: Messages = {
       left: 'Left',
       right: 'Right',
     },
+    backdrop: {
+      title: 'Cover backdrop',
+      hint: 'Blurred cover behind the top of home, discover and anime pages',
+      full: 'Full width',
+      glow: 'Top half circle',
+    },
     navLabels: {
       title: 'Button labels',
       always: 'Always',

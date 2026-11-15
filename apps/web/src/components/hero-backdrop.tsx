@@ -1,4 +1,5 @@
 import { cn } from '@yoru/ui'
+import { useAppearance } from '../lib/appearance'
 import { useEffect, useState } from 'react'
 
 const FADE_MS = 700
@@ -21,6 +22,7 @@ function preload(src: string): Promise<void> {
 }
 
 export function HeroBackdrop({ src }: { src: string | null }) {
+  const { backdrop } = useAppearance()
   const [layers, setLayers] = useState<Layer[]>(() => (lastShown ? [{ src: lastShown, shown: true }] : []))
 
   useEffect(() => {
@@ -44,7 +46,7 @@ export function HeroBackdrop({ src }: { src: string | null }) {
   }, [src])
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[calc(100%+12rem)] overflow-hidden [mask-image:linear-gradient(to_bottom,black_45%,transparent)]">
+    <div className={cn('pointer-events-none absolute inset-x-0 top-0 -z-10 h-[calc(100%+12rem)] overflow-hidden', backdrop === 'glow' ? 'backdrop-glow' : '[mask-image:linear-gradient(to_bottom,black_45%,transparent)]')}>
       <div className="absolute inset-0 opacity-50">
       {layers.map((layer) => (
         <img

@@ -254,6 +254,7 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
 export function AnimePage() {
   const { t } = useTranslation()
   const malId = Number(useParams().id)
+  const { backdrop } = useAppearance()
   const { data, isPending, isError, error } = useQuery({ queryKey: keys.anime(malId), queryFn: () => api.anime(malId), enabled: malId > 0 })
   const title = useAnimeTitle()
   useDocumentTitle(data ? title(data.anime) : undefined)
@@ -269,7 +270,7 @@ export function AnimePage() {
 
   return (
     <div className="relative isolate -mt-(--header-h) pt-(--header-h)">
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[52rem] overflow-hidden [mask-image:linear-gradient(to_bottom,black_30%,transparent)]">
+      <div className={cn('pointer-events-none absolute inset-x-0 top-0 -z-10 h-[52rem] overflow-hidden', backdrop === 'glow' ? 'backdrop-glow' : '[mask-image:linear-gradient(to_bottom,black_30%,transparent)]')}>
         {data.anime.imageUrl ? <img src={data.anime.imageUrl} alt="" className="h-full w-full scale-110 object-cover object-[50%_25%] opacity-50 blur-xl" /> : null}
         <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-background/50 to-background/20" />
       </div>

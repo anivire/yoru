@@ -27,6 +27,8 @@ export type NavPosition = 'left' | 'top' | 'bottom' | 'right'
 
 export type NavLabels = 'always' | 'hover' | 'off'
 
+export type BackdropShape = 'full' | 'glow'
+
 export interface HomeSectionSetting {
   id: HomeSectionId
   visible: boolean
@@ -44,6 +46,7 @@ interface State {
   preferredAuthors: FavoriteAuthors
   navPosition: NavPosition
   navLabels: NavLabels
+  backdrop: BackdropShape
   titleLanguage: TitleLanguage
   appearanceButton: boolean
 }
@@ -76,6 +79,7 @@ interface Appearance extends State {
   setPreferredAuthors: (authors: FavoriteAuthors) => void
   setNavPosition: (position: NavPosition) => void
   setNavLabels: (labels: NavLabels) => void
+  setBackdrop: (shape: BackdropShape) => void
   setTitleLanguage: (language: TitleLanguage) => void
   setAppearanceButton: (show: boolean) => void
 }
@@ -97,6 +101,7 @@ function load(): State {
       preferredAuthors?: unknown
       navPosition?: string
       navLabels?: string
+      backdrop?: string
       titleLanguage?: string
       appearanceButton?: boolean
     }
@@ -117,11 +122,12 @@ function load(): State {
       preferredAuthors: normalizeFavorites(raw.preferredAuthors),
       navPosition: raw.navPosition === 'top' || raw.navPosition === 'bottom' || raw.navPosition === 'right' ? raw.navPosition : 'left',
       navLabels: raw.navLabels === 'hover' || raw.navLabels === 'off' ? raw.navLabels : 'always',
+      backdrop: raw.backdrop === 'glow' ? 'glow' : 'full',
       titleLanguage: TITLE_LANGUAGES.includes(raw.titleLanguage as TitleLanguage) ? (raw.titleLanguage as TitleLanguage) : 'romaji',
       appearanceButton: raw.appearanceButton !== false,
     }
   } catch {
-    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], defaultKind: 'sub', preferredAuthors: {}, navPosition: 'left', navLabels: 'always', titleLanguage: 'romaji', appearanceButton: true }
+    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], defaultKind: 'sub', preferredAuthors: {}, navPosition: 'left', navLabels: 'always', backdrop: 'full', titleLanguage: 'romaji', appearanceButton: true }
   }
 }
 
@@ -193,6 +199,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
         setPreferredAuthors: (preferredAuthors) => setState((s) => ({ ...s, preferredAuthors })),
         setNavPosition: (navPosition) => setState((s) => ({ ...s, navPosition })),
         setNavLabels: (navLabels) => setState((s) => ({ ...s, navLabels })),
+        setBackdrop: (backdrop) => setState((s) => ({ ...s, backdrop })),
         setTitleLanguage: (titleLanguage) => setState((s) => ({ ...s, titleLanguage })),
         setAppearanceButton: (appearanceButton) => setState((s) => ({ ...s, appearanceButton })),
       }}
