@@ -1,7 +1,7 @@
 {
   "name": "@yoru/ui",
   "private": true,
-  "version": "0.44.6",
+  "version": "0.44.7",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",

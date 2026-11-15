@@ -3,9 +3,11 @@ import { Spinner, cn } from '@yoru/ui'
 import type Hls from 'hls.js'
 import type JASSUB from 'jassub'
 import { RiArrowLeftSFill, RiCheckFill, RiClosedCaptioningFill, RiClosedCaptioningLine, RiDashboard3Fill, RiFullscreenExitFill, RiFullscreenFill, RiPauseLargeFill, RiPictureInPicture2Fill, RiPlayLargeFill, RiSettings3Fill, RiSkipBackFill, RiSkipForwardFill, RiVolumeDownFill, RiVolumeMuteFill, RiVolumeUpFill } from '@remixicon/react'
-import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatTime } from '../../lib/format'
+import { assToVtt } from './ass-to-vtt'
 
 const RATES = [0.75, 1, 1.25, 1.5, 2]
 const QUALITY_KEY = 'yoru:quality'
@@ -31,6 +33,8 @@ function pickSource(sources: StreamSource[]): StreamSource {
 }
 
 type Menu = null | 'root' | 'quality' | 'speed' | 'subs'
+
+const NATIVE_VIDEO_FULLSCREEN = typeof HTMLVideoElement !== 'undefined' && 'webkitEnterFullscreen' in HTMLVideoElement.prototype
 
 type FullscreenDocument = Document & { webkitFullscreenElement?: Element | null; webkitExitFullscreen?: () => void }
 type FullscreenElement = HTMLElement & { webkitRequestFullscreen?: () => void }
@@ -138,6 +142,37 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
       subsRef.current = null
     }
   }, [subtitlesUrl, subsOn])
+
+  const vtt = useQuery({
+    queryKey: ['subtitles-vtt', subtitlesUrl],
+    queryFn: async () => {
+      const res = await fetch(subtitlesUrl!)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      return assToVtt(await res.text())
+    },
+    enabled: NATIVE_VIDEO_FULLSCREEN && Boolean(subtitlesUrl) && subsOn,
+    staleTime: Infinity,
+  }).data
+  const vttUrl = useMemo(() => (vtt ? URL.createObjectURL(new Blob([vtt], { type: 'text/vtt' })) : null), [vtt])
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !vttUrl || !subsOn) return
+    const setMode = (mode: TextTrackMode) => {
+      for (const track of Array.from(video.textTracks)) track.mode = mode
+    }
+    setMode('hidden')
+    const show = () => setMode('showing')
+    const hide = () => setMode('hidden')
+    video.addEventListener('webkitbeginfullscreen', show)
+    video.addEventListener('webkitendfullscreen', hide)
+    return () => {
+      video.removeEventListener('webkitbeginfullscreen', show)
+      video.removeEventListener('webkitendfullscreen', hide)
+    }
+  }, [vttUrl, subsOn])
+  useEffect(() => () => {
+    if (vttUrl) URL.revokeObjectURL(vttUrl)
+  }, [vttUrl])
 
   useEffect(() => {
     const v = videoRef.current
@@ -316,7 +351,9 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
             onEnded()
           }}
           onError={() => setError(t('player.noSources'))}
-        />
+        >
+          {vttUrl && subsOn ? <track key={vttUrl} kind="subtitles" srcLang="ru" label={t('player.subtitles')} src={vttUrl} /> : null}
+        </video>
       </div>
 
       {waiting && !error ? (
