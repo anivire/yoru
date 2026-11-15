@@ -397,7 +397,6 @@ function ImportTab() {
         <div className="grid gap-3 sm:grid-cols-3">
           {IMPORT_PROVIDERS.map((p) => {
             const enabled = status.data?.providers[p]
-            const env = p.toUpperCase()
             return (
               <Card key={p} className="flex flex-col gap-4 p-4">
                 <div className="flex items-center gap-3">
@@ -417,13 +416,6 @@ function ImportTab() {
                     ) : null}
                   </div>
                 </div>
-                {enabled === false && isAdmin ? (
-                  <code className="break-all rounded-md bg-inset px-2 py-1.5 font-mono text-[0.6875rem] text-muted-foreground">
-                    {env}_CLIENT_ID
-                    <br />
-                    {env}_CLIENT_SECRET
-                  </code>
-                ) : null}
                 {enabled ? (
                   <Button asChild variant="secondary" size="sm" className="mt-auto">
                     <a href={api.importStartUrl(p)}>
