@@ -1,4 +1,5 @@
 import type {
+  SkipTime,
   AccountInfo,
   ActivityData,
   AdminSettings,
@@ -105,6 +106,7 @@ export const api = {
   matchSearch: (q: string) => get<ProviderCandidate[]>(`/anime/match/search${qs({ q })}`),
 
   list: (params: Record<string, string | number | undefined>) => get<ListResponse>(`/list${qs(params)}`),
+  skipTimes: (malId: number, episode: number, length: number) => get<SkipTime[]>(`/anime/${malId}/skip/${episode}?length=${Math.round(length)}`),
   listStatuses: () => get<Record<number, ListStatus>>('/list/statuses'),
   share: () => get<ShareInfo>('/me/share'),
   createShare: () => request<ShareInfo>('POST', '/me/share'),
@@ -114,8 +116,8 @@ export const api = {
   deleteEntry: (malId: number) => request<{ ok: true }>('DELETE', `/list/${malId}`),
   exportUrl: (format: string) => `/api/list/export?format=${format}`,
 
-  saveProgress: (malId: number, episode: number, position: number, duration: number) =>
-    request<{ ok: true }>('PUT', `/progress/${malId}/${episode}`, { position, duration }),
+  saveProgress: (malId: number, episode: number, position: number, duration: number, threshold?: number) =>
+    request<{ ok: true }>('PUT', `/progress/${malId}/${episode}`, { position, duration, threshold }),
 
   translations: (malId: number, episode: number, kind: StreamKind) =>
     get<Translation[]>(`/stream/${malId}/translations${qs({ episode, kind })}`),

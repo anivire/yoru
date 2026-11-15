@@ -17,7 +17,7 @@ export const EXPORT_FORMATS = ['yoru', 'json', 'csv', 'mal-xml'] as const
 export type ExportFormat = (typeof EXPORT_FORMATS)[number]
 
 export const METADATA_SOURCES = ['jikan', 'anime365'] as const
-export const DATA_SOURCES = ['anime365', 'jikan', 'shikimori', 'anilist', 'github'] as const
+export const DATA_SOURCES = ['anime365', 'jikan', 'shikimori', 'anilist', 'aniskip', 'github'] as const
 export type DataSourceId = (typeof DATA_SOURCES)[number]
 export type MetadataSource = (typeof METADATA_SOURCES)[number]
 
@@ -334,6 +334,14 @@ export interface AdminUser {
   entries: number
 }
 
+export type SkipKind = 'op' | 'ed' | 'recap'
+
+export interface SkipTime {
+  kind: SkipKind
+  start: number
+  end: number
+}
+
 export interface DataSourceInfo {
   id: DataSourceId
   enabled: boolean
@@ -428,6 +436,7 @@ export type ListEntryInput = z.infer<typeof listEntryInputSchema>
 export const progressInputSchema = z.object({
   position: z.number().min(0),
   duration: z.number().min(0),
+  threshold: z.number().min(0.5).max(1).optional(),
 })
 
 export const inviteInputSchema = z.object({

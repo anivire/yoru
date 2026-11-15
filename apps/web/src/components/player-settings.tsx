@@ -1,12 +1,12 @@
 import { STREAM_KINDS } from '@yoru/shared'
-import { Button, Card, Input, Segmented, cn } from '@yoru/ui'
+import { Button, Card, Input, Segmented, Switch, cn } from '@yoru/ui'
 import { DndContext, type DragEndEvent, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { RiAddFill, RiCloseFill, RiDraggable } from '@remixicon/react'
 import { type FormEvent, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useAppearance } from '../lib/appearance'
+import { WATCHED_THRESHOLDS, useAppearance } from '../lib/appearance'
 import { IS_IOS } from '../lib/device'
 import { type FavoriteGroup, rememberedAuthors } from '../lib/favorite-authors'
 import { Block } from '../pages/settings'
@@ -43,7 +43,7 @@ function SortableAuthor({ author, index, onRemove }: { author: string; index: nu
 
 export function PlayerTab() {
   const { t } = useTranslation()
-  const { defaultKind, setDefaultKind, preferredAuthors, setPreferredAuthors, iosFullscreen, setIosFullscreen } = useAppearance()
+  const { defaultKind, setDefaultKind, preferredAuthors, setPreferredAuthors, iosFullscreen, setIosFullscreen, autoNext, setAutoNext, watchedAt, setWatchedAt } = useAppearance()
   const [draft, setDraft] = useState('')
   const [picked, setPicked] = useState<FavoriteGroup>(defaultKind)
   const groups: FavoriteGroup[] = preferredAuthors.any?.length ? [...STREAM_KINDS, 'any'] : [...STREAM_KINDS]
@@ -155,18 +155,51 @@ export function PlayerTab() {
           ) : null}
         </Card>
       </Block>
-      {IS_IOS ? (
-        <Block title={t('settings.playerPrefs.iosFullscreen')} description={t('settings.playerPrefs.iosFullscreenHint')}>
-          <Segmented
-            value={iosFullscreen}
-            onChange={setIosFullscreen}
-            options={[
-              { value: 'app', label: t('settings.playerPrefs.iosFullscreenApp') },
-              { value: 'native', label: t('settings.playerPrefs.iosFullscreenNative') },
-            ]}
-          />
-        </Block>
-      ) : null}
+      <Block title={t('settings.playerPrefs.playback')}>
+        <Card className="py-1">
+          <label className="flex cursor-pointer items-center justify-between gap-4 px-5 py-3">
+            <span>
+              <span className="block text-sm">{t('settings.playerPrefs.autoNext')}</span>
+              <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.playerPrefs.autoNextHint')}</span>
+            </span>
+            <Switch checked={autoNext} onCheckedChange={setAutoNext} />
+          </label>
+          <div className="flex flex-col gap-3 px-5 py-3">
+            <span>
+              <span className="block text-sm">{t('settings.playerPrefs.watchedAt')}</span>
+              <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.playerPrefs.watchedAtHint')}</span>
+            </span>
+            <Segmented
+              size="sm"
+              className="self-start"
+              value={String(watchedAt)}
+              onChange={(v) => setWatchedAt(Number(v))}
+              options={WATCHED_THRESHOLDS.map((ratio) => ({
+                value: String(ratio),
+                label: ratio === 1 ? t('settings.playerPrefs.watchedAtEnd') : `${Math.round(ratio * 100)}%`,
+              }))}
+            />
+          </div>
+          {IS_IOS ? (
+            <div className="flex flex-col gap-3 px-5 py-3">
+              <span>
+                <span className="block text-sm">{t('settings.playerPrefs.iosFullscreen')}</span>
+                <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.playerPrefs.iosFullscreenHint')}</span>
+              </span>
+              <Segmented
+                size="sm"
+                className="self-start"
+                value={iosFullscreen}
+                onChange={setIosFullscreen}
+                options={[
+                  { value: 'app', label: t('settings.playerPrefs.iosFullscreenApp') },
+                  { value: 'native', label: t('settings.playerPrefs.iosFullscreenNative') },
+                ]}
+              />
+            </div>
+          ) : null}
+        </Card>
+      </Block>
     </>
   )
 }

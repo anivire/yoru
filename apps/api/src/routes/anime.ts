@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { createMiddleware } from 'hono/factory'
-import { type AnimePage, type Genre, type ProviderCandidate, type Screenshot, type SearchResult, providerMatchSchema } from '@yoru/shared'
+import { type AnimePage, type Genre, type ProviderCandidate, type Screenshot, type SearchResult, type SkipTime, providerMatchSchema } from '@yoru/shared'
 import { type AppEnv, requireAuth } from '../lib/auth'
 import { UpstreamError } from '../lib/http'
 import { metadataSource } from '../lib/settings'
@@ -14,6 +14,7 @@ import { animeExtras } from '../services/extras'
 import { animeLinks } from '../services/links'
 import { resolveMatch, setManualMatch } from '../services/provider'
 import { shikimori } from '../services/shikimori'
+import { skipTimes } from '../services/aniskip'
 
 const A365_PAGE = 24
 const RESPONSE_TTL = 10 * 60_000
@@ -120,6 +121,11 @@ export const animeRoutes = new Hono<AppEnv>()
   .get('/:id/screenshots', async (c) => c.json(await shikimori.gallery(intParam(c, 'id')).catch(() => [] as Screenshot[])))
   .get('/:id/match', async (c) => c.json(await resolveMatch(intParam(c, 'id'))))
   .get('/:id/links', async (c) => c.json(await animeLinks(intParam(c, 'id'))))
+  .get('/:id/skip/:episode', async (c) => {
+    const length = Number(c.req.query('length'))
+    const skips = await skipTimes(intParam(c, 'id'), intParam(c, 'episode'), Number.isFinite(length) && length > 0 ? length : 0).catch(() => [] as SkipTime[])
+    return c.json(skips)
+  })
   .put('/:id/match', async (c) => {
     const { providerId } = await parseBody(c, providerMatchSchema)
     return c.json(await setManualMatch(intParam(c, 'id'), providerId))

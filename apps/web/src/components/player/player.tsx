@@ -1,10 +1,10 @@
-import type { StreamSource } from '@yoru/shared'
+import type { SkipTime, StreamSource } from '@yoru/shared'
 import { Spinner, cn } from '@yoru/ui'
 import type Hls from 'hls.js'
 import type JASSUB from 'jassub'
 import { RiArrowLeftSFill, RiCheckFill, RiClosedCaptioningFill, RiClosedCaptioningLine, RiDashboard3Fill, RiFullscreenExitFill, RiFullscreenFill, RiPauseLargeFill, RiPictureInPicture2Fill, RiPlayLargeFill, RiSettings3Fill, RiSkipBackFill, RiSkipForwardFill, RiVolumeDownFill, RiVolumeMuteFill, RiVolumeUpFill } from '@remixicon/react'
 import { useQuery } from '@tanstack/react-query'
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatTime } from '../../lib/format'
 import { assToVtt } from './ass-to-vtt'
@@ -27,7 +27,12 @@ export interface PlayerProps {
   onEnded: () => void
   onNext?: () => void
   onPrev?: () => void
+  onDuration?: (duration: number) => void
+  skips?: SkipTime[]
+  autoNext?: boolean
 }
+
+const COUNTDOWN_SECONDS = 5
 
 function pickSource(sources: StreamSource[]): StreamSource {
   const preferred = Number(localStorage.getItem(QUALITY_KEY)) || 1080
@@ -48,7 +53,7 @@ function fullscreenElement() {
   return document.fullscreenElement ?? (document as FullscreenDocument).webkitFullscreenElement ?? null
 }
 
-export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPlay, onProgress, onEnded, onNext, onPrev }: PlayerProps) {
+export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPlay, onProgress, onEnded, onNext, onPrev, onDuration, skips, autoNext = true }: PlayerProps) {
   const { t } = useTranslation()
   const rootRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -69,6 +74,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   const [rate, setRate] = useState(1)
   const [subsOn, setSubsOn] = useState(() => localStorage.getItem(SUBS_KEY) !== 'off')
   const [fullscreen, setFullscreen] = useState(false)
+  const [countdown, setCountdown] = useState<number | null>(null)
   const [stretched, setStretched] = useState(false)
   const { iosFullscreen } = useAppearance()
   const nativeIos = IS_IOS && iosFullscreen === 'native'
@@ -348,6 +354,21 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
     return () => window.removeEventListener('keydown', onKey)
   }, [toggle, seekBy, toggleFullscreen, poke, onNext, onPrev, subsOn])
 
+  const activeSkip = skips?.find((s) => time >= s.start && time < s.end - 1)
+
+  const goNext = useEffectEvent(() => onEnded())
+
+  useEffect(() => {
+    if (countdown === null) return
+    const id = window.setTimeout(() => {
+      if (countdown <= 1) {
+        setCountdown(null)
+        goNext()
+      } else setCountdown(countdown - 1)
+    }, 1000)
+    return () => window.clearTimeout(id)
+  }, [countdown])
+
   const VolumeIcon = muted || volume === 0 ? RiVolumeMuteFill : volume < 0.5 ? RiVolumeDownFill : RiVolumeUpFill
   const pct = duration ? (time / duration) * 100 : 0
 
@@ -372,6 +393,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
           preload="metadata"
           onPlay={() => {
             setPlaying(true)
+            setCountdown(null)
             poke()
           }}
           onPause={() => {
@@ -383,7 +405,11 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
           onPlaying={() => setWaiting(false)}
           onCanPlay={() => setWaiting(false)}
           onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-          onDurationChange={(e) => setDuration(e.currentTarget.duration)}
+          onDurationChange={(e) => {
+            const d = e.currentTarget.duration
+            setDuration(d)
+            if (Number.isFinite(d) && d > 0) onDuration?.(d)
+          }}
           onTimeUpdate={(e) => {
             const v = e.currentTarget
             setTime(v.currentTime)
@@ -392,7 +418,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
           }}
           onEnded={() => {
             save(true)
-            onEnded()
+            if (autoNext && onNext) setCountdown(COUNTDOWN_SECONDS)
           }}
           onError={() => setError(t('player.noSources'))}
         >
@@ -410,7 +436,49 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         <div className="absolute inset-0 grid place-items-center bg-black/70 p-6 text-center text-sm text-white/80">{error}</div>
       ) : null}
 
-      {!playing && !waiting && !error ? (
+      {activeSkip && !error && countdown === null ? (
+        <button
+          type="button"
+          onClick={() => {
+            const v = videoRef.current
+            if (v) v.currentTime = Math.min(activeSkip.end, v.duration || activeSkip.end)
+            poke()
+          }}
+          className={cn(
+            'absolute right-3 z-10 flex h-10 cursor-pointer items-center gap-2 rounded-xl bg-white/90 px-4 text-sm font-semibold text-black shadow-2xl transition-[bottom] hover:bg-white sm:right-5',
+            controls ? 'bottom-20 sm:bottom-24' : 'bottom-5',
+          )}
+        >
+          <RiSkipForwardFill className="size-4" />
+          {t(`player.skip.${activeSkip.kind}`)}
+        </button>
+      ) : null}
+
+      {countdown !== null ? (
+        <div className="absolute inset-0 z-10 grid place-items-center bg-black/70 p-4">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="text-sm text-white/70">{t('player.nextIn')}</div>
+            <div className="font-mono text-5xl font-semibold tabular-nums">{countdown}</div>
+            <div className="mt-1 flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setCountdown(null)
+                  onEnded()
+                }}
+                className="flex h-10 cursor-pointer items-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-black hover:bg-white/90">
+                <RiSkipForwardFill className="size-4" />
+                {t('player.watchNext')}
+              </button>
+              <button type="button" onClick={() => setCountdown(null)} className="h-10 cursor-pointer rounded-xl bg-white/15 px-4 text-sm font-medium text-white hover:bg-white/25">
+                {t('common.cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {!playing && !waiting && !error && countdown === null ? (
         <button type="button" onClick={toggle} className="absolute left-1/2 top-1/2 grid size-12 -translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/90 text-black shadow-2xl sm:size-16">
           <RiPlayLargeFill className="size-6 sm:size-8" />
         </button>

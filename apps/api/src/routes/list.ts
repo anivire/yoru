@@ -92,7 +92,7 @@ export const progressRoutes = new Hono<AppEnv>()
   .put('/:malId/:episode', async (c) => {
     const malId = intParam(c, 'malId')
     const episode = intParam(c, 'episode')
-    const { position, duration } = await parseBody(c, progressInputSchema)
+    const { position, duration, threshold } = await parseBody(c, progressInputSchema)
     const userId = c.get('user').id
     const values = { position, duration, updatedAt: now() }
     db.insert(watchProgress)
@@ -100,7 +100,7 @@ export const progressRoutes = new Hono<AppEnv>()
       .onConflictDoUpdate({ target: [watchProgress.userId, watchProgress.malId, watchProgress.episode], set: values })
       .run()
     const row = getAnimeRow(malId) ?? (await ensureAnime(malId))
-    if (duration > 0 && position / duration >= 0.85) {
+    if (duration > 0 && position / duration >= (threshold ?? 0.85) - 0.001) {
       logEpisodes(userId, malId, [episode])
       markWatched(userId, malId, episode, row.episodes)
     }

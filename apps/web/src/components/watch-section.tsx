@@ -75,7 +75,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
   const malId = anime.malId
   const title = useAnimeTitle()
   const [params, setParams] = useSearchParams()
-  const { defaultKind, preferredAuthors, setPreferredAuthors, pageWidth } = useAppearance()
+  const { defaultKind, preferredAuthors, setPreferredAuthors, pageWidth, autoNext, watchedAt } = useAppearance()
   const side = pageWidth !== '3xl' && pageWidth !== '4xl'
   const source = parseSource(params.get('source')) ?? parseSource(localStorage.getItem(sourceKey(malId))) ?? 'anime365'
   const libria = source === 'anilibria'
@@ -141,9 +141,9 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
   const onProgress = useCallback(
     (position: number, duration: number) => {
       if (!episode) return
-      void api.saveProgress(malId, episode, position, duration).then(() => {
+      void api.saveProgress(malId, episode, position, duration, watchedAt).then(() => {
         const key = `${malId}:${episode}`
-        if (duration > 0 && position / duration >= 0.85 && markedRef.current !== key) {
+        if (duration > 0 && position / duration >= watchedAt - 0.001 && markedRef.current !== key) {
           markedRef.current = key
           void client.invalidateQueries({ queryKey: keys.anime(malId) })
           void client.invalidateQueries({ queryKey: keys.episodes(malId) })
@@ -152,7 +152,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
         }
       })
     },
-    [malId, episode, client],
+    [malId, episode, client, watchedAt],
   )
 
   const startAt = current?.position && current.duration && current.position / current.duration < 0.9 ? current.position : 0
@@ -160,7 +160,19 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
   const tokenProblem = streamError?.message === 'ANIME365_TOKEN_MISSING' || streamError?.message === 'ANIME365_TOKEN_INVALID'
 
   const libriaEpisode = episode ? libriaEpisodes.get(episode) : undefined
+  const lengthKey = `${malId}:${episode}:${libria ? 'libria' : translationId}`
+  const [videoLength, setVideoLength] = useState<{ key: string; value: number } | null>(null)
+  const length = videoLength?.key === lengthKey ? videoLength.value : 0
+  const skips = useQuery({
+    queryKey: ['skip-times', malId, episode, Math.round(length)],
+    queryFn: () => api.skipTimes(malId, episode!, length),
+    enabled: Boolean(episode) && length > 0,
+    staleTime: Infinity,
+  })
   const playerProps = {
+    skips: skips.data,
+    autoNext,
+    onDuration: (value: number) => setVideoLength((prev) => (prev?.key === lengthKey && Math.round(prev.value) === Math.round(value) ? prev : { key: lengthKey, value })),
     startAt,
     autoPlay: params.get('autoplay') === '1',
     title: current?.title ? `${t('common.episode')} ${episode} · ${current.title}` : `${t('common.episode')} ${episode}`,

@@ -9,6 +9,7 @@ const DEFAULT_URLS: Record<UrlSource, string> = {
   jikan: env.jikanUrl,
   shikimori: env.shikimoriUrl,
   anilist: env.anilistUrl,
+  aniskip: env.aniskipUrl,
 }
 
 const GITHUB_API = 'https://api.github.com'

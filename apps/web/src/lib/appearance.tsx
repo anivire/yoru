@@ -31,6 +31,8 @@ export type BackdropShape = 'full' | 'glow'
 
 export type IosFullscreen = 'app' | 'native'
 
+export const WATCHED_THRESHOLDS = [0.7, 0.8, 0.85, 0.9, 0.95, 1] as const
+
 export interface HomeSectionSetting {
   id: HomeSectionId
   visible: boolean
@@ -50,6 +52,8 @@ interface State {
   navLabels: NavLabels
   backdrop: BackdropShape
   iosFullscreen: IosFullscreen
+  autoNext: boolean
+  watchedAt: number
   titleLanguage: TitleLanguage
   appearanceButton: boolean
 }
@@ -86,6 +90,8 @@ interface Appearance extends State {
   setNavLabels: (labels: NavLabels) => void
   setBackdrop: (shape: BackdropShape) => void
   setIosFullscreen: (mode: IosFullscreen) => void
+  setAutoNext: (enabled: boolean) => void
+  setWatchedAt: (ratio: number) => void
   setTitleLanguage: (language: TitleLanguage) => void
   setAppearanceButton: (show: boolean) => void
 }
@@ -109,6 +115,8 @@ function load(): State {
       navLabels?: string
       backdrop?: string
       iosFullscreen?: string
+      autoNext?: boolean
+      watchedAt?: number
       titleLanguage?: string
       appearanceButton?: boolean
     }
@@ -131,11 +139,13 @@ function load(): State {
       navLabels: raw.navLabels === 'hover' || raw.navLabels === 'off' ? raw.navLabels : 'always',
       backdrop: raw.backdrop === 'glow' ? 'glow' : 'full',
       iosFullscreen: raw.iosFullscreen === 'app' ? 'app' : 'native',
+      autoNext: raw.autoNext !== false,
+      watchedAt: (WATCHED_THRESHOLDS as readonly number[]).includes(raw.watchedAt as number) ? (raw.watchedAt as number) : 0.85,
       titleLanguage: TITLE_LANGUAGES.includes(raw.titleLanguage as TitleLanguage) ? (raw.titleLanguage as TitleLanguage) : 'romaji',
       appearanceButton: raw.appearanceButton !== false,
     }
   } catch {
-    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], defaultKind: 'sub', preferredAuthors: {}, navPosition: 'left', navLabels: 'always', backdrop: 'full', iosFullscreen: 'native', titleLanguage: 'romaji', appearanceButton: true }
+    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], defaultKind: 'sub', preferredAuthors: {}, navPosition: 'left', navLabels: 'always', backdrop: 'full', iosFullscreen: 'native', autoNext: true, watchedAt: 0.85, titleLanguage: 'romaji', appearanceButton: true }
   }
 }
 
@@ -247,6 +257,8 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
         setNavLabels: (navLabels) => setState((s) => ({ ...s, navLabels })),
         setBackdrop: (backdrop) => setState((s) => ({ ...s, backdrop })),
         setIosFullscreen: (iosFullscreen) => setState((s) => ({ ...s, iosFullscreen })),
+        setAutoNext: (autoNext) => setState((s) => ({ ...s, autoNext })),
+        setWatchedAt: (watchedAt) => setState((s) => ({ ...s, watchedAt })),
         setTitleLanguage: (titleLanguage) => setState((s) => ({ ...s, titleLanguage })),
         setAppearanceButton: (appearanceButton) => setState((s) => ({ ...s, appearanceButton })),
       }}

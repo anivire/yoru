@@ -16,6 +16,8 @@ function probeTarget(id: DataSourceId, url: string): string {
       return `${url}/api/animes?limit=1`
     case 'anilist':
       return url
+    case 'aniskip':
+      return `${url}/v2/skip-times/21/1?types[]=op&episodeLength=0`
     case 'github':
       return `${url}/repos/${githubConfig().repo}`
   }

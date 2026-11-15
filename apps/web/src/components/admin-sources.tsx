@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { type AdminSettings, type AdminSettingsInput, type DataSourceId, type DataSourceInfo, IMPORT_PROVIDERS, type ImportProvider } from '@yoru/shared'
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Code, Field, Input, Skeleton, Spinner, StatusDot, Switch, toast } from '@yoru/ui'
-import { RiKey2Fill } from '@remixicon/react'
+import { RiKey2Fill, RiSkipForwardFill } from '@remixicon/react'
 import { type FormEvent, type ReactNode, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
@@ -9,7 +9,7 @@ import { errorMessage } from '../lib/queries'
 import { PROVIDER_NAMES, ProviderIcon } from './providers'
 import { Anime365Mark } from './source-logo'
 
-const SOURCE_NAMES: Record<DataSourceId, string> = { anime365: 'Anime365', jikan: 'Jikan', shikimori: 'Shikimori', anilist: 'AniList', github: 'GitHub' }
+const SOURCE_NAMES: Record<DataSourceId, string> = { anime365: 'Anime365', jikan: 'Jikan', shikimori: 'Shikimori', anilist: 'AniList', aniskip: 'AniSkip', github: 'GitHub' }
 
 function GithubMark() {
   return (
@@ -24,6 +24,13 @@ function SourceIcon({ id }: { id: DataSourceId }) {
   if (id === 'jikan') return <ProviderIcon provider="mal" />
   if (id === 'shikimori') return <ProviderIcon provider="shikimori" />
   if (id === 'anilist') return <ProviderIcon provider="anilist" />
+  if (id === 'aniskip') {
+    return (
+      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent">
+        <RiSkipForwardFill className="size-[1.125rem]" />
+      </span>
+    )
+  }
   return (
     <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-inverse text-inverse-foreground">
       <GithubMark />
