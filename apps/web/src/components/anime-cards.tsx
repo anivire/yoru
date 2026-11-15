@@ -1,8 +1,8 @@
 import type { AnimeSummary, ContinueItem, ListStatus, UpcomingItem } from '@yoru/shared'
 import { Badge, Image, Progress, cn } from '@yoru/ui'
-import { RiPlayLargeFill, RiRepeatFill, RiStarFill, RiTimeFill } from '@remixicon/react'
+import { RiArrowLeftSLine, RiArrowRightSLine, RiPlayLargeFill, RiRepeatFill, RiStarFill, RiTimeFill } from '@remixicon/react'
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
-import { Children, type ReactNode, type RefObject, useLayoutEffect, useRef, useState } from 'react'
+import { Children, type CSSProperties, type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatDateTime, formatTime, relativeTime, seasonLabel, typeLabel } from '../lib/format'
 import { useAppearance } from '../lib/appearance'
@@ -385,16 +385,145 @@ export function UpcomingCard({ item }: { item: UpcomingItem }) {
   )
 }
 
+const RAIL_FADE = '3rem'
+
 export function Rail({ children, size = 'wide' }: { children: ReactNode; size?: 'wide' | 'poster' }) {
+  const { t } = useTranslation()
+  const ref = useRef<HTMLDivElement>(null)
+  const drag = useRef<{ x: number; left: number; moved: boolean; lastX: number; lastT: number; v: number } | null>(null)
+  const dragged = useRef(false)
+  const [dragging, setDragging] = useState(false)
+  const [settling, setSettling] = useState(false)
+  const [edges, setEdges] = useState({ prev: false, next: false })
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const update = () => {
+      const prev = el.scrollLeft > 4
+      const next = el.scrollLeft + el.clientWidth < el.scrollWidth - 4
+      setEdges((e) => (e.prev === prev && e.next === next ? e : { prev, next }))
+    }
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+    const resize = new ResizeObserver(update)
+    resize.observe(el)
+    const mutation = new MutationObserver(update)
+    mutation.observe(el, { childList: true })
+    return () => {
+      el.removeEventListener('scroll', update)
+      resize.disconnect()
+      mutation.disconnect()
+    }
+  }, [])
+
+  const page = (dir: 1 | -1) => {
+    const el = ref.current
+    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.85, behavior: 'smooth' })
+  }
+
+  const endDrag = () => {
+    const d = drag.current
+    const el = ref.current
+    dragged.current = Boolean(d?.moved)
+    drag.current = null
+    setDragging(false)
+    if (!d?.moved || !el) return
+    const fling = performance.now() - d.lastT < 80 && Math.abs(d.v) > 0.05 ? d.v * 300 : 0
+    const projected = el.scrollLeft - fling
+    const max = el.scrollWidth - el.clientWidth
+    let target = projected
+    let best = Infinity
+    for (const child of Array.from(el.children) as HTMLElement[]) {
+      const left = Math.min(child.offsetLeft, max)
+      if (Math.abs(left - projected) < best) {
+        best = Math.abs(left - projected)
+        target = left
+      }
+    }
+    setSettling(true)
+    let done = false
+    const finish = () => {
+      if (done) return
+      done = true
+      setSettling(false)
+    }
+    el.addEventListener('scrollend', finish, { once: true })
+    window.setTimeout(finish, 700)
+    el.scrollTo({ left: Math.max(0, Math.min(max, target)), behavior: 'smooth' })
+  }
+
+  const mask: CSSProperties = {
+    maskImage: `linear-gradient(to right, ${edges.prev ? `transparent, #000 ${RAIL_FADE}` : '#000, #000'}, ${edges.next ? `#000 calc(100% - ${RAIL_FADE}), transparent` : '#000, #000'})`,
+  }
+
   return (
-    <div
+    <div className="group/rail relative">
+      <div
+        ref={ref}
+        style={mask}
+        onPointerDown={(e) => {
+          dragged.current = false
+          if (e.pointerType !== 'mouse' || e.button !== 0) return
+          drag.current = { x: e.clientX, left: e.currentTarget.scrollLeft, moved: false, lastX: e.clientX, lastT: e.timeStamp, v: 0 }
+        }}
+        onPointerMove={(e) => {
+          const d = drag.current
+          if (!d) return
+          const dx = e.clientX - d.x
+          if (!d.moved) {
+            if (Math.abs(dx) < 6) return
+            d.moved = true
+            setDragging(true)
+            e.currentTarget.setPointerCapture(e.pointerId)
+          }
+          e.currentTarget.scrollLeft = d.left - dx
+          const dt = e.timeStamp - d.lastT
+          if (dt > 0) d.v = d.v * 0.6 + ((e.clientX - d.lastX) / dt) * 0.4
+          d.lastX = e.clientX
+          d.lastT = e.timeStamp
+        }}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onClickCapture={(e) => {
+          if (!dragged.current) return
+          dragged.current = false
+          e.preventDefault()
+          e.stopPropagation()
+        }}
+        onDragStart={(e) => e.preventDefault()}
+        className={cn(
+          'flex gap-4 overflow-x-auto pb-2 scrollbar-none [&>*]:shrink-0 [&>*]:snap-start',
+          dragging && 'cursor-grabbing select-none',
+          !dragging && !settling && 'snap-x',
+          size === 'wide' ? '[&>*]:w-72' : '[&>*]:w-36 sm:[&>*]:w-44',
+        )}
+      >
+        {children}
+      </div>
+      <RailArrow dir={-1} visible={edges.prev} size={size} label={t('common.scrollPrev')} onClick={() => page(-1)} />
+      <RailArrow dir={1} visible={edges.next} size={size} label={t('common.scrollNext')} onClick={() => page(1)} />
+    </div>
+  )
+}
+
+function RailArrow({ dir, visible, size, label, onClick }: { dir: 1 | -1; visible: boolean; size: 'wide' | 'poster'; label: string; onClick: () => void }) {
+  const Icon = dir === 1 ? RiArrowRightSLine : RiArrowLeftSLine
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      tabIndex={visible ? 0 : -1}
+      onClick={onClick}
       className={cn(
-        'flex snap-x gap-4 overflow-x-auto pb-2 scrollbar-none [&>*]:shrink-0 [&>*]:snap-start',
-        size === 'wide' ? '[&>*]:w-72' : '[&>*]:w-36 sm:[&>*]:w-44',
+        'absolute z-10 grid size-10 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-raised text-foreground shadow-lg ring-1 ring-border transition-[opacity,scale] duration-150 hover:scale-105 active:scale-95 [@media(hover:none)]:hidden [&_svg]:size-6',
+        dir === 1 ? 'right-2' : 'left-2',
+        size === 'poster' ? 'top-[6.75rem] sm:top-[8.25rem]' : 'top-[calc(50%-0.25rem)]',
+        visible ? 'opacity-0 group-hover/rail:opacity-100 focus-visible:opacity-100' : 'pointer-events-none opacity-0',
       )}
     >
-      {children}
-    </div>
+      <Icon />
+    </button>
   )
 }
 

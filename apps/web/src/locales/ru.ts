@@ -34,6 +34,8 @@ export const ru = {
   },
   common: {
     close: 'Закрыть',
+    scrollPrev: 'Прокрутить назад',
+    scrollNext: 'Прокрутить вперёд',
     save: 'Сохранить',
     saved: 'Сохранено',
     cancel: 'Отмена',

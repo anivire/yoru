@@ -36,6 +36,8 @@ export const en: Messages = {
   },
   common: {
     close: 'Close',
+    scrollPrev: 'Scroll back',
+    scrollNext: 'Scroll forward',
     save: 'Save',
     saved: 'Saved',
     cancel: 'Cancel',
