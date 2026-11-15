@@ -8,6 +8,10 @@ import { seasonLabel, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
 import { AnimeCard, Rail } from './anime-cards'
 
+function useListStatuses() {
+  return useQuery({ queryKey: keys.listStatuses, queryFn: api.listStatuses, staleTime: 60_000 }).data
+}
+
 export function useAnimeExtras(malId: number) {
   return useQuery({ queryKey: keys.extras(malId), queryFn: () => api.extras(malId), staleTime: 60 * 60_000 })
 }
@@ -27,6 +31,7 @@ function Section({ title, action, className, children }: { title: string; action
 function RelatedSection({ malId }: { malId: number }) {
   const { t } = useTranslation()
   const { data } = useAnimeExtras(malId)
+  const statuses = useListStatuses()
   if (!data?.relations.length) return null
   return (
     <Section title={t('anime.related')}>
@@ -35,6 +40,7 @@ function RelatedSection({ malId }: { malId: number }) {
           <AnimeCard
             key={`${relation}-${anime.malId}`}
             anime={anime}
+            status={statuses?.[anime.malId]}
             subtitle={[t(`anime.relation.${relation}`, { defaultValue: relation }), typeLabel(anime.type), anime.year].filter(Boolean).join(' · ')}
           />
         ))}
@@ -90,12 +96,13 @@ function CharactersSection({ malId }: { malId: number }) {
 function RecommendationsSection({ malId }: { malId: number }) {
   const { t } = useTranslation()
   const { data } = useAnimeExtras(malId)
+  const statuses = useListStatuses()
   if (!data?.recommendations.length) return null
   return (
     <Section title={t('anime.recommendations')}>
       <Rail size="poster">
         {data.recommendations.map((anime) => (
-          <AnimeCard key={anime.malId} anime={anime} subtitle={[typeLabel(anime.type), seasonLabel(anime)].filter(Boolean).join(' · ')} />
+          <AnimeCard key={anime.malId} anime={anime} status={statuses?.[anime.malId]} subtitle={[typeLabel(anime.type), seasonLabel(anime)].filter(Boolean).join(' · ')} />
         ))}
       </Rail>
     </Section>

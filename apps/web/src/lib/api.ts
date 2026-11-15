@@ -16,6 +16,7 @@ import type {
   ListEntry,
   ListEntryInput,
   ListResponse,
+  ListStatus,
   NotificationList,
   ProviderCandidate,
   ProviderMatch,
@@ -104,6 +105,7 @@ export const api = {
   matchSearch: (q: string) => get<ProviderCandidate[]>(`/anime/match/search${qs({ q })}`),
 
   list: (params: Record<string, string | number | undefined>) => get<ListResponse>(`/list${qs(params)}`),
+  listStatuses: () => get<Record<number, ListStatus>>('/list/statuses'),
   share: () => get<ShareInfo>('/me/share'),
   createShare: () => request<ShareInfo>('POST', '/me/share'),
   deleteShare: () => request<ShareInfo>('DELETE', '/me/share'),

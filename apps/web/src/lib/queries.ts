@@ -24,6 +24,7 @@ export const keys = {
   extras: (id: number) => ['extras', id] as const,
   screenshots: (id: number) => ['screenshots', id] as const,
   list: (params: object) => ['list', params] as const,
+  listStatuses: ['list-statuses'] as const,
   notifications: ['notifications'] as const,
 }
 
@@ -81,6 +82,7 @@ export function patchListEntry(client: QueryClient, malId: number, patch: Partia
       : data,
   )
   void client.invalidateQueries({ queryKey: ['list'], refetchType: 'none' })
+  void client.invalidateQueries({ queryKey: keys.listStatuses })
 }
 
 function definedFields<T extends object>(input: T): Partial<T> {
@@ -104,6 +106,7 @@ function useEntryCache(malId: number) {
       if (!inFlight.get(malId) && !pendingSaves.has(malId)) {
         void client.invalidateQueries({ queryKey: keys.anime(malId) })
         void client.invalidateQueries({ queryKey: ['list'], refetchType: 'none' })
+        void client.invalidateQueries({ queryKey: keys.listStatuses })
         void client.invalidateQueries({ queryKey: keys.home })
         void client.invalidateQueries({ queryKey: keys.episodes(malId) })
       }
@@ -112,6 +115,7 @@ function useEntryCache(malId: number) {
   const restore = (previous: AnimePage | undefined) => {
     if (previous) client.setQueryData(keys.anime(malId), previous)
     void client.invalidateQueries({ queryKey: ['list'] })
+    void client.invalidateQueries({ queryKey: keys.listStatuses })
   }
   return { client, snapshot, setEntry, run, restore }
 }

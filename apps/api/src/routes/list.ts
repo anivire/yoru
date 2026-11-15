@@ -10,7 +10,7 @@ import {
   progressInputSchema,
 } from '@yoru/shared'
 import { db, now } from '../db/client'
-import { watchProgress } from '../db/schema'
+import { listEntries, watchProgress } from '../db/schema'
 import { type AppEnv, requireAuth } from '../lib/auth'
 import { badRequest } from '../lib/http'
 import { intParam, parseBody } from '../lib/validate'
@@ -54,6 +54,10 @@ export function listPage(userId: number, query: (key: string) => string | undefi
 export const listRoutes = new Hono<AppEnv>()
   .use(requireAuth)
   .get('/', (c) => c.json(listPage(c.get('user').id, (key) => c.req.query(key))))
+  .get('/statuses', (c) => {
+    const rows = db.select({ malId: listEntries.malId, status: listEntries.status }).from(listEntries).where(eq(listEntries.userId, c.get('user').id)).all()
+    return c.json(Object.fromEntries(rows.map((r) => [r.malId, r.status as ListStatus])) as Record<number, ListStatus>)
+  })
   .get('/export', (c) => {
     const format = c.req.query('format') as ExportFormat
     if (!EXPORT_FORMATS.includes(format)) badRequest('Unknown format')
