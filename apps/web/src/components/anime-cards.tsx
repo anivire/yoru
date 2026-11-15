@@ -1,7 +1,7 @@
 import type { AnimeSummary, ContinueItem, ListStatus, UpcomingItem } from '@yoru/shared'
 import { Badge, Image, Progress, cn } from '@yoru/ui'
 import { RiPlayLargeFill, RiRepeatFill, RiStarFill, RiTimeFill } from '@remixicon/react'
-import type { ReactNode } from 'react'
+import { Children, type ReactNode, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatDateTime, formatTime, relativeTime, seasonLabel, typeLabel } from '../lib/format'
 import { useAppearance } from '../lib/appearance'
@@ -211,17 +211,36 @@ function CardLink({ href, to, children }: { href?: string; to: string; children:
   )
 }
 
-export function PosterGrid({ children, className }: { children: ReactNode; className?: string }) {
+function useGridColumns(enabled: boolean) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [columns, setColumns] = useState(0)
+  useEffect(() => {
+    const el = ref.current
+    if (!enabled || !el) return
+    const measure = () => setColumns(getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [enabled])
+  return { ref, columns }
+}
+
+export function PosterGrid({ children, className, fullRows = false }: { children: ReactNode; className?: string; fullRows?: boolean }) {
   const { stretch } = useAppearance()
+  const { ref, columns } = useGridColumns(fullRows)
+  const items = Children.toArray(children)
+  const shown = fullRows && columns > 0 && items.length > columns ? items.slice(0, items.length - (items.length % columns)) : items
   return (
     <div
+      ref={ref}
       className={cn(
         'grid gap-x-4 gap-y-6',
         stretch ? 'grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(11rem,1fr))]' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6',
         className,
       )}
     >
-      {children}
+      {shown}
     </div>
   )
 }

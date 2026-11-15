@@ -98,7 +98,7 @@ export function SharedListPage() {
             ) : view === 'table' ? (
               <ListTable items={items} external />
             ) : (
-              <PosterGrid>
+              <PosterGrid fullRows={hasNextPage}>
                 {items.map((e) => (
                   <AnimeCard
                     key={e.malId}

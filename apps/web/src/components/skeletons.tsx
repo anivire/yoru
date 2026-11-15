@@ -23,7 +23,7 @@ export function AnimeCardSkeleton() {
 
 export function PosterGridSkeleton({ count = 12 }: { count?: number }) {
   return (
-    <PosterGrid>
+    <PosterGrid fullRows>
       {Array.from({ length: count }, (_, i) => (
         <AnimeCardSkeleton key={i} />
       ))}

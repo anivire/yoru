@@ -156,7 +156,7 @@ export function SearchPage() {
         <EmptyState mood="thinking" title={t('search.nothing')} description={t('search.nothingHint')} />
       ) : (
         <>
-          <PosterGrid>
+          <PosterGrid fullRows={results.hasNextPage}>
             {items.map((a) => (
               <AnimeCard key={a.malId} anime={a} />
             ))}

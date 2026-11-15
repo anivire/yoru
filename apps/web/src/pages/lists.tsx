@@ -109,7 +109,7 @@ export function ListsPage() {
       ) : view === 'table' ? (
         <ListTable items={items} />
       ) : (
-        <PosterGrid>
+        <PosterGrid fullRows={hasNextPage}>
           {items.map((e) => (
             <AnimeCard
               key={e.malId}
