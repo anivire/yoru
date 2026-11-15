@@ -187,13 +187,44 @@ function DaySection({ day }: { day: Day }) {
 
 function FeedSkeleton() {
   return (
-    <div className="flex flex-col gap-6 pl-11">
-      {Array.from({ length: 3 }, (_, i) => (
-        <div key={i} className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-3">
-          {Array.from({ length: 6 }, (_, j) => (
-            <Skeleton key={j} className="aspect-[2/3] rounded-xl" />
-          ))}
-        </div>
+    <div className="relative">
+      <span aria-hidden className="absolute bottom-0 left-4 top-4 w-px -translate-x-1/2 bg-border" />
+      {[[3, 1], [2]].map((groups, i) => (
+        <section key={i} className="relative mb-12 last:mb-0">
+          <div className="relative mb-5 flex items-center gap-3">
+            <span className="grid size-8 shrink-0 place-items-center">
+              <span className="size-3 rounded-full bg-muted ring-4 ring-background" />
+            </span>
+            <div className="flex min-w-0 flex-1 items-center gap-2 border-b border-border pb-2">
+              <Skeleton className="size-6 rounded-md" />
+              <Skeleton className="h-6 w-28 rounded-md" />
+              <Skeleton className="h-4 w-32 rounded-md" />
+              <Skeleton className="ml-auto h-3.5 w-16 rounded-md" />
+            </div>
+          </div>
+          <ol>
+            {groups.map((cards, j) => (
+              <li key={j} className="relative pb-7 pl-11 last:pb-0">
+                <span className="absolute left-0 top-0 size-8 rounded-full bg-background ring-4 ring-background">
+                  <Skeleton className="size-8 rounded-full" />
+                </span>
+                <div className="mb-3 flex min-h-8 items-center gap-2">
+                  <Skeleton className="h-4 w-44 rounded-md" />
+                  <Skeleton className="h-3.5 w-10 rounded-md" />
+                </div>
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-3 gap-y-4">
+                  {Array.from({ length: cards }, (_, k) => (
+                    <div key={k} className="flex flex-col gap-2">
+                      <Skeleton className="aspect-[2/3] rounded-xl" />
+                      <Skeleton className="h-4 w-4/5 rounded-md" />
+                      <Skeleton className="h-3 w-1/2 rounded-md" />
+                    </div>
+                  ))}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
       ))}
     </div>
   )
