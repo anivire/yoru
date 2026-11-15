@@ -293,7 +293,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { navPosition, appearanceButton } = useAppearance()
   const rail = navPosition === 'top' ? null : navPosition
   return (
-    <div className={cn('flex min-h-dvh flex-col', rail && 'md:[--page-max:min(var(--page-max-setting),calc(100%-5.3rem))]')}>
+    <div className={cn('flex min-h-dvh flex-col', rail && 'md:[--page-max:min(var(--page-max-setting),calc(100%-5.3rem))] md:[--page-top:1.125rem]')}>
       {rail ? <SideRail position={rail} /> : null}
       <header ref={header.ref} className={cn('sticky top-0 z-40 pt-2', rail && 'md:hidden')}>
         <div className="mx-auto max-w-(--page-max) px-4 sm:px-6">
@@ -335,7 +335,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 export function Page({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn('mx-auto w-full max-w-(--page-max) px-4 pb-8 pt-4 sm:px-6 sm:pt-8', className)}>{children}</div>
+  return <div className={cn('mx-auto w-full max-w-(--page-max) px-4 pb-8 pt-4 sm:px-6 sm:pt-(--page-top,2rem)', className)}>{children}</div>
 }
 
 export function PageHeader({ title, description, actions }: { title: ReactNode; description?: ReactNode; actions?: ReactNode }) {
