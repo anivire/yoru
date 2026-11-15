@@ -122,10 +122,19 @@ function widthIndex(width: PageWidth) {
   return PAGE_WIDTHS.findIndex((w) => w.value === width)
 }
 
+function resolveColor(variable: string): string {
+  const probe = document.createElement('span')
+  probe.style.color = `var(${variable})`
+  probe.style.display = 'none'
+  document.body.append(probe)
+  const color = getComputedStyle(probe).color
+  probe.remove()
+  return color
+}
+
 function updateFavicon() {
-  const css = getComputedStyle(document.documentElement)
-  const body = css.getPropertyValue('--logo').trim()
-  const ink = css.getPropertyValue('--logo-ink').trim()
+  const body = resolveColor('--logo')
+  const ink = resolveColor('--logo-ink')
   if (!body || !ink) return
   let link = document.querySelector<HTMLLinkElement>('link[rel~="icon"]')
   if (!link) {

@@ -45,6 +45,7 @@
   --hue: 275;
   --tint: 0;
   --accent-c: 0.16;
+  --logo-scale: 1;
 }
 
 :root,
@@ -73,8 +74,8 @@
   --ring: oklch(0.56 var(--accent-c) var(--hue) / 0.45);
   --inverse: oklch(0.2 calc(var(--tint) * 1.5) var(--hue));
   --inverse-foreground: oklch(0.985 0 0);
-  --logo: oklch(0.76 0.11 var(--hue));
-  --logo-ink: oklch(0.24 0.06 var(--hue));
+  --logo: oklch(0.76 calc(0.11 * var(--logo-scale)) var(--hue));
+  --logo-ink: oklch(0.24 calc(0.06 * var(--logo-scale)) var(--hue));
 
   --success: oklch(0.6 0.15 150);
   --success-soft: oklch(0.6 0.15 150 / 0.14);
@@ -110,8 +111,8 @@
   --ring: oklch(0.72 var(--accent-c) var(--hue) / 0.5);
   --inverse: oklch(0.95 0 0);
   --inverse-foreground: oklch(0.16 0 0);
-  --logo: oklch(0.85 0.085 var(--hue));
-  --logo-ink: oklch(0.2 0.045 var(--hue));
+  --logo: oklch(0.85 calc(0.085 * var(--logo-scale)) var(--hue));
+  --logo-ink: oklch(0.2 calc(0.045 * var(--logo-scale)) var(--hue));
 
   --success: oklch(0.74 0.17 150);
   --success-soft: oklch(0.74 0.17 150 / 0.16);
@@ -193,6 +194,7 @@
   --hue: 260;
   --tint: 0.003;
   --accent-c: 0.02;
+  --logo-scale: 0.1;
 }
 
 @layer base {
