@@ -131,7 +131,7 @@ export function Footer({ scope, compact, className }: { scope: 'app' | 'public';
                 <Logo />
               </TLink>
               <p className="max-w-xs text-sm text-muted-foreground">{t('footer.tagline')}</p>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-3 text-sm text-muted-foreground">
                 {repoUrl ? (
                   <a href={repoUrl} target="_blank" rel="noreferrer" className={linkClass}>
                     <RiGithubFill className="size-4" />
