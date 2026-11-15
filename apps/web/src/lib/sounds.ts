@@ -1,5 +1,5 @@
 import { type CueName, type ThemeName, observe, play, set, unlock } from '@foleyjs/core'
-import { onToast } from '@yoru/ui'
+import { onStep, onToast } from '@yoru/ui'
 import { useSyncExternalStore } from 'react'
 
 export const SOUND_THEMES = ['soft', 'default', 'mechanical', 'glass'] as const satisfies readonly ThemeName[]
@@ -109,6 +109,9 @@ export function installSounds() {
     },
     { capture: true },
   )
+  onStep((position) => {
+    if (state.enabled && state.interface) play('tick', { pitch: position * 7 - 3.5 })
+  })
   onToast((kind) => {
     if (kind in TOAST_CUES) cue('feedback', TOAST_CUES[kind as keyof typeof TOAST_CUES])
   })
