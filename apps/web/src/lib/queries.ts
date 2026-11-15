@@ -1,5 +1,5 @@
-import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { AnimePage, ListEntry, ListEntryInput, User } from '@yoru/shared'
+import { type InfiniteData, QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { AnimePage, ListEntry, ListEntryInput, ListResponse, User } from '@yoru/shared'
 import { toast } from '@yoru/ui'
 import { useTranslation } from 'react-i18next'
 import { ApiError, api } from './api'
@@ -52,6 +52,25 @@ function entryMutationKey(malId: number) {
   return ['entry', malId] as const
 }
 
+export function patchListEntry(client: QueryClient, malId: number, patch: Partial<ListEntry> | null) {
+  client.setQueriesData<InfiniteData<ListResponse>>({ queryKey: ['list'] }, (data) =>
+    data
+      ? {
+          ...data,
+          pages: data.pages.map((page) => ({
+            ...page,
+            items: patch ? page.items.map((e) => (e.malId === malId ? { ...e, ...patch } : e)) : page.items.filter((e) => e.malId !== malId),
+          })),
+        }
+      : data,
+  )
+  void client.invalidateQueries({ queryKey: ['list'], refetchType: 'none' })
+}
+
+function definedFields<T extends object>(input: T): Partial<T> {
+  return Object.fromEntries(Object.entries(input).filter(([, v]) => v !== undefined)) as Partial<T>
+}
+
 function useEntryCache(malId: number) {
   const client = useQueryClient()
   const snapshot = async () => {
@@ -63,7 +82,7 @@ function useEntryCache(malId: number) {
   const settle = () => {
     if (client.isMutating({ mutationKey: entryMutationKey(malId) }) > 1) return
     void client.invalidateQueries({ queryKey: keys.anime(malId) })
-    void client.invalidateQueries({ queryKey: ['list'] })
+    void client.invalidateQueries({ queryKey: ['list'], refetchType: 'none' })
     void client.invalidateQueries({ queryKey: keys.home })
     void client.invalidateQueries({ queryKey: keys.episodes(malId) })
   }
@@ -87,14 +106,17 @@ export function useSaveEntry(malId: number) {
         startedAt: null,
         completedAt: null,
         ...entry,
-        ...Object.fromEntries(Object.entries(input).filter(([, v]) => v !== undefined)),
+        ...definedFields(input),
         status: input.status,
         updatedAt: new Date().toISOString(),
       }))
+      patchListEntry(cache.client, malId, { ...definedFields(input), status: input.status })
       return { previous }
     },
+    onSuccess: (entry) => patchListEntry(cache.client, malId, entry),
     onError: (e, _input, context) => {
       if (context?.previous) cache.client.setQueryData(keys.anime(malId), context.previous)
+      void cache.client.invalidateQueries({ queryKey: ['list'] })
       toast.error(e instanceof Error ? e.message : t('common.error'))
     },
     onSettled: cache.settle,
@@ -110,10 +132,12 @@ export function useDeleteEntry(malId: number) {
     onMutate: async () => {
       const previous = await cache.snapshot()
       cache.setEntry(() => null)
+      patchListEntry(cache.client, malId, null)
       return { previous }
     },
     onError: (e, _input, context) => {
       if (context?.previous) cache.client.setQueryData(keys.anime(malId), context.previous)
+      void cache.client.invalidateQueries({ queryKey: ['list'] })
       toast.error(e instanceof Error ? e.message : t('common.error'))
     },
     onSettled: cache.settle,
