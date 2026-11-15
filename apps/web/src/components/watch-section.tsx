@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { type AnimeDetails, type Episode, type ListEntry, STREAM_KINDS, type StreamKind } from '@yoru/shared'
 import { Button, Mascot, Select, Spinner, Tooltip, cn } from '@yoru/ui'
 import { RiClosedCaptioningFill, RiMicFill, RiSettings3Fill, RiStarFill, RiStarLine, RiVolumeUpFill } from '@remixicon/react'
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { type ReactNode, useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 import { ApiError, api } from '../lib/api'
@@ -112,17 +112,15 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
     enabled: Boolean(!libria && episode && available && match.data?.providerId),
   })
 
-  const [translationId, setTranslationId] = useState<number | null>(null)
-  useEffect(() => {
+  const [pickedId, setPickedId] = useState<number | null>(null)
+  const translationId = useMemo(() => {
     const items = translations.data
-    if (!items?.length) {
-      setTranslationId(null)
-      return
-    }
+    if (!items?.length) return null
+    if (pickedId !== null && items.some((x) => x.id === pickedId)) return pickedId
     const remembered = localStorage.getItem(authorKey(malId, kind))
     const favorite = pickFavorite(preferredAuthors, kind, items)
-    setTranslationId((items.find((x) => x.author === remembered) ?? favorite ?? items[0]!).id)
-  }, [translations.data, malId, kind, preferredAuthors])
+    return (items.find((x) => x.author === remembered) ?? favorite ?? items[0]!).id
+  }, [translations.data, pickedId, malId, kind, preferredAuthors])
 
   const translation = translations.data?.find((x) => x.id === translationId)
   const favorite = translation ? isFavorite(preferredAuthors, kind, translation.author) : false
@@ -305,7 +303,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
             onValueChange={(v) => {
               const tr = translations.data?.find((x) => String(x.id) === v)
               if (tr) localStorage.setItem(authorKey(malId, kind), tr.author)
-              setTranslationId(Number(v))
+              setPickedId(Number(v))
             }}
             options={(translations.data ?? []).map((x) => ({
               value: String(x.id),

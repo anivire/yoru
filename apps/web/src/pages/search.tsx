@@ -2,7 +2,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { ANIME_TYPES } from '@yoru/shared'
 import { Button, EmptyState, Input, Select, cn } from '@yoru/ui'
 import { RiBroadcastFill, RiCloseFill, RiSearchFill as SearchIcon, RiSortDesc, RiTvFill } from '@remixicon/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 import { AnimeCard, PosterGrid } from '../components/anime-cards'
@@ -29,17 +29,29 @@ export function SearchPage() {
     order_by: params.get('order_by') ?? undefined,
   }
 
-  useEffect(() => setInput(q), [q])
-  useEffect(() => {
-    const id = setTimeout(() => {
-      if (input.trim() === q) return
-      const next = new URLSearchParams(params)
-      if (input.trim()) next.set('q', input.trim())
-      else next.delete('q')
-      setParams(next, { replace: true })
+  const [syncedQ, setSyncedQ] = useState(q)
+  if (q !== syncedQ) {
+    setSyncedQ(q)
+    if (q !== input.trim()) setInput(q)
+  }
+  const debounce = useRef<number | undefined>(undefined)
+  useEffect(() => () => window.clearTimeout(debounce.current), [])
+  const changeInput = (value: string) => {
+    setInput(value)
+    window.clearTimeout(debounce.current)
+    debounce.current = window.setTimeout(() => {
+      setParams(
+        (prev) => {
+          if (value.trim() === (prev.get('q') ?? '')) return prev
+          const next = new URLSearchParams(prev)
+          if (value.trim()) next.set('q', value.trim())
+          else next.delete('q')
+          return next
+        },
+        { replace: true },
+      )
     }, 400)
-    return () => clearTimeout(id)
-  }, [input])
+  }
 
   const setFilter = (key: string, value: string) => {
     const next = new URLSearchParams(params)
@@ -79,9 +91,9 @@ export function SearchPage() {
       <div className="mb-8 flex flex-col gap-3">
         <div className="relative">
           <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
-          <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder={t('search.placeholder')} className="h-11 rounded-xl pl-10 text-[0.9375rem]" autoFocus />
+          <Input value={input} onChange={(e) => changeInput(e.target.value)} placeholder={t('search.placeholder')} className="h-11 rounded-xl pl-10 text-[0.9375rem]" autoFocus />
           {input ? (
-            <button type="button" onClick={() => setInput('')} className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-1 text-subtle-foreground hover:text-foreground">
+            <button type="button" onClick={() => changeInput('')} className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-1 text-subtle-foreground hover:text-foreground">
               <RiCloseFill className="size-4" />
             </button>
           ) : null}

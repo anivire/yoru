@@ -58,11 +58,6 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   const [hover, setHover] = useState<{ x: number; time: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    setSource(pickSource(sources))
-    resumeRef.current = startAt
-  }, [sources, startAt])
-
   const save = useCallback(
     (force = false) => {
       const v = videoRef.current

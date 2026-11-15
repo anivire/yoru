@@ -33,6 +33,7 @@ There is no test suite. Before finishing a change, run the typecheck for every p
 - Single quotes, no semicolons, 2-space indent, long single-line JSX attributes are normal. There is no formatter config in the repo: do not run Prettier or another formatter over files, it rewrites the whole file in a different style.
 - Do not add code comments. Explain decisions in the commit message or the conversation instead.
 - Match the surrounding code: Tailwind utility classes inline, `cn()` from `@yoru/ui` for conditional classes, small components in the same file as their only user.
+- Effects are for syncing with things outside React (DOM APIs, subscriptions, timers, `localStorage`, media elements). Follow [You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect): derive values during render (`useMemo` only when expensive), handle user actions in event handlers, reset state with a `key` or by comparing to the previous value during render, and fetch through TanStack Query. Do not use an effect to copy props or query data into state, to chain state updates, or to notify a parent.
 - Prefer the existing primitives in `packages/ui` (Button, Select, Segmented, StepSlider, Tooltip, Popover, DropdownMenu, Dialog, Switch) over new ones. `DropdownMenu` defaults to `modal={false}` so it does not lock page scroll.
 
 ## Frontend conventions

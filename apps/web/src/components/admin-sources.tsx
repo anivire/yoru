@@ -2,12 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { type AdminSettings, type AdminSettingsInput, type DataSourceId, type DataSourceInfo, IMPORT_PROVIDERS, type ImportProvider } from '@yoru/shared'
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Code, Field, Input, Skeleton, Spinner, StatusDot, Switch, toast } from '@yoru/ui'
 import { RiKey2Fill } from '@remixicon/react'
-import { type FormEvent, type ReactNode, useEffect, useState } from 'react'
+import { type FormEvent, type ReactNode, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { errorMessage } from '../lib/queries'
 import { PROVIDER_NAMES, ProviderIcon } from './providers'
-import { ANIME365_LOGO } from '../lib/logos'
+import { Anime365Mark } from './source-logo'
 
 const SOURCE_NAMES: Record<DataSourceId, string> = { anime365: 'Anime365', jikan: 'Jikan', shikimori: 'Shikimori', anilist: 'AniList', github: 'GitHub' }
 
@@ -20,13 +20,7 @@ function GithubMark() {
 }
 
 function SourceIcon({ id }: { id: DataSourceId }) {
-  if (id === 'anime365') {
-    return (
-      <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-white">
-        <img src={ANIME365_LOGO} alt="" className="size-7 object-contain" />
-      </span>
-    )
-  }
+  if (id === 'anime365') return <Anime365Mark />
   if (id === 'jikan') return <ProviderIcon provider="mal" />
   if (id === 'shikimori') return <ProviderIcon provider="shikimori" />
   if (id === 'anilist') return <ProviderIcon provider="anilist" />
@@ -74,7 +68,6 @@ function UrlField({ info }: { info: DataSourceInfo }) {
   const { t } = useTranslation()
   const save = useSaveSettings([['me']])
   const [value, setValue] = useState(info.customUrl ? info.url : '')
-  useEffect(() => setValue(info.customUrl ? info.url : ''), [info.url, info.customUrl])
   const changed = value.trim() !== (info.customUrl ? info.url : '')
   const submit = (e: FormEvent) => {
     e.preventDefault()
@@ -203,10 +196,6 @@ function GithubExtras({ settings }: { settings: AdminSettings }) {
   const save = useSaveSettings([['version']])
   const [repo, setRepo] = useState(settings.github.repo)
   const [branch, setBranch] = useState(settings.github.branch)
-  useEffect(() => {
-    setRepo(settings.github.repo)
-    setBranch(settings.github.branch)
-  }, [settings.github.repo, settings.github.branch])
   const changed = repo.trim() !== settings.github.repo || branch.trim() !== settings.github.branch
   return (
     <>
@@ -254,7 +243,7 @@ function SourceCard({ info, settings }: { info: DataSourceInfo; settings: AdminS
   const uses = t(`admin.sources.${info.id}`, { returnObjects: true }) as unknown as string[]
   let extras: ReactNode = null
   if (info.id === 'anime365') extras = <Anime365Extras settings={settings} />
-  if (info.id === 'github') extras = <GithubExtras settings={settings} />
+  if (info.id === 'github') extras = <GithubExtras key={`${settings.github.repo}|${settings.github.branch}`} settings={settings} />
   return (
     <div className="flex flex-col gap-4 rounded-xl bg-field/50 p-3 sm:p-4">
       <div className="flex items-center gap-3">
@@ -283,7 +272,7 @@ function SourceCard({ info, settings }: { info: DataSourceInfo; settings: AdminS
         </ul>
         {info.id === 'jikan' && !info.enabled ? <p className="mt-2 text-[0.8125rem] text-warning">{t('admin.sources.jikanOff')}</p> : null}
       </div>
-      <UrlField info={info} />
+      <UrlField key={`${info.url}|${info.customUrl}`} info={info} />
       {extras}
     </div>
   )
@@ -324,7 +313,6 @@ function OAuthProvider({ provider, settings }: { provider: ImportProvider; setti
   const info = settings.oauth[provider]
   const save = useSaveSettings([['import-status']])
   const [clientId, setClientId] = useState(info.clientId)
-  useEffect(() => setClientId(info.clientId), [info.clientId])
   return (
     <div className="flex flex-col gap-3 rounded-xl bg-field/50 p-3 sm:p-4">
       <div className="flex items-center gap-3">
@@ -393,7 +381,7 @@ export function OAuthSettings() {
       </CardHeader>
       <CardContent className="grid gap-3 md:grid-cols-3">
         {data
-          ? IMPORT_PROVIDERS.map((p) => <OAuthProvider key={p} provider={p} settings={data} />)
+          ? IMPORT_PROVIDERS.map((p) => <OAuthProvider key={`${p}|${data.oauth[p].clientId}`} provider={p} settings={data} />)
           : Array.from({ length: 3 }, (_, i) => <Skeleton key={i} className="h-64 rounded-xl" />)}
       </CardContent>
     </Card>
