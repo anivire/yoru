@@ -52,12 +52,12 @@ function useVersion(scope: 'app' | 'public') {
   return useQuery({ queryKey: ['version', scope], queryFn: api.version, staleTime: 30 * 60_000 }).data
 }
 
-function VersionBadge({ scope }: { scope: 'app' | 'public' }) {
+function VersionBadge({ scope, centered }: { scope: 'app' | 'public'; centered?: boolean }) {
   const { t } = useTranslation()
   const data = useVersion(scope)
   if (!data) return <Skeleton className="h-4 w-24 rounded-full" />
   return (
-    <span className="inline-flex flex-wrap items-center gap-2">
+    <span className="contents">
       <a href={data.repoUrl} target="_blank" rel="noreferrer" className="hover:text-foreground">
         v{data.version}
       </a>
@@ -67,16 +67,18 @@ function VersionBadge({ scope }: { scope: 'app' | 'public' }) {
         </a>
       ) : null}
       {data.updateAvailable ? (
-        <a
-          href={data.compareUrl ?? data.repoUrl}
-          target="_blank"
-          rel="noreferrer"
-          title={data.latest?.message}
-          className="inline-flex h-6 items-center gap-1.5 rounded-full bg-accent-soft px-2.5 text-xs font-medium text-accent hover:bg-accent hover:text-accent-foreground"
-        >
-          <RiArrowUpCircleFill className="size-3.5" />
-          {data.latest?.version && data.latest.version !== data.version ? t('version.updateTo', { version: data.latest.version }) : t('version.update')}
-        </a>
+        <span className={cn('flex basis-full', centered && 'justify-center')}>
+          <a
+            href={data.compareUrl ?? data.repoUrl}
+            target="_blank"
+            rel="noreferrer"
+            title={data.latest?.message}
+            className="inline-flex h-6 items-center gap-1.5 rounded-full bg-accent-soft px-2.5 text-xs font-medium text-accent hover:bg-accent hover:text-accent-foreground"
+          >
+            <RiArrowUpCircleFill className="size-3.5" />
+            {data.latest?.version && data.latest.version !== data.version ? t('version.updateTo', { version: data.latest.version }) : t('version.update')}
+          </a>
+        </span>
       ) : null}
     </span>
   )
@@ -114,7 +116,7 @@ export function Footer({ scope, compact, className }: { scope: 'app' | 'public';
     return (
       <footer className={cn('flex flex-wrap items-center justify-center gap-2 py-6 text-sm text-muted-foreground', className)}>
         <span>yoru</span>
-        <VersionBadge scope={scope} />
+        <VersionBadge scope={scope} centered />
       </footer>
     )
   }
@@ -123,8 +125,8 @@ export function Footer({ scope, compact, className }: { scope: 'app' | 'public';
     <footer className={cn('mt-12', className)}>
       <div className="page-frame px-4 sm:px-6">
         <div className="border-t border-border py-10">
-          <div className={cn('grid grid-cols-2 gap-x-6 gap-y-8', scope === 'app' ? 'md:grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(0,1fr))]' : 'md:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))]')}>
-            <div className="col-span-2 flex flex-col gap-3 md:col-span-1">
+          <div className="flex flex-col gap-8 lg:flex-row lg:justify-between lg:gap-12">
+            <div className="flex flex-col gap-3 lg:max-w-sm">
               <TLink to="/" className="w-fit">
                 <Logo />
               </TLink>
@@ -139,24 +141,26 @@ export function Footer({ scope, compact, className }: { scope: 'app' | 'public';
                 <VersionBadge scope={scope} />
               </div>
             </div>
-            {scope === 'app' ? <AppColumns /> : null}
-            <Column title={t('footer.sources')}>
-              {SOURCES.map((s) => (
-                <External key={s.name} href={s.url}>
-                  {s.name}
-                </External>
-              ))}
-            </Column>
-            <Column title={t('footer.project')}>
-              {repoUrl ? (
-                <>
-                  <External href={repoUrl}>GitHub</External>
-                  <External href={`${repoUrl}/commits`}>{t('footer.changelog')}</External>
-                  <External href={`${repoUrl}/issues`}>{t('footer.issues')}</External>
-                  <External href={`${repoUrl}#readme`}>{t('footer.selfHost')}</External>
-                </>
-              ) : null}
-            </Column>
+            <div className={cn('grid grid-cols-2 gap-x-6 gap-y-8 sm:gap-x-12', scope === 'app' ? 'sm:grid-cols-[repeat(4,auto)]' : 'sm:grid-cols-[repeat(2,auto)]')}>
+              {scope === 'app' ? <AppColumns /> : null}
+              <Column title={t('footer.sources')}>
+                {SOURCES.map((s) => (
+                  <External key={s.name} href={s.url}>
+                    {s.name}
+                  </External>
+                ))}
+              </Column>
+              <Column title={t('footer.project')}>
+                {repoUrl ? (
+                  <>
+                    <External href={repoUrl}>GitHub</External>
+                    <External href={`${repoUrl}/commits`}>{t('footer.changelog')}</External>
+                    <External href={`${repoUrl}/issues`}>{t('footer.issues')}</External>
+                    <External href={`${repoUrl}#readme`}>{t('footer.selfHost')}</External>
+                  </>
+                ) : null}
+              </Column>
+            </div>
           </div>
         </div>
       </div>
