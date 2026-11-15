@@ -375,7 +375,6 @@ export const en: Messages = {
       authorsEmpty: 'Empty for now, the first translation in the list is used',
       add: 'Add',
       placeholder: 'For example, AniLibria',
-      up: 'Move up',
       remove: 'Remove',
     },
     dragToReorder: 'Drag to reorder',

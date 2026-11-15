@@ -373,7 +373,6 @@ export const ru = {
       authorsEmpty: 'Пока пусто, выбирается первый перевод из списка',
       add: 'Добавить',
       placeholder: 'Например, AniLibria',
-      up: 'Выше',
       remove: 'Убрать',
     },
     dragToReorder: 'Перетащите, чтобы изменить порядок',
