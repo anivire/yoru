@@ -39,6 +39,22 @@ function groupKey(item: FeedItem) {
   return item.type
 }
 
+function absorb(day: Day, item: FeedItem): boolean {
+  if (item.type !== 'episodes' && item.type !== 'score') return false
+  for (const group of day.groups) {
+    for (let i = 0; i < group.items.length; i++) {
+      const other = group.items[i]!
+      if (other.type !== item.type || other.anime.malId !== item.anime.malId) continue
+      if (other.type === 'score') return true
+      if (other.type === 'episodes' && item.type === 'episodes' && item.to + 1 >= other.from && other.to + 1 >= item.from) {
+        group.items[i] = { ...other, from: Math.min(other.from, item.from), to: Math.max(other.to, item.to) }
+        return true
+      }
+    }
+  }
+  return false
+}
+
 function buildDays(items: FeedItem[]): Day[] {
   const days: Day[] = []
   for (const item of items) {
@@ -48,6 +64,7 @@ function buildDays(items: FeedItem[]): Day[] {
       day = { key: dayKey(date), date, count: 0, groups: [] }
       days.push(day)
     }
+    if (absorb(day, item)) continue
     day.count++
     const key = groupKey(item)
     const time = date.getTime()
