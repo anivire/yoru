@@ -2,9 +2,9 @@ import type { AnimeSummary, ContinueItem, ListStatus, UpcomingItem } from '@yoru
 import { Badge, Image, Progress, Tooltip, cn } from '@yoru/ui'
 import { RiArrowLeftSLine, RiArrowRightSLine, RiPlayLargeFill, RiRepeatFill, RiStarFill, RiTimeFill } from '@remixicon/react'
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
-import { Children, type CSSProperties, type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { Children, type CSSProperties, type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { formatDateTime, formatTime, relativeTime, seasonLabel, typeLabel } from '../lib/format'
+import { formatTime, relativeTime, seasonLabel, typeLabel } from '../lib/format'
 import { useAppearance } from '../lib/appearance'
 import { QuickEdit } from './quick-edit'
 import { TLink } from './transition-link'
@@ -371,51 +371,11 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
   )
 }
 
-const clockListeners = new Set<() => void>()
-let clockTimer: number | undefined
-let clockNow = Date.now()
-
-function subscribeClock(listener: () => void) {
-  clockListeners.add(listener)
-  if (clockTimer === undefined) {
-    clockNow = Date.now()
-    clockTimer = window.setInterval(() => {
-      clockNow = Date.now()
-      for (const l of clockListeners) l()
-    }, 1000)
-  }
-  return () => {
-    clockListeners.delete(listener)
-    if (!clockListeners.size) {
-      window.clearInterval(clockTimer)
-      clockTimer = undefined
-    }
-  }
-}
-
-function useNow() {
-  return useSyncExternalStore(subscribeClock, () => clockNow)
-}
-
-function Countdown({ iso }: { iso: string }) {
-  const now = useNow()
-  const left = Math.max(0, Math.floor((Date.parse(iso) - now) / 1000))
-  const hours = Math.floor(left / 3600)
-  const minutes = Math.floor((left % 3600) / 60)
-  const seconds = left % 60
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return <span className="shrink-0 font-mono text-[0.6875rem] tabular-nums text-muted-foreground">{`${hours}:${pad(minutes)}:${pad(seconds)}`}</span>
-}
-
 export function UpcomingCard({ item }: { item: UpcomingItem }) {
   const { t } = useTranslation()
   const image = item.bannerUrl ?? item.anime.imageUrl
   return (
     <TLink to={`/anime/${item.anime.malId}`} className="group flex min-w-0 flex-col gap-2.5">
-      <div className="flex items-baseline justify-between gap-2 px-0.5">
-        <span className="truncate font-mono text-[0.6875rem] text-muted-foreground">{formatDateTime(item.airingAt)}</span>
-        <Countdown iso={item.airingAt} />
-      </div>
       <div className="relative isolate aspect-video overflow-hidden rounded-xl bg-muted transform-gpu">
         {image ? (
           <Image
