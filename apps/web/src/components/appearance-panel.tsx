@@ -144,9 +144,11 @@ export function AppearancePopover({
         side={side}
         align="end"
         collisionPadding={12}
-        className={cn('flex max-h-[min(85vh,44rem)] flex-col gap-5 overflow-y-auto p-4', full ? 'w-[min(92vw,26rem)]' : 'w-[min(92vw,22rem)]')}
+        className={cn('flex max-h-[min(85vh,44rem)] flex-col overflow-hidden p-0', full ? 'w-[min(92vw,26rem)]' : 'w-[min(92vw,22rem)]')}
       >
-        <AppearancePanel full={full} />
+        <div className="flex min-h-0 flex-col gap-5 overflow-y-auto p-4">
+          <AppearancePanel full={full} />
+        </div>
       </PopoverContent>
     </Popover>
   )
