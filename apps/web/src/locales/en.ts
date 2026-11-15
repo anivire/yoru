@@ -436,6 +436,7 @@ export const en: Messages = {
     importHint: 'Sign in with the service and the list is copied into the yoru database. Existing entries are updated.',
     connect: 'Import from {{name}}',
     notConfigured: 'Not connected',
+    configured: 'Connected',
     sessions: {
       title: 'Active sessions',
       hint: 'Devices signed in to your account',

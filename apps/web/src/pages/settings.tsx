@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, type User } from '@yoru/shared'
 import { Badge, Button, Card, CardContent, Code, Field, Input, LogoMark, Segmented, Skeleton, Spinner, StepSlider, Switch, toast } from '@yoru/ui'
-import { RiAlertFill, RiArrowUpDownFill, RiBracesFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiLockFill, RiNotification3Fill, RiPaletteFill, RiPlayCircleFill, RiShieldFill, RiUser3Fill, RiVolumeUpFill } from '@remixicon/react'
+import { RiAlertFill, RiArrowUpDownFill, RiCheckboxCircleFill, RiBracesFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiLockFill, RiNotification3Fill, RiPaletteFill, RiPlayCircleFill, RiShieldFill, RiUser3Fill, RiVolumeUpFill } from '@remixicon/react'
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
@@ -377,7 +377,7 @@ function ImportTab() {
   return (
     <>
       <Block title={t('settings.importTitle')} description={t('settings.importHint')}>
-        {missing.length ? (
+        {missing.length === IMPORT_PROVIDERS.length ? (
           <div className="mb-4 flex flex-col gap-3 rounded-xl bg-warning-soft p-4 sm:flex-row sm:items-center">
             <RiAlertFill className="size-5 shrink-0 text-warning" />
             <div className="flex-1 text-sm">
@@ -412,6 +412,11 @@ function ImportTab() {
                       <div className="flex items-center gap-1 text-xs text-warning">
                         <RiAlertFill className="size-3" />
                         {t('settings.notConfigured')}
+                      </div>
+                    ) : enabled ? (
+                      <div className="flex items-center gap-1 text-xs text-success">
+                        <RiCheckboxCircleFill className="size-3" />
+                        {t('settings.configured')}
                       </div>
                     ) : null}
                   </div>
