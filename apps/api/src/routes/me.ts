@@ -1,14 +1,27 @@
-import { and, desc, eq, gt, ne } from 'drizzle-orm'
+import { and, count, desc, eq, gt, ne } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import { Hono } from 'hono'
-import { type AccountInfo, type SessionInfo, type ShareInfo, shareUpdateSchema, userSettingsSchema } from '@yoru/shared'
+import { HTTPException } from 'hono/http-exception'
+import { type AccountInfo, type SessionInfo, type ShareInfo, confirmPasswordSchema, shareUpdateSchema, userSettingsSchema } from '@yoru/shared'
 import { db, now } from '../db/client'
-import { invites, sessions, users } from '../db/schema'
+import { activity, animeNotes, feedEvents, imports, invites, listEntries, notifications, sessions, users, watchProgress } from '../db/schema'
 import { type AppEnv, currentSessionId, destroySession, requireAuth, toUser } from '../lib/auth'
-import { randomToken } from '../lib/crypto'
+import { randomToken, verifyPassword } from '../lib/crypto'
 import { parseBody } from '../lib/validate'
 
 const inviter = alias(users, 'inviter')
+
+async function confirmPassword(passwordHash: string, password: string) {
+  if (!(await verifyPassword(password, passwordHash))) throw new HTTPException(400, { message: 'INVALID_PASSWORD' })
+}
+
+function clearUserData(userId: number) {
+  db.transaction((tx) => {
+    for (const table of [listEntries, watchProgress, activity, notifications, imports, animeNotes, feedEvents]) {
+      tx.delete(table).where(eq(table.userId, userId)).run()
+    }
+  })
+}
 
 function shareColumns(flags: { list?: boolean; stats?: boolean }) {
   return { ...(flags.list === undefined ? {} : { shareList: flags.list }), ...(flags.stats === undefined ? {} : { shareStats: flags.stats }) }
@@ -83,6 +96,25 @@ export const meRoutes = new Hono<AppEnv>()
   .delete('/sessions', (c) => {
     const current = currentSessionId(c) ?? ''
     db.delete(sessions).where(and(eq(sessions.userId, c.get('user').id), ne(sessions.id, current))).run()
+    return c.json({ ok: true })
+  })
+  .post('/clear', async (c) => {
+    const { password } = await parseBody(c, confirmPasswordSchema)
+    const user = c.get('user')
+    await confirmPassword(user.passwordHash, password)
+    clearUserData(user.id)
+    return c.json({ ok: true })
+  })
+  .post('/delete', async (c) => {
+    const { password } = await parseBody(c, confirmPasswordSchema)
+    const user = c.get('user')
+    await confirmPassword(user.passwordHash, password)
+    if (user.role === 'admin') {
+      const admins = db.select({ n: count() }).from(users).where(eq(users.role, 'admin')).get()?.n ?? 0
+      if (admins <= 1) throw new HTTPException(400, { message: 'LAST_ADMIN' })
+    }
+    destroySession(c)
+    db.delete(users).where(eq(users.id, user.id)).run()
     return c.json({ ok: true })
   })
   .patch('/settings', async (c) => {

@@ -512,6 +512,22 @@ export const en: Messages = {
     voice: 'voice-over',
   },
   settings: {
+    danger: {
+      title: 'Danger zone',
+      hint: 'These actions cannot be undone',
+      clear: 'Clear profile data',
+      clearHint: 'Removes lists, watch history, notes, feed and notifications. Your account and settings stay.',
+      clearButton: 'Clear',
+      clearConfirm: 'Clear all profile data?',
+      clearDone: 'Profile data cleared',
+      delete: 'Delete account',
+      deleteHint: 'Deletes the account with all its data and ends every session.',
+      deleteButton: 'Delete',
+      deleteConfirm: 'Delete account {{username}}?',
+      passwordPrompt: 'Enter your password to confirm. This cannot be undone.',
+      wrongPassword: 'Wrong password',
+      lastAdmin: 'You cannot delete the only admin. Promote someone else first.',
+    },
     titleLanguage: {
       title: 'Title language',
       hint: 'Which language to show anime titles in. Falls back to romaji when a title is missing.',

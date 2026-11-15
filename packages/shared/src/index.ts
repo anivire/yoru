@@ -460,6 +460,10 @@ export const registerSchema = z.object({
   password: z.string().min(8).max(256),
 })
 
+export const confirmPasswordSchema = z.object({
+  password: z.string().min(1).max(256),
+})
+
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1),
   newPassword: z.string().min(8).max(256),

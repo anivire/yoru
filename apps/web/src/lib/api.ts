@@ -88,6 +88,8 @@ export const api = {
   logout: () => request<{ ok: true }>('POST', '/auth/logout'),
   invite: (code: string) => get<{ valid: boolean; role: string | null }>(`/auth/invite/${encodeURIComponent(code)}`),
   register: (code: string, username: string, password: string) => request<User>('POST', '/auth/register', { code, username, password }),
+  clearData: (password: string) => request<{ ok: true }>('POST', '/me/clear', { password }),
+  deleteAccount: (password: string) => request<{ ok: true }>('POST', '/me/delete', { password }),
   changePassword: (currentPassword: string, newPassword: string) =>
     request<{ ok: true }>('POST', '/auth/password', { currentPassword, newPassword }),
   updateSettings: (patch: Partial<Pick<User, 'locale' | 'notifySub' | 'notifyVoice'>> & { anime365Token?: string | null }) =>

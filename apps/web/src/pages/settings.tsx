@@ -22,6 +22,7 @@ import { useDocumentTitle } from '../lib/title'
 
 import { PlayerTab } from '../components/player-settings'
 import { SoundsTab } from '../components/sound-settings'
+import { DangerZone } from '../components/danger-zone'
 import { ANIME365_LOGO, SEANIME_LOGO } from '../lib/logos'
 
 const TABS = ['appearance', 'player', 'sounds', 'account', 'notifications', 'import'] as const
@@ -225,6 +226,9 @@ function AccountTab() {
             pending={update.isPending}
           />
         </Card>
+      </Block>
+      <Block title={t('settings.danger.title')} description={t('settings.danger.hint')}>
+        <DangerZone />
       </Block>
     </>
   )
