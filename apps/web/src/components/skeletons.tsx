@@ -68,13 +68,17 @@ export function ContinueCardSkeleton() {
 export function UpcomingCardSkeleton() {
   return (
     <div className="flex flex-col gap-2.5">
+      <div className="flex items-center justify-between gap-2 px-0.5">
+        <TextLine className="text-[0.6875rem]" bar="w-28" />
+        <TextLine className="text-[0.6875rem]" bar="w-14" />
+      </div>
       <Skeleton className="aspect-video w-full rounded-xl" />
       <div className="px-0.5">
-        <TextLine className="text-sm" bar="w-3/4" />
-        <div className="mt-0.5 flex items-center justify-between gap-2">
-          <TextLine className="text-base" bar="w-20" />
+        <div className="flex items-center justify-between gap-2">
+          <TextLine className="text-sm" bar="w-24" />
           <TextLine className="text-[0.8125rem]" bar="w-16" />
         </div>
+        <TextLine className="text-[0.8125rem]" bar="w-3/4" />
       </div>
     </div>
   )

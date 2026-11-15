@@ -2,7 +2,7 @@ import type { AnimeSummary, ContinueItem, ListStatus, UpcomingItem } from '@yoru
 import { Badge, Image, Progress, cn } from '@yoru/ui'
 import { RiArrowLeftSLine, RiArrowRightSLine, RiPlayLargeFill, RiRepeatFill, RiStarFill, RiTimeFill } from '@remixicon/react'
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
-import { Children, type CSSProperties, type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Children, type CSSProperties, type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatDateTime, formatTime, relativeTime, seasonLabel, typeLabel } from '../lib/format'
 import { useAppearance } from '../lib/appearance'
@@ -354,11 +354,51 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
   )
 }
 
+const clockListeners = new Set<() => void>()
+let clockTimer: number | undefined
+let clockNow = Date.now()
+
+function subscribeClock(listener: () => void) {
+  clockListeners.add(listener)
+  if (clockTimer === undefined) {
+    clockNow = Date.now()
+    clockTimer = window.setInterval(() => {
+      clockNow = Date.now()
+      for (const l of clockListeners) l()
+    }, 1000)
+  }
+  return () => {
+    clockListeners.delete(listener)
+    if (!clockListeners.size) {
+      window.clearInterval(clockTimer)
+      clockTimer = undefined
+    }
+  }
+}
+
+function useNow() {
+  return useSyncExternalStore(subscribeClock, () => clockNow)
+}
+
+function Countdown({ iso }: { iso: string }) {
+  const now = useNow()
+  const left = Math.max(0, Math.floor((Date.parse(iso) - now) / 1000))
+  const hours = Math.floor(left / 3600)
+  const minutes = Math.floor((left % 3600) / 60)
+  const seconds = left % 60
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return <span className="shrink-0 font-mono text-[0.6875rem] tabular-nums text-muted-foreground">{`${hours}:${pad(minutes)}:${pad(seconds)}`}</span>
+}
+
 export function UpcomingCard({ item }: { item: UpcomingItem }) {
   const { t } = useTranslation()
   const image = item.bannerUrl ?? item.anime.imageUrl
   return (
     <TLink to={`/anime/${item.anime.malId}`} className="group flex min-w-0 flex-col gap-2.5">
+      <div className="flex items-baseline justify-between gap-2 px-0.5">
+        <span className="truncate font-mono text-[0.6875rem] text-muted-foreground">{formatDateTime(item.airingAt)}</span>
+        <Countdown iso={item.airingAt} />
+      </div>
       <div className="relative isolate aspect-video overflow-hidden rounded-xl bg-muted transform-gpu">
         {image ? (
           <Image
@@ -371,15 +411,16 @@ export function UpcomingCard({ item }: { item: UpcomingItem }) {
             )}
           />
         ) : null}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-        <span className="absolute bottom-2.5 left-3 font-mono text-[0.6875rem] text-white/90">{formatDateTime(item.airingAt)}</span>
       </div>
       <div className="min-w-0 px-0.5">
-        <div className="truncate text-sm font-medium"><AnimeTitle anime={item.anime} /></div>
-        <div className="mt-0.5 flex items-baseline justify-between gap-2">
-          <span className="text-base font-semibold">{item.episode ? `${t('common.episode')} ${item.episode}` : '—'}</span>
+        <div className="flex items-baseline justify-between gap-2 text-sm">
+          <span className="min-w-0 truncate">
+            <span className="font-medium">{item.episode ? `${t('common.episode')} ${item.episode}` : '—'}</span>
+            {item.episode ? <span className="text-subtle-foreground"> / {item.anime.episodes ?? '?'}</span> : null}
+          </span>
           <span className="shrink-0 text-[0.8125rem] text-muted-foreground">{relativeTime(item.airingAt)}</span>
         </div>
+        <div className="truncate text-[0.8125rem] text-muted-foreground"><AnimeTitle anime={item.anime} /></div>
       </div>
     </TLink>
   )
