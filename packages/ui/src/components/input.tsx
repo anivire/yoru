@@ -3,7 +3,7 @@ import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '../lib/cn'
 
 const fieldBase =
-  'w-full rounded-lg bg-field px-3 text-sm text-foreground transition-colors placeholder:text-subtle-foreground hover:bg-field-hover focus-visible:bg-field-hover focus-visible:outline-none disabled:opacity-50'
+  'w-full rounded-lg bg-foreground/[0.05] px-3 text-sm text-foreground transition-colors placeholder:text-subtle-foreground hover:bg-foreground/[0.08] focus-visible:bg-foreground/[0.08] focus-visible:outline-none disabled:opacity-50'
 
 export function Input({ className, ...props }: ComponentProps<'input'>) {
   return <input className={cn(fieldBase, 'h-9', className)} {...props} />

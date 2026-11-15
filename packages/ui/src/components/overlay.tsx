@@ -143,7 +143,7 @@ export function Select({
     <S.Root value={value} onValueChange={onValueChange} disabled={disabled}>
       <S.Trigger
         className={cn(
-          'inline-flex cursor-pointer items-center gap-2 rounded-lg bg-field text-left text-foreground transition-colors hover:bg-field-hover data-[placeholder]:text-subtle-foreground disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0',
+          'inline-flex cursor-pointer items-center gap-2 rounded-lg bg-foreground/[0.05] text-left text-foreground transition-colors hover:bg-foreground/[0.08] data-[placeholder]:text-subtle-foreground disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0',
           size === 'sm' ? 'h-8 px-2.5 text-[0.8125rem]' : 'h-9 px-3 text-sm',
           className,
         )}

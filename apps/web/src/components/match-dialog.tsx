@@ -31,7 +31,7 @@ export function MatchDialog({ malId, match, defaultQuery }: { malId: number; mat
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" aria-label={t('player.manualMatch')} title={t('player.manualMatch')} className="max-sm:w-8 max-sm:bg-field max-sm:px-0">
+        <Button variant="ghost" aria-label={t('player.manualMatch')} title={t('player.manualMatch')} className="h-10 rounded-xl px-3.5 max-sm:w-10 max-sm:bg-foreground/[0.05] max-sm:px-0">
           <RiLinksFill />
           <span className="hidden sm:inline">{t('player.manualMatch')}</span>
         </Button>
