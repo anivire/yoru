@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { type AdminSettings, type AdminSettingsInput, type DataSourceId, type DataSourceInfo, IMPORT_PROVIDERS, type ImportProvider } from '@yoru/shared'
+import { type AdminSettings, type AdminSettingsInput, DATA_SOURCES, type DataSourceId, type DataSourceInfo, IMPORT_PROVIDERS, type ImportProvider } from '@yoru/shared'
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Code, Field, Input, Skeleton, Spinner, StatusDot, Switch, toast } from '@yoru/ui'
 import { RiKey2Fill, RiSkipForwardFill } from '@remixicon/react'
 import { type FormEvent, type ReactNode, useState } from 'react'
@@ -285,6 +285,57 @@ function SourceCard({ info, settings }: { info: DataSourceInfo; settings: AdminS
   )
 }
 
+function CardSkeletonHeader({ control }: { control: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <Skeleton className="size-9 shrink-0 rounded-lg" />
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <Skeleton className="h-4 w-28 rounded-md" />
+        <Skeleton className="h-5 w-20 rounded-full" />
+      </div>
+      <Skeleton className={control} />
+    </div>
+  )
+}
+
+function FieldSkeleton() {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Skeleton className="h-3 w-24 rounded-md" />
+      <Skeleton className="h-8 w-full rounded-lg" />
+    </div>
+  )
+}
+
+function SourceCardSkeleton() {
+  return (
+    <div className="flex min-w-0 flex-col gap-4 rounded-xl bg-field/50 p-3 sm:p-4">
+      <CardSkeletonHeader control="h-5 w-9 shrink-0 rounded-full" />
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-3 w-20 rounded-md" />
+        <Skeleton className="h-3.5 w-4/5 rounded-md" />
+        <Skeleton className="h-3.5 w-3/5 rounded-md" />
+        <Skeleton className="h-3.5 w-2/3 rounded-md" />
+      </div>
+      <FieldSkeleton />
+    </div>
+  )
+}
+
+function OAuthProviderSkeleton() {
+  return (
+    <div className="flex min-w-0 flex-col gap-3 rounded-xl bg-field/50 p-3 sm:p-4">
+      <CardSkeletonHeader control="hidden" />
+      <FieldSkeleton />
+      <FieldSkeleton />
+      <div className="flex flex-col gap-1.5">
+        <Skeleton className="h-3 w-28 rounded-md" />
+        <Skeleton className="h-12 w-full rounded-lg" />
+      </div>
+    </div>
+  )
+}
+
 function useAdminSettings() {
   return useQuery({
     queryKey: ['admin', 'settings'],
@@ -309,7 +360,7 @@ export function DataSources() {
       <CardContent className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,22rem),1fr))] gap-3 [&>*]:min-w-0">
         {data
           ? data.sources.map((info) => <SourceCard key={info.id} info={info} settings={data} />)
-          : Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-72 rounded-xl" />)}
+          : DATA_SOURCES.map((id) => <SourceCardSkeleton key={id} />)}
       </CardContent>
     </Card>
   )
@@ -389,7 +440,7 @@ export function OAuthSettings() {
       <CardContent className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,19rem),1fr))] gap-3 [&>*]:min-w-0">
         {data
           ? IMPORT_PROVIDERS.map((p) => <OAuthProvider key={`${p}|${data.oauth[p].clientId}`} provider={p} settings={data} />)
-          : Array.from({ length: 3 }, (_, i) => <Skeleton key={i} className="h-64 rounded-xl" />)}
+          : IMPORT_PROVIDERS.map((p) => <OAuthProviderSkeleton key={p} />)}
       </CardContent>
     </Card>
   )
