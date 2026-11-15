@@ -27,7 +27,7 @@ export function QuickEdit({ malId, className }: { malId: number; className?: str
           aria-label={t('anime.editEntry')}
           title={t('anime.editEntry')}
           className={cn(
-            'grid size-7 cursor-pointer place-items-center rounded-lg bg-white/20 text-white opacity-0 backdrop-blur-md transition-[opacity,background-color] hover:bg-white/35 focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:bg-white/35 data-[state=open]:opacity-100 [@media(hover:none)]:bg-black/55 [@media(hover:none)]:opacity-100',
+            'grid size-7 cursor-pointer place-items-center rounded-lg bg-black/45 text-white opacity-0 transition-[opacity,background-color] hover:bg-black/60 focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:bg-white/35 data-[state=open]:opacity-100 [@media(hover:none)]:bg-black/55 [@media(hover:none)]:opacity-100',
             className,
           )}
         >

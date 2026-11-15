@@ -72,7 +72,7 @@ export function ListTable({ items, external }: { items: ListEntryWithAnime[]; ex
       </div>
       <div className="flex flex-col">
         {items.map((e) => (
-          <RowLink key={e.malId} malId={e.malId} external={external} className={cn(TABLE_COLS, 'group rounded-xl px-3 py-2 transition-colors hover:bg-field-hover')}>
+          <RowLink key={e.malId} malId={e.malId} external={external} className={cn(TABLE_COLS, 'group rounded-xl px-3 py-2 transition-colors [contain-intrinsic-size:auto_4.5rem] [content-visibility:auto] hover:bg-field-hover')}>
             <div className="flex min-w-0 items-center gap-3">
               <div className="h-14 w-10 shrink-0 overflow-hidden rounded-md bg-muted">
                 {e.anime.imageUrl ? <Image src={e.anime.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" /> : null}

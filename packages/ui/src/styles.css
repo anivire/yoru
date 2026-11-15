@@ -332,8 +332,7 @@
 }
 
 @utility zoom-layer {
-  transform: translateZ(0) scale(var(--zoom, 1));
-  will-change: transform;
+  transform: scale(var(--zoom, 1));
   backface-visibility: hidden;
 }
 

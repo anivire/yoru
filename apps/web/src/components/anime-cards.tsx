@@ -1,7 +1,8 @@
 import type { AnimeSummary, ContinueItem, ListStatus, UpcomingItem } from '@yoru/shared'
 import { Badge, Image, Progress, cn } from '@yoru/ui'
 import { RiPlayLargeFill, RiRepeatFill, RiStarFill, RiTimeFill } from '@remixicon/react'
-import { Children, type ReactNode, useEffect, useRef, useState } from 'react'
+import { useWindowVirtualizer } from '@tanstack/react-virtual'
+import { Children, type ReactNode, type RefObject, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatDateTime, formatTime, relativeTime, seasonLabel, typeLabel } from '../lib/format'
 import { useAppearance } from '../lib/appearance'
@@ -76,7 +77,7 @@ export function Score({
       title={title}
       className={cn(
         'inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs font-semibold tabular-nums',
-        surface === 'dark' ? 'bg-black/55 text-white backdrop-blur-md' : surface === 'glass' ? GLASS_CHIP : 'bg-field text-foreground',
+        surface === 'dark' ? 'bg-black/65 text-white' : surface === 'glass' ? GLASS_CHIP : 'bg-field text-foreground',
         className,
       )}
     >
@@ -122,13 +123,13 @@ export function AnimeCard({
   return (
     <div className="group relative">
       <CardLink href={href} to={`/anime/${anime.malId}`}>
-      <div className="relative isolate aspect-[2/3] overflow-hidden rounded-xl bg-muted shadow-sm transition-shadow duration-150 group-hover:shadow-xl group-hover:shadow-black/40 transform-gpu">
+      <div className="relative isolate aspect-[2/3] overflow-hidden rounded-xl bg-muted shadow-sm transition-shadow duration-150 group-hover:shadow-xl group-hover:shadow-black/40">
         {anime.imageUrl ? (
           <Image
             src={anime.imageUrl}
             alt={anime.title}
             loading="lazy"
-            className="absolute inset-0 h-full w-full zoom-layer object-cover transition-transform duration-150 ease-out group-hover:[--zoom:1.05]"
+            className="absolute inset-0 h-full w-full zoom-layer object-cover transition-transform duration-150 ease-out group-hover:will-change-transform group-hover:[--zoom:1.05]"
           />
         ) : null}
         <div className="absolute inset-0 flex flex-col justify-end gap-1.5 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-2.5 pr-11 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
@@ -153,13 +154,13 @@ export function AnimeCard({
         <div className="absolute inset-x-2 top-2.5 flex items-start justify-between gap-1">
           <div className="flex flex-wrap gap-1">
             {rewatches ? (
-              <Badge size="sm" variant="solid" className="gap-1 bg-black/55 text-white tabular-nums backdrop-blur-md" title={t('anime.rewatchedTimes', { count: rewatches })}>
+              <Badge size="sm" variant="solid" className="gap-1 bg-black/65 text-white tabular-nums" title={t('anime.rewatchedTimes', { count: rewatches })}>
                 <RiRepeatFill className="size-3" />
                 {rewatches}
               </Badge>
             ) : null}
             {anime.airing ? (
-              <Badge size="sm" variant="solid" className="bg-black/55 text-white backdrop-blur-md">
+              <Badge size="sm" variant="solid" className="bg-black/65 text-white">
                 <span className="size-1.5 rounded-full bg-success" />
                 {t('airing.airing')}
               </Badge>
@@ -211,36 +212,75 @@ function CardLink({ href, to, children }: { href?: string; to: string; children:
   )
 }
 
+const VIRTUALIZE_FROM = 60
+const ROW_GAP = 24
+const CAPTION_HEIGHT = 64
+
 function useGridColumns(enabled: boolean) {
   const ref = useRef<HTMLDivElement>(null)
-  const [columns, setColumns] = useState(0)
-  useEffect(() => {
+  const [size, setSize] = useState({ columns: 0, width: 0 })
+  useLayoutEffect(() => {
     const el = ref.current
     if (!enabled || !el) return
-    const measure = () => setColumns(getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length)
+    const measure = () => {
+      if (!el.isConnected) return
+      const tracks = getComputedStyle(el).gridTemplateColumns.split(' ').filter((t) => t.endsWith('px'))
+      if (tracks.length) setSize({ columns: tracks.length, width: Number.parseFloat(tracks[0]!) })
+    }
     measure()
     const observer = new ResizeObserver(measure)
     observer.observe(el)
     return () => observer.disconnect()
   }, [enabled])
-  return { ref, columns }
+  return { ref, ...size }
+}
+
+function VirtualRows({ gridRef, grid, items, columns, columnWidth }: { gridRef: RefObject<HTMLDivElement | null>; grid: string; items: ReactNode[]; columns: number; columnWidth: number }) {
+  const [offset, setOffset] = useState(0)
+  useLayoutEffect(() => {
+    const el = gridRef.current
+    if (!el) return
+    const update = () => setOffset(el.getBoundingClientRect().top + window.scrollY)
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(document.body)
+    return () => observer.disconnect()
+  }, [gridRef])
+  const virtualizer = useWindowVirtualizer({
+    count: Math.ceil(items.length / columns),
+    estimateSize: () => (columnWidth || 180) * 1.5 + CAPTION_HEIGHT + ROW_GAP,
+    overscan: 3,
+    scrollMargin: offset,
+  })
+  return (
+    <div className="relative col-span-full" style={{ height: Math.max(0, virtualizer.getTotalSize() - ROW_GAP) }}>
+      {virtualizer.getVirtualItems().map((row) => (
+        <div
+          key={row.key}
+          data-index={row.index}
+          ref={virtualizer.measureElement}
+          className={cn(grid, 'absolute inset-x-0 top-0')}
+          style={{ transform: `translateY(${row.start - virtualizer.options.scrollMargin}px)`, paddingBottom: ROW_GAP }}
+        >
+          {items.slice(row.index * columns, (row.index + 1) * columns)}
+        </div>
+      ))}
+    </div>
+  )
 }
 
 export function PosterGrid({ children, className, fullRows = false }: { children: ReactNode; className?: string; fullRows?: boolean }) {
   const { stretch } = useAppearance()
-  const { ref, columns } = useGridColumns(fullRows)
   const items = Children.toArray(children)
+  const virtual = items.length >= VIRTUALIZE_FROM
+  const { ref, columns, width } = useGridColumns(fullRows || virtual)
   const shown = fullRows && columns > 0 && items.length > columns ? items.slice(0, items.length - (items.length % columns)) : items
+  const columnsClass = stretch
+    ? 'grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(11rem,1fr))]'
+    : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
   return (
-    <div
-      ref={ref}
-      className={cn(
-        'grid gap-x-4 gap-y-6',
-        stretch ? 'grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(11rem,1fr))]' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6',
-        className,
-      )}
-    >
-      {shown}
+    <div ref={ref} className={cn('grid gap-x-4 gap-y-6', columnsClass, className)}>
+      {!virtual ? shown : columns > 0 ? <VirtualRows gridRef={ref} grid={cn('grid gap-x-4', columnsClass)} items={shown} columns={columns} columnWidth={width} /> : null}
     </div>
   )
 }
@@ -257,7 +297,7 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
             alt=""
             loading="lazy"
             className={cn(
-              'absolute inset-0 h-full w-full zoom-layer object-cover transition-transform duration-150 ease-out group-hover:[--zoom:1.04]',
+              'absolute inset-0 h-full w-full zoom-layer object-cover transition-transform duration-150 ease-out group-hover:will-change-transform group-hover:[--zoom:1.04]',
               !item.episodeImageUrl && 'object-[50%_25%]',
               item.pending && 'blur-md [--zoom:1.2] group-hover:[--zoom:1.2]',
             )}
@@ -326,7 +366,7 @@ export function UpcomingCard({ item }: { item: UpcomingItem }) {
             alt=""
             loading="lazy"
             className={cn(
-              'absolute inset-0 h-full w-full zoom-layer object-cover transition-transform duration-150 ease-out group-hover:[--zoom:1.05]',
+              'absolute inset-0 h-full w-full zoom-layer object-cover transition-transform duration-150 ease-out group-hover:will-change-transform group-hover:[--zoom:1.05]',
               !item.bannerUrl && 'object-[50%_25%]',
             )}
           />
