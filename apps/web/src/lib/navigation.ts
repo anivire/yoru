@@ -1,7 +1,8 @@
-import { RiBarChart2Fill, RiGroupFill, RiBookShelfFill, RiCalendar2Fill, RiCalendarScheduleFill, RiCompass3Fill, RiHome5Fill, RiPlayCircleFill, RiPulseFill, RiSearchFill, RiTv2Fill } from '@remixicon/react'
+import { RiBarChart2Fill, RiNewspaperFill, RiGroupFill, RiBookShelfFill, RiCalendar2Fill, RiCalendarScheduleFill, RiCompass3Fill, RiHome5Fill, RiPlayCircleFill, RiPulseFill, RiSearchFill, RiTv2Fill } from '@remixicon/react'
 
 export const NAV = [
   { to: '/', key: 'home', icon: RiHome5Fill, end: true },
+  { to: '/feed', key: 'feed', icon: RiNewspaperFill, end: false },
   { to: '/discover', key: 'discover', icon: RiCompass3Fill, end: false },
   { to: '/schedule', key: 'schedule', icon: RiCalendar2Fill, end: false },
   { to: '/search', key: 'search', icon: RiSearchFill, end: false },

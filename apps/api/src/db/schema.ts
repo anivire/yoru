@@ -173,3 +173,23 @@ export const httpCache = sqliteTable('http_cache', {
   value: text('value').notNull(),
   expiresAt: integer('expires_at').notNull(),
 })
+
+export const animeNotes = sqliteTable('anime_notes', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  malId: integer('mal_id').notNull(),
+  episode: integer('episode'),
+  text: text('text').notNull(),
+  private: integer('private', { mode: 'boolean' }).notNull().default(false),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+}, (t) => [index('anime_notes_anime_idx').on(t.malId, t.createdAt), index('anime_notes_user_idx').on(t.userId)])
+
+export const feedEvents = sqliteTable('feed_events', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  malId: integer('mal_id').notNull(),
+  type: text('type', { enum: ['added', 'status', 'score', 'episodes', 'note'] }).notNull(),
+  data: text('data', { mode: 'json' }).$type<Record<string, unknown>>().notNull().default({}),
+  createdAt: text('created_at').notNull(),
+}, (t) => [index('feed_events_created_idx').on(t.createdAt), index('feed_events_user_idx').on(t.userId, t.createdAt)])

@@ -57,6 +57,13 @@
       "when": 1794765919971,
       "tag": "0007_share_sections",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1794773045515,
+      "tag": "0008_feed_and_notes",
+      "breakpoints": true
     }
   ]
 }

@@ -13,6 +13,7 @@ import { airedLimit } from '../components/quick-edit'
 import { LinkList, LinkLogo, LinkRow, ServiceLinks } from '../components/service-links'
 import { AnimePageSkeleton } from '../components/skeletons'
 import { WatchSection } from '../components/watch-section'
+import { NotesSection } from '../components/notes'
 import { api } from '../lib/api'
 import { useAppearance } from '../lib/appearance'
 import { formatDate, formatDateTime, relativeTime, seasonLabel, typeLabel } from '../lib/format'
@@ -279,6 +280,7 @@ export function AnimePage() {
         <ScreenshotsSection malId={data.anime.malId} />
         <h2 className="mb-4 text-xl font-semibold tracking-tight">{t('anime.streaming')}</h2>
         <WatchSection anime={data.anime} entry={data.entry} />
+        <NotesSection malId={data.anime.malId} />
         <AnimeExtrasSections malId={data.anime.malId} />
       </Page>
     </div>

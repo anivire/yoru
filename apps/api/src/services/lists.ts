@@ -12,6 +12,7 @@ import { anime, listEntries } from '../db/schema'
 import { toSummary } from './anime'
 import { logEpisodes } from './activity'
 import { airedEpisode } from './aired'
+import { recordEntryChange } from './feed'
 
 type EntryRow = typeof listEntries.$inferSelect
 
@@ -107,6 +108,10 @@ export function saveEntry(userId: number, malId: number, input: ListEntryInput, 
     .values({ ...values, createdAt: now() })
     .onConflictDoUpdate({ target: [listEntries.userId, listEntries.malId], set: values })
     .run()
+  recordEntryChange(userId, malId, {
+    before: existing ? { status: existing.status, progress: existing.progress, score: existing.score } : null,
+    after: { status: values.status, progress: values.progress, score: values.score },
+  })
   return toEntry(getEntry(userId, malId)!)
 }
 

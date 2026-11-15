@@ -18,6 +18,7 @@ import { publicRoutes } from './routes/public'
 import { homeRoutes, listRoutes, progressRoutes } from './routes/list'
 import { meRoutes } from './routes/me'
 import { notificationRoutes } from './routes/notifications'
+import { feedRoutes, noteRoutes } from './routes/feed'
 import { roomRoutes } from './routes/rooms'
 import { statsRoutes } from './routes/stats'
 import { streamRoutes } from './routes/stream'
@@ -44,6 +45,8 @@ app.route('/api/home', homeRoutes)
 app.route('/api/stream', streamRoutes)
 app.route('/api/stats', statsRoutes)
 app.route('/api/rooms', roomRoutes)
+app.route('/api/feed', feedRoutes)
+app.route('/api/notes', noteRoutes)
 app.route('/api/notifications', notificationRoutes)
 app.route('/api/import', importRoutes)
 app.route('/api/discover', discoverRoutes)

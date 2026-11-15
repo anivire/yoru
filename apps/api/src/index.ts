@@ -9,6 +9,7 @@ import { env } from './env'
 import { startAnimeBackfill } from './jobs/anime-backfill'
 import { startRussianTitles } from './jobs/russian-titles'
 import { startReleaseWatcher } from './jobs/release-watcher'
+import { backfillAllFeeds } from './services/feed'
 import { hashPassword, randomToken } from './lib/crypto'
 
 if (process.env.HTTPS_PROXY || process.env.HTTP_PROXY || process.env.https_proxy || process.env.http_proxy) {
@@ -37,6 +38,7 @@ await bootstrapAdmin()
 startReleaseWatcher()
 startAnimeBackfill()
 startRussianTitles()
+backfillAllFeeds()
 
 serve({ fetch: app.fetch, port: env.port, hostname: env.host, websocket: { server: new WebSocketServer({ noServer: true, maxPayload: 16 * 1024 }) } }, (info) => {
   console.log(`[yoru] api listening on http://${info.address}:${info.port}`)

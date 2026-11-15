@@ -594,3 +594,47 @@ export type RoomServerMessage =
   | { type: 'playback'; playback: RoomPlayback; by: RoomMember; now: number }
   | { type: 'members'; members: RoomMember[] }
   | { type: 'pong'; now: number }
+
+export interface FeedUser {
+  id: number
+  username: string
+}
+
+export interface AnimeNote {
+  id: number
+  malId: number
+  episode: number | null
+  text: string
+  private: boolean
+  createdAt: string
+  updatedAt: string
+  user: FeedUser
+}
+
+export const noteInputSchema = z.object({
+  text: z.string().trim().min(1).max(4000),
+  episode: z.number().int().positive().nullable().optional(),
+  private: z.boolean().optional(),
+})
+export type NoteInput = z.infer<typeof noteInputSchema>
+
+interface FeedBase {
+  id: number
+  createdAt: string
+  user: FeedUser
+  anime: AnimeSummary
+}
+
+export type FeedItem = FeedBase &
+  (
+    | { type: 'added'; status: ListStatus }
+    | { type: 'status'; from: ListStatus; to: ListStatus }
+    | { type: 'score'; score: number }
+    | { type: 'episodes'; from: number; to: number }
+    | { type: 'note'; note: AnimeNote }
+  )
+
+export interface FeedPage {
+  items: FeedItem[]
+  nextBefore: string | null
+}

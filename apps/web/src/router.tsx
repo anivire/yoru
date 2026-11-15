@@ -20,6 +20,7 @@ import { SharedListPage } from './pages/shared-list'
 import { StatsPage } from './pages/stats'
 import { RoomPage } from './pages/room'
 import { TogetherPage } from './pages/together'
+import { FeedPage } from './pages/feed'
 
 function Splash() {
   return (
@@ -115,6 +116,7 @@ export const router = createBrowserRouter([
           { path: 'stats', element: <StatsPage /> },
           { path: 'together/:id', element: <RoomPage /> },
           { path: 'together', element: <TogetherPage /> },
+          { path: 'feed', element: <FeedPage /> },
           { path: 'anime/:id', element: <AnimePage /> },
           { path: 'settings/:tab?', element: <SettingsPage /> },
           { element: <RequireAdmin />, children: [{ path: 'admin', element: <AdminPage /> }] },
