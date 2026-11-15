@@ -231,10 +231,13 @@ function SideRail({ position }: { position: 'left' | 'right' }) {
   useEffect(() => {
     if (!hovered) return
     const onMove = (e: PointerEvent) => {
+      if (ref.current?.querySelector('[data-state="open"]')) return
       const r = ref.current?.getBoundingClientRect()
       if (!r || e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) setHovered(false)
     }
-    const onLeaveWindow = () => setHovered(false)
+    const onLeaveWindow = () => {
+      if (!ref.current?.querySelector('[data-state="open"]')) setHovered(false)
+    }
     window.addEventListener('pointermove', onMove, { passive: true })
     document.documentElement.addEventListener('pointerleave', onLeaveWindow)
     return () => {
@@ -250,8 +253,8 @@ function SideRail({ position }: { position: 'left' | 'right' }) {
           if (navLabels === 'hover' && (e.target as Element).closest('a, button')) setHovered(true)
         }}
         className={cn(
-          'fixed inset-y-0 z-40 hidden flex-col items-start py-3 transition-[width,background-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] [view-transition-name:site-rail] md:flex',
-          position === 'left' ? 'left-0 pl-2.5 pr-1.5' : 'right-0 pl-1.5 pr-2.5',
+          'fixed inset-y-0 z-40 hidden flex-col items-start px-2 py-3 transition-[width,background-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] [view-transition-name:site-rail] md:flex',
+          position === 'left' ? 'left-0' : 'right-0',
           expanded ? 'w-[11.25rem]' : 'w-[3.75rem]',
           navLabels === 'hover' && expanded && 'bg-background',
         )}
