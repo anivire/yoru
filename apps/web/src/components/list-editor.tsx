@@ -170,7 +170,7 @@ export function ListEditor({
             <RiEdit2Fill />
           </Button>
         ) : (
-        <Button variant="accent" size="sm" className={cn('w-full', entry && TONE_SOLID[STATUS_META[entry.status].tone])}>
+        <Button variant="accent" size="sm" className={cn('w-full gap-1.5', entry && TONE_SOLID[STATUS_META[entry.status].tone])}>
           {entry ? <StatusIcon status={entry.status} className="text-current" /> : <RiAddFill />}
           <span className="flex-1 truncate text-left">{entry ? t(`status.${entry.status}`) : t('anime.add')}</span>
           <RiArrowDownSFill className="-mr-1 size-5! opacity-70" />
