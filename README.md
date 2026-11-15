@@ -16,15 +16,19 @@ A self-hosted anime tracker and player built around [Anime365](https://smotret-a
 
 ## Features
 
-- **Player** with Anime365 translations: pick subtitles or voice-over, choose the author, resume where you stopped.
-- **Lists** with statuses, progress, scores, rewatches and notes; grid and table views with filters and sorting.
+- **Player** with Anime365 translations: pick subtitles or voice-over, choose the author, resume where you stopped. Set a default translation type and a list of preferred authors once, and every new anime starts with them.
+- **Anime pages** with related titles in watch order, characters with their voice actors, similar anime, a screenshot gallery, the trailer and links to MyAnimeList, Shikimori, AniList, AniDB and Crunchyroll. Genres open a filtered search.
+- **Lists** with statuses, progress, scores, rewatches and notes; grid and table views with filters and sorting. Edits are saved in the background and do not reshuffle the list under you.
+- **Public list link**: share a read-only page of your list with the same filters and views.
 - **Home** with continue watching, upcoming episodes from your lists, a GitHub-style watch activity grid and what you are watching now. Sections can be reordered and hidden.
 - **Schedule** as a month calendar: aired episodes, the ones still waiting for a translation, and what comes next.
 - **Discover**: seasonal highlights, trending by genre, recently released translations, top rated and upcoming.
-- **Notifications** when a new episode with subtitles or voice-over appears for anime in your lists.
+- **Notifications** when a new episode with subtitles or voice-over appears for anime in your lists, and optionally when a brand-new title premieres.
+- **Title language**: show anime titles in romaji, English, Japanese or Russian, independent of the interface language.
 - **Import** from AniList, Shikimori and MyAnimeList, or from a Seanime offline account; **export** to JSON, CSV and MAL XML.
 - **Invites only**: the admin creates invite links, there is no open registration.
-- **Themes**: light and dark schemes, a dozen color presets and an adjustable page width.
+- **Appearance**: light and dark schemes, a dozen color presets, an adjustable page width, and navigation at the top or as a side rail on the left or right.
+- **Russian and English** interface.
 
 ## Install
 
@@ -43,6 +47,8 @@ docker compose up -d --build
 ```
 
 The container listens on port `3000`. The compose file publishes it on a random host port so it can sit behind a reverse proxy; change `"3000"` to `"3000:3000"` in `docker-compose.yml` to expose it directly.
+
+The database lives in `/data` inside the container, which the compose file keeps in the `yoru-data` volume. If you deploy through a platform such as Dokploy, Coolify or Portainer, make sure `/data` is mounted to a persistent volume, otherwise every redeploy starts with an empty database.
 
 ### First login
 
@@ -67,13 +73,14 @@ A personal token wins over the shared one. `ANIME365_TOKEN` in `.env` works as t
 
 | Service | Used for | Required |
 |---|---|---|
-| [Anime365](https://smotret-anime.app) | Video, translations and subtitles, released episodes and notifications, recently released on Discover, metadata when Jikan is off | Yes |
+| [Anime365](https://smotret-anime.app) | Video, translations and subtitles, released episodes and notifications, recently released on Discover, links to AniList, AniDB and Crunchyroll, metadata when Jikan is off | Yes |
 | [Jikan](https://jikan.moe) (MyAnimeList) | Synopses, posters, studios, trailers, weekly airing times, episode titles and thumbnails, search filters | No, Anime365 can serve metadata instead |
-| [Shikimori](https://shikimori.io) | Discover, release calendar and upcoming episodes, banner screenshots, Shikimori list import | No |
-| GitHub | Version and update check in the footer | No |
+| [Shikimori](https://shikimori.io) | Discover, release calendar and upcoming episodes, banners and the screenshot gallery, Russian titles, Shikimori list import | No |
+| [AniList](https://anilist.co) | Related titles, characters and voice actors, similar anime on the anime page | No |
+| GitHub | Version and update check | No |
 | AniList, Shikimori, MyAnimeList OAuth | List import | No |
 
-Every source has a card in **Admin panel → Data sources** with its live status, an on/off switch and an API URL override. Values from `.env` are the defaults; whatever you change in the panel applies right away without a restart.
+Every source has a card in **Admin panel → Data sources** with its live status, an on/off switch and an API URL override. Values from `.env` are the defaults; whatever you change in the panel applies right away without a restart. Turning an optional source off only hides the parts of the app that depend on it.
 
 ### Self-hosted Jikan
 
@@ -127,7 +134,7 @@ Close Seanime and upload that file under **Import from a file**. Statuses, progr
 
 ## Updates
 
-The footer shows the running version and commit. When the configured GitHub branch has newer commits, an **Update available** badge links to the comparison. Pull and rebuild to update:
+The footer shows the running version and commit. When the configured GitHub branch has newer commits, an **Update available** badge links to the comparison. After you deploy a new version, open tabs show a prompt to reload, so nobody keeps running stale code. Pull and rebuild to update:
 
 ```bash
 git pull
