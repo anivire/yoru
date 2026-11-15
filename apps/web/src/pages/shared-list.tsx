@@ -1,7 +1,6 @@
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
 import { LIST_STATUSES } from '@yoru/shared'
-import { Button, EmptyState, Logo, Popover, PopoverContent, PopoverTrigger, Segmented, cn } from '@yoru/ui'
-import { RiPaletteFill } from '@remixicon/react'
+import { EmptyState, Logo, Segmented, cn } from '@yoru/ui'
 import { useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
@@ -11,7 +10,7 @@ import { Footer } from '../components/footer'
 import { PosterGridSkeleton } from '../components/skeletons'
 import { api } from '../lib/api'
 import { useDocumentTitle } from '../lib/title'
-import { SchemePicker, ThemePicker } from '../components/theme-picker'
+import { AppearancePopover } from '../components/appearance-panel'
 import { ListTable, ViewToggle, useListView } from '../components/list-table'
 import { ListTableSkeleton } from '../components/skeletons'
 import { ListFilterBar, useListParams } from '../components/list-filters'
@@ -63,23 +62,7 @@ export function SharedListPage() {
             )}
           >
             <Logo className="[&>span]:text-[0.9375rem] [&_svg]:size-6 sm:[&>span]:text-[17px] sm:[&_svg]:size-7" />
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="ml-auto rounded-full" aria-label={t('settings.appearance')} title={t('settings.appearance')}>
-                  <RiPaletteFill />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="flex max-h-[min(80vh,36rem)] w-[min(92vw,22rem)] flex-col gap-4 overflow-y-auto p-4">
-                <div>
-                  <div className="mb-2 text-xs font-medium text-muted-foreground">{t('settings.colorScheme')}</div>
-                  <SchemePicker compact />
-                </div>
-                <div>
-                  <div className="mb-2 text-xs font-medium text-muted-foreground">{t('settings.themes')}</div>
-                  <ThemePicker compact />
-                </div>
-              </PopoverContent>
-            </Popover>
+            <AppearancePopover className="ml-auto" />
           </div>
         </div>
       </header>

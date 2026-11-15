@@ -41,6 +41,7 @@ interface State {
   preferredAuthors: string[]
   navPosition: NavPosition
   titleLanguage: TitleLanguage
+  appearanceButton: boolean
 }
 
 const DEFAULT_SECTIONS: HomeSectionSetting[] = HOME_SECTIONS.map((s) => ({ id: s.id, visible: true }))
@@ -71,6 +72,7 @@ interface Appearance extends State {
   setPreferredAuthors: (authors: string[]) => void
   setNavPosition: (position: NavPosition) => void
   setTitleLanguage: (language: TitleLanguage) => void
+  setAppearanceButton: (show: boolean) => void
 }
 
 const AppearanceContext = createContext<Appearance | null>(null)
@@ -90,6 +92,7 @@ function load(): State {
       preferredAuthors?: unknown
       navPosition?: string
       titleLanguage?: string
+      appearanceButton?: boolean
     }
     const theme = THEME_PRESETS.some((t) => t.id === raw.theme) ? (raw.theme as ThemePreset) : DEFAULT_THEME
     const scheme = raw.scheme === 'light' || raw.scheme === 'dark' || raw.scheme === 'system' ? raw.scheme : DEFAULT_SCHEME
@@ -108,9 +111,10 @@ function load(): State {
       preferredAuthors: Array.isArray(raw.preferredAuthors) ? raw.preferredAuthors.filter((a): a is string => typeof a === 'string' && Boolean(a.trim())) : [],
       navPosition: raw.navPosition === 'top' || raw.navPosition === 'right' ? raw.navPosition : 'left',
       titleLanguage: TITLE_LANGUAGES.includes(raw.titleLanguage as TitleLanguage) ? (raw.titleLanguage as TitleLanguage) : 'romaji',
+      appearanceButton: raw.appearanceButton !== false,
     }
   } catch {
-    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], defaultKind: 'sub', preferredAuthors: [], navPosition: 'left', titleLanguage: 'romaji' }
+    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], defaultKind: 'sub', preferredAuthors: [], navPosition: 'left', titleLanguage: 'romaji', appearanceButton: true }
   }
 }
 
@@ -173,6 +177,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
         setPreferredAuthors: (preferredAuthors) => setState((s) => ({ ...s, preferredAuthors })),
         setNavPosition: (navPosition) => setState((s) => ({ ...s, navPosition })),
         setTitleLanguage: (titleLanguage) => setState((s) => ({ ...s, titleLanguage })),
+        setAppearanceButton: (appearanceButton) => setState((s) => ({ ...s, appearanceButton })),
       }}
     >
       {children}

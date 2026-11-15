@@ -23,6 +23,7 @@ import { keys, useUser } from '../lib/queries'
 import { NotificationsPopover, RAIL_BUTTON } from './notifications'
 import { Footer } from './footer'
 import { TLink, TNavLink, useTransitionNavigate } from './transition-link'
+import { AppearancePopover } from './appearance-panel'
 
 function NavItem({ to, children, end, label }: { to: string; children: ReactNode; end?: boolean; label?: string }) {
   return (
@@ -221,7 +222,7 @@ function SideRail({ position }: { position: Exclude<NavPosition, 'top'> }) {
   const { t } = useTranslation()
   const ref = useRef<HTMLElement>(null)
   const { pathname } = useLocation()
-  const { hiddenNav } = useAppearance()
+  const { hiddenNav, appearanceButton } = useAppearance()
   const nav = useVisibleNav()
   const indicator = useSlidingIndicator(ref, '[aria-current="page"]', `${pathname}|${hiddenNav.join()}|${position}`)
   const side = position === 'left' ? 'right' : 'left'
@@ -257,6 +258,7 @@ function SideRail({ position }: { position: Exclude<NavPosition, 'top'> }) {
         })}
       </nav>
       <div className="mt-auto flex flex-col items-center gap-2">
+        {appearanceButton ? <AppearancePopover side={side} rail full /> : null}
         <SettingsButton side={side} rail />
         <NotificationsPopover side={side} rail />
         <UserMenu side={side} rail />
@@ -288,7 +290,7 @@ export function useHeader() {
 export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useTranslation()
   const header = useHeader()
-  const { navPosition } = useAppearance()
+  const { navPosition, appearanceButton } = useAppearance()
   const rail = navPosition === 'top' ? null : navPosition
   return (
     <div className={cn('flex min-h-dvh flex-col', rail && 'md:[--page-max:min(var(--page-max-setting),calc(100%-5.3rem))]')}>
@@ -311,7 +313,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <RiSearchFill />
                 </TLink>
               </Button>
-              <div className="hidden md:block">
+              <div className="hidden items-center gap-2 md:flex">
+                {appearanceButton ? <AppearancePopover full /> : null}
                 <SettingsButton />
               </div>
               <NotificationsPopover />

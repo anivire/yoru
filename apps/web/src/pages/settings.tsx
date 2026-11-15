@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, TITLE_LANGUAGES, type TitleLanguage, type User } from '@yoru/shared'
+import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, type User } from '@yoru/shared'
 import { Badge, Button, Card, CardContent, Code, Field, Input, LogoMark, Segmented, Skeleton, Spinner, StepSlider, Switch, toast } from '@yoru/ui'
 import { RiAlertFill, RiArrowUpDownFill, RiBracesFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiLockFill, RiNotification3Fill, RiPaletteFill, RiPlayCircleFill, RiShieldFill, RiUser3Fill } from '@remixicon/react'
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
@@ -10,6 +10,7 @@ import { SecretForm } from '../components/admin-sources'
 import { HomeLayoutSettings, NavPositionSettings, NavigationSettings } from '../components/layout-settings'
 import { SessionsList } from '../components/sessions'
 import { Flag, LANGUAGES, useChangeLanguage } from '../components/language'
+import { TitleLanguagePicker } from '../components/appearance-panel'
 import { PROVIDER_NAMES, ProviderIcon } from '../components/providers'
 import { SchemePicker, ThemePicker } from '../components/theme-picker'
 import { api } from '../lib/api'
@@ -19,7 +20,6 @@ import { errorMessage, keys, useUser } from '../lib/queries'
 import { TLink } from '../components/transition-link'
 import { useDocumentTitle } from '../lib/title'
 
-const TITLE_FLAGS = { romaji: 'romaji', english: 'en', japanese: 'ja', russian: 'ru' } as const satisfies Record<TitleLanguage, 'ja' | 'romaji' | 'en' | 'ru'>
 import { PlayerTab } from '../components/player-settings'
 
 const TABS = ['appearance', 'player', 'account', 'notifications', 'import'] as const
@@ -54,7 +54,7 @@ export function Block({ title, description, children }: { title: ReactNode; desc
 
 function AppearanceTab() {
   const { t } = useTranslation()
-  const { pageWidth, setPageWidth, expandSynopsis, setExpandSynopsis, titleLanguage, setTitleLanguage } = useAppearance()
+  const { pageWidth, setPageWidth, expandSynopsis, setExpandSynopsis } = useAppearance()
   const user = useUser()
   const changeLanguage = useChangeLanguage()
   return (
@@ -67,26 +67,7 @@ function AppearanceTab() {
         />
       </Block>
       <Block title={t('settings.titleLanguage.title')} description={t('settings.titleLanguage.hint')}>
-        <Segmented
-          value={titleLanguage === 'russian' && !user.russianTitles ? 'romaji' : titleLanguage}
-          onChange={setTitleLanguage}
-          options={TITLE_LANGUAGES.map((v) => ({
-            value: v,
-            label: t(`settings.titleLanguage.${v}`),
-            icon: <Flag locale={TITLE_FLAGS[v]} />,
-            disabled: v === 'russian' && !user.russianTitles,
-            title: v === 'russian' && !user.russianTitles ? t('settings.titleLanguage.russianLocked') : undefined,
-          }))}
-          className="grid w-full grid-cols-2 sm:inline-flex sm:w-auto"
-        />
-        {!user.russianTitles ? (
-          <p className="mt-3 flex items-center gap-2 text-[0.8125rem] text-warning">
-            <RiLockFill className="size-3.5 shrink-0" />
-            {t('settings.titleLanguage.russianLocked')}
-          </p>
-        ) : titleLanguage === 'russian' ? (
-          <p className="mt-3 text-[0.8125rem] text-muted-foreground">{t('settings.titleLanguage.russianNote')}</p>
-        ) : null}
+        <TitleLanguagePicker />
       </Block>
       <Block title={t('settings.layout')}>
         <Card className="py-1">

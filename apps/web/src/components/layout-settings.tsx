@@ -2,7 +2,7 @@ import { Card, Switch, cn } from '@yoru/ui'
 import { DndContext, type DragEndEvent, KeyboardSensor, type Modifier, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { RiDraggable, RiImageFill, RiLayoutLeft2Fill, RiLayoutRight2Fill, RiLayoutTop2Fill } from '@remixicon/react'
+import { RiDraggable, RiImageFill, RiLayoutLeft2Fill, RiLayoutRight2Fill, RiLayoutTop2Fill, RiPaletteFill } from '@remixicon/react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { type HomeSectionSetting, type NavPosition, useAppearance } from '../lib/appearance'
@@ -117,7 +117,7 @@ export function NavPositionSettings() {
 
 export function NavigationSettings() {
   const { t } = useTranslation()
-  const { hiddenNav, setHiddenNav } = useAppearance()
+  const { hiddenNav, setHiddenNav, appearanceButton, setAppearanceButton } = useAppearance()
   const visibleCount = NAV.length - hiddenNav.length
   return (
     <Card className="py-1">
@@ -138,6 +138,13 @@ export function NavigationSettings() {
           </label>
         )
       })}
+      <label className="hidden cursor-pointer items-center gap-3 px-5 py-2.5 md:flex">
+        <IconTile>
+          <RiPaletteFill />
+        </IconTile>
+        <span className={cn('min-w-0 flex-1 text-sm', !appearanceButton && 'text-muted-foreground')}>{t('settings.appearance')}</span>
+        <Switch checked={appearanceButton} onCheckedChange={setAppearanceButton} />
+      </label>
     </Card>
   )
 }
