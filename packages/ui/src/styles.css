@@ -7,6 +7,7 @@
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-raised: var(--raised);
+  --color-popover: var(--popover);
   --color-muted: var(--muted);
   --color-inset: var(--inset);
   --color-field: var(--field);
@@ -52,7 +53,8 @@
 
   --background: oklch(0.97 calc(var(--tint) * 0.6) var(--hue));
   --surface: oklch(1 0 0);
-  --raised: oklch(0.99 calc(var(--tint) * 0.6) var(--hue));
+  --raised: oklch(1 0 0);
+  --popover: oklch(0.99 calc(var(--tint) * 0.6) var(--hue));
   --muted: oklch(0.94 var(--tint) var(--hue));
   --inset: oklch(0.945 var(--tint) var(--hue));
   --field: oklch(0.945 var(--tint) var(--hue));
@@ -89,6 +91,7 @@
   --background: oklch(0.145 calc(var(--tint) * 0.8) var(--hue));
   --surface: oklch(0.18 var(--tint) var(--hue));
   --raised: oklch(0.235 var(--tint) var(--hue));
+  --popover: var(--raised);
   --muted: oklch(0.25 var(--tint) var(--hue));
   --inset: oklch(0.175 var(--tint) var(--hue));
   --field: oklch(0.225 var(--tint) var(--hue));
