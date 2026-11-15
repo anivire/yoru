@@ -7,6 +7,7 @@ import { RiAddFill, RiCloseFill, RiDraggable } from '@remixicon/react'
 import { type FormEvent, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppearance } from '../lib/appearance'
+import { IS_IOS } from '../lib/device'
 import { type FavoriteGroup, rememberedAuthors } from '../lib/favorite-authors'
 import { Block } from '../pages/settings'
 import { restrictToVertical } from './layout-settings'
@@ -42,7 +43,7 @@ function SortableAuthor({ author, index, onRemove }: { author: string; index: nu
 
 export function PlayerTab() {
   const { t } = useTranslation()
-  const { defaultKind, setDefaultKind, preferredAuthors, setPreferredAuthors } = useAppearance()
+  const { defaultKind, setDefaultKind, preferredAuthors, setPreferredAuthors, iosFullscreen, setIosFullscreen } = useAppearance()
   const [draft, setDraft] = useState('')
   const [picked, setPicked] = useState<FavoriteGroup>(defaultKind)
   const groups: FavoriteGroup[] = preferredAuthors.any?.length ? [...STREAM_KINDS, 'any'] : [...STREAM_KINDS]
@@ -154,6 +155,18 @@ export function PlayerTab() {
           ) : null}
         </Card>
       </Block>
+      {IS_IOS ? (
+        <Block title={t('settings.playerPrefs.iosFullscreen')} description={t('settings.playerPrefs.iosFullscreenHint')}>
+          <Segmented
+            value={iosFullscreen}
+            onChange={setIosFullscreen}
+            options={[
+              { value: 'app', label: t('settings.playerPrefs.iosFullscreenApp') },
+              { value: 'native', label: t('settings.playerPrefs.iosFullscreenNative') },
+            ]}
+          />
+        </Block>
+      ) : null}
     </>
   )
 }

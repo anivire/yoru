@@ -8,6 +8,8 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import { useTranslation } from 'react-i18next'
 import { formatTime } from '../../lib/format'
 import { assToVtt } from './ass-to-vtt'
+import { useAppearance } from '../../lib/appearance'
+import { IS_IOS } from '../../lib/device'
 
 const RATES = [0.75, 1, 1.25, 1.5, 2]
 const QUALITY_KEY = 'yoru:quality'
@@ -33,8 +35,6 @@ function pickSource(sources: StreamSource[]): StreamSource {
 }
 
 type Menu = null | 'root' | 'quality' | 'speed' | 'subs'
-
-const NATIVE_VIDEO_FULLSCREEN = typeof HTMLVideoElement !== 'undefined' && 'webkitEnterFullscreen' in HTMLVideoElement.prototype
 
 type FullscreenDocument = Document & { webkitFullscreenElement?: Element | null; webkitExitFullscreen?: () => void }
 type FullscreenElement = HTMLElement & { webkitRequestFullscreen?: () => void }
@@ -65,6 +65,10 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   const [rate, setRate] = useState(1)
   const [subsOn, setSubsOn] = useState(() => localStorage.getItem(SUBS_KEY) !== 'off')
   const [fullscreen, setFullscreen] = useState(false)
+  const [stretched, setStretched] = useState(false)
+  const { iosFullscreen } = useAppearance()
+  const nativeIos = IS_IOS && iosFullscreen === 'native'
+  const full = fullscreen || stretched
   const [controls, setControls] = useState(true)
   const [menu, setMenu] = useState<Menu>(null)
   const [hover, setHover] = useState<{ x: number; time: number } | null>(null)
@@ -150,7 +154,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       return assToVtt(await res.text())
     },
-    enabled: NATIVE_VIDEO_FULLSCREEN && Boolean(subtitlesUrl) && subsOn,
+    enabled: nativeIos && Boolean(subtitlesUrl) && subsOn,
     staleTime: Infinity,
   }).data
   const vttUrl = useMemo(() => (vtt ? URL.createObjectURL(new Blob([vtt], { type: 'text/vtt' })) : null), [vtt])
@@ -231,6 +235,10 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
 
   const toggleFullscreen = useCallback(() => {
     const doc = document as FullscreenDocument
+    if (stretched) {
+      setStretched(false)
+      return
+    }
     if (fullscreenElement()) {
       if (doc.exitFullscreen) void doc.exitFullscreen().catch(() => undefined)
       else doc.webkitExitFullscreen?.()
@@ -239,10 +247,27 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
     const root = rootRef.current as FullscreenElement | null
     const video = videoRef.current as IosVideo | null
     const native = () => video?.webkitEnterFullscreen?.()
-    if (root?.requestFullscreen) void root.requestFullscreen().catch(native)
+    const fallback = () => (IS_IOS ? setStretched(true) : native())
+    if (nativeIos) native()
+    else if (root?.requestFullscreen) void root.requestFullscreen().catch(fallback)
     else if (root?.webkitRequestFullscreen) root.webkitRequestFullscreen()
-    else native()
-  }, [])
+    else fallback()
+  }, [stretched, nativeIos])
+
+  useEffect(() => {
+    if (!stretched) return
+    const root = document.documentElement
+    const previous = root.style.overflow
+    root.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setStretched(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      root.style.overflow = previous
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [stretched])
 
   const setSubs = (on: boolean) => {
     setSubsOn(on)
@@ -316,7 +341,12 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
     <div
       ref={rootRef}
       data-sound="none"
-      className={cn('group/player relative aspect-video w-full overflow-hidden bg-black text-white', fullscreen ? 'rounded-none' : 'rounded-xl', !controls && 'cursor-none')}
+      className={cn(
+        'group/player overflow-hidden bg-black text-white',
+        stretched ? 'fixed inset-0 z-[100] h-dvh w-screen' : 'relative aspect-video w-full',
+        full ? 'rounded-none' : 'rounded-xl',
+        !controls && 'cursor-none',
+      )}
       onMouseMove={poke}
       onMouseLeave={() => playing && setControls(false)}
     >
@@ -466,7 +496,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
             {document.pictureInPictureEnabled ? (
               <ControlButton label={t('player.pip')} onClick={() => void videoRef.current?.requestPictureInPicture().catch(() => undefined)} icon={<RiPictureInPicture2Fill />} />
             ) : null}
-            <ControlButton label={t('player.fullscreen')} onClick={toggleFullscreen} icon={fullscreen ? <RiFullscreenExitFill /> : <RiFullscreenFill />} />
+            <ControlButton label={t('player.fullscreen')} onClick={toggleFullscreen} icon={full ? <RiFullscreenExitFill /> : <RiFullscreenFill />} />
           </div>
         </div>
       </div>

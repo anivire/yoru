@@ -387,6 +387,10 @@ export const en: Messages = {
       preview: 'Preview',
     },
     playerPrefs: {
+      iosFullscreen: 'Fullscreen on iOS',
+      iosFullscreenHint: 'The yoru player fills the screen and keeps full styled subtitles. The iOS system player is smoother but shows subtitles as plain text',
+      iosFullscreenApp: 'yoru player',
+      iosFullscreenNative: 'System',
       kind: 'Default translation',
       kindHint: 'What to play when you open an anime for the first time. Your choice on the anime page is remembered for that title.',
       authors: 'Favorite translators',
