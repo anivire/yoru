@@ -78,7 +78,7 @@ export function ListFilterBar({
           options={[{ value: ANY, label: `${t('lists.year')}: ${t('common.any')}` }, ...years.map((y) => ({ value: String(y), label: String(y) }))]}
         />
         <Select
-          className="h-11 w-72 rounded-xl px-3.5"
+          className="h-11 min-w-48 max-w-72 flex-1 basis-0 rounded-xl px-3.5"
           icon={<RiSortDesc />}
           value={filters.sort}
           onValueChange={(v) => set('sort', v === 'score' ? undefined : v)}
