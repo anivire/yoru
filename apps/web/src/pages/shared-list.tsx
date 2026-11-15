@@ -54,7 +54,7 @@ export function SharedListPage() {
   return (
     <div className="flex min-h-dvh flex-col">
       <header ref={header.ref} className="sticky top-0 z-40 pt-2">
-        <div className="mx-auto max-w-(--page-max) px-4 sm:px-6">
+        <div className="page-frame px-4 sm:px-6">
           <div
             className={cn(
               'flex h-12 items-center -mx-2 rounded-full px-2 transition-[background-color,backdrop-filter] duration-300 sm:h-14 sm:-mx-4 sm:px-4',
@@ -66,7 +66,7 @@ export function SharedListPage() {
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-(--page-max) flex-1 px-4 pb-8 pt-4 sm:px-6 sm:pt-8">
+      <main className="page-frame w-full flex-1 px-4 pb-8 pt-4 sm:px-6 sm:pt-8">
         {isError ? (
           <EmptyState mood="error" title={t('share.notFound')} description={t('share.notFoundHint')} />
         ) : (

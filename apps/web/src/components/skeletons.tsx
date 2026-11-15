@@ -83,7 +83,7 @@ export function UpcomingCardSkeleton() {
 export function HomeSkeleton() {
   return (
     <>
-      <div className="mx-auto max-w-(--page-max) px-4 pb-12 pt-6 sm:px-6">
+      <div className="page-frame px-4 pb-12 pt-6 sm:px-6">
         <div className="mb-6 flex h-1 items-center">
           <TextLine className="text-[0.9375rem]" bar="w-40" />
         </div>
@@ -106,7 +106,7 @@ export function HomeSkeleton() {
           </div>
         </div>
       </div>
-      <div className="mx-auto w-full max-w-(--page-max) px-4 pb-8 pt-4 sm:px-6 sm:pt-(--page-top,2rem)">
+      <div className="page-frame w-full px-4 pb-8 pt-4 sm:px-6 sm:pt-(--page-top,2rem)">
         <section>
           <SectionTitleSkeleton icon />
           <Rail>
@@ -135,7 +135,7 @@ export function HomeSkeleton() {
 export function AnimePageSkeleton() {
   return (
     <>
-      <div className="mx-auto max-w-(--page-max) px-4 pb-10 pt-4 sm:px-6 sm:pt-(--page-top,2.5rem)">
+      <div className="page-frame px-4 pb-10 pt-4 sm:px-6 sm:pt-(--page-top,2.5rem)">
         <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
           <div className="flex w-36 shrink-0 flex-col gap-3 sm:w-48">
             <Skeleton className="aspect-[2/3] w-full rounded-xl" />
@@ -174,7 +174,7 @@ export function AnimePageSkeleton() {
           </div>
         </div>
       </div>
-      <div className="mx-auto w-full max-w-(--page-max) px-4 pb-8 pt-4 sm:px-6 sm:pt-(--page-top,2rem)">
+      <div className="page-frame w-full px-4 pb-8 pt-4 sm:px-6 sm:pt-(--page-top,2rem)">
         <TextLine className="mb-4 text-xl font-semibold" bar="w-24" />
         <div className="mb-12 flex gap-4 overflow-hidden">
           {[0, 1, 2, 3].map((i) => (

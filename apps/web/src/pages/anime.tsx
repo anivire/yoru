@@ -174,7 +174,7 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
   ].filter((f) => f !== null)
   return (
     <div>
-      <div className="mx-auto max-w-(--page-max) px-4 pb-10 pt-4 sm:px-6 sm:pt-(--page-top,2.5rem)">
+      <div className="page-frame px-4 pb-10 pt-4 sm:px-6 sm:pt-(--page-top,2.5rem)">
         <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
           <div className="flex w-36 shrink-0 flex-col gap-3 sm:w-48">
             {anime.imageUrl ? (

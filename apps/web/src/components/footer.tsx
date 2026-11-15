@@ -121,7 +121,7 @@ export function Footer({ scope, compact, className }: { scope: 'app' | 'public';
 
   return (
     <footer className={cn('mt-12', className)}>
-      <div className="mx-auto max-w-(--page-max) px-4 sm:px-6">
+      <div className="page-frame px-4 sm:px-6">
         <div className="border-t border-border py-10">
           <div className={cn('grid grid-cols-2 gap-x-6 gap-y-8', scope === 'app' ? 'md:grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(0,1fr))]' : 'md:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))]')}>
             <div className="col-span-2 flex flex-col gap-3 md:col-span-1">

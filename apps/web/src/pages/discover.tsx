@@ -61,7 +61,7 @@ function Hero({ items }: { items: AnimeSummary[] }) {
       onMouseLeave={() => setPaused(false)}
     >
       <HeroBackdrop src={banner.isPending ? null : (background ?? null)} />
-      <div className="mx-auto max-w-(--page-max) px-4 pb-12 pt-6 sm:px-6">
+      <div className="page-frame px-4 pb-12 pt-6 sm:px-6">
         <div className="mb-6 flex gap-1.5">
           {items.map((item, i) => (
             <button
@@ -120,7 +120,7 @@ function Hero({ items }: { items: AnimeSummary[] }) {
 
 function HeroSkeleton() {
   return (
-    <div className="mx-auto max-w-(--page-max) px-4 pb-12 pt-6 sm:px-6">
+    <div className="page-frame px-4 pb-12 pt-6 sm:px-6">
       <div className="mb-6 flex gap-1.5">
         {Array.from({ length: 10 }, (_, i) => (
           <Skeleton key={i} className={cn('h-1 rounded-full', i === 0 ? 'w-8' : 'w-4')} />

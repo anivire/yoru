@@ -343,14 +343,16 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div
       className={cn(
         'flex min-h-dvh flex-col',
-        rail && 'md:[--page-max:min(var(--page-max-setting),calc(100%-5.3rem))] md:[--page-top:1.125rem]',
+        rail === 'left' && 'md:[--rail-left:2.65rem]',
+        rail === 'right' && 'md:[--rail-right:2.65rem]',
+        rail && 'md:[--page-max:min(var(--page-max-setting),calc(100%-2.65rem))] md:[--page-top:1.125rem]',
         dock && 'md:pb-20 md:[--page-top:1.5rem]',
       )}
     >
       {rail ? <SideRail position={rail} /> : null}
       {dock ? <BottomDock /> : null}
       <header ref={header.ref} className={cn('sticky top-0 z-40 pt-2', (rail || dock) && 'md:hidden')}>
-        <div className="mx-auto max-w-(--page-max) px-4 sm:px-6">
+        <div className="page-frame px-4 sm:px-6">
           <div
             className={cn(
               'flex h-12 items-center gap-3 -mx-2 rounded-full px-2 transition-[background-color,backdrop-filter] duration-300 [view-transition-name:site-header] sm:h-14 sm:gap-4 sm:-mx-4 sm:px-4',
@@ -389,7 +391,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 export function Page({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn('mx-auto w-full max-w-(--page-max) px-4 pb-8 pt-4 sm:px-6 sm:pt-(--page-top,2rem)', className)}>{children}</div>
+  return <div className={cn('page-frame w-full px-4 pb-8 pt-4 sm:px-6 sm:pt-(--page-top,2rem)', className)}>{children}</div>
 }
 
 export function PageHeader({ title, description, actions }: { title: ReactNode; description?: ReactNode; actions?: ReactNode }) {
