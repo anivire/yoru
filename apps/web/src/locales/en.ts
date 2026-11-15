@@ -341,8 +341,9 @@ export const en: Messages = {
     },
     navPosition: {
       title: 'Navigation bar',
-      hint: 'Show navigation at the top or on the side. On phones it always stays at the top.',
+      hint: 'Show navigation on the side, at the top or at the bottom. On phones it always stays at the top.',
       top: 'Top',
+      bottom: 'Bottom',
       left: 'Left',
       right: 'Right',
     },

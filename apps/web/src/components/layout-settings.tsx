@@ -2,7 +2,7 @@ import { Card, Switch, cn } from '@yoru/ui'
 import { DndContext, type DragEndEvent, KeyboardSensor, type Modifier, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { RiDraggable, RiImageFill, RiLayoutLeft2Fill, RiLayoutRight2Fill, RiLayoutTop2Fill, RiPaletteFill } from '@remixicon/react'
+import { RiDraggable, RiImageFill, RiLayoutBottom2Fill, RiLayoutLeft2Fill, RiLayoutRight2Fill, RiLayoutTop2Fill, RiPaletteFill } from '@remixicon/react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { type HomeSectionSetting, type NavPosition, useAppearance } from '../lib/appearance'
@@ -87,8 +87,9 @@ export function HomeLayoutSettings() {
 }
 
 const NAV_POSITIONS = [
-  { value: 'top', icon: RiLayoutTop2Fill },
   { value: 'left', icon: RiLayoutLeft2Fill },
+  { value: 'top', icon: RiLayoutTop2Fill },
+  { value: 'bottom', icon: RiLayoutBottom2Fill },
   { value: 'right', icon: RiLayoutRight2Fill },
 ] as const satisfies { value: NavPosition; icon: unknown }[]
 
@@ -96,7 +97,7 @@ export function NavPositionSettings() {
   const { t } = useTranslation()
   const { navPosition, setNavPosition } = useAppearance()
   return (
-    <div className="grid grid-cols-3 gap-2 sm:gap-4">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
       {NAV_POSITIONS.map(({ value, icon: Icon }) => (
         <button
           key={value}

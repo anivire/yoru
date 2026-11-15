@@ -119,7 +119,7 @@ export function AppearancePopover({
   full = false,
   className,
 }: {
-  side?: 'bottom' | 'left' | 'right'
+  side?: 'top' | 'bottom' | 'left' | 'right'
   rail?: boolean
   full?: boolean
   className?: string

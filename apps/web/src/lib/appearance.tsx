@@ -22,7 +22,7 @@ export type PageWidth = (typeof PAGE_WIDTHS)[number]['value']
 
 const DEFAULT_WIDTH: PageWidth = '7xl'
 
-export type NavPosition = 'top' | 'left' | 'right'
+export type NavPosition = 'left' | 'top' | 'bottom' | 'right'
 
 export interface HomeSectionSetting {
   id: HomeSectionId
@@ -109,7 +109,7 @@ function load(): State {
       hiddenNav: normalizeNav(raw.hiddenNav),
       defaultKind: STREAM_KINDS.includes(raw.defaultKind as StreamKind) ? (raw.defaultKind as StreamKind) : 'sub',
       preferredAuthors: Array.isArray(raw.preferredAuthors) ? raw.preferredAuthors.filter((a): a is string => typeof a === 'string' && Boolean(a.trim())) : [],
-      navPosition: raw.navPosition === 'top' || raw.navPosition === 'right' ? raw.navPosition : 'left',
+      navPosition: raw.navPosition === 'top' || raw.navPosition === 'bottom' || raw.navPosition === 'right' ? raw.navPosition : 'left',
       titleLanguage: TITLE_LANGUAGES.includes(raw.titleLanguage as TitleLanguage) ? (raw.titleLanguage as TitleLanguage) : 'romaji',
       appearanceButton: raw.appearanceButton !== false,
     }

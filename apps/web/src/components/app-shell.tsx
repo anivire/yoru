@@ -17,10 +17,9 @@ import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { matchPath, useLocation, useNavigate } from 'react-router'
 import { api } from '../lib/api'
-import { type NavPosition, useAppearance } from '../lib/appearance'
+import { useAppearance } from '../lib/appearance'
 import { NAV } from '../lib/navigation'
 import { keys, useUser } from '../lib/queries'
-import { NotificationsPopover, RAIL_BUTTON } from './notifications'
 import { NotificationsPopover, RAIL_BUTTON, useNotificationSound } from './notifications'
 import { Footer } from './footer'
 import { TLink, TNavLink, useTransitionNavigate } from './transition-link'
@@ -163,7 +162,7 @@ function AccountItems({ settings = true }: { settings?: boolean }) {
   )
 }
 
-function UserMenu({ side = 'bottom', rail = false }: { side?: 'bottom' | 'left' | 'right'; rail?: boolean }) {
+function UserMenu({ side = 'bottom', rail = false }: { side?: 'top' | 'bottom' | 'left' | 'right'; rail?: boolean }) {
   const { t } = useTranslation()
   const user = useUser()
   const trigger = (
@@ -196,7 +195,7 @@ function UserMenu({ side = 'bottom', rail = false }: { side?: 'bottom' | 'left' 
   )
 }
 
-function SettingsButton({ rail = false, side = 'bottom' }: { rail?: boolean; side?: 'bottom' | 'left' | 'right' }) {
+function SettingsButton({ rail = false, side = 'bottom' }: { rail?: boolean; side?: 'top' | 'bottom' | 'left' | 'right' }) {
   const { t } = useTranslation()
   const active = Boolean(matchPath({ path: '/settings', end: false }, useLocation().pathname))
   if (!rail) {
@@ -219,7 +218,7 @@ function SettingsButton({ rail = false, side = 'bottom' }: { rail?: boolean; sid
   )
 }
 
-function SideRail({ position }: { position: Exclude<NavPosition, 'top'> }) {
+function SideRail({ position }: { position: 'left' | 'right' }) {
   const { t } = useTranslation()
   const ref = useRef<HTMLElement>(null)
   const { pathname } = useLocation()
@@ -268,6 +267,51 @@ function SideRail({ position }: { position: Exclude<NavPosition, 'top'> }) {
   )
 }
 
+function BottomDock() {
+  const { t } = useTranslation()
+  const ref = useRef<HTMLElement>(null)
+  const { pathname } = useLocation()
+  const { hiddenNav, appearanceButton } = useAppearance()
+  const nav = useVisibleNav()
+  const indicator = useSlidingIndicator(ref, '[aria-current="page"]', `${pathname}|${hiddenNav.join()}|bottom`)
+  return (
+    <aside className="pointer-events-none fixed inset-x-0 bottom-3 z-40 hidden justify-center px-4 [view-transition-name:site-rail] md:flex">
+      <div className="pointer-events-auto flex h-14 items-center gap-1 rounded-full bg-background/70 px-2 backdrop-blur-2xl backdrop-saturate-150">
+        <TLink to="/" aria-label="yoru" className="grid size-11 place-items-center">
+          <LogoMark size={26} />
+        </TLink>
+        <span aria-hidden className="mx-1 h-6 w-px bg-border" />
+        <nav ref={ref} className="relative flex items-center gap-1">
+          <span aria-hidden style={indicator} className="pointer-events-none absolute rounded-xl bg-muted duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]" />
+          {nav.map((n) => {
+            const active = Boolean(matchPath({ path: n.to, end: n.end }, pathname))
+            return (
+              <Tooltip key={n.to} content={t(`nav.${n.key}`)} side="top">
+                <TNavLink
+                  to={n.to}
+                  end={n.end}
+                  aria-label={t(`nav.${n.key}`)}
+                  className={cn(
+                    'relative grid size-11 place-items-center rounded-xl transition-colors [&_svg]:size-5',
+                    active ? 'text-foreground [&_svg]:text-accent' : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  <n.icon />
+                </TNavLink>
+              </Tooltip>
+            )
+          })}
+        </nav>
+        <span aria-hidden className="mx-1 h-6 w-px bg-border" />
+        {appearanceButton ? <AppearancePopover side="top" rail full /> : null}
+        <SettingsButton side="top" rail />
+        <NotificationsPopover side="top" rail />
+        <UserMenu side="top" rail />
+      </div>
+    </aside>
+  )
+}
+
 export function useHeader() {
   const ref = useRef<HTMLElement>(null)
   const [scrolled, setScrolled] = useState(false)
@@ -292,12 +336,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useTranslation()
   const header = useHeader()
   const { navPosition, appearanceButton } = useAppearance()
-  const rail = navPosition === 'top' ? null : navPosition
   useNotificationSound()
+  const rail = navPosition === 'left' || navPosition === 'right' ? navPosition : null
+  const dock = navPosition === 'bottom'
   return (
-    <div className={cn('flex min-h-dvh flex-col', rail && 'md:[--page-max:min(var(--page-max-setting),calc(100%-5.3rem))] md:[--page-top:1.125rem]')}>
+    <div
+      className={cn(
+        'flex min-h-dvh flex-col',
+        rail && 'md:[--page-max:min(var(--page-max-setting),calc(100%-5.3rem))] md:[--page-top:1.125rem]',
+        dock && 'md:pb-20 md:[--page-top:1.5rem]',
+      )}
+    >
       {rail ? <SideRail position={rail} /> : null}
-      <header ref={header.ref} className={cn('sticky top-0 z-40 pt-2', rail && 'md:hidden')}>
+      {dock ? <BottomDock /> : null}
+      <header ref={header.ref} className={cn('sticky top-0 z-40 pt-2', (rail || dock) && 'md:hidden')}>
         <div className="mx-auto max-w-(--page-max) px-4 sm:px-6">
           <div
             className={cn(
@@ -316,7 +368,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </TLink>
               </Button>
               <div className="hidden items-center gap-2 md:flex">
-                {appearanceButton && !rail ? <AppearancePopover full /> : null}
+                {appearanceButton && !rail && !dock ? <AppearancePopover full /> : null}
                 <SettingsButton />
               </div>
               <NotificationsPopover />

@@ -13,7 +13,6 @@ import { AnimeTitle } from '../lib/anime-title'
 export const RAIL_BUTTON =
   'relative grid size-11 cursor-pointer place-items-center rounded-xl text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent data-[state=open]:bg-muted data-[state=open]:text-foreground [&_svg]:size-5'
 
-export function NotificationsPopover({ side = 'bottom', rail = false }: { side?: 'bottom' | 'left' | 'right'; rail?: boolean }) {
 export function useNotificationSound() {
   const { data } = useQuery({ queryKey: keys.notifications, queryFn: api.notifications, refetchInterval: 60_000, refetchOnWindowFocus: true })
   const previous = useRef<number | null>(null)
@@ -25,6 +24,7 @@ export function useNotificationSound() {
   }, [unread])
 }
 
+export function NotificationsPopover({ side = 'bottom', rail = false }: { side?: 'top' | 'bottom' | 'left' | 'right'; rail?: boolean }) {
   const { t } = useTranslation()
   const client = useQueryClient()
   const { data } = useQuery({ queryKey: keys.notifications, queryFn: api.notifications, refetchInterval: 60_000, refetchOnWindowFocus: true })
