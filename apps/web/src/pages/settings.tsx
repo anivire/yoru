@@ -14,7 +14,7 @@ import { TitleLanguagePicker } from '../components/appearance-panel'
 import { PROVIDER_NAMES, ProviderIcon } from '../components/providers'
 import { SchemePicker, ThemePicker } from '../components/theme-picker'
 import { api } from '../lib/api'
-import { PAGE_WIDTHS, useAppearance } from '../lib/appearance'
+import { useAppearance } from '../lib/appearance'
 import { exportFormatName, formatDate } from '../lib/format'
 import { errorMessage, keys, useUser } from '../lib/queries'
 import { TLink } from '../components/transition-link'
@@ -56,7 +56,7 @@ export function Block({ title, description, children, className }: { title: Reac
 
 function AppearanceTab() {
   const { t } = useTranslation()
-  const { pageWidth, setPageWidth, expandSynopsis, setExpandSynopsis } = useAppearance()
+  const { pageWidth, setPageWidth, pageWidthOptions, expandSynopsis, setExpandSynopsis } = useAppearance()
   const user = useUser()
   const changeLanguage = useChangeLanguage()
   return (
@@ -73,7 +73,7 @@ function AppearanceTab() {
       </Block>
       <Block title={t('settings.layout')}>
         <Card className="py-1">
-          <div className="hidden flex-col gap-3 px-5 py-4 lg:flex">
+          <div className="hidden flex-col gap-3 px-5 py-4 md:flex">
             <span>
               <span className="block text-sm">{t('settings.pageWidth')}</span>
               <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.pageWidthHint')}</span>
@@ -82,7 +82,7 @@ function AppearanceTab() {
               value={pageWidth}
               onChange={setPageWidth}
               label={t('settings.pageWidth')}
-              options={PAGE_WIDTHS.map((w) => ({ value: w.value, label: w.label }))}
+              options={pageWidthOptions.map((w) => ({ value: w.value, label: w.label }))}
             />
           </div>
           <label className="flex cursor-pointer items-center justify-between gap-4 px-5 py-3">

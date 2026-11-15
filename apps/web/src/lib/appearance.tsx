@@ -1,6 +1,6 @@
 import { STREAM_KINDS, type StreamKind, TITLE_LANGUAGES, type TitleLanguage } from '@yoru/shared'
 import { type ColorScheme, DEFAULT_SCHEME, DEFAULT_THEME, THEME_PRESETS, type ThemePreset, applyTheme, logoSvg } from '@yoru/ui'
-import { type ReactNode, createContext, useContext, useEffect, useState } from 'react'
+import { type ReactNode, createContext, useContext, useEffect, useState, useSyncExternalStore } from 'react'
 import { HOME_SECTIONS, type HomeSectionId, NAV, type NavKey } from './navigation'
 import { type FavoriteAuthors, normalizeFavorites } from './favorite-authors'
 
@@ -71,6 +71,8 @@ function normalizeNav(value: unknown): NavKey[] {
 
 interface Appearance extends State {
   stretch: boolean
+  tablet: boolean
+  pageWidthOptions: (typeof PAGE_WIDTHS)[number][]
   setTheme: (theme: ThemePreset) => void
   setScheme: (scheme: ColorScheme) => void
   setPageWidth: (width: PageWidth) => void
@@ -137,6 +139,32 @@ function load(): State {
   }
 }
 
+const TABLET_QUERY = '(pointer: coarse) and (min-width: 768px)'
+
+function subscribeViewport(listener: () => void) {
+  const media = window.matchMedia(TABLET_QUERY)
+  window.addEventListener('resize', listener)
+  media.addEventListener('change', listener)
+  return () => {
+    window.removeEventListener('resize', listener)
+    media.removeEventListener('change', listener)
+  }
+}
+
+function viewportSnapshot() {
+  const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+  return `${window.innerWidth}|${rem}|${window.matchMedia(TABLET_QUERY).matches ? 1 : 0}`
+}
+
+function useViewport() {
+  const [width, rem, tablet] = useSyncExternalStore(subscribeViewport, viewportSnapshot).split('|')
+  return { width: Number(width), rem: Number(rem), tablet: tablet === '1' }
+}
+
+function widthPx(width: (typeof PAGE_WIDTHS)[number], rem: number) {
+  return width.max.endsWith('rem') ? Number.parseFloat(width.max) * rem : Infinity
+}
+
 function widthIndex(width: PageWidth) {
   return PAGE_WIDTHS.findIndex((w) => w.value === width)
 }
@@ -167,7 +195,16 @@ function updateFavicon() {
 
 export function AppearanceProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState(load)
-  const stretch = widthIndex(state.pageWidth) > widthIndex(DEFAULT_WIDTH)
+  const viewport = useViewport()
+  const pageWidthOptions = viewport.tablet
+    ? PAGE_WIDTHS.filter((w) => w.value === '3xl' || w.value === 'full')
+    : PAGE_WIDTHS.filter((w) => w.value === 'full' || w.value === '3xl' || widthPx(w, viewport.rem) <= viewport.width)
+  const pageWidth: PageWidth = pageWidthOptions.some((w) => w.value === state.pageWidth)
+    ? state.pageWidth
+    : viewport.tablet
+      ? '3xl'
+      : 'full'
+  const stretch = widthIndex(viewport.tablet ? pageWidth : state.pageWidth) > widthIndex(DEFAULT_WIDTH)
 
   useEffect(() => {
     applyTheme(state.theme, state.scheme)
@@ -185,15 +222,18 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement
-    root.style.setProperty('--page-max-setting', PAGE_WIDTHS[widthIndex(state.pageWidth)]!.max)
+    root.style.setProperty('--page-max-setting', PAGE_WIDTHS[widthIndex(pageWidth)]!.max)
     root.toggleAttribute('data-wide', stretch)
-  }, [state.pageWidth, stretch])
+  }, [pageWidth, stretch])
 
   return (
     <AppearanceContext
       value={{
         ...state,
+        pageWidth,
         stretch,
+        tablet: viewport.tablet,
+        pageWidthOptions,
         setTheme: (theme) => setState((s) => ({ ...s, theme })),
         setScheme: (scheme) => setState((s) => ({ ...s, scheme })),
         setPageWidth: (pageWidth) => setState((s) => ({ ...s, pageWidth })),

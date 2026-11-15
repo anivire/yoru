@@ -3,7 +3,7 @@ import { Button, Popover, PopoverContent, PopoverTrigger, Segmented, StepSlider,
 import { RiArrowRightSLine, RiLockFill, RiPaletteFill } from '@remixicon/react'
 import { type ReactNode, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
-import { PAGE_WIDTHS, useAppearance } from '../lib/appearance'
+import { useAppearance } from '../lib/appearance'
 import { useMe } from '../lib/queries'
 import { Flag } from './language'
 import { BackdropPicker, HomeLayoutSettings, NavPositionSettings, NavigationSettings } from './layout-settings'
@@ -55,7 +55,7 @@ function Section({ title, children, className }: { title: ReactNode; children: R
 
 function AppearancePanel({ full }: { full: boolean }) {
   const { t } = useTranslation()
-  const { pageWidth, setPageWidth, expandSynopsis, setExpandSynopsis } = useAppearance()
+  const { pageWidth, setPageWidth, pageWidthOptions, expandSynopsis, setExpandSynopsis } = useAppearance()
   return (
     <>
       <Section title={t('settings.colorScheme')}>
@@ -70,7 +70,7 @@ function AppearancePanel({ full }: { full: boolean }) {
             <TitleLanguagePicker compact />
           </Section>
           <Section title={t('settings.pageWidth')}>
-            <StepSlider value={pageWidth} onChange={setPageWidth} label={t('settings.pageWidth')} options={PAGE_WIDTHS.map((w) => ({ value: w.value, label: w.label }))} />
+            <StepSlider value={pageWidth} onChange={setPageWidth} label={t('settings.pageWidth')} options={pageWidthOptions.map((w) => ({ value: w.value, label: w.label }))} />
           </Section>
           <label className="flex cursor-pointer items-center justify-between gap-4">
             <span className="text-sm">{t('settings.expandSynopsis')}</span>
