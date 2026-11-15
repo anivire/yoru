@@ -258,7 +258,13 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
 
   return (
     <section id="watch" className="min-w-0 scroll-mt-20">
-      <div className={cn('mb-3 grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_auto] gap-2', side && 'sm:flex sm:flex-wrap sm:items-center')}>
+      <div
+        className={cn(
+          'mb-3 grid min-w-0 gap-2',
+          libria ? 'grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]' : 'grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_auto]',
+          side && 'sm:flex sm:flex-wrap sm:items-center',
+        )}
+      >
         <Select
           className={cn('h-10 w-full min-w-0 rounded-xl px-3.5', side && 'sm:w-40')}
           value={source}
@@ -288,14 +294,14 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
         />
         {libria ? (
           <Select
-            className={cn('col-span-3 h-10 w-full min-w-0 rounded-xl px-3.5', side ? 'max-sm:order-1 sm:w-72' : 'order-1')}
+            className={cn('col-span-full h-10 w-full min-w-0 rounded-xl px-3.5', side ? 'max-sm:order-1 sm:w-72' : 'order-1')}
             disabled
             value="anilibria"
             onValueChange={() => undefined}
             options={[{ value: 'anilibria', label: 'AniLibria', hint: libriaRelease.data?.title ?? undefined }]}
           />
         ) : (
-        <div className={cn('col-span-3 flex min-w-0 gap-2', side ? 'max-sm:order-1' : 'order-1')}>
+        <div className={cn('col-span-full flex min-w-0 gap-2', side ? 'max-sm:order-1' : 'order-1')}>
           <Select
             className={cn('h-10 w-full min-w-0 flex-1 rounded-xl px-3.5', side && 'sm:w-72 sm:flex-none')}
             disabled={!translations.data?.length}
@@ -331,9 +337,11 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
           </Tooltip>
         </div>
         )}
-        <div className={cn('flex justify-end', side && 'sm:ml-auto')}>
-          {libria ? null : <MatchDialog malId={malId} match={match.data} defaultQuery={anime.title} />}
-        </div>
+        {libria ? null : (
+          <div className={cn('flex justify-end', side && 'sm:ml-auto')}>
+            <MatchDialog malId={malId} match={match.data} defaultQuery={anime.title} />
+          </div>
+        )}
       </div>
       <div className={cn('grid gap-5', side && 'desk:grid-cols-[minmax(0,1fr)_22rem]')}>
         <div className="min-w-0">{body}</div>
