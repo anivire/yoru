@@ -1,4 +1,4 @@
-import { and, eq, inArray, lt, notInArray, sql } from 'drizzle-orm'
+import { and, eq, inArray, notInArray, sql } from 'drizzle-orm'
 import { db, now } from '../db/client'
 import { listEntries, notifications, providerMappings, providerReleases, users } from '../db/schema'
 import { env } from '../env'
@@ -44,7 +44,6 @@ function notifyUsers(malId: number, episode: number, kind: 'sub' | 'voice', auth
       and(
         eq(listEntries.malId, malId),
         inArray(listEntries.status, [...NOTIFY_STATUSES]),
-        lt(listEntries.progress, episode),
         eq(pref, true),
       ),
     )
