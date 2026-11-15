@@ -8,7 +8,11 @@ A self-hosted anime tracker and player built around [Anime365](https://smotret-a
 
 </div>
 
-![yoru home page](docs/screenshot.jpg)
+![yoru home page](docs/home.webp)
+
+![My lists](docs/lists.webp)
+
+![Discover page](docs/discover.webp)
 
 ## Features
 
