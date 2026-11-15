@@ -15,6 +15,7 @@ export function PopoverContent({ className, align = 'end', sideOffset = 8, ...pr
   return (
     <P.Portal>
       <P.Content align={align} sideOffset={sideOffset} className={cn(panel, 'w-80 overflow-hidden', className)} {...props} />
+      <P.Content data-foley-enter="hover" align={align} sideOffset={sideOffset} className={cn(panel, 'w-80 overflow-hidden', className)} {...props} />
     </P.Portal>
   )
 }
@@ -45,6 +46,7 @@ export function DialogContent({
     <D.Portal>
       <D.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[0.125rem] animate-fade" />
       <D.Content
+        data-foley-enter="rise"
         className={cn(surface, 'fixed left-1/2 top-1/2 flex max-h-[85vh] animate-zoom w-[min(92vw,32rem)] -translate-x-1/2 -translate-y-1/2 flex-col', className)}
         {...props}
       >
@@ -90,6 +92,7 @@ export function DropdownMenuContent({ className, align = 'end', sideOffset = 6, 
   return (
     <M.Portal>
       <M.Content align={align} sideOffset={sideOffset} className={cn(panel, 'min-w-44 p-1.5', className)} {...props} />
+      <M.Content data-foley-enter="hover" align={align} sideOffset={sideOffset} className={cn(panel, 'min-w-44 p-1.5', className)} {...props} />
     </M.Portal>
   )
 }
@@ -167,6 +170,7 @@ export function Select({
       </S.Trigger>
       <S.Portal>
         <S.Content position="popper" sideOffset={6} className={cn(panel, 'max-h-80 min-w-[var(--radix-select-trigger-width)] overflow-hidden')}>
+        <S.Content data-foley-enter="hover" position="popper" sideOffset={6} className={cn(panel, 'max-h-80 min-w-[var(--radix-select-trigger-width)] overflow-hidden')}>
           <S.Viewport className="p-1.5">
             {options.map((o) => (
               <S.Item

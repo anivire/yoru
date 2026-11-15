@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, type User } from '@yoru/shared'
 import { Badge, Button, Card, CardContent, Code, Field, Input, LogoMark, Segmented, Skeleton, Spinner, StepSlider, Switch, toast } from '@yoru/ui'
-import { RiAlertFill, RiArrowUpDownFill, RiBracesFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiLockFill, RiNotification3Fill, RiPaletteFill, RiPlayCircleFill, RiShieldFill, RiUser3Fill } from '@remixicon/react'
+import { RiAlertFill, RiArrowUpDownFill, RiBracesFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiLockFill, RiNotification3Fill, RiPaletteFill, RiPlayCircleFill, RiShieldFill, RiUser3Fill, RiVolumeUpFill } from '@remixicon/react'
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
@@ -21,13 +21,14 @@ import { TLink } from '../components/transition-link'
 import { useDocumentTitle } from '../lib/title'
 
 import { PlayerTab } from '../components/player-settings'
+import { SoundsTab } from '../components/sound-settings'
 
-const TABS = ['appearance', 'player', 'account', 'notifications', 'import'] as const
+const TABS = ['appearance', 'player', 'sounds', 'account', 'notifications', 'import'] as const
 type Tab = (typeof TABS)[number]
 
 const EXPORT_ICONS = { yoru: RiBracesFill, json: RiBracesFill, csv: RiFileExcel2Fill, 'mal-xml': RiFileCodeFill } satisfies Record<ExportFormat, unknown>
 
-const TAB_ICONS = { appearance: RiPaletteFill, player: RiPlayCircleFill, account: RiUser3Fill, notifications: RiNotification3Fill, import: RiArrowUpDownFill } satisfies Record<Tab, unknown>
+const TAB_ICONS = { appearance: RiPaletteFill, player: RiPlayCircleFill, sounds: RiVolumeUpFill, account: RiUser3Fill, notifications: RiNotification3Fill, import: RiArrowUpDownFill } satisfies Record<Tab, unknown>
 
 function useUpdateUser() {
   const client = useQueryClient()
@@ -503,6 +504,7 @@ export function SettingsPage() {
       <div key={tab} className="animate-fade">
         {tab === 'appearance' ? <AppearanceTab /> : null}
         {tab === 'player' ? <PlayerTab /> : null}
+        {tab === 'sounds' ? <SoundsTab /> : null}
         {tab === 'account' ? <AccountTab /> : null}
         {tab === 'notifications' ? <NotificationsTab /> : null}
         {tab === 'import' ? <ImportTab /> : null}

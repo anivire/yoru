@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { relativeTime } from '../lib/format'
 import { keys } from '../lib/queries'
+import { cue } from '../lib/sounds'
+import { useEffect, useRef } from 'react'
 import { TLink } from './transition-link'
 import { AnimeTitle } from '../lib/anime-title'
 
@@ -12,6 +14,17 @@ export const RAIL_BUTTON =
   'relative grid size-11 cursor-pointer place-items-center rounded-xl text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent data-[state=open]:bg-muted data-[state=open]:text-foreground [&_svg]:size-5'
 
 export function NotificationsPopover({ side = 'bottom', rail = false }: { side?: 'bottom' | 'left' | 'right'; rail?: boolean }) {
+export function useNotificationSound() {
+  const { data } = useQuery({ queryKey: keys.notifications, queryFn: api.notifications, refetchInterval: 60_000, refetchOnWindowFocus: true })
+  const previous = useRef<number | null>(null)
+  const unread = data?.unread
+  useEffect(() => {
+    if (unread === undefined) return
+    if (previous.current !== null && unread > previous.current) cue('notifications', 'bubble')
+    previous.current = unread
+  }, [unread])
+}
+
   const { t } = useTranslation()
   const client = useQueryClient()
   const { data } = useQuery({ queryKey: keys.notifications, queryFn: api.notifications, refetchInterval: 60_000, refetchOnWindowFocus: true })

@@ -21,6 +21,7 @@ import { type NavPosition, useAppearance } from '../lib/appearance'
 import { NAV } from '../lib/navigation'
 import { keys, useUser } from '../lib/queries'
 import { NotificationsPopover, RAIL_BUTTON } from './notifications'
+import { NotificationsPopover, RAIL_BUTTON, useNotificationSound } from './notifications'
 import { Footer } from './footer'
 import { TLink, TNavLink, useTransitionNavigate } from './transition-link'
 import { AppearancePopover } from './appearance-panel'
@@ -292,6 +293,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const header = useHeader()
   const { navPosition, appearanceButton } = useAppearance()
   const rail = navPosition === 'top' ? null : navPosition
+  useNotificationSound()
   return (
     <div className={cn('flex min-h-dvh flex-col', rail && 'md:[--page-max:min(var(--page-max-setting),calc(100%-5.3rem))] md:[--page-top:1.125rem]')}>
       {rail ? <SideRail position={rail} /> : null}

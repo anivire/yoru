@@ -263,6 +263,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   return (
     <div
       ref={rootRef}
+      data-sound="none"
       className={cn('group/player relative aspect-video w-full overflow-hidden bg-black text-white', fullscreen ? 'rounded-none' : 'rounded-xl', !controls && 'cursor-none')}
       onMouseMove={poke}
       onMouseLeave={() => playing && setControls(false)}

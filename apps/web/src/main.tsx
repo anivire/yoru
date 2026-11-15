@@ -9,6 +9,9 @@ import { UpdateWatcher } from './components/update-watcher'
 import { AppearanceProvider } from './lib/appearance'
 import { queryClient } from './lib/queries'
 import { router } from './router'
+import { installSounds } from './lib/sounds'
+
+installSounds()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
