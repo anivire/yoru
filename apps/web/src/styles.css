@@ -6,6 +6,7 @@
 @source '../../../packages/ui/src';
 
 @custom-variant wide (&:where([data-wide], [data-wide] *));
+@custom-variant desk (@media (min-width: 64rem) and (pointer: fine));
 
 :root {
   --page-max-setting: 80rem;

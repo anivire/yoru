@@ -200,7 +200,7 @@ function GithubExtras({ settings }: { settings: AdminSettings }) {
   return (
     <>
       <form
-        className="grid gap-2 sm:grid-cols-[1fr_8rem_auto] sm:items-end"
+        className="grid grid-cols-[minmax(0,1fr)_minmax(0,7rem)] items-end gap-2 [&>button]:col-span-2 [&>button]:justify-self-start"
         onSubmit={(e) => {
           e.preventDefault()
           save.mutate({
@@ -245,7 +245,7 @@ function SourceCard({ info, settings }: { info: DataSourceInfo; settings: AdminS
   if (info.id === 'anime365') extras = <Anime365Extras settings={settings} />
   if (info.id === 'github') extras = <GithubExtras key={`${settings.github.repo}|${settings.github.branch}`} settings={settings} />
   return (
-    <div className="flex flex-col gap-4 rounded-xl bg-field/50 p-3 sm:p-4">
+    <div className="flex min-w-0 flex-col gap-4 rounded-xl bg-field/50 p-3 sm:p-4">
       <div className="flex items-center gap-3">
         <SourceIcon id={info.id} />
         <div className="min-w-0 flex-1">
@@ -299,7 +299,7 @@ export function DataSources() {
           </CardDescription>
         </div>
       </CardHeader>
-      <CardContent className="grid gap-3 md:grid-cols-2">
+      <CardContent className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,22rem),1fr))] gap-3 [&>*]:min-w-0">
         {data
           ? data.sources.map((info) => <SourceCard key={info.id} info={info} settings={data} />)
           : Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-72 rounded-xl" />)}
@@ -314,7 +314,7 @@ function OAuthProvider({ provider, settings }: { provider: ImportProvider; setti
   const save = useSaveSettings([['import-status']])
   const [clientId, setClientId] = useState(info.clientId)
   return (
-    <div className="flex flex-col gap-3 rounded-xl bg-field/50 p-3 sm:p-4">
+    <div className="flex min-w-0 flex-col gap-3 rounded-xl bg-field/50 p-3 sm:p-4">
       <div className="flex items-center gap-3">
         <ProviderIcon provider={provider} />
         <div className="min-w-0 flex-1">
@@ -379,7 +379,7 @@ export function OAuthSettings() {
           </CardDescription>
         </div>
       </CardHeader>
-      <CardContent className="grid gap-3 md:grid-cols-3">
+      <CardContent className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,19rem),1fr))] gap-3 [&>*]:min-w-0">
         {data
           ? IMPORT_PROVIDERS.map((p) => <OAuthProvider key={`${p}|${data.oauth[p].clientId}`} provider={p} settings={data} />)
           : Array.from({ length: 3 }, (_, i) => <Skeleton key={i} className="h-64 rounded-xl" />)}

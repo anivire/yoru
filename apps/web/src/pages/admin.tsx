@@ -129,9 +129,17 @@ function Invites() {
             invites.data.map((invite) => {
               const state = inviteState(invite)
               const link = `${location.origin}/invite/${invite.code}`
+              const tone = state === 'active' ? 'success' : state === 'used' ? 'neutral' : 'danger'
+              const badge = (
+                <Badge size="sm" variant={tone} className="max-w-full">
+                  <span className="truncate">{state === 'used' ? t('admin.used', { user: invite.usedBy ?? '?' }) : t(`admin.${state}`)}</span>
+                </Badge>
+              )
               return (
-                <div key={invite.id} className="flex flex-wrap items-center gap-3 rounded-lg bg-field px-4 py-3">
-                  <StatusDot tone={state === 'active' ? 'success' : state === 'used' ? 'neutral' : 'danger'} />
+                <div key={invite.id} className="flex items-start gap-3 rounded-lg bg-field px-4 py-3 sm:items-center">
+                  <span className="flex h-5 shrink-0 items-center">
+                    <StatusDot tone={tone} />
+                  </span>
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-mono text-[0.8125rem]">{link}</div>
                     <div className="text-xs text-muted-foreground">
@@ -143,10 +151,9 @@ function Invites() {
                         .filter(Boolean)
                         .join(' · ')}
                     </div>
+                    <div className="mt-1.5 sm:hidden">{badge}</div>
                   </div>
-                  <Badge size="sm" variant={state === 'active' ? 'success' : state === 'used' ? 'neutral' : 'danger'}>
-                    {state === 'used' ? t('admin.used', { user: invite.usedBy ?? '?' }) : t(`admin.${state}`)}
-                  </Badge>
+                  <div className="hidden shrink-0 sm:block">{badge}</div>
                   {state === 'active' ? (
                     <Button
                       size="icon-sm"

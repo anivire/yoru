@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, type User } from '@yoru/shared'
-import { Badge, Button, Card, CardContent, Code, Field, Input, LogoMark, Segmented, Skeleton, Spinner, StepSlider, Switch, toast } from '@yoru/ui'
+import { Badge, Button, Card, CardContent, Code, Field, Input, LogoMark, Segmented, Skeleton, Spinner, StepSlider, Switch, cn, toast } from '@yoru/ui'
 import { RiAlertFill, RiArrowUpDownFill, RiCheckboxCircleFill, RiBracesFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiLockFill, RiNotification3Fill, RiPaletteFill, RiPlayCircleFill, RiShieldFill, RiUser3Fill, RiVolumeUpFill } from '@remixicon/react'
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
@@ -44,9 +44,9 @@ function useUpdateUser() {
   })
 }
 
-export function Block({ title, description, children }: { title: ReactNode; description?: ReactNode; children: ReactNode }) {
+export function Block({ title, description, children, className }: { title: ReactNode; description?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className="mt-10 first:mt-0">
+    <section className={cn('mt-10 first:mt-0', className)}>
       <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
       {description ? <p className="mt-0.5 text-sm text-muted-foreground">{description}</p> : null}
       <div className="mt-4">{children}</div>
@@ -104,7 +104,7 @@ function AppearanceTab() {
       <Block title={t('settings.homeLayout')} description={t('settings.homeLayoutHint')}>
         <HomeLayoutSettings />
       </Block>
-      <Block title={t('settings.navPosition.title')} description={t('settings.navPosition.hint')}>
+      <Block title={t('settings.navPosition.title')} description={t('settings.navPosition.hint')} className="hidden md:block">
         <NavPositionSettings />
       </Block>
       <Block title={t('settings.navigation')} description={t('settings.navigationHint')}>
@@ -401,7 +401,7 @@ function ImportTab() {
             ) : null}
           </div>
         ) : null}
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] gap-3 [&>*]:min-w-0">
           {IMPORT_PROVIDERS.map((p) => {
             const enabled = status.data?.providers[p]
             return (
@@ -432,13 +432,13 @@ function ImportTab() {
                   <Button asChild variant="secondary" size="sm" className="mt-auto">
                     <a href={api.importStartUrl(p)}>
                       <RiDownload2Fill />
-                      {t('settings.connect', { name: PROVIDER_NAMES[p] })}
+                      <span className="truncate">{t('settings.connect', { name: PROVIDER_NAMES[p] })}</span>
                     </a>
                   </Button>
                 ) : (
                   <Button variant="secondary" size="sm" disabled className="mt-auto">
                     <RiDownload2Fill />
-                    {t('settings.connect', { name: PROVIDER_NAMES[p] })}
+                    <span className="truncate">{t('settings.connect', { name: PROVIDER_NAMES[p] })}</span>
                   </Button>
                 )}
               </Card>

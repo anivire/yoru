@@ -44,9 +44,9 @@ export function TitleLanguagePicker({ compact }: { compact?: boolean }) {
   )
 }
 
-function Section({ title, children }: { title: ReactNode; children: ReactNode }) {
+function Section({ title, children, className }: { title: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <div>
+    <div className={className}>
       <div className="mb-2 text-xs font-medium text-muted-foreground">{title}</div>
       {children}
     </div>
@@ -79,7 +79,7 @@ function AppearancePanel({ full }: { full: boolean }) {
           <Section title={t('settings.backdrop.title')}>
             <BackdropPicker />
           </Section>
-          <Section title={t('settings.navPosition.title')}>
+          <Section title={t('settings.navPosition.title')} className="hidden md:block">
             <NavPositionSettings />
           </Section>
           <Section title={t('settings.homeLayout')}>
