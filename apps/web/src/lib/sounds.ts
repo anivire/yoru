@@ -1,4 +1,4 @@
-import { type CueName, type ThemeName, observe, play, set, unlock } from '@foleyjs/core'
+import { type CueName, type PlayOptions, type ThemeName, play as foleyPlay, set, unlock } from '@foleyjs/core'
 import { onStep, onToast } from '@yoru/ui'
 import { useSyncExternalStore } from 'react'
 
@@ -37,16 +37,42 @@ function load(): SoundSettings {
 }
 
 let state = load()
-let stopObserving: (() => void) | null = null
+let observer: MutationObserver | null = null
 const listeners = new Set<() => void>()
+
+function play(name: CueName, opts?: PlayOptions) {
+  unlock()
+  const random = Math.random
+  let calls = 0
+  Math.random = () => (++calls === 2 ? 0.5 : random())
+  try {
+    foleyPlay(name, opts)
+  } finally {
+    Math.random = random
+  }
+}
+
+function playEntering(records: MutationRecord[]) {
+  for (const record of records) {
+    for (const node of record.addedNodes) {
+      if (!(node instanceof Element)) continue
+      const el = node.matches('[data-foley-enter]') ? node : node.querySelector('[data-foley-enter]')
+      const name = el?.getAttribute('data-foley-enter')
+      if (name) play(name as CueName)
+    }
+  }
+}
 
 function apply() {
   set({ muted: !state.enabled, volume: (Number(state.volume) / 100) * GAIN, theme: state.theme })
   const watch = state.enabled && state.interface
-  if (watch && !stopObserving) stopObserving = observe()
-  if (!watch && stopObserving) {
-    stopObserving()
-    stopObserving = null
+  if (watch && !observer) {
+    observer = new MutationObserver(playEntering)
+    observer.observe(document.documentElement, { childList: true, subtree: true })
+  }
+  if (!watch && observer) {
+    observer.disconnect()
+    observer = null
   }
 }
 
