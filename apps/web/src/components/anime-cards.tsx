@@ -284,14 +284,17 @@ function VirtualRows({ gridRef, grid, items, columns, columnWidth }: { gridRef: 
 }
 
 export function PosterGrid({ children, className, fullRows = false }: { children: ReactNode; className?: string; fullRows?: boolean }) {
-  const { stretch } = useAppearance()
+  const { stretch, pageWidth } = useAppearance()
+  const narrow = pageWidth === '3xl' || pageWidth === '4xl'
   const items = Children.toArray(children)
   const virtual = items.length >= VIRTUALIZE_FROM
   const { ref, columns, width } = useGridColumns(fullRows || virtual)
   const shown = fullRows && columns > 0 && items.length > columns ? items.slice(0, items.length - (items.length % columns)) : items
   const columnsClass = stretch
     ? 'grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(11rem,1fr))]'
-    : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
+    : narrow
+      ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
+      : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
   return (
     <div ref={ref} className={cn('grid gap-x-4 gap-y-6', columnsClass, className)}>
       {!virtual ? shown : columns > 0 ? <VirtualRows gridRef={ref} grid={cn('grid gap-x-4', columnsClass)} items={shown} columns={columns} columnWidth={width} /> : null}
@@ -583,6 +586,7 @@ function RailArrow({ dir, visible, size, label, onClick }: { dir: 1 | -1; visibl
 }
 
 export function UpcomingGrid({ children }: { children: ReactNode }) {
-  const { stretch } = useAppearance()
-  return <div className={cn('grid gap-4', stretch ? 'grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]' : 'sm:grid-cols-2 lg:grid-cols-4')}>{children}</div>
+  const { stretch, pageWidth } = useAppearance()
+  const narrow = pageWidth === '3xl' || pageWidth === '4xl'
+  return <div className={cn('grid gap-4', stretch ? 'grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]' : narrow ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-4')}>{children}</div>
 }

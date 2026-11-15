@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { ScheduleItem } from '@yoru/shared'
 import { Button, EmptyState, Image, Segmented, cn } from '@yoru/ui'
+import { useAppearance } from '../lib/appearance'
 import { RiArrowLeftSFill, RiArrowRightSFill } from '@remixicon/react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -137,6 +138,8 @@ function DayHeader({ day, total, today }: { day: Date; total: number; today: boo
 export function SchedulePage() {
   const { t } = useTranslation()
   useDocumentTitle(t('schedule.title'))
+  const { pageWidth } = useAppearance()
+  const narrow = pageWidth === '3xl' || pageWidth === '4xl'
   const [scope, setScope] = useState<'mine' | 'all'>('mine')
   const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1))
   const range = useMemo(() => monthRange(month), [month])
@@ -199,7 +202,7 @@ export function SchedulePage() {
         <EmptyState mood="error" title={t('schedule.empty')} />
       ) : (
         <>
-          <div className="hidden grid-cols-7 gap-2 md:grid">
+          <div className={cn('hidden grid-cols-7 gap-2', !narrow && 'md:grid')}>
             {cells.map((cell, i) => {
               const isToday = cell.day.getTime() === today.getTime()
               return (
@@ -221,7 +224,7 @@ export function SchedulePage() {
             })}
           </div>
 
-          <div className="flex flex-col gap-6 md:hidden">
+          <div className={cn('flex flex-col gap-6', !narrow && 'md:hidden')}>
             {busyDays.length ? (
               busyDays.map((day) => {
                 const isToday = day.getTime() === today.getTime()
