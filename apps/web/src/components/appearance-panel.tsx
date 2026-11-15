@@ -1,7 +1,7 @@
 import { TITLE_LANGUAGES, type TitleLanguage } from '@yoru/shared'
 import { Button, Popover, PopoverContent, PopoverTrigger, Segmented, StepSlider, Switch, Tooltip, cn } from '@yoru/ui'
 import { RiArrowRightSLine, RiLockFill, RiPaletteFill } from '@remixicon/react'
-import type { ReactNode } from 'react'
+import { type ReactNode, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PAGE_WIDTHS, useAppearance } from '../lib/appearance'
 import { useMe } from '../lib/queries'
@@ -95,6 +95,24 @@ function AppearancePanel({ full }: { full: boolean }) {
   )
 }
 
+let popoverOpen = false
+const openListeners = new Set<() => void>()
+
+function setPopoverOpen(open: boolean) {
+  popoverOpen = open
+  for (const listener of openListeners) listener()
+}
+
+function usePopoverOpen() {
+  return useSyncExternalStore(
+    (listener) => {
+      openListeners.add(listener)
+      return () => openListeners.delete(listener)
+    },
+    () => popoverOpen,
+  )
+}
+
 export function AppearancePopover({
   side = 'bottom',
   rail = false,
@@ -107,8 +125,9 @@ export function AppearancePopover({
   className?: string
 }) {
   const { t } = useTranslation()
+  const open = usePopoverOpen()
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setPopoverOpen}>
       <Tooltip content={t('settings.appearance')} side={side}>
         <PopoverTrigger asChild>
           <Button

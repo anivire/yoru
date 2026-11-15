@@ -314,7 +314,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </TLink>
               </Button>
               <div className="hidden items-center gap-2 md:flex">
-                {appearanceButton ? <AppearancePopover full /> : null}
+                {appearanceButton && !rail ? <AppearancePopover full /> : null}
                 <SettingsButton />
               </div>
               <NotificationsPopover />
