@@ -103,10 +103,10 @@ function load(): State {
       hiddenNav: normalizeNav(raw.hiddenNav),
       defaultKind: STREAM_KINDS.includes(raw.defaultKind as StreamKind) ? (raw.defaultKind as StreamKind) : 'sub',
       preferredAuthors: Array.isArray(raw.preferredAuthors) ? raw.preferredAuthors.filter((a): a is string => typeof a === 'string' && Boolean(a.trim())) : [],
-      navPosition: raw.navPosition === 'left' || raw.navPosition === 'right' ? raw.navPosition : 'top',
+      navPosition: raw.navPosition === 'top' || raw.navPosition === 'right' ? raw.navPosition : 'left',
     }
   } catch {
-    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], defaultKind: 'sub', preferredAuthors: [], navPosition: 'top' }
+    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], defaultKind: 'sub', preferredAuthors: [], navPosition: 'left' }
   }
 }
 
