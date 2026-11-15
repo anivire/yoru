@@ -1,13 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { type AnimeDetails, type Episode, type ListEntry, STREAM_KINDS, type StreamKind } from '@yoru/shared'
+import { type AnimeDetails, type Episode, type ListEntry, type RoomMedia, STREAM_KINDS, type StreamKind } from '@yoru/shared'
 import { Button, Mascot, Select, Spinner, StarIcon, Tooltip, cn } from '@yoru/ui'
 import { RiClosedCaptioningFill, RiMicFill, RiSettings3Fill, RiVolumeUpFill } from '@remixicon/react'
-import { type ReactNode, useCallback, useMemo, useRef, useState } from 'react'
+import { type CSSProperties, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 import { ApiError, api } from '../lib/api'
 import { errorMessage, keys } from '../lib/queries'
-import { EpisodeList } from './episode-list'
+import { EpisodeList, episodePanelWidth, useEpisodeView } from './episode-list'
 import { MatchDialog } from './match-dialog'
 import { Player } from './player/player'
 import { TLink } from './transition-link'
@@ -15,6 +15,8 @@ import { useAppearance } from '../lib/appearance'
 import { useAnimeTitle } from '../lib/anime-title'
 import { ANIME365_LOGO } from '../lib/logos'
 import { isFavorite, pickFavorite, toggleFavorite } from '../lib/favorite-authors'
+import type { Room } from '../lib/rooms'
+import { RoomDebug } from './watch-together'
 
 function kindKey(malId: number) {
   return `yoru:kind:${malId}`
@@ -69,7 +71,7 @@ function defaultEpisode(episodes: Episode[], entry: ListEntry | null): number | 
   return available.find((e) => e.number === next)?.number ?? available.find((e) => e.number > next)?.number ?? available[0]!.number
 }
 
-export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null }) {
+export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entry: ListEntry | null; room?: Room }) {
   const { t } = useTranslation()
   const client = useQueryClient()
   const malId = anime.malId
@@ -113,15 +115,22 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
     enabled: Boolean(!libria && episode && available && match.data?.providerId),
   })
 
+  const inRoom = Boolean(room)
+  const [episodeView, setEpisodeView] = useEpisodeView()
+  const playerColumnRef = useRef<HTMLDivElement>(null)
+  const roomAuthor = room?.media?.author ?? null
+
   const [pickedId, setPickedId] = useState<number | null>(null)
   const translationId = useMemo(() => {
     const items = translations.data
     if (!items?.length) return null
+    const shared = roomAuthor ? items.find((x) => x.author === roomAuthor) : undefined
+    if (shared) return shared.id
     if (pickedId !== null && items.some((x) => x.id === pickedId)) return pickedId
     const remembered = localStorage.getItem(authorKey(malId, kind))
     const favorite = pickFavorite(preferredAuthors, kind, items)
     return (items.find((x) => x.author === remembered) ?? favorite ?? items[0]!).id
-  }, [translations.data, pickedId, malId, kind, preferredAuthors])
+  }, [translations.data, roomAuthor, pickedId, malId, kind, preferredAuthors])
 
   const translation = translations.data?.find((x) => x.id === translationId)
   const favorite = translation ? isFavorite(preferredAuthors, kind, translation.author) : false
@@ -135,7 +144,29 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
 
   const nextEpisode = useMemo(() => list.find((e) => e.number > (episode ?? 0) && e.available)?.number, [list, episode])
   const prevEpisode = useMemo(() => [...list].reverse().find((e) => e.number < (episode ?? 0) && e.available)?.number, [list, episode])
-  const goTo = useCallback((n: number) => setParam({ episode: String(n) }), [setParam])
+  const shareMedia = (patch: Partial<RoomMedia>) => {
+    if (room?.status !== 'open') return
+    room.sendMedia({ episode, source, kind, author: translation?.author ?? null, ...patch })
+  }
+  const goTo = (n: number) => {
+    setParam({ episode: String(n) })
+    shareMedia({ episode: n })
+  }
+
+  const appliedMediaRef = useRef(0)
+  const roomMedia = room?.media ?? null
+  const roomMediaSeq = room?.mediaSeq ?? 0
+  useEffect(() => {
+    const media = roomMedia
+    if (!media || roomMediaSeq === appliedMediaRef.current) return
+    appliedMediaRef.current = roomMediaSeq
+    const patch: Record<string, string> = {}
+    if (media.episode && media.episode !== episode) patch.episode = String(media.episode)
+    if (media.source !== source) patch.source = media.source
+    if (media.kind !== kind && media.source !== 'anilibria') patch.kind = media.kind
+    if (Object.keys(patch).length) setParam(patch)
+  }, [roomMedia, roomMediaSeq, episode, source, kind, setParam])
+
 
   const markedRef = useRef<string | null>(null)
   const onProgress = useCallback(
@@ -173,12 +204,17 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
     skips: skips.data,
     autoNext,
     onDuration: (value: number) => setVideoLength((prev) => (prev?.key === lengthKey && Math.round(prev.value) === Math.round(value) ? prev : { key: lengthKey, value })),
-    startAt,
-    autoPlay: params.get('autoplay') === '1',
+    startAt: inRoom ? 0 : startAt,
+    autoPlay: !inRoom && params.get('autoplay') === '1',
+    sync: room?.status === 'open' ? { playback: room.playback, offset: room.offset, onAction: room.sendPlayback } : undefined,
     title: current?.title ? `${t('common.episode')} ${episode} · ${current.title}` : `${t('common.episode')} ${episode}`,
     subtitle: title(anime),
     onProgress,
-    onEnded: () => nextEpisode && setParam({ episode: String(nextEpisode), autoplay: '1' }),
+    onEnded: () => {
+      if (!nextEpisode) return
+      setParam({ episode: String(nextEpisode), autoplay: '1' })
+      shareMedia({ episode: nextEpisode })
+    },
     onNext: nextEpisode ? () => goTo(nextEpisode) : undefined,
     onPrev: prevEpisode ? () => goTo(prevEpisode) : undefined,
   }
@@ -268,12 +304,20 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
     )
   }
 
+  if (room && !room.media) {
+    body = (
+      <PlayerMessage mood="thinking">
+        <Spinner />
+      </PlayerMessage>
+    )
+  }
+
   return (
     <section id="watch" className="min-w-0 scroll-mt-20">
       <div
         className={cn(
           'mb-3 grid min-w-0 gap-2',
-          libria ? 'grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]' : 'grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_auto]',
+          'grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_auto]',
           side && 'sm:flex sm:flex-wrap sm:items-center',
         )}
       >
@@ -283,6 +327,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
           onValueChange={(v) => {
             localStorage.setItem(sourceKey(malId), v)
             setParam({ source: v })
+            shareMedia({ source: v === 'anilibria' ? 'anilibria' : 'anime365', kind: v === 'anilibria' ? 'voice' : kind, author: null })
           }}
           icon={libria ? <LibriaMark /> : <img src={ANIME365_LOGO} alt="" className="size-4 rounded-sm bg-white object-contain" />}
           options={[
@@ -301,6 +346,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
           onValueChange={(v) => {
             localStorage.setItem(kindKey(malId), v)
             setParam({ kind: v })
+            shareMedia({ kind: parseKind(v) ?? kind, author: null })
           }}
           options={STREAM_KINDS.map((k) => ({ value: k, label: t(`player.${k}`) }))}
         />
@@ -323,6 +369,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
               const tr = translations.data?.find((x) => String(x.id) === v)
               if (tr) localStorage.setItem(authorKey(malId, kind), tr.author)
               setPickedId(Number(v))
+              if (tr) shareMedia({ author: tr.author })
             }}
             options={(translations.data ?? []).map((x) => ({
               value: String(x.id),
@@ -342,24 +389,25 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
                 localStorage.setItem(authorKey(malId, kind), translation.author)
                 setPreferredAuthors(toggleFavorite(preferredAuthors, kind, translation.author))
               }}
-              className={cn('size-10 shrink-0 rounded-xl', favorite && 'text-accent')}
+              className={cn('size-10 shrink-0 rounded-xl bg-foreground/[0.05] hover:bg-foreground/[0.08]', favorite && 'text-accent')}
             >
               {favorite ? <StarIcon /> : <StarIcon outline />}
             </Button>
           </Tooltip>
         </div>
         )}
-        {libria ? null : (
-          <div className={cn('flex justify-end', side && 'sm:ml-auto')}>
-            <MatchDialog malId={malId} match={match.data} defaultQuery={anime.title} />
-          </div>
-        )}
+        <div className={cn('flex justify-end gap-2', side && 'sm:ml-auto')}>
+          {libria ? null : <MatchDialog malId={malId} match={match.data} defaultQuery={anime.title} />}
+        </div>
       </div>
-      <div className={cn('grid gap-5', side && 'desk:grid-cols-[minmax(0,1fr)_22rem]')}>
-        <div className="min-w-0">{body}</div>
+      <div className={cn('grid gap-5', side && 'desk:grid-cols-[minmax(0,1fr)_var(--episodes-w)]')} style={{ '--episodes-w': episodePanelWidth(episodeView, list.length) } as CSSProperties}>
+        <div ref={playerColumnRef} className="min-w-0">
+          {body}
+          {room ? <RoomDebug room={room} container={playerColumnRef} /> : null}
+        </div>
         <div className={cn(side && 'desk:relative')}>
           <div className={cn('flex max-h-[26rem] flex-col', side && 'desk:absolute desk:inset-0 desk:max-h-none')}>
-            <EpisodeList episodes={list} current={episode ?? 0} loading={episodes.isPending} onSelect={goTo} />
+            <EpisodeList episodes={list} current={episode ?? 0} loading={episodes.isPending} onSelect={goTo} view={episodeView} onViewChange={setEpisodeView} />
           </div>
         </div>
       </div>

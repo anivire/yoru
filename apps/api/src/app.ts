@@ -18,6 +18,7 @@ import { publicRoutes } from './routes/public'
 import { homeRoutes, listRoutes, progressRoutes } from './routes/list'
 import { meRoutes } from './routes/me'
 import { notificationRoutes } from './routes/notifications'
+import { roomRoutes } from './routes/rooms'
 import { statsRoutes } from './routes/stats'
 import { streamRoutes } from './routes/stream'
 import { buildInfo, versionInfo } from './services/version'
@@ -42,6 +43,7 @@ app.route('/api/progress', progressRoutes)
 app.route('/api/home', homeRoutes)
 app.route('/api/stream', streamRoutes)
 app.route('/api/stats', statsRoutes)
+app.route('/api/rooms', roomRoutes)
 app.route('/api/notifications', notificationRoutes)
 app.route('/api/import', importRoutes)
 app.route('/api/discover', discoverRoutes)

@@ -1,7 +1,7 @@
 {
   "name": "api",
   "private": true,
-  "version": "0.49.0",
+  "version": "0.50.0",
   "type": "module",
   "scripts": {
     "dev": "node --watch --watch-preserve-output --env-file-if-exists=../../.env --import tsx src/index.ts",
@@ -17,11 +17,13 @@
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.18",
     "undici": "^7.16.0",
+    "ws": "^8.23.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^26.6.6",
+    "@types/ws": "^8.18.2",
     "drizzle-kit": "^0.31.11",
     "tsup": "^9.0.0",
     "tsx": "^4.23.15"

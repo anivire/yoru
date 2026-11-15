@@ -18,10 +18,11 @@ import { useTranslation } from 'react-i18next'
 import { matchPath, useLocation, useNavigate } from 'react-router'
 import { api } from '../lib/api'
 import { useAppearance } from '../lib/appearance'
-import { NAV } from '../lib/navigation'
+import { NAV, isBeta } from '../lib/navigation'
 import { keys, useUser } from '../lib/queries'
 import { NotificationsPopover, useNotificationSound } from './notifications'
 import { RailLabel, RailProvider, RailTip, useRailButton } from './rail'
+import { BetaBadge } from './watch-together'
 import { Footer } from './footer'
 import { TLink, TNavLink, useTransitionNavigate } from './transition-link'
 import { AppearancePopover } from './appearance-panel'
@@ -61,6 +62,7 @@ function NavItems() {
         <NavItem key={n.to} to={n.to} end={n.end} label={iconOnly ? t(`nav.${n.key}`) : undefined}>
           <n.icon />
           {iconOnly ? null : t(`nav.${n.key}`)}
+          {!iconOnly && isBeta(n) ? <BetaBadge /> : null}
         </NavItem>
       ))}
     </>
@@ -119,6 +121,7 @@ function MobileMenu() {
             >
               <Icon />
               {t(`nav.${key}`)}
+              {key === 'together' ? <BetaBadge className="ml-auto" /> : null}
             </DropdownMenuItem>
           )
         })}
@@ -307,7 +310,10 @@ function SideRailContent({ position }: { position: 'left' | 'right' }) {
                 className={cn(railButton, active && 'text-foreground [&_svg]:text-accent')}
               >
                 <n.icon />
-                <RailLabel>{t(`nav.${n.key}`)}</RailLabel>
+                <RailLabel>
+                  {t(`nav.${n.key}`)}
+                  {isBeta(n) ? <BetaBadge className="ml-1.5" /> : null}
+                </RailLabel>
               </TNavLink>
             </RailTip>
           )

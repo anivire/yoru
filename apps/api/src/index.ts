@@ -1,4 +1,5 @@
 import { serve } from '@hono/node-server'
+import { WebSocketServer } from 'ws'
 import { eq } from 'drizzle-orm'
 import { EnvHttpProxyAgent, setGlobalDispatcher } from 'undici'
 import { app } from './app'
@@ -37,6 +38,6 @@ startReleaseWatcher()
 startAnimeBackfill()
 startRussianTitles()
 
-serve({ fetch: app.fetch, port: env.port, hostname: env.host }, (info) => {
+serve({ fetch: app.fetch, port: env.port, hostname: env.host, websocket: { server: new WebSocketServer({ noServer: true, maxPayload: 16 * 1024 }) } }, (info) => {
   console.log(`[yoru] api listening on http://${info.address}:${info.port}`)
 })

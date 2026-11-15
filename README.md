@@ -21,6 +21,7 @@ A self-hosted anime tracker and player built around [Anime365](https://smotret-a
 - **Lists** with statuses, progress, scores, rewatches and notes; grid and table views with filters and sorting. Edits are saved in the background and do not reshuffle the list under you.
 - **Stats**: hours watched, episodes, mean score and list breakdown up top, then episodes by month, your score distribution, favourite genres and studios, formats, release years and seasons.
 - **Public link**: share a read-only page with your list, your stats or both; each section can be turned on and off without changing the link.
+- **Watch party** (beta): open a room for an anime, send the link, and everyone in it shares pause, seeking, playback speed, the episode and the translation. Playback stays in sync by gently nudging speed instead of jumping, and open rooms are listed for everyone on the server.
 - **Home** with continue watching, upcoming episodes from your lists, a GitHub-style watch activity grid and what you are watching now. Sections can be reordered and hidden.
 - **Schedule** as a month calendar: aired episodes, the ones still waiting for a translation, and what comes next.
 - **Discover**: seasonal highlights, trending by genre, recently released translations, top rated and upcoming.
@@ -48,6 +49,8 @@ docker compose up -d --build
 ```
 
 The container listens on port `3000`. The compose file publishes it on a random host port so it can sit behind a reverse proxy; change `"3000"` to `"3000:3000"` in `docker-compose.yml` to expose it directly.
+
+Watch party rooms use a WebSocket on `/api/rooms/<id>/ws`, so a reverse proxy in front of yoru has to forward WebSocket upgrades (`Upgrade` and `Connection` headers). Traefik and Caddy do this by default; for nginx add `proxy_http_version 1.1`, `proxy_set_header Upgrade $http_upgrade` and `proxy_set_header Connection "upgrade"`.
 
 The database lives in `/data` inside the container, which the compose file keeps in the `yoru-data` volume. If you deploy through a platform such as Dokploy, Coolify or Portainer, make sure `/data` is mounted to a persistent volume, otherwise every redeploy starts with an empty database.
 

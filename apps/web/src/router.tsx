@@ -18,6 +18,8 @@ import { SearchPage } from './pages/search'
 import { SettingsPage } from './pages/settings'
 import { SharedListPage } from './pages/shared-list'
 import { StatsPage } from './pages/stats'
+import { RoomPage } from './pages/room'
+import { TogetherPage } from './pages/together'
 
 function Splash() {
   return (
@@ -111,6 +113,8 @@ export const router = createBrowserRouter([
           { path: 'search', element: <SearchPage /> },
           { path: 'lists', element: <ListsPage /> },
           { path: 'stats', element: <StatsPage /> },
+          { path: 'together/:id', element: <RoomPage /> },
+          { path: 'together', element: <TogetherPage /> },
           { path: 'anime/:id', element: <AnimePage /> },
           { path: 'settings/:tab?', element: <SettingsPage /> },
           { element: <RequireAdmin />, children: [{ path: 'admin', element: <AdminPage /> }] },

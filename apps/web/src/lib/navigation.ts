@@ -1,4 +1,4 @@
-import { RiBarChart2Fill, RiBookShelfFill, RiCalendar2Fill, RiCalendarScheduleFill, RiCompass3Fill, RiHome5Fill, RiPlayCircleFill, RiPulseFill, RiSearchFill, RiTv2Fill } from '@remixicon/react'
+import { RiBarChart2Fill, RiGroupFill, RiBookShelfFill, RiCalendar2Fill, RiCalendarScheduleFill, RiCompass3Fill, RiHome5Fill, RiPlayCircleFill, RiPulseFill, RiSearchFill, RiTv2Fill } from '@remixicon/react'
 
 export const NAV = [
   { to: '/', key: 'home', icon: RiHome5Fill, end: true },
@@ -6,6 +6,7 @@ export const NAV = [
   { to: '/schedule', key: 'schedule', icon: RiCalendar2Fill, end: false },
   { to: '/search', key: 'search', icon: RiSearchFill, end: false },
   { to: '/lists', key: 'lists', icon: RiBookShelfFill, end: false },
+  { to: '/together', key: 'together', icon: RiGroupFill, end: false, beta: true },
   { to: '/stats', key: 'stats', icon: RiBarChart2Fill, end: false },
 ] as const
 
@@ -19,3 +20,7 @@ export const HOME_SECTIONS = [
 ] as const
 
 export type HomeSectionId = (typeof HOME_SECTIONS)[number]['id']
+
+export function isBeta(item: (typeof NAV)[number]) {
+  return 'beta' in item && item.beta
+}

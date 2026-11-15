@@ -538,3 +538,59 @@ export type AdminSettingsInput = z.infer<typeof adminSettingsSchema>
 export const providerMatchSchema = z.object({
   providerId: z.number().int().positive().nullable(),
 })
+
+export const ROOM_SOURCES = ['anime365', 'anilibria'] as const
+export type RoomSource = (typeof ROOM_SOURCES)[number]
+
+export const roomMediaSchema = z.object({
+  episode: z.number().int().positive().nullable(),
+  source: z.enum(ROOM_SOURCES),
+  kind: z.enum(STREAM_KINDS),
+  author: z.string().max(300).nullable(),
+})
+export type RoomMedia = z.infer<typeof roomMediaSchema>
+
+export const roomPlaybackInputSchema = z.object({
+  playing: z.boolean(),
+  position: z.number().min(0).max(1e6),
+  rate: z.number().min(0.25).max(4),
+})
+export type RoomPlaybackInput = z.infer<typeof roomPlaybackInputSchema>
+
+export interface RoomPlayback extends RoomPlaybackInput {
+  at: number
+}
+
+export interface RoomMember {
+  id: number
+  username: string
+}
+
+export const roomCreateSchema = z.object({ malId: z.number().int().positive(), media: roomMediaSchema })
+
+export interface RoomInfo {
+  id: string
+  malId: number
+}
+
+export interface RoomListItem {
+  id: string
+  anime: AnimeSummary
+  episode: number | null
+  playing: boolean
+  members: RoomMember[]
+}
+
+export const roomClientMessageSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('media'), media: roomMediaSchema }),
+  z.object({ type: z.literal('playback'), playback: roomPlaybackInputSchema }),
+  z.object({ type: z.literal('ping') }),
+])
+export type RoomClientMessage = z.infer<typeof roomClientMessageSchema>
+
+export type RoomServerMessage =
+  | { type: 'snapshot'; room: RoomInfo; media: RoomMedia; playback: RoomPlayback; members: RoomMember[]; now: number }
+  | { type: 'media'; media: RoomMedia; playback: RoomPlayback; by: RoomMember; now: number }
+  | { type: 'playback'; playback: RoomPlayback; by: RoomMember; now: number }
+  | { type: 'members'; members: RoomMember[] }
+  | { type: 'pong'; now: number }

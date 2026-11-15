@@ -1,4 +1,4 @@
-import type { SkipTime, StreamSource } from '@yoru/shared'
+import type { RoomPlayback, RoomPlaybackInput, SkipTime, StreamSource } from '@yoru/shared'
 import { Spinner, cn } from '@yoru/ui'
 import type Hls from 'hls.js'
 import type JASSUB from 'jassub'
@@ -30,6 +30,26 @@ export interface PlayerProps {
   onDuration?: (duration: number) => void
   skips?: SkipTime[]
   autoNext?: boolean
+  sync?: PlayerSync
+}
+
+export interface PlayerSync {
+  playback: (RoomPlayback & { seq: number }) | null
+  offset: number
+  onAction: (playback: RoomPlaybackInput) => void
+}
+
+const SYNC_TOLERANCE = 2
+const DRIFT_SEEK = 5
+const DRIFT_NUDGE = 0.3
+const NUDGE_FACTOR = 0.08
+const DRIFT_CHECK_MS = 1000
+const DRIFT_COOLDOWN_MS = 10_000
+const ECHO_MS = 6000
+
+function syncTarget(playback: RoomPlayback, offset: number) {
+  if (!playback.playing) return playback.position
+  return playback.position + (Math.max(0, Date.now() + offset - playback.at) / 1000) * playback.rate
 }
 
 const COUNTDOWN_SECONDS = 5
@@ -53,7 +73,7 @@ function fullscreenElement() {
   return document.fullscreenElement ?? (document as FullscreenDocument).webkitFullscreenElement ?? null
 }
 
-export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPlay, onProgress, onEnded, onNext, onPrev, onDuration, skips, autoNext = true }: PlayerProps) {
+export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPlay, onProgress, onEnded, onNext, onPrev, onDuration, skips, autoNext = true, sync }: PlayerProps) {
   const { t } = useTranslation()
   const rootRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -83,6 +103,89 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   const [menu, setMenu] = useState<Menu>(null)
   const [hover, setHover] = useState<{ x: number; time: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [blocked, setBlocked] = useState(false)
+  const syncRef = useRef(sync)
+  const expectRef = useRef<{ playing: boolean; position: number; until: number } | null>(null)
+  const syncSeekRef = useRef(0)
+  const rateRef = useRef(rate)
+  const nudgeRef = useRef(false)
+  const setVideoRate = (v: HTMLVideoElement, value: number) => {
+    if (v.playbackRate === value) return
+    nudgeRef.current = true
+    v.playbackRate = value
+  }
+  useEffect(() => {
+    rateRef.current = rate
+  }, [rate])
+  useEffect(() => {
+    syncRef.current = sync
+  })
+
+  const applySync = useCallback(() => {
+    const v = videoRef.current
+    const current = syncRef.current
+    if (!v || !current?.playback || v.readyState < 1) return
+    const playback = current.playback
+    const target = Math.min(syncTarget(playback, current.offset), Number.isFinite(v.duration) ? v.duration : Infinity)
+    expectRef.current = { playing: playback.playing, position: target, until: performance.now() + ECHO_MS }
+    if (rateRef.current !== playback.rate) setRate(playback.rate)
+    if (Math.abs(v.currentTime - target) > SYNC_TOLERANCE) {
+      syncSeekRef.current = performance.now()
+      v.currentTime = target
+    }
+    if (playback.playing && v.paused) {
+      void v.play().then(
+        () => setBlocked(false),
+        () => setBlocked(true),
+      )
+    }
+    if (!playback.playing && !v.paused) v.pause()
+  }, [])
+
+  const reportSync = useCallback(() => {
+    const v = videoRef.current
+    const current = syncRef.current
+    if (!v || !current) return
+    const expected = expectRef.current
+    if (expected && performance.now() < expected.until && expected.playing === !v.paused && Math.abs(v.currentTime - expected.position) < 2) return
+    expectRef.current = null
+    const shared = current.playback
+    const nominal = rateRef.current
+    if (shared && shared.playing === !v.paused && shared.rate === nominal && Math.abs(v.currentTime - syncTarget(shared, current.offset)) < SYNC_TOLERANCE) return
+    current.onAction({ playing: !v.paused, position: v.currentTime, rate: nominal })
+  }, [])
+
+  const syncSeq = sync?.playback?.seq
+  useEffect(() => {
+    if (syncSeq !== undefined) applySync()
+  }, [syncSeq, applySync])
+
+  const syncing = Boolean(sync)
+  useEffect(() => {
+    if (!syncing) return
+    const timer = window.setInterval(() => {
+      const v = videoRef.current
+      const current = syncRef.current
+      if (!v) return
+      const playback = current?.playback
+      const nominal = playback?.rate ?? rateRef.current
+      if (!current || !playback?.playing || v.paused || v.seeking || v.readyState < HTMLMediaElement.HAVE_FUTURE_DATA) {
+        setVideoRate(v, nominal)
+        return
+      }
+      const drift = v.currentTime - syncTarget(playback, current.offset)
+      if (Math.abs(drift) > DRIFT_SEEK && performance.now() - syncSeekRef.current >= DRIFT_COOLDOWN_MS) {
+        setVideoRate(v, nominal)
+        expectRef.current = { playing: true, position: v.currentTime - drift, until: performance.now() + ECHO_MS }
+        syncSeekRef.current = performance.now()
+        v.currentTime -= drift
+        return
+      }
+      if (Math.abs(drift) <= DRIFT_NUDGE) setVideoRate(v, nominal)
+      else setVideoRate(v, nominal * (drift < 0 ? 1 + NUDGE_FACTOR : 1 - NUDGE_FACTOR))
+    }, DRIFT_CHECK_MS)
+    return () => window.clearInterval(timer)
+  }, [syncing])
 
   const save = useCallback(
     (force = false) => {
@@ -109,6 +212,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
     const start = () => {
       if (resumeAt > 0) video.currentTime = resumeAt
       if (wasPlaying) void video.play().catch(() => setPlaying(false))
+      applySync()
     }
 
     const mse = typeof window !== 'undefined' && ('MediaSource' in window || 'ManagedMediaSource' in window)
@@ -394,12 +498,23 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
           onPlay={() => {
             setPlaying(true)
             setCountdown(null)
+            setBlocked(false)
             poke()
+            reportSync()
           }}
           onPause={() => {
             setPlaying(false)
             setControls(true)
             save(true)
+            reportSync()
+          }}
+          onSeeking={reportSync}
+          onRateChange={() => {
+            if (nudgeRef.current) {
+              nudgeRef.current = false
+              return
+            }
+            reportSync()
           }}
           onWaiting={() => setWaiting(true)}
           onPlaying={() => setWaiting(false)}
@@ -434,6 +549,23 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
 
       {error ? (
         <div className="absolute inset-0 grid place-items-center bg-black/70 p-6 text-center text-sm text-white/80">{error}</div>
+      ) : null}
+
+      {blocked && !error ? (
+        <div className="absolute inset-0 z-20 grid place-items-center bg-black/60 p-4">
+          <button
+            type="button"
+            onClick={() => {
+              setBlocked(false)
+              const v = videoRef.current
+              if (v) void v.play().then(applySync, () => setBlocked(true))
+            }}
+            className="flex h-11 cursor-pointer items-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-black shadow-2xl hover:bg-white/90"
+          >
+            <RiPlayLargeFill className="size-5" />
+            {t('room.join')}
+          </button>
+        </div>
       ) : null}
 
       {activeSkip && !error && countdown === null ? (
