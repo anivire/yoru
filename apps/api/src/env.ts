@@ -29,6 +29,7 @@ export const env = {
   metadataSource: str('METADATA_SOURCE', 'jikan'),
   shikimoriUrl: str('SHIKIMORI_URL', 'https://shikimori.io').replace(/\/+$/, ''),
   anilistUrl: str('ANILIST_URL', 'https://graphql.anilist.co').replace(/\/+$/, ''),
+  anilibriaUrl: str('ANILIBRIA_URL', 'https://api.anilibria.app/api/v1').replace(/\/+$/, ''),
   releasePollMinutes: int('RELEASE_POLL_MINUTES', 5),
   oauth: {
     anilist: { clientId: str('ANILIST_CLIENT_ID'), clientSecret: str('ANILIST_CLIENT_SECRET') },

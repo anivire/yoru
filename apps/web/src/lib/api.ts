@@ -29,7 +29,7 @@ import type {
   StreamResult,
   Translation,
   User,
-  VersionInfo, AnimeExtras, Screenshot } from '@yoru/shared'
+  VersionInfo, AnimeExtras, AnilibriaRelease, Screenshot } from '@yoru/shared'
 
 export class ApiError extends Error {
   constructor(
@@ -98,6 +98,7 @@ export const api = {
   match: (malId: number) => get<ProviderMatch>(`/anime/${malId}/match`),
   links: (malId: number) => get<AnimeLink[]>(`/anime/${malId}/links`),
   extras: (malId: number) => get<AnimeExtras>(`/anime/${malId}/extras`),
+  anilibria: (malId: number) => get<AnilibriaRelease>(`/stream/${malId}/anilibria`),
   screenshots: (malId: number) => get<Screenshot[]>(`/anime/${malId}/screenshots`),
   setMatch: (malId: number, providerId: number | null) => request<ProviderMatch>('PUT', `/anime/${malId}/match`, { providerId }),
   matchSearch: (q: string) => get<ProviderCandidate[]>(`/anime/match/search${qs({ q })}`),

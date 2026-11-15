@@ -216,6 +216,18 @@ export interface StreamSource {
   height: number
 }
 
+export interface AnilibriaEpisode {
+  number: number
+  name: string | null
+  sources: StreamSource[]
+}
+
+export interface AnilibriaRelease {
+  releaseId: number | null
+  title: string | null
+  episodes: AnilibriaEpisode[]
+}
+
 export interface StreamResult {
   translationId: number
   author: string

@@ -279,6 +279,7 @@ export const en: Messages = {
     notFound: 'Anime not found',
   },
   player: {
+    noLibria: 'This anime is not on AniLibria. Try Anime365.',
     provider: 'Source',
     sub: 'Russian subtitles',
     voice: 'Russian dub',

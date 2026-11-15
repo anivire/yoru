@@ -90,7 +90,8 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
       if (wasPlaying) void video.play().catch(() => setPlaying(false))
     }
 
-    if (source.type === 'm3u8' && !video.canPlayType('application/vnd.apple.mpegurl')) {
+    const mse = typeof window !== 'undefined' && ('MediaSource' in window || 'ManagedMediaSource' in window)
+    if (source.type === 'm3u8' && (mse || !video.canPlayType('application/vnd.apple.mpegurl'))) {
       void import('hls.js').then(({ default: HlsCtor }) => {
         if (cancelled) return
         const hls = new HlsCtor({ maxBufferLength: 60 })

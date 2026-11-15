@@ -277,6 +277,7 @@ export const ru = {
     notFound: 'Аниме не найдено',
   },
   player: {
+    noLibria: 'Этого аниме нет на AniLibria. Попробуй Anime365.',
     provider: 'Источник',
     sub: 'Русские субтитры',
     voice: 'Русская озвучка',

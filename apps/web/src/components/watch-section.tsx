@@ -30,6 +30,20 @@ export const KIND_ICONS: Record<StreamKind, typeof RiMicFill> = {
   raw: RiVolumeUpFill,
 }
 
+type StreamProvider = 'anime365' | 'anilibria'
+
+function sourceKey(malId: number) {
+  return `yoru:source:${malId}`
+}
+
+function parseSource(value: string | null): StreamProvider | null {
+  return value === 'anime365' || value === 'anilibria' ? value : null
+}
+
+function LibriaMark() {
+  return <span className="grid size-4 place-items-center rounded-sm bg-[#b32121] text-[0.5625rem] font-extrabold leading-none text-white">A</span>
+}
+
 function authorKey(malId: number, kind: StreamKind) {
   return `yoru:author:${malId}:${kind}`
 }
@@ -60,11 +74,19 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
   const title = useAnimeTitle()
   const [params, setParams] = useSearchParams()
   const { defaultKind, preferredAuthors } = useAppearance()
-  const kind = parseKind(params.get('kind')) ?? parseKind(localStorage.getItem(kindKey(malId))) ?? defaultKind
+  const source = parseSource(params.get('source')) ?? parseSource(localStorage.getItem(sourceKey(malId))) ?? 'anime365'
+  const libria = source === 'anilibria'
+  const kind = libria ? 'voice' : (parseKind(params.get('kind')) ?? parseKind(localStorage.getItem(kindKey(malId))) ?? defaultKind)
 
   const match = useQuery({ queryKey: keys.match(malId), queryFn: () => api.match(malId) })
   const episodes = useQuery({ queryKey: keys.episodes(malId), queryFn: () => api.episodes(malId) })
-  const list = episodes.data ?? []
+  const libriaRelease = useQuery({ queryKey: ['anilibria', malId], queryFn: () => api.anilibria(malId), enabled: libria, staleTime: 30 * 60_000, retry: 1 })
+  const libriaEpisodes = useMemo(() => new Map((libriaRelease.data?.episodes ?? []).map((e) => [e.number, e])), [libriaRelease.data])
+  const list = useMemo(() => {
+    const base = episodes.data ?? []
+    if (!libria) return base
+    return base.map((e) => ({ ...e, available: libriaEpisodes.has(e.number) }))
+  }, [episodes.data, libria, libriaEpisodes])
   const paramEpisode = Number(params.get('episode')) || null
   const episode = paramEpisode ?? (episodes.data ? defaultEpisode(list, entry) : null)
   const current = list.find((e) => e.number === episode)
@@ -85,7 +107,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
   const translations = useQuery({
     queryKey: ['translations', malId, episode, kind],
     queryFn: () => api.translations(malId, episode!, kind),
-    enabled: Boolean(episode && available && match.data?.providerId),
+    enabled: Boolean(!libria && episode && available && match.data?.providerId),
   })
 
   const [translationId, setTranslationId] = useState<number | null>(null)
@@ -135,8 +157,49 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
   const streamError = stream.error instanceof ApiError ? stream.error : null
   const tokenProblem = streamError?.message === 'ANIME365_TOKEN_MISSING' || streamError?.message === 'ANIME365_TOKEN_INVALID'
 
+  const libriaEpisode = episode ? libriaEpisodes.get(episode) : undefined
+  const playerProps = {
+    startAt,
+    autoPlay: params.get('autoplay') === '1',
+    title: current?.title ? `${t('common.episode')} ${episode} · ${current.title}` : `${t('common.episode')} ${episode}`,
+    subtitle: title(anime),
+    onProgress,
+    onEnded: () => nextEpisode && setParam({ episode: String(nextEpisode), autoplay: '1' }),
+    onNext: nextEpisode ? () => goTo(nextEpisode) : undefined,
+    onPrev: prevEpisode ? () => goTo(prevEpisode) : undefined,
+  }
+
   let body: ReactNode
-  if (match.isPending || episodes.isPending) {
+  if (libria) {
+    if (libriaRelease.isPending || episodes.isPending) {
+      body = (
+        <PlayerMessage mood="sleepy">
+          <Spinner />
+        </PlayerMessage>
+      )
+    } else if (libriaRelease.isError) {
+      body = (
+        <PlayerMessage
+          mood="error"
+          action={
+            <Button size="sm" variant="secondary" onClick={() => libriaRelease.refetch()}>
+              {t('common.retry')}
+            </Button>
+          }
+        >
+          {errorMessage(libriaRelease.error, t)}
+        </PlayerMessage>
+      )
+    } else if (!libriaRelease.data?.releaseId) {
+      body = <PlayerMessage>{t('player.noLibria')}</PlayerMessage>
+    } else if (!episode) {
+      body = <PlayerMessage>{t('player.selectEpisode')}</PlayerMessage>
+    } else if (!libriaEpisode) {
+      body = <PlayerMessage mood="sleepy">{t('player.notAvailable')}</PlayerMessage>
+    } else {
+      body = <Player key={`${episode}:libria`} sources={libriaEpisode.sources} subtitlesUrl={null} {...playerProps} />
+    }
+  } else if (match.isPending || episodes.isPending) {
     body = (
       <PlayerMessage mood="sleepy">
         <Spinner />
@@ -186,14 +249,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
         key={`${episode}:${stream.data.translationId}`}
         sources={stream.data.sources}
         subtitlesUrl={kind === 'sub' || kind === 'subEn' ? stream.data.subtitlesUrl : null}
-        startAt={startAt}
-        autoPlay={params.get('autoplay') === '1'}
-        title={current?.title ? `${t('common.episode')} ${episode} · ${current.title}` : `${t('common.episode')} ${episode}`}
-        subtitle={title(anime)}
-        onProgress={onProgress}
-        onEnded={() => nextEpisode && setParam({ episode: String(nextEpisode), autoplay: '1' })}
-        onNext={nextEpisode ? () => goTo(nextEpisode) : undefined}
-        onPrev={prevEpisode ? () => goTo(prevEpisode) : undefined}
+        {...playerProps}
       />
     )
   }
@@ -201,9 +257,22 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
   return (
     <section id="watch" className="min-w-0 scroll-mt-20">
       <div className="mb-3 grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_auto] gap-2 sm:flex sm:flex-wrap sm:items-center">
-        <Select className="h-10 w-full min-w-0 rounded-xl px-3.5 sm:w-40" value="anime365" onValueChange={() => undefined} icon={<img src="/anime365.webp" alt="" className="size-4 rounded-sm bg-white object-contain" />} options={[{ value: 'anime365', label: 'Anime365' }]} />
+        <Select
+          className="h-10 w-full min-w-0 rounded-xl px-3.5 sm:w-40"
+          value={source}
+          onValueChange={(v) => {
+            localStorage.setItem(sourceKey(malId), v)
+            setParam({ source: v })
+          }}
+          icon={libria ? <LibriaMark /> : <img src="/anime365.webp" alt="" className="size-4 rounded-sm bg-white object-contain" />}
+          options={[
+            { value: 'anime365', label: 'Anime365' },
+            { value: 'anilibria', label: 'AniLibria' },
+          ]}
+        />
         <Select
           className="h-10 w-full min-w-0 rounded-xl px-3.5 sm:w-56"
+          disabled={libria}
           value={kind}
           icon={(() => {
             const Icon = KIND_ICONS[kind]
@@ -216,8 +285,17 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
           options={STREAM_KINDS.map((k) => ({ value: k, label: t(`player.${k}`) }))}
         />
         <div className="flex justify-end sm:order-last sm:ml-auto">
-          <MatchDialog malId={malId} match={match.data} defaultQuery={anime.title} />
+          {libria ? null : <MatchDialog malId={malId} match={match.data} defaultQuery={anime.title} />}
         </div>
+        {libria ? (
+          <Select
+            className="col-span-3 h-10 w-full min-w-0 rounded-xl px-3.5 sm:w-72"
+            disabled
+            value="anilibria"
+            onValueChange={() => undefined}
+            options={[{ value: 'anilibria', label: 'AniLibria', hint: libriaRelease.data?.title ?? undefined }]}
+          />
+        ) : (
         <Select
           className="col-span-3 h-10 w-full min-w-0 rounded-xl px-3.5 sm:w-72"
           disabled={!translations.data?.length}
@@ -234,6 +312,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
             hint: [x.height ? `${x.height}p` : null, x.qualityType?.toUpperCase()].filter(Boolean).join(' · ') || undefined,
           }))}
         />
+        )}
       </div>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0">{body}</div>
