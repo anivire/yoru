@@ -21,7 +21,7 @@ import { useAppearance } from '../lib/appearance'
 import { NAV } from '../lib/navigation'
 import { keys, useUser } from '../lib/queries'
 import { NotificationsPopover, useNotificationSound } from './notifications'
-import { RailLabel, RailProvider, RailTip, useRail, useRailButton } from './rail'
+import { RailLabel, RailProvider, RailTip, useRailButton } from './rail'
 import { Footer } from './footer'
 import { TLink, TNavLink, useTransitionNavigate } from './transition-link'
 import { AppearancePopover } from './appearance-panel'
@@ -226,18 +226,33 @@ function SettingsButton({ rail = false, side = 'bottom' }: { rail?: boolean; sid
 function SideRail({ position }: { position: 'left' | 'right' }) {
   const { navLabels } = useAppearance()
   const [hovered, setHovered] = useState(false)
+  const ref = useRef<HTMLElement>(null)
   const expanded = navLabels === 'always' || (navLabels === 'hover' && hovered)
+  useEffect(() => {
+    if (!hovered) return
+    const onMove = (e: PointerEvent) => {
+      const r = ref.current?.getBoundingClientRect()
+      if (!r || e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) setHovered(false)
+    }
+    const onLeaveWindow = () => setHovered(false)
+    window.addEventListener('pointermove', onMove, { passive: true })
+    document.documentElement.addEventListener('pointerleave', onLeaveWindow)
+    return () => {
+      window.removeEventListener('pointermove', onMove)
+      document.documentElement.removeEventListener('pointerleave', onLeaveWindow)
+    }
+  }, [hovered])
   return (
-    <RailProvider value={{ labels: navLabels !== 'off', expanded }}>
+    <RailProvider value={{ labels: navLabels !== 'off', expanded, fill: true }}>
       <aside
+        ref={ref}
         onPointerOver={(e) => {
           if (navLabels === 'hover' && (e.target as Element).closest('a, button')) setHovered(true)
         }}
-        onPointerLeave={() => setHovered(false)}
         className={cn(
-          'fixed inset-y-0 z-40 hidden flex-col items-start px-1.5 py-3 transition-[width,background-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] [view-transition-name:site-rail] md:flex',
-          position === 'left' ? 'left-1' : 'right-1',
-          expanded ? 'w-44' : 'w-14',
+          'fixed inset-y-0 z-40 hidden flex-col items-start py-3 transition-[width,background-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] [view-transition-name:site-rail] md:flex',
+          position === 'left' ? 'left-0 pl-2.5 pr-1.5' : 'right-0 pl-1.5 pr-2.5',
+          expanded ? 'w-[11.25rem]' : 'w-[3.75rem]',
           navLabels === 'hover' && expanded && 'bg-background',
         )}
       >
@@ -252,10 +267,9 @@ function SideRailContent({ position }: { position: 'left' | 'right' }) {
   const ref = useRef<HTMLElement>(null)
   const { pathname } = useLocation()
   const { hiddenNav, appearanceButton } = useAppearance()
-  const { expanded } = useRail()
   const railButton = useRailButton()
   const nav = useVisibleNav()
-  const indicator = useSlidingIndicator(ref, '[aria-current="page"]', `${pathname}|${hiddenNav.join()}|${position}|${expanded}`)
+  const indicator = useSlidingIndicator(ref, '[aria-current="page"]', `${pathname}|${hiddenNav.join()}|${position}`)
   const side = position === 'left' ? 'right' : 'left'
   return (
     <>
@@ -263,7 +277,7 @@ function SideRailContent({ position }: { position: 'left' | 'right' }) {
         <LogoMark size={30} />
       </TLink>
       <nav ref={ref} className="relative mt-4 flex w-full flex-col items-start gap-1">
-        <span aria-hidden style={indicator} className="pointer-events-none absolute rounded-xl bg-muted duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]" />
+        <span aria-hidden style={{ ...indicator, left: 0, width: '100%', transitionProperty: indicator.transitionProperty ? 'top, height, opacity' : undefined }} className="pointer-events-none absolute rounded-xl bg-muted duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]" />
         {nav.map((n) => {
           const active = Boolean(matchPath({ path: n.to, end: n.end }, pathname))
           return (

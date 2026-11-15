@@ -387,6 +387,11 @@
   display: none;
 }
 
+::view-transition-new(site-rail) {
+  inline-size: auto;
+  block-size: auto;
+}
+
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
   ::view-transition-old(*),
