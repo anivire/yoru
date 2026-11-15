@@ -13,7 +13,7 @@ export const PAGE_WIDTHS = [
   { value: '7xl', max: '80rem', label: '7XL' },
   { value: '8xl', max: '96rem', label: '8XL' },
   { value: '9xl', max: '120rem', label: '9XL' },
-  { value: 'full', max: 'none', label: '100%' },
+  { value: 'full', max: '100vw', label: '100%' },
 ] as const
 
 const LEGACY_WIDTHS: Record<string, PageWidth> = { narrow: '5xl', default: '7xl', wide: '8xl', xwide: '9xl' }
@@ -153,7 +153,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement
-    root.style.setProperty('--page-max', PAGE_WIDTHS[widthIndex(state.pageWidth)]!.max)
+    root.style.setProperty('--page-max-setting', PAGE_WIDTHS[widthIndex(state.pageWidth)]!.max)
     root.toggleAttribute('data-wide', stretch)
   }, [state.pageWidth, stretch])
 

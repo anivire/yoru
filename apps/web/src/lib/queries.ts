@@ -48,8 +48,22 @@ export function useUser(): User {
   return data
 }
 
-function entryMutationKey(malId: number) {
-  return ['entry', malId] as const
+const SAVE_DELAY_MS = 700
+
+interface PendingSave {
+  input: ListEntryInput
+  previous: AnimePage | undefined
+  timer: ReturnType<typeof setTimeout>
+  flush: () => void
+}
+
+const pendingSaves = new Map<number, PendingSave>()
+const inFlight = new Map<number, number>()
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') for (const pending of [...pendingSaves.values()]) pending.flush()
+  })
 }
 
 export function patchListEntry(client: QueryClient, malId: number, patch: Partial<ListEntry> | null) {
@@ -73,74 +87,95 @@ function definedFields<T extends object>(input: T): Partial<T> {
 
 function useEntryCache(malId: number) {
   const client = useQueryClient()
-  const snapshot = async () => {
-    await client.cancelQueries({ queryKey: keys.anime(malId) })
+  const snapshot = () => {
+    void client.cancelQueries({ queryKey: keys.anime(malId) })
     return client.getQueryData<AnimePage>(keys.anime(malId))
   }
   const setEntry = (update: (entry: ListEntry | null) => ListEntry | null) =>
     client.setQueryData<AnimePage>(keys.anime(malId), (page) => (page ? { ...page, entry: update(page.entry) } : page))
-  const settle = () => {
-    if (client.isMutating({ mutationKey: entryMutationKey(malId) }) > 1) return
-    void client.invalidateQueries({ queryKey: keys.anime(malId) })
-    void client.invalidateQueries({ queryKey: ['list'], refetchType: 'none' })
-    void client.invalidateQueries({ queryKey: keys.home })
-    void client.invalidateQueries({ queryKey: keys.episodes(malId) })
+  const run = async <T,>(request: () => Promise<T>): Promise<T> => {
+    inFlight.set(malId, (inFlight.get(malId) ?? 0) + 1)
+    try {
+      return await request()
+    } finally {
+      inFlight.set(malId, (inFlight.get(malId) ?? 1) - 1)
+      if (!inFlight.get(malId) && !pendingSaves.has(malId)) {
+        void client.invalidateQueries({ queryKey: keys.anime(malId) })
+        void client.invalidateQueries({ queryKey: ['list'], refetchType: 'none' })
+        void client.invalidateQueries({ queryKey: keys.home })
+        void client.invalidateQueries({ queryKey: keys.episodes(malId) })
+      }
+    }
   }
-  return { client, snapshot, setEntry, settle }
+  const restore = (previous: AnimePage | undefined) => {
+    if (previous) client.setQueryData(keys.anime(malId), previous)
+    void client.invalidateQueries({ queryKey: ['list'] })
+  }
+  return { client, snapshot, setEntry, run, restore }
 }
 
 export function useSaveEntry(malId: number) {
   const { t } = useTranslation()
   const cache = useEntryCache(malId)
-  return useMutation({
-    mutationKey: entryMutationKey(malId),
-    mutationFn: (input: ListEntryInput) => api.saveEntry(malId, input),
-    onMutate: async (input) => {
-      const previous = await cache.snapshot()
-      cache.setEntry((entry) => ({
-        malId,
-        progress: 0,
-        score: null,
-        rewatches: 0,
-        notes: null,
-        startedAt: null,
-        completedAt: null,
-        ...entry,
-        ...definedFields(input),
-        status: input.status,
-        updatedAt: new Date().toISOString(),
-      }))
-      patchListEntry(cache.client, malId, { ...definedFields(input), status: input.status })
-      return { previous }
-    },
-    onSuccess: (entry) => patchListEntry(cache.client, malId, entry),
-    onError: (e, _input, context) => {
-      if (context?.previous) cache.client.setQueryData(keys.anime(malId), context.previous)
-      void cache.client.invalidateQueries({ queryKey: ['list'] })
-      toast.error(e instanceof Error ? e.message : t('common.error'))
-    },
-    onSettled: cache.settle,
-  })
+  const mutate = (input: ListEntryInput) => {
+    const existing = pendingSaves.get(malId)
+    const previous = existing ? existing.previous : cache.snapshot()
+    cache.setEntry((entry) => ({
+      malId,
+      progress: 0,
+      score: null,
+      rewatches: 0,
+      notes: null,
+      startedAt: null,
+      completedAt: null,
+      ...entry,
+      ...definedFields(input),
+      status: input.status,
+      updatedAt: new Date().toISOString(),
+    }))
+    patchListEntry(cache.client, malId, { ...definedFields(input), status: input.status })
+    if (existing) clearTimeout(existing.timer)
+    const merged: ListEntryInput = { ...existing?.input, ...definedFields(input), status: input.status }
+    const flush = () => {
+      const pending = pendingSaves.get(malId)
+      if (!pending) return
+      clearTimeout(pending.timer)
+      pendingSaves.delete(malId)
+      cache
+        .run(() => api.saveEntry(malId, pending.input))
+        .then((entry) => {
+          if (!pendingSaves.has(malId)) patchListEntry(cache.client, malId, entry)
+        })
+        .catch((e: unknown) => {
+          cache.restore(pending.previous)
+          toast.error(e instanceof Error ? e.message : t('common.error'))
+        })
+    }
+    pendingSaves.set(malId, { input: merged, previous, timer: setTimeout(flush, SAVE_DELAY_MS), flush })
+  }
+  return { mutate }
 }
 
 export function useDeleteEntry(malId: number) {
   const { t } = useTranslation()
   const cache = useEntryCache(malId)
   return useMutation({
-    mutationKey: entryMutationKey(malId),
-    mutationFn: () => api.deleteEntry(malId),
-    onMutate: async () => {
-      const previous = await cache.snapshot()
+    mutationFn: () => cache.run(() => api.deleteEntry(malId)),
+    onMutate: () => {
+      const pending = pendingSaves.get(malId)
+      if (pending) {
+        clearTimeout(pending.timer)
+        pendingSaves.delete(malId)
+      }
+      const previous = pending?.previous ?? cache.snapshot()
       cache.setEntry(() => null)
       patchListEntry(cache.client, malId, null)
       return { previous }
     },
     onError: (e, _input, context) => {
-      if (context?.previous) cache.client.setQueryData(keys.anime(malId), context.previous)
-      void cache.client.invalidateQueries({ queryKey: ['list'] })
+      cache.restore(context?.previous)
       toast.error(e instanceof Error ? e.message : t('common.error'))
     },
-    onSettled: cache.settle,
   })
 }
 

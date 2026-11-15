@@ -8,7 +8,8 @@
 @custom-variant wide (&:where([data-wide], [data-wide] *));
 
 :root {
-  --page-max: 80rem;
+  --page-max-setting: 80rem;
+  --page-max: var(--page-max-setting);
 }
 
 body {

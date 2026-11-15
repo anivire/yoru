@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, TITLE_LANGUAGES, type User } from '@yoru/shared'
+import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, TITLE_LANGUAGES, type TitleLanguage, type User } from '@yoru/shared'
 import { Badge, Button, Card, CardContent, Code, Field, Input, LogoMark, Segmented, Skeleton, Spinner, StepSlider, Switch, toast } from '@yoru/ui'
 import { RiAlertFill, RiArrowUpDownFill, RiBracesFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiLockFill, RiNotification3Fill, RiPaletteFill, RiPlayCircleFill, RiShieldFill, RiUser3Fill } from '@remixicon/react'
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
@@ -18,6 +18,8 @@ import { exportFormatName, formatDate } from '../lib/format'
 import { errorMessage, keys, useUser } from '../lib/queries'
 import { TLink } from '../components/transition-link'
 import { useDocumentTitle } from '../lib/title'
+
+const TITLE_FLAGS = { romaji: 'ja', english: 'en', japanese: 'ja', russian: 'ru' } as const satisfies Record<TitleLanguage, 'ja' | 'en' | 'ru'>
 import { PlayerTab } from '../components/player-settings'
 
 const TABS = ['appearance', 'player', 'account', 'notifications', 'import'] as const
@@ -68,7 +70,7 @@ function AppearanceTab() {
         <Segmented
           value={titleLanguage}
           onChange={setTitleLanguage}
-          options={TITLE_LANGUAGES.map((v) => ({ value: v, label: t(`settings.titleLanguage.${v}`) }))}
+          options={TITLE_LANGUAGES.map((v) => ({ value: v, label: t(`settings.titleLanguage.${v}`), icon: <Flag locale={TITLE_FLAGS[v]} /> }))}
           className="grid w-full grid-cols-2 sm:inline-flex sm:w-auto"
         />
       </Block>

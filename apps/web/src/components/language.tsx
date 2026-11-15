@@ -22,6 +22,15 @@ function RuFlag() {
   )
 }
 
+function JpFlag() {
+  return (
+    <svg viewBox="0 0 9 6" preserveAspectRatio="xMidYMid slice" className="size-full!">
+      <rect width="9" height="6" fill="#fff" />
+      <circle cx="4.5" cy="3" r="1.8" fill="#bc002d" />
+    </svg>
+  )
+}
+
 function UkFlag() {
   const id = useId()
   return (
@@ -38,10 +47,10 @@ function UkFlag() {
   )
 }
 
-export function Flag({ locale, className }: { locale: Locale; className?: string }) {
+export function Flag({ locale, className }: { locale: Locale | 'ja'; className?: string }) {
   return (
     <span className={cn('inline-block h-3.5 w-5 shrink-0 overflow-hidden rounded-[0.1875rem] shadow-[0_0_0_1px_rgb(0_0_0/0.12)]', className)}>
-      {locale === 'ru' ? <RuFlag /> : <UkFlag />}
+      {locale === 'ru' ? <RuFlag /> : locale === 'ja' ? <JpFlag /> : <UkFlag />}
     </span>
   )
 }

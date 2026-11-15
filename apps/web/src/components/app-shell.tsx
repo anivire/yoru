@@ -256,7 +256,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { navPosition } = useAppearance()
   const rail = navPosition === 'top' ? null : navPosition
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className={cn('flex min-h-dvh flex-col', rail && 'md:[--page-max:min(var(--page-max-setting),calc(100vw-8rem))]')}>
       {rail ? <SideRail position={rail} /> : null}
       <header ref={header.ref} className={cn('sticky top-0 z-40 pt-2', rail && 'md:hidden')}>
         <div className="mx-auto max-w-(--page-max) px-4 sm:px-6">
