@@ -35,12 +35,13 @@ export function RailTip({ label, side, children }: { label: string; side: 'top' 
   )
 }
 
-export function RailLabel({ children }: { children: ReactNode }) {
+export function RailLabel({ children, badge }: { children: ReactNode; badge?: ReactNode }) {
   const { labels, expanded } = useRail()
   if (!labels) return null
   return (
-    <span className={cn('min-w-0 truncate text-sm font-medium transition-opacity duration-200', expanded ? 'opacity-100' : 'opacity-0')}>
-      {children}
+    <span className={cn('flex min-w-0 items-center gap-1.5 text-sm font-medium transition-opacity duration-200', expanded ? 'opacity-100' : 'opacity-0')}>
+      <span className="min-w-0 truncate">{children}</span>
+      {badge}
     </span>
   )
 }

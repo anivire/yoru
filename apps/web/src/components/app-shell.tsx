@@ -310,10 +310,7 @@ function SideRailContent({ position }: { position: 'left' | 'right' }) {
                 className={cn(railButton, active && 'text-foreground [&_svg]:text-accent')}
               >
                 <n.icon />
-                <RailLabel>
-                  {t(`nav.${n.key}`)}
-                  {isBeta(n) ? <BetaBadge className="ml-1.5" /> : null}
-                </RailLabel>
+                <RailLabel badge={isBeta(n) ? <BetaBadge /> : undefined}>{t(`nav.${n.key}`)}</RailLabel>
               </TNavLink>
             </RailTip>
           )
