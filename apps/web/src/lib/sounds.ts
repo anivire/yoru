@@ -1,4 +1,4 @@
-import { type CueName, type PlayOptions, type ThemeName, play as foleyPlay, set, unlock } from '@foleyjs/core'
+import { type CueName, type PlayOptions, type ThemeName, play as foleyPlay, getAnalyser, set, unlock as foleyUnlock } from '@foleyjs/core'
 import { onStep, onToast } from '@yoru/ui'
 import { useSyncExternalStore } from 'react'
 
@@ -18,7 +18,7 @@ export interface SoundSettings {
 
 const STORAGE_KEY = 'yoru:sounds'
 const GAIN = 2
-const DEFAULTS: SoundSettings = { enabled: false, volume: '60', theme: 'soft', interface: true, notifications: true, feedback: true }
+const DEFAULTS: SoundSettings = { enabled: false, volume: '60', theme: 'mechanical', interface: true, notifications: true, feedback: true }
 
 function load(): SoundSettings {
   try {
@@ -34,6 +34,17 @@ function load(): SoundSettings {
   } catch {
     return DEFAULTS
   }
+}
+
+function unlock() {
+  foleyUnlock()
+  const ctx = getAnalyser()?.context as AudioContext | undefined
+  if (!ctx || ctx.state === 'running') return
+  void ctx.resume().catch(() => undefined)
+  const source = ctx.createBufferSource()
+  source.buffer = ctx.createBuffer(1, 1, ctx.sampleRate)
+  source.connect(ctx.destination)
+  source.start(0)
 }
 
 let state = load()
@@ -127,7 +138,15 @@ const TOAST_CUES = { success: 'success', error: 'error', warning: 'warning' } as
 
 export function installSounds() {
   apply()
-  document.addEventListener('pointerdown', () => state.enabled && unlock(), { capture: true })
+  for (const event of ['pointerdown', 'touchend', 'keydown'] as const) {
+    document.addEventListener(event, () => state.enabled && unlock(), { capture: true, passive: true })
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && state.enabled) {
+      const ctx = getAnalyser()?.context as AudioContext | undefined
+      if (ctx && ctx.state !== 'running') void ctx.resume().catch(() => undefined)
+    }
+  })
   document.addEventListener(
     'click',
     (e) => {
