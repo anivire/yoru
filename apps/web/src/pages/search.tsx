@@ -86,18 +86,16 @@ export function SearchPage() {
             </button>
           ) : null}
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-3">
           <Select
-            size="sm"
-            className="w-40"
+            className="h-11 w-44 rounded-xl px-3.5"
             icon={<RiTvFill />}
             value={filters.type ?? ANY}
             onValueChange={(v) => setFilter('type', v)}
             options={[{ value: ANY, label: `${t('search.type')}: ${t('common.any')}` }, ...ANIME_TYPES.slice(0, 6).map((v) => ({ value: v, label: t(`type.${v}`) }))]}
           />
           <Select
-            size="sm"
-            className="w-44"
+            className="h-11 w-48 rounded-xl px-3.5"
             icon={<RiBroadcastFill />}
             value={filters.status ?? ANY}
             onValueChange={(v) => setFilter('status', v)}
@@ -105,8 +103,7 @@ export function SearchPage() {
           />
           {basic ? null : (
             <Select
-              size="sm"
-              className="w-56"
+              className="h-11 w-60 rounded-xl px-3.5"
               icon={<RiSortDesc />}
               value={filters.order_by ?? ANY}
               onValueChange={(v) => setFilter('order_by', v)}
@@ -114,7 +111,7 @@ export function SearchPage() {
             />
           )}
           {filtered ? (
-            <Button variant="ghost" size="sm" onClick={() => setParams(q ? { q } : {}, { replace: true })}>
+            <Button variant="ghost" className="h-11 rounded-xl px-3.5" onClick={() => setParams(q ? { q } : {}, { replace: true })}>
               <RiCloseFill />
               {t('common.all')}
             </Button>

@@ -23,14 +23,14 @@ export function useListView() {
 export function ViewToggle({ view, onChange }: { view: ListView; onChange: (v: ListView) => void }) {
   const { t } = useTranslation()
   return (
-    <div className="ml-auto flex rounded-lg bg-inset p-0.5">
+    <div className="ml-auto flex h-11 items-center gap-0.5 rounded-xl bg-inset p-1">
       {(['grid', 'table'] as const).map((v) => (
         <button
           key={v}
           type="button"
           aria-label={t(`lists.${v}`)}
           onClick={() => onChange(v)}
-          className={cn('cursor-pointer rounded-md p-1.5', view === v ? 'bg-raised text-foreground shadow-sm shadow-black/20' : 'text-muted-foreground')}
+          className={cn('grid size-9 cursor-pointer place-items-center rounded-lg', view === v ? 'bg-raised text-foreground shadow-sm shadow-black/20' : 'text-muted-foreground')}
         >
           {v === 'grid' ? <RiLayoutGridFill className="size-4" /> : <RiLayoutRowFill className="size-4" />}
         </button>

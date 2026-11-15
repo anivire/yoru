@@ -46,7 +46,7 @@ export function ListFilterBar({
   const [resetKey, setResetKey] = useState(0)
   return (
     <>
-      <div className="relative mt-4">
+      <div className="relative mt-3">
         <RiSearchFill className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
         <Input key={resetKey} defaultValue={filters.q} onChange={(e) => set('q', e.target.value)} placeholder={t('lists.filter')} className="h-11 rounded-xl pl-10 text-[0.9375rem]" />
         {filters.q ? (
@@ -62,26 +62,23 @@ export function ListFilterBar({
           </button>
         ) : null}
       </div>
-      <div className="mb-8 mt-3 flex flex-wrap items-center gap-2">
+      <div className="mb-8 mt-3 flex flex-wrap items-center gap-3">
         <Select
-          size="sm"
-          className="w-40"
+          className="h-11 w-44 rounded-xl px-3.5"
           icon={<RiTvFill />}
           value={filters.type ?? ANY}
           onValueChange={(v) => set('type', v)}
           options={[{ value: ANY, label: `${t('search.type')}: ${t('common.any')}` }, ...types.map((v) => ({ value: v, label: typeLabel(v) }))]}
         />
         <Select
-          size="sm"
-          className="w-36"
+          className="h-11 w-40 rounded-xl px-3.5"
           icon={<RiCalendar2Fill />}
           value={filters.year ?? ANY}
           onValueChange={(v) => set('year', v)}
           options={[{ value: ANY, label: `${t('lists.year')}: ${t('common.any')}` }, ...years.map((y) => ({ value: String(y), label: String(y) }))]}
         />
         <Select
-          size="sm"
-          className="w-64"
+          className="h-11 w-72 rounded-xl px-3.5"
           icon={<RiSortDesc />}
           value={filters.sort}
           onValueChange={(v) => set('sort', v === 'score' ? undefined : v)}

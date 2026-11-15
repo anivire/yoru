@@ -52,7 +52,7 @@
 
   --background: oklch(0.97 calc(var(--tint) * 0.6) var(--hue));
   --surface: oklch(1 0 0);
-  --raised: oklch(1 0 0);
+  --raised: oklch(0.99 calc(var(--tint) * 0.6) var(--hue));
   --muted: oklch(0.94 var(--tint) var(--hue));
   --inset: oklch(0.945 var(--tint) var(--hue));
   --field: oklch(0.945 var(--tint) var(--hue));

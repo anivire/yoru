@@ -93,6 +93,7 @@ export function SharedListPage() {
               <p className="mt-1 text-[0.9375rem] text-muted-foreground">{t('share.hint')}</p>
             </div>
             <Segmented
+              className="[&_button]:h-9"
               value={status}
               onChange={(v) => set('status', v)}
               options={[

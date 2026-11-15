@@ -85,6 +85,7 @@ export function ListsPage() {
       />
 
       <Segmented
+        className="[&_button]:h-9"
         value={status}
         onChange={(v) => set('status', v)}
         options={[
