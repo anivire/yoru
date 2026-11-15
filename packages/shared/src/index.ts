@@ -269,6 +269,7 @@ export interface RecentItem {
   episode: number
   at: string
   kind: StreamKind
+  author: string | null
 }
 
 export interface ActivityData {

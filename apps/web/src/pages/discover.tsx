@@ -1,7 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import type { AnimeSummary } from '@yoru/shared'
+import type { AnimeSummary, RecentItem } from '@yoru/shared'
 import { Button, EmptyState, Image, Skeleton, cn } from '@yoru/ui'
-import { RiPlayLargeFill } from '@remixicon/react'
+import { RiClosedCaptioningFill, RiMicFill, RiPlayLargeFill } from '@remixicon/react'
+import { Anime365Mark } from '../components/source-logo'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AnimeCard, Rail, Score } from '../components/anime-cards'
@@ -202,35 +203,76 @@ function CollectionSection({ name, title }: { name: 'top' | 'anons'; title: stri
   )
 }
 
+const RECENT_PREVIEW = 12
+
 function RecentSection() {
   const { t } = useTranslation()
   const { data, isPending } = useQuery({ queryKey: ['discover', 'recent'], queryFn: api.discoverRecent, staleTime: 5 * 60_000 })
+  const [expanded, setExpanded] = useState(false)
   if (isPending) {
     return (
       <section className="mt-10">
         <SectionTitleSkeleton />
-        <PosterRailSkeleton />
+        <div className="grid gap-x-4 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }, (_, i) => (
+            <div key={i} className="flex items-center gap-3 p-2">
+              <Skeleton className="aspect-[2/3] w-12 shrink-0 rounded-lg" />
+              <div className="min-w-0 flex-1">
+                <TextLine className="text-sm" bar="w-3/4" />
+                <TextLine className="text-[0.8125rem]" bar="w-1/3" />
+                <TextLine className="text-xs" bar="w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
     )
   }
   if (!data?.length) return null
+  const items = expanded ? data : data.slice(0, RECENT_PREVIEW)
   return (
-    <Section title={t('discover.recent')}>
-      <Rail size="poster">
-        {data.map((r) => (
-          <AnimeCard
-            key={r.anime.malId}
-            anime={r.anime}
-            badge={
-              <span className="inline-flex h-6 shrink-0 items-center rounded-full bg-accent px-2 text-[0.6875rem] font-semibold text-accent-foreground">
-                {t('common.episode')} {r.episode}
-              </span>
-            }
-            subtitle={relativeTime(r.at)}
-          />
+    <Section
+      title={t('discover.recent')}
+      hint={t('discover.recentHint')}
+      media={<Anime365Mark />}
+    >
+      <div className="grid gap-x-4 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((r) => (
+          <RecentRow key={r.anime.malId} item={r} />
         ))}
-      </Rail>
+      </div>
+      {data.length > RECENT_PREVIEW ? (
+        <Button variant="ghost" size="sm" className="mt-2" onClick={() => setExpanded((v) => !v)}>
+          {expanded ? t('discover.showLess') : t('discover.showMore')}
+        </Button>
+      ) : null}
     </Section>
+  )
+}
+
+function RecentRow({ item }: { item: RecentItem }) {
+  const { t } = useTranslation()
+  const Icon = item.kind === 'voice' || item.kind === 'voiceEn' ? RiMicFill : RiClosedCaptioningFill
+  return (
+    <TLink
+      to={`/anime/${item.anime.malId}?episode=${item.episode}&kind=${item.kind}`}
+      className="group flex min-w-0 items-center gap-3 rounded-xl p-2 transition-colors hover:bg-muted"
+    >
+      <div className="aspect-[2/3] w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
+        {item.anime.imageUrl ? <Image src={item.anime.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" /> : null}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-medium"><AnimeTitle anime={item.anime} /></div>
+        <div className="mt-0.5 flex items-baseline justify-between gap-2 text-[0.8125rem]">
+          <span className="font-medium text-accent">{t('common.episode')} {item.episode}</span>
+          <span className="shrink-0 text-xs text-muted-foreground">{relativeTime(item.at)}</span>
+        </div>
+        <div className="mt-0.5 flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+          <Icon className="size-3.5 shrink-0" />
+          <span className="truncate">{item.author ?? t(`player.${item.kind}`)}</span>
+        </div>
+      </div>
+    </TLink>
   )
 }
 

@@ -453,6 +453,7 @@ export function Section({
   title,
   hint,
   icon,
+  media,
   action,
   children,
   className,
@@ -460,6 +461,7 @@ export function Section({
   title: ReactNode
   hint?: ReactNode
   icon?: ReactNode
+  media?: ReactNode
   action?: ReactNode
   children: ReactNode
   className?: string
@@ -468,6 +470,7 @@ export function Section({
     <section className={cn('mt-10 first:mt-0', className)}>
       <div className="mb-4 flex items-end justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
+          {media}
           {icon ? <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent [&_svg]:size-[1.125rem]">{icon}</span> : null}
           <div className="min-w-0">
             <h2 className="text-xl font-semibold tracking-tight">{title}</h2>

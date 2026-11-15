@@ -105,7 +105,7 @@ async function loadRecent(): Promise<RecentItem[]> {
     upsertA365Summaries([series])
     const anime = getAnimeRow(malId)
     if (!anime) continue
-    result.push({ anime: toSummary(anime), episode, at: a365Date(row.activeDateTime), kind: TYPE_TO_KIND[row.type] ?? 'sub' })
+    result.push({ anime: toSummary(anime), episode, at: a365Date(row.activeDateTime), kind: TYPE_TO_KIND[row.type] ?? 'sub', author: row.authorsSummary?.trim() || null })
     if (result.length >= 24) break
   }
   return result
