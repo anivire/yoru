@@ -2,12 +2,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { type AnimeDetails, type Episode, type ListEntry, type RoomMedia, STREAM_KINDS, type StreamKind } from '@yoru/shared'
 import { Button, Mascot, Select, Spinner, StarIcon, Tooltip, cn } from '@yoru/ui'
 import { RiClosedCaptioningFill, RiMicFill, RiSettings3Fill, RiVolumeUpFill } from '@remixicon/react'
-import { type CSSProperties, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 import { ApiError, api } from '../lib/api'
 import { errorMessage, keys } from '../lib/queries'
-import { EpisodeList, episodePanelWidth, useEpisodeView } from './episode-list'
+import { EpisodeList } from './episode-list'
 import { MatchDialog } from './match-dialog'
 import { Player } from './player/player'
 import { TLink } from './transition-link'
@@ -116,7 +116,6 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
   })
 
   const inRoom = Boolean(room)
-  const [episodeView, setEpisodeView] = useEpisodeView()
   const playerColumnRef = useRef<HTMLDivElement>(null)
   const roomAuthor = room?.media?.author ?? null
 
@@ -400,14 +399,14 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
           {libria ? null : <MatchDialog malId={malId} match={match.data} defaultQuery={anime.title} />}
         </div>
       </div>
-      <div className={cn('grid gap-5', side && 'desk:grid-cols-[minmax(0,1fr)_var(--episodes-w)]')} style={{ '--episodes-w': episodePanelWidth(episodeView, list.length) } as CSSProperties}>
+      <div className={cn('grid gap-5', side && 'desk:grid-cols-[minmax(0,1fr)_22rem]')}>
         <div ref={playerColumnRef} className="min-w-0">
           {body}
           {room ? <RoomDebug room={room} container={playerColumnRef} /> : null}
         </div>
         <div className={cn(side && 'desk:relative')}>
           <div className={cn('flex max-h-[26rem] flex-col', side && 'desk:absolute desk:inset-0 desk:max-h-none')}>
-            <EpisodeList episodes={list} current={episode ?? 0} loading={episodes.isPending} onSelect={goTo} view={episodeView} onViewChange={setEpisodeView} />
+            <EpisodeList episodes={list} current={episode ?? 0} loading={episodes.isPending} onSelect={goTo} />
           </div>
         </div>
       </div>

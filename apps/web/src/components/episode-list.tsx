@@ -4,50 +4,19 @@ import { RiCheckFill, RiLayoutGridFill, RiListUnordered } from '@remixicon/react
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-const DEFAULT_COLUMNS = 5
-const VIEW_KEY = 'yoru:episodes-view'
-
-export type EpisodeView = 'list' | 'grid'
-
-export function useEpisodeView() {
-  const [view, setView] = useState<EpisodeView>(() => (localStorage.getItem(VIEW_KEY) === 'grid' ? 'grid' : 'list'))
-  const change = (next: EpisodeView) => {
-    setView(next)
-    localStorage.setItem(VIEW_KEY, next)
-  }
-  return [view, change] as const
-}
-
-export function gridColumns(count: number) {
-  if (count <= 12) return 1
-  if (count <= 24) return 2
-  if (count <= 40) return 3
-  return DEFAULT_COLUMNS
-}
-
-export function episodePanelWidth(view: EpisodeView, count: number) {
-  if (view === 'list') return '22rem'
-  const columns = gridColumns(count)
-  if (columns === DEFAULT_COLUMNS) return '18rem'
-  return ['6rem', '7.5rem', '10rem'][columns - 1]!
-}
-
 export function EpisodeList({
   episodes,
   current,
   loading,
   onSelect,
-  view,
-  onViewChange,
 }: {
   episodes: Episode[]
   current: number
   loading: boolean
   onSelect: (n: number) => void
-  view: EpisodeView
-  onViewChange: (view: EpisodeView) => void
 }) {
   const { t } = useTranslation()
+  const [view, setView] = useState<'list' | 'grid'>(() => (localStorage.getItem('yoru:episodes-view') === 'grid' ? 'grid' : 'list'))
   const activeRef = useRef<HTMLButtonElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -58,12 +27,14 @@ export function EpisodeList({
     if (top < box.scrollTop) box.scrollTop = top
     else if (top + item.offsetHeight > box.scrollTop + box.clientHeight) box.scrollTop = top + item.offsetHeight - box.clientHeight
   }, [current, episodes.length, view])
-  const columns = gridColumns(episodes.length)
-  const vertical = columns < DEFAULT_COLUMNS
+  const switchView = (v: 'list' | 'grid') => {
+    setView(v)
+    localStorage.setItem('yoru:episodes-view', v)
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className={cn('mb-3 flex items-center justify-between', vertical && view === 'grid' && 'flex-wrap gap-y-2')}>
+      <div className="mb-3 flex items-center justify-between">
         <span className="text-sm font-medium">
           {t('player.episodesTitle')} <span className="font-mono text-xs text-subtle-foreground">{episodes.length || ''}</span>
         </span>
@@ -72,7 +43,7 @@ export function EpisodeList({
             <button
               key={v}
               type="button"
-              onClick={() => onViewChange(v)}
+              onClick={() => switchView(v)}
               className={cn('cursor-pointer rounded-md p-1.5', view === v ? 'bg-muted text-foreground' : 'text-subtle-foreground hover:text-foreground')}
             >
               {v === 'grid' ? <RiLayoutGridFill className="size-4" /> : <RiListUnordered className="size-4" />}
@@ -94,13 +65,7 @@ export function EpisodeList({
             ))}
           </div>
         ) : view === 'grid' ? (
-          <div
-            className="grid gap-1.5"
-            style={{
-              gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
-              ...(vertical ? { gridAutoFlow: 'column', gridTemplateRows: `repeat(${Math.ceil(episodes.length / columns)}, auto)` } : {}),
-            }}
-          >
+          <div className="grid grid-cols-5 gap-1.5">
             {episodes.map((e) => (
               <button
                 key={e.number}
@@ -109,8 +74,7 @@ export function EpisodeList({
                 disabled={!e.available}
                 onClick={() => onSelect(e.number)}
                 className={cn(
-                  'relative cursor-pointer rounded-lg font-mono transition-colors disabled:cursor-not-allowed disabled:opacity-35',
-                  vertical ? 'h-8 text-[0.8125rem]' : 'h-10 text-sm',
+                  'relative h-10 cursor-pointer rounded-lg font-mono text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-35',
                   e.number === current ? 'bg-accent-soft text-accent' : 'bg-field hover:bg-field-hover',
                   e.watched && e.number !== current && 'text-subtle-foreground',
                 )}
