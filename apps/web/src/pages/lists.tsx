@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { AnimeCard, PosterGrid } from '../components/anime-cards'
 import { ListTableSkeleton, PosterGridSkeleton } from '../components/skeletons'
 import { Page, PageHeader } from '../components/app-shell'
-import { ShareListButton } from '../components/share-list'
+import { ShareButton } from '../components/share-list'
 import { api } from '../lib/api'
 import { exportFormatName } from '../lib/format'
 import { keys } from '../lib/queries'
@@ -56,7 +56,7 @@ export function ListsPage() {
         title={t('lists.title')}
         actions={
           <>
-            <ShareListButton />
+            <ShareButton kind="list" />
             <Button asChild variant="secondary" size="sm">
               <TLink to="/settings/import">
                 <RiDownload2Fill />

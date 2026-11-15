@@ -17,6 +17,7 @@ export const queryClient = new QueryClient({
 export const keys = {
   me: ['me'] as const,
   home: ['home'] as const,
+  stats: ['stats'] as const,
   anime: (id: number) => ['anime', id] as const,
   episodes: (id: number) => ['episodes', id] as const,
   match: (id: number) => ['match', id] as const,

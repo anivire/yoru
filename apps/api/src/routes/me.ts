@@ -1,7 +1,7 @@
 import { and, desc, eq, gt, ne } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import { Hono } from 'hono'
-import { type AccountInfo, type SessionInfo, type ShareInfo, userSettingsSchema } from '@yoru/shared'
+import { type AccountInfo, type SessionInfo, type ShareInfo, shareUpdateSchema, userSettingsSchema } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { invites, sessions, users } from '../db/schema'
 import { type AppEnv, currentSessionId, destroySession, requireAuth, toUser } from '../lib/auth'
@@ -10,23 +10,32 @@ import { parseBody } from '../lib/validate'
 
 const inviter = alias(users, 'inviter')
 
+function shareColumns(flags: { list?: boolean; stats?: boolean }) {
+  return { ...(flags.list === undefined ? {} : { shareList: flags.list }), ...(flags.stats === undefined ? {} : { shareStats: flags.stats }) }
+}
+
+function readShare(userId: number): ShareInfo {
+  const row = db.select({ token: users.shareToken, list: users.shareList, stats: users.shareStats }).from(users).where(eq(users.id, userId)).get()
+  return { token: row?.token ?? null, list: row?.list ?? true, stats: row?.stats ?? false }
+}
+
 export const meRoutes = new Hono<AppEnv>()
   .use(requireAuth)
-  .get('/share', (c) => {
-    const row = db.select({ token: users.shareToken }).from(users).where(eq(users.id, c.get('user').id)).get()
-    const body: ShareInfo = { token: row?.token ?? null }
-    return c.json(body)
+  .get('/share', (c) => c.json(readShare(c.get('user').id)))
+  .post('/share', async (c) => {
+    const flags = await parseBody(c, shareUpdateSchema)
+    db.update(users).set({ shareToken: randomToken(16), ...shareColumns(flags) }).where(eq(users.id, c.get('user').id)).run()
+    return c.json(readShare(c.get('user').id))
   })
-  .post('/share', (c) => {
-    const token = randomToken(16)
-    db.update(users).set({ shareToken: token }).where(eq(users.id, c.get('user').id)).run()
-    const body: ShareInfo = { token }
-    return c.json(body)
+  .patch('/share', async (c) => {
+    const flags = await parseBody(c, shareUpdateSchema)
+    const columns = shareColumns(flags)
+    if (Object.keys(columns).length) db.update(users).set(columns).where(eq(users.id, c.get('user').id)).run()
+    return c.json(readShare(c.get('user').id))
   })
   .delete('/share', (c) => {
     db.update(users).set({ shareToken: null }).where(eq(users.id, c.get('user').id)).run()
-    const body: ShareInfo = { token: null }
-    return c.json(body)
+    return c.json(readShare(c.get('user').id))
   })
   .get('/account', (c) => {
     const user = c.get('user')

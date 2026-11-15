@@ -272,6 +272,33 @@ export interface RecentItem {
   author: string | null
 }
 
+export interface StatsBucket {
+  name: string
+  count: number
+  minutes: number
+  meanScore: number | null
+}
+
+export interface UserStats {
+  totals: {
+    titles: number
+    completed: number
+    episodes: number
+    minutes: number
+    meanScore: number | null
+    scored: number
+    rewatches: number
+  }
+  statuses: Record<ListStatus, number>
+  scores: { score: number; count: number }[]
+  genres: StatsBucket[]
+  studios: StatsBucket[]
+  types: StatsBucket[]
+  years: { year: number; count: number }[]
+  seasons: { season: string; count: number }[]
+  months: { month: string; episodes: number }[]
+}
+
 export interface ActivityData {
   days: { date: string; count: number }[]
   total: number
@@ -395,6 +422,22 @@ export interface ListResponse {
 
 export interface ShareInfo {
   token: string | null
+  list: boolean
+  stats: boolean
+}
+
+export type ShareKind = 'list' | 'stats'
+
+export interface PublicShareInfo {
+  username: string
+  list: boolean
+  stats: boolean
+}
+
+export const shareUpdateSchema = z.object({ list: z.boolean().optional(), stats: z.boolean().optional() })
+
+export interface PublicStatsResponse extends UserStats {
+  username: string
 }
 
 export interface PublicListResponse extends ListResponse {

@@ -50,6 +50,13 @@
       "when": 1794733008264,
       "tag": "0006_title_russian",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1794765919971,
+      "tag": "0007_share_sections",
+      "breakpoints": true
     }
   ]
 }

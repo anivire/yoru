@@ -11,6 +11,8 @@ export const users = sqliteTable('users', {
   notifyPremieres: integer('notify_premieres', { mode: 'boolean' }).notNull().default(true),
   anime365Token: text('anime365_token'),
   shareToken: text('share_token'),
+  shareList: integer('share_list', { mode: 'boolean' }).notNull().default(true),
+  shareStats: integer('share_stats', { mode: 'boolean' }).notNull().default(false),
   createdAt: text('created_at').notNull(),
 }, (t) => [uniqueIndex('users_username_idx').on(t.username), uniqueIndex('users_share_token_idx').on(t.shareToken)])
 

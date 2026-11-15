@@ -17,6 +17,7 @@ import { SchedulePage } from './pages/schedule'
 import { SearchPage } from './pages/search'
 import { SettingsPage } from './pages/settings'
 import { SharedListPage } from './pages/shared-list'
+import { StatsPage } from './pages/stats'
 
 function Splash() {
   return (
@@ -109,6 +110,7 @@ export const router = createBrowserRouter([
           { path: 'schedule', element: <SchedulePage /> },
           { path: 'search', element: <SearchPage /> },
           { path: 'lists', element: <ListsPage /> },
+          { path: 'stats', element: <StatsPage /> },
           { path: 'anime/:id', element: <AnimePage /> },
           { path: 'settings/:tab?', element: <SettingsPage /> },
           { element: <RequireAdmin />, children: [{ path: 'admin', element: <AdminPage /> }] },

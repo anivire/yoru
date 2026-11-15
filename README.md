@@ -16,10 +16,11 @@ A self-hosted anime tracker and player built around [Anime365](https://smotret-a
 
 ## Features
 
-- **Player** with Anime365 translations: pick subtitles or voice-over, choose the author, resume where you stopped. Set a default translation type and a list of preferred authors once, and every new anime starts with them.
+- **Player** with Anime365 translations: pick subtitles or voice-over, choose the author, resume where you stopped. Set a default translation type and star favourite translations right from the player, kept separately for subtitles and voice-over, and every new anime starts with them.
 - **Anime pages** with related titles in watch order, characters with their voice actors, similar anime, a screenshot gallery, the trailer and links to MyAnimeList, Shikimori, AniList, AniDB and Crunchyroll. Genres open a filtered search.
 - **Lists** with statuses, progress, scores, rewatches and notes; grid and table views with filters and sorting. Edits are saved in the background and do not reshuffle the list under you.
-- **Public list link**: share a read-only page of your list with the same filters and views.
+- **Stats**: hours watched, episodes, mean score and list breakdown up top, then episodes by month, your score distribution, favourite genres and studios, formats, release years and seasons.
+- **Public link**: share a read-only page with your list, your stats or both; each section can be turned on and off without changing the link.
 - **Home** with continue watching, upcoming episodes from your lists, a GitHub-style watch activity grid and what you are watching now. Sections can be reordered and hidden.
 - **Schedule** as a month calendar: aired episodes, the ones still waiting for a translation, and what comes next.
 - **Discover**: seasonal highlights, trending by genre, recently released translations, top rated and upcoming.
@@ -27,7 +28,7 @@ A self-hosted anime tracker and player built around [Anime365](https://smotret-a
 - **Title language**: show anime titles in romaji, English, Japanese or Russian, independent of the interface language.
 - **Import** from AniList, Shikimori and MyAnimeList, or from a Seanime offline account; **export** to JSON, CSV and MAL XML.
 - **Invites only**: the admin creates invite links, there is no open registration.
-- **Appearance**: light and dark schemes, a dozen color presets, an adjustable page width, and navigation at the top or as a side rail on the left or right.
+- **Appearance**: light and dark schemes, a dozen color presets, an adjustable page width, and navigation at the top, at the bottom or as a side rail on the left or right.
 - **Russian and English** interface.
 
 ## Install

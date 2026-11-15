@@ -1,4 +1,4 @@
-import { RiBookShelfFill, RiCalendar2Fill, RiCalendarScheduleFill, RiCompass3Fill, RiHome5Fill, RiPlayCircleFill, RiPulseFill, RiSearchFill, RiTv2Fill } from '@remixicon/react'
+import { RiBarChart2Fill, RiBookShelfFill, RiCalendar2Fill, RiCalendarScheduleFill, RiCompass3Fill, RiHome5Fill, RiPlayCircleFill, RiPulseFill, RiSearchFill, RiTv2Fill } from '@remixicon/react'
 
 export const NAV = [
   { to: '/', key: 'home', icon: RiHome5Fill, end: true },
@@ -6,6 +6,7 @@ export const NAV = [
   { to: '/schedule', key: 'schedule', icon: RiCalendar2Fill, end: false },
   { to: '/search', key: 'search', icon: RiSearchFill, end: false },
   { to: '/lists', key: 'lists', icon: RiBookShelfFill, end: false },
+  { to: '/stats', key: 'stats', icon: RiBarChart2Fill, end: false },
 ] as const
 
 export type NavKey = (typeof NAV)[number]['key']
