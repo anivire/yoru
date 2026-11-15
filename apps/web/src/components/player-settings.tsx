@@ -1,12 +1,13 @@
 import { STREAM_KINDS } from '@yoru/shared'
-import { Button, Card, Input, cn } from '@yoru/ui'
+import { Button, Card, Input, Segmented, cn } from '@yoru/ui'
 import { DndContext, type DragEndEvent, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { RiCloseFill, RiDraggable } from '@remixicon/react'
-import { type FormEvent, useState } from 'react'
+import { RiAddFill, RiCloseFill, RiDraggable } from '@remixicon/react'
+import { type FormEvent, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppearance } from '../lib/appearance'
+import { type FavoriteGroup, rememberedAuthors } from '../lib/favorite-authors'
 import { Block } from '../pages/settings'
 import { restrictToVertical } from './layout-settings'
 import { KIND_ICONS } from './watch-section'
@@ -43,13 +44,21 @@ export function PlayerTab() {
   const { t } = useTranslation()
   const { defaultKind, setDefaultKind, preferredAuthors, setPreferredAuthors } = useAppearance()
   const [draft, setDraft] = useState('')
+  const [picked, setPicked] = useState<FavoriteGroup>(defaultKind)
+  const groups: FavoriteGroup[] = preferredAuthors.any?.length ? [...STREAM_KINDS, 'any'] : [...STREAM_KINDS]
+  const group = groups.includes(picked) ? picked : defaultKind
+  const authors = preferredAuthors[group] ?? []
+  const setAuthors = (next: string[]) => setPreferredAuthors({ ...preferredAuthors, [group]: next })
+  const suggestions = useMemo(() => (group === 'any' ? [] : rememberedAuthors(group, authors)), [group, authors])
 
+  const addAuthor = (value: string) => {
+    if (!value || authors.some((a) => a.toLowerCase() === value.toLowerCase())) return
+    setAuthors([...authors, value])
+  }
   const add = (e: FormEvent) => {
     e.preventDefault()
-    const value = draft.trim()
+    addAuthor(draft.trim())
     setDraft('')
-    if (!value || preferredAuthors.some((a) => a.toLowerCase() === value.toLowerCase())) return
-    setPreferredAuthors([...preferredAuthors, value])
   }
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -57,10 +66,10 @@ export function PlayerTab() {
   )
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return
-    const from = preferredAuthors.indexOf(String(active.id))
-    const to = preferredAuthors.indexOf(String(over.id))
+    const from = authors.indexOf(String(active.id))
+    const to = authors.indexOf(String(over.id))
     if (from < 0 || to < 0) return
-    setPreferredAuthors(arrayMove(preferredAuthors, from, to))
+    setAuthors(arrayMove(authors, from, to))
   }
 
   return (
@@ -89,12 +98,28 @@ export function PlayerTab() {
       </Block>
       <Block title={t('settings.playerPrefs.authors')} description={t('settings.playerPrefs.authorsHint')}>
         <Card className="flex flex-col gap-3 p-4">
-          {preferredAuthors.length ? (
+          <Segmented
+            size="sm"
+            value={group}
+            onChange={setPicked}
+            className="self-start"
+            options={groups.map((g) => {
+              const Icon = g === 'any' ? null : KIND_ICONS[g]
+              return {
+                value: g,
+                label: t(g === 'any' ? 'settings.playerPrefs.any' : `player.${g}`),
+                icon: Icon ? <Icon /> : undefined,
+                count: preferredAuthors[g]?.length || undefined,
+              }
+            })}
+          />
+          {group === 'any' ? <p className="text-[0.8125rem] text-muted-foreground">{t('settings.playerPrefs.anyHint')}</p> : null}
+          {authors.length ? (
             <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVertical]} onDragEnd={onDragEnd}>
-              <SortableContext items={preferredAuthors} strategy={verticalListSortingStrategy}>
+              <SortableContext items={authors} strategy={verticalListSortingStrategy}>
                 <ol className="flex flex-col gap-1">
-                  {preferredAuthors.map((author, i) => (
-                    <SortableAuthor key={author} author={author} index={i} onRemove={() => setPreferredAuthors(preferredAuthors.filter((a) => a !== author))} />
+                  {authors.map((author, i) => (
+                    <SortableAuthor key={author} author={author} index={i} onRemove={() => setAuthors(authors.filter((a) => a !== author))} />
                   ))}
                 </ol>
               </SortableContext>
@@ -108,6 +133,25 @@ export function PlayerTab() {
               {t('settings.playerPrefs.add')}
             </Button>
           </form>
+          {suggestions.length ? (
+            <div className="flex flex-col gap-2">
+              <span className="text-[0.8125rem] text-muted-foreground">{t('settings.playerPrefs.suggestions')}</span>
+              <div className="flex flex-wrap gap-1.5">
+                {suggestions.map(([author, count]) => (
+                  <button
+                    key={author}
+                    type="button"
+                    onClick={() => addAuthor(author)}
+                    title={t('settings.playerPrefs.pickedIn', { count })}
+                    className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-full bg-field pl-2 pr-3 text-[0.8125rem] font-medium transition-colors hover:bg-field-hover [&_svg]:size-3.5 [&_svg]:text-accent"
+                  >
+                    <RiAddFill />
+                    {author}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </Card>
       </Block>
     </>

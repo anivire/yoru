@@ -2,6 +2,7 @@ import { STREAM_KINDS, type StreamKind, TITLE_LANGUAGES, type TitleLanguage } fr
 import { type ColorScheme, DEFAULT_SCHEME, DEFAULT_THEME, THEME_PRESETS, type ThemePreset, applyTheme, logoSvg } from '@yoru/ui'
 import { type ReactNode, createContext, useContext, useEffect, useState } from 'react'
 import { HOME_SECTIONS, type HomeSectionId, NAV, type NavKey } from './navigation'
+import { type FavoriteAuthors, normalizeFavorites } from './favorite-authors'
 
 const STORAGE_KEY = 'yoru:appearance'
 
@@ -38,7 +39,7 @@ interface State {
   homeSections: HomeSectionSetting[]
   hiddenNav: NavKey[]
   defaultKind: StreamKind
-  preferredAuthors: string[]
+  preferredAuthors: FavoriteAuthors
   navPosition: NavPosition
   titleLanguage: TitleLanguage
   appearanceButton: boolean
@@ -69,7 +70,7 @@ interface Appearance extends State {
   setHomeSections: (sections: HomeSectionSetting[]) => void
   setHiddenNav: (hidden: NavKey[]) => void
   setDefaultKind: (kind: StreamKind) => void
-  setPreferredAuthors: (authors: string[]) => void
+  setPreferredAuthors: (authors: FavoriteAuthors) => void
   setNavPosition: (position: NavPosition) => void
   setTitleLanguage: (language: TitleLanguage) => void
   setAppearanceButton: (show: boolean) => void
@@ -108,13 +109,13 @@ function load(): State {
       homeSections: normalizeSections(raw.homeSections),
       hiddenNav: normalizeNav(raw.hiddenNav),
       defaultKind: STREAM_KINDS.includes(raw.defaultKind as StreamKind) ? (raw.defaultKind as StreamKind) : 'sub',
-      preferredAuthors: Array.isArray(raw.preferredAuthors) ? raw.preferredAuthors.filter((a): a is string => typeof a === 'string' && Boolean(a.trim())) : [],
+      preferredAuthors: normalizeFavorites(raw.preferredAuthors),
       navPosition: raw.navPosition === 'top' || raw.navPosition === 'bottom' || raw.navPosition === 'right' ? raw.navPosition : 'left',
       titleLanguage: TITLE_LANGUAGES.includes(raw.titleLanguage as TitleLanguage) ? (raw.titleLanguage as TitleLanguage) : 'romaji',
       appearanceButton: raw.appearanceButton !== false,
     }
   } catch {
-    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], defaultKind: 'sub', preferredAuthors: [], navPosition: 'left', titleLanguage: 'romaji', appearanceButton: true }
+    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], defaultKind: 'sub', preferredAuthors: {}, navPosition: 'left', titleLanguage: 'romaji', appearanceButton: true }
   }
 }
 

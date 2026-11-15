@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { type AnimeDetails, type Episode, type ListEntry, STREAM_KINDS, type StreamKind } from '@yoru/shared'
-import { Button, Mascot, Select, Spinner } from '@yoru/ui'
-import { RiClosedCaptioningFill, RiMicFill, RiSettings3Fill, RiVolumeUpFill } from '@remixicon/react'
+import { Button, Mascot, Select, Spinner, Tooltip, cn } from '@yoru/ui'
+import { RiClosedCaptioningFill, RiMicFill, RiSettings3Fill, RiStarFill, RiStarLine, RiVolumeUpFill } from '@remixicon/react'
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
@@ -14,6 +14,7 @@ import { TLink } from './transition-link'
 import { useAppearance } from '../lib/appearance'
 import { useAnimeTitle } from '../lib/anime-title'
 import { ANIME365_LOGO } from '../lib/logos'
+import { isFavorite, pickFavorite, toggleFavorite } from '../lib/favorite-authors'
 
 function kindKey(malId: number) {
   return `yoru:kind:${malId}`
@@ -74,7 +75,7 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
   const malId = anime.malId
   const title = useAnimeTitle()
   const [params, setParams] = useSearchParams()
-  const { defaultKind, preferredAuthors } = useAppearance()
+  const { defaultKind, preferredAuthors, setPreferredAuthors } = useAppearance()
   const source = parseSource(params.get('source')) ?? parseSource(localStorage.getItem(sourceKey(malId))) ?? 'anime365'
   const libria = source === 'anilibria'
   const kind = libria ? 'voice' : (parseKind(params.get('kind')) ?? parseKind(localStorage.getItem(kindKey(malId))) ?? defaultKind)
@@ -119,11 +120,12 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
       return
     }
     const remembered = localStorage.getItem(authorKey(malId, kind))
-    const favorite = preferredAuthors.map((p) => p.toLowerCase()).reduce<(typeof items)[number] | undefined>((found, p) => found ?? items.find((x) => x.author.toLowerCase().includes(p)), undefined)
+    const favorite = pickFavorite(preferredAuthors, kind, items)
     setTranslationId((items.find((x) => x.author === remembered) ?? favorite ?? items[0]!).id)
   }, [translations.data, malId, kind, preferredAuthors])
 
   const translation = translations.data?.find((x) => x.id === translationId)
+  const favorite = translation ? isFavorite(preferredAuthors, kind, translation.author) : false
   const stream = useQuery({
     queryKey: ['stream', translationId],
     queryFn: () => api.stream(translationId!, translation?.author ?? ''),
@@ -297,22 +299,41 @@ export function WatchSection({ anime, entry }: { anime: AnimeDetails; entry: Lis
             options={[{ value: 'anilibria', label: 'AniLibria', hint: libriaRelease.data?.title ?? undefined }]}
           />
         ) : (
-        <Select
-          className="col-span-3 h-10 w-full min-w-0 rounded-xl px-3.5 sm:w-72"
-          disabled={!translations.data?.length}
-          placeholder={t('player.author')}
-          value={translationId ? String(translationId) : undefined}
-          onValueChange={(v) => {
-            const tr = translations.data?.find((x) => String(x.id) === v)
-            if (tr) localStorage.setItem(authorKey(malId, kind), tr.author)
-            setTranslationId(Number(v))
-          }}
-          options={(translations.data ?? []).map((x) => ({
-            value: String(x.id),
-            label: x.author,
-            hint: [x.height ? `${x.height}p` : null, x.qualityType?.toUpperCase()].filter(Boolean).join(' · ') || undefined,
-          }))}
-        />
+        <div className="col-span-3 flex min-w-0 gap-2">
+          <Select
+            className="h-10 w-full min-w-0 flex-1 rounded-xl px-3.5 sm:w-72 sm:flex-none"
+            disabled={!translations.data?.length}
+            placeholder={t('player.author')}
+            value={translationId ? String(translationId) : undefined}
+            onValueChange={(v) => {
+              const tr = translations.data?.find((x) => String(x.id) === v)
+              if (tr) localStorage.setItem(authorKey(malId, kind), tr.author)
+              setTranslationId(Number(v))
+            }}
+            options={(translations.data ?? []).map((x) => ({
+              value: String(x.id),
+              label: x.author,
+              hint: [x.height ? `${x.height}p` : null, x.qualityType?.toUpperCase()].filter(Boolean).join(' · ') || undefined,
+            }))}
+          />
+          <Tooltip content={t(favorite ? 'player.unfavorite' : 'player.favorite')}>
+            <Button
+              variant="secondary"
+              size="icon"
+              disabled={!translation}
+              aria-label={t(favorite ? 'player.unfavorite' : 'player.favorite')}
+              aria-pressed={favorite}
+              onClick={() => {
+                if (!translation) return
+                localStorage.setItem(authorKey(malId, kind), translation.author)
+                setPreferredAuthors(toggleFavorite(preferredAuthors, kind, translation.author))
+              }}
+              className={cn('size-10 shrink-0 rounded-xl', favorite && 'text-accent')}
+            >
+              {favorite ? <RiStarFill /> : <RiStarLine />}
+            </Button>
+          </Tooltip>
+        </div>
         )}
       </div>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
