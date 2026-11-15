@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { AnimeDetails, ListEntry } from '@yoru/shared'
 import { Badge, Dialog, DialogContent, DialogTrigger, EmptyState, Image, Lightbox, cn } from '@yoru/ui'
 import { RiCalendarScheduleFill, RiClapperboardFill, RiPlayFill } from '@remixicon/react'
-import { EpisodeCount, Score } from '../components/anime-cards'
+import { EpisodeCount, GLASS_CHIP, Score } from '../components/anime-cards'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
@@ -18,6 +18,7 @@ import { formatDate, formatDateTime, relativeTime, seasonLabel, typeLabel } from
 import { keys } from '../lib/queries'
 import { useDocumentTitle } from '../lib/title'
 import { useAnimeTitle } from '../lib/anime-title'
+import { TLink } from '../components/transition-link'
 
 const MORE_SPACE = 24
 
@@ -144,7 +145,7 @@ function MobileEntryRow({ anime, entry }: { anime: AnimeDetails; entry: ListEntr
   const { t } = useTranslation()
   return (
     <div className="flex flex-wrap items-center justify-center gap-2.5 sm:hidden">
-      {entry?.score ? <Score value={entry.score} surface="theme" className="h-7 px-2.5 text-sm" title={t('anime.yourScore')} /> : null}
+      {entry?.score ? <Score value={entry.score} surface="glass" className="h-7 px-2.5 text-sm" title={t('anime.yourScore')} /> : null}
       {entry ? <EpisodeCount current={entry.progress} total={anime.episodes} className="text-base font-semibold" /> : null}
       <div className={entry ? '' : 'w-full max-w-64'}>
         <ListEditor malId={anime.malId} entry={entry} total={anime.episodes} aired={airedLimit(anime)} compact={Boolean(entry)} />
@@ -158,6 +159,8 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
   const { t } = useTranslation()
   const { expandSynopsis } = useAppearance()
   const [open, setOpen] = useState(expandSynopsis)
+  const genreList = useQuery({ queryKey: ['genres'], queryFn: api.genres, staleTime: Infinity })
+  const genreIds = new Map((genreList.data ?? []).map((g) => [g.name.toLowerCase(), g.id]))
   const title = useAnimeTitle()
   const mainTitle = title(anime)
   const secondaryTitle = [anime.title, anime.titleEnglish].find((v) => v && v !== mainTitle) ?? null
@@ -196,8 +199,8 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
             </div>
             <MobileEntryRow anime={anime} entry={entry} />
             <div className="flex flex-wrap items-center justify-center gap-2 text-sm sm:justify-start">
-              {anime.score ? <Score value={anime.score} surface="theme" digits={2} /> : null}
-              {anime.status ? <Badge variant={anime.airing ? 'success' : 'neutral'}>{t(`airing.${anime.status}`, { defaultValue: anime.status })}</Badge> : null}
+              {anime.score ? <Score value={anime.score} surface="glass" digits={2} /> : null}
+              {anime.status ? <Badge variant={anime.airing ? 'success' : 'neutral'} className={anime.airing ? undefined : GLASS_CHIP}>{t(`airing.${anime.status}`, { defaultValue: anime.status })}</Badge> : null}
               {meta.map((m) => (
                 <span key={m} className="text-muted-foreground">
                   {m}
@@ -213,11 +216,19 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
             ) : null}
             {anime.genres.length ? (
               <div className="flex flex-wrap justify-center gap-1.5 sm:justify-start">
-                {anime.genres.map((g) => (
-                  <span key={g} className="inline-flex h-6 items-center rounded-full bg-foreground/10 px-2.5 text-xs font-medium text-foreground/90 backdrop-blur-sm">
-                    {g}
-                  </span>
-                ))}
+                {anime.genres.map((g) => {
+                  const id = genreIds.get(g.toLowerCase())
+                  const className = cn('inline-flex h-6 items-center rounded-full px-2.5 text-xs font-medium', GLASS_CHIP)
+                  return id ? (
+                    <TLink key={g} to={`/search?genres=${id}`} className={cn(className, 'transition-colors hover:text-accent')}>
+                      {g}
+                    </TLink>
+                  ) : (
+                    <span key={g} className={className}>
+                      {g}
+                    </span>
+                  )
+                })}
               </div>
             ) : null}
             {anime.synopsis ? <Synopsis text={anime.synopsis} open={open} onToggle={() => setOpen(!open)} /> : null}

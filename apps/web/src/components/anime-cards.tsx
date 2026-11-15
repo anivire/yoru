@@ -37,6 +37,8 @@ export function scoreColor(value: number) {
   return TONE_COLOR[scoreTone(value)]
 }
 
+export const GLASS_CHIP = 'bg-white/75 text-foreground shadow-sm shadow-black/5 backdrop-blur-sm dark:bg-white/10 dark:shadow-none'
+
 export function formatScore(value: number, digits = 1) {
   return Number.isInteger(value) ? String(value) : value.toFixed(digits)
 }
@@ -51,7 +53,7 @@ export function Score({
 }: {
   value: number
   className?: string
-  surface?: 'dark' | 'theme'
+  surface?: 'dark' | 'theme' | 'glass'
   digits?: number
   title?: string
   colored?: boolean
@@ -73,7 +75,7 @@ export function Score({
       title={title}
       className={cn(
         'inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs font-semibold tabular-nums',
-        surface === 'dark' ? 'bg-black/55 text-white backdrop-blur-md' : 'bg-field text-foreground',
+        surface === 'dark' ? 'bg-black/55 text-white backdrop-blur-md' : surface === 'glass' ? GLASS_CHIP : 'bg-field text-foreground',
         className,
       )}
     >
