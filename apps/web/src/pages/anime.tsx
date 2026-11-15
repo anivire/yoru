@@ -19,6 +19,7 @@ import { keys } from '../lib/queries'
 import { useDocumentTitle } from '../lib/title'
 import { useAnimeTitle } from '../lib/anime-title'
 import { TLink } from '../components/transition-link'
+import { AnimeExtrasSections, ScreenshotsSection } from '../components/anime-extras'
 
 const MORE_SPACE = 24
 
@@ -231,19 +232,19 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
                 })}
               </div>
             ) : null}
+            {facts.length ? (
+              <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-[0.8125rem] text-muted-foreground sm:justify-start">
+                {facts.map((f) => (
+                  <span key={f.label}>
+                    {f.label}: <span className="text-foreground">{f.value}</span>
+                  </span>
+                ))}
+              </div>
+            ) : null}
             {anime.synopsis ? <Synopsis text={anime.synopsis} open={open} onToggle={() => setOpen(!open)} /> : null}
             <Links anime={anime} className="w-full sm:hidden" />
           </div>
         </div>
-        {facts.length ? (
-          <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-1 text-[0.8125rem] text-muted-foreground sm:justify-end">
-            {facts.map((f) => (
-              <span key={f.label}>
-                {f.label}: <span className="text-foreground">{f.value}</span>
-              </span>
-            ))}
-          </div>
-        ) : null}
       </div>
     </div>
   )
@@ -273,8 +274,10 @@ export function AnimePage() {
       </div>
       <Header anime={data.anime} entry={data.entry} />
       <Page>
+        <ScreenshotsSection malId={data.anime.malId} />
         <h2 className="mb-4 text-xl font-semibold tracking-tight">{t('anime.streaming')}</h2>
         <WatchSection anime={data.anime} entry={data.entry} />
+        <AnimeExtrasSections malId={data.anime.malId} />
       </Page>
     </div>
   )

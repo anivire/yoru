@@ -139,18 +139,21 @@ export function AnimePageSkeleton() {
         <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
           <div className="flex w-36 shrink-0 flex-col gap-3 sm:w-48">
             <Skeleton className="aspect-[2/3] w-full rounded-xl" />
-            <Skeleton className="hidden h-8 w-full rounded-md sm:block" />
-            <div className="hidden flex-col gap-1.5 sm:flex">
-              {[0, 1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-8 w-full rounded-md" />
+            <Skeleton className="hidden h-8 w-full rounded-lg sm:block" />
+            <div className="hidden flex-col gap-0.5 sm:flex">
+              {[28, 20, 16, 14, 24].map((w) => (
+                <div key={w} className="flex h-9 items-center gap-3">
+                  <Skeleton className="size-6 shrink-0 rounded-md" />
+                  <Skeleton className="h-3 rounded-full" style={{ width: `${w * 0.25}rem` }} />
+                </div>
               ))}
             </div>
           </div>
           <div className="flex w-full min-w-0 flex-1 flex-col items-center gap-3 sm:items-stretch">
             <div className="flex w-full flex-col items-center sm:items-start">
-              <TextLine className="text-2xl font-semibold sm:text-4xl" bar="w-2/3" />
-              <TextLine className="mt-1 text-base sm:text-lg" bar="w-1/2" />
-              <TextLine className="text-sm" bar="w-1/4" />
+              <TextLine className="w-full justify-center text-2xl font-semibold sm:justify-start sm:text-4xl" bar="w-2/3" />
+              <TextLine className="mt-1 w-full justify-center text-base sm:justify-start sm:text-lg" bar="w-1/2" />
+              <TextLine className="w-full justify-center text-sm sm:justify-start" bar="w-1/4" />
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Skeleton className="h-6 w-16 rounded-full" />
@@ -172,11 +175,18 @@ export function AnimePageSkeleton() {
         </div>
       </div>
       <div className="mx-auto w-full max-w-(--page-max) px-4 pb-8 pt-4 sm:px-6 sm:pt-8">
+        <TextLine className="mb-4 text-xl font-semibold" bar="w-24" />
+        <div className="mb-12 flex gap-4 overflow-hidden">
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} className="aspect-video w-72 shrink-0 rounded-xl" />
+          ))}
+        </div>
         <TextLine className="mb-4 text-xl font-semibold" bar="w-40" />
-        <div className="mb-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
-          <Skeleton className="h-8 w-full rounded-md sm:w-36" />
-          <Skeleton className="h-8 w-full rounded-md sm:w-40" />
-          <Skeleton className="col-span-2 h-8 w-full rounded-md sm:w-64" />
+        <div className="mb-3 grid grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_auto] gap-2 sm:flex sm:flex-wrap sm:items-center">
+          <Skeleton className="h-10 w-full rounded-xl sm:w-40" />
+          <Skeleton className="h-10 w-full rounded-xl sm:w-56" />
+          <Skeleton className="size-10 rounded-xl sm:order-last sm:ml-auto sm:w-48" />
+          <Skeleton className="col-span-3 h-10 w-full rounded-xl sm:w-72" />
         </div>
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <Skeleton className="aspect-video w-full rounded-xl" />

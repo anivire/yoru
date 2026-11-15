@@ -14,6 +14,8 @@ function probeTarget(id: DataSourceId, url: string): string {
       return `${url}/anime/1`
     case 'shikimori':
       return `${url}/api/animes?limit=1`
+    case 'anilist':
+      return url
     case 'github':
       return `${url}/repos/${githubConfig().repo}`
   }
@@ -22,8 +24,16 @@ function probeTarget(id: DataSourceId, url: string): string {
 async function probe(id: DataSourceId, url: string): Promise<boolean> {
   const token = id === 'github' ? githubConfig().token : ''
   try {
+    const graphql = id === 'anilist'
     const res = await fetch(probeTarget(id, url), {
-      headers: { Accept: 'application/json', 'User-Agent': env.userAgent, ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      method: graphql ? 'POST' : 'GET',
+      body: graphql ? JSON.stringify({ query: '{ Media(id: 1) { id } }' }) : undefined,
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': env.userAgent,
+        ...(graphql ? { 'Content-Type': 'application/json' } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       signal: AbortSignal.timeout(8000),
     })
     return res.ok

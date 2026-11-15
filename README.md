@@ -93,7 +93,7 @@ The `jikan` profile starts jikan-rest with MongoDB, Redis and Typesense. Expect 
 | `ADMIN_USERNAME`, `ADMIN_PASSWORD` | | First admin on an empty database |
 | `ANIME365_TOKEN` | | Shared Anime365 token |
 | `METADATA_SOURCE` | `jikan` | `jikan` or `anime365` |
-| `ANIME365_URL`, `JIKAN_URL`, `SHIKIMORI_URL` | public instances | API base URLs |
+| `ANIME365_URL`, `JIKAN_URL`, `SHIKIMORI_URL`, `ANILIST_URL` | public instances | API base URLs |
 | `ANILIST_CLIENT_ID`, `ANILIST_CLIENT_SECRET` | | AniList import |
 | `SHIKIMORI_CLIENT_ID`, `SHIKIMORI_CLIENT_SECRET` | | Shikimori import |
 | `MAL_CLIENT_ID`, `MAL_CLIENT_SECRET` | | MyAnimeList import |

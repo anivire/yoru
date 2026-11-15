@@ -8,6 +8,7 @@ const DEFAULT_URLS: Record<UrlSource, string> = {
   anime365: env.anime365Url,
   jikan: env.jikanUrl,
   shikimori: env.shikimoriUrl,
+  anilist: env.anilistUrl,
 }
 
 const GITHUB_API = 'https://api.github.com'

@@ -1,4 +1,4 @@
-import type { AnimeSummary, Genre } from '@yoru/shared'
+import type { AnimeSummary, Genre, Screenshot } from '@yoru/shared'
 import { inArray } from 'drizzle-orm'
 import { db, now } from '../db/client'
 import { anime } from '../db/schema'
@@ -166,6 +166,16 @@ export const shikimori = {
     return cached(screenshotsKey(id), 7 * 24 * HOUR, async () => {
       const rows = await enqueue<{ original?: string }[]>(`/animes/${id}/screenshots`)
       return rows.map((r) => shikiUrl(r.original)).filter((u): u is string => Boolean(u))
+    })
+  },
+
+  async gallery(id: number): Promise<Screenshot[]> {
+    if (!sourceEnabled('shikimori')) return disabled()
+    return cached(`shiki:gallery:${id}`, 7 * 24 * HOUR, async () => {
+      const rows = await enqueue<{ original?: string; preview?: string }[]>(`/animes/${id}/screenshots`)
+      return rows
+        .map((r) => ({ full: shikiUrl(r.original), thumb: shikiUrl(r.preview ?? r.original) }))
+        .filter((r): r is Screenshot => Boolean(r.full && r.thumb))
     })
   },
 

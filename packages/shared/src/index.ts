@@ -17,7 +17,7 @@ export const EXPORT_FORMATS = ['yoru', 'json', 'csv', 'mal-xml'] as const
 export type ExportFormat = (typeof EXPORT_FORMATS)[number]
 
 export const METADATA_SOURCES = ['jikan', 'anime365'] as const
-export const DATA_SOURCES = ['anime365', 'jikan', 'shikimori', 'github'] as const
+export const DATA_SOURCES = ['anime365', 'jikan', 'shikimori', 'anilist', 'github'] as const
 export type DataSourceId = (typeof DATA_SOURCES)[number]
 export type MetadataSource = (typeof METADATA_SOURCES)[number]
 
@@ -143,6 +143,30 @@ export interface SearchResult {
   items: AnimeSummary[]
   pagination: Pagination
   source: MetadataSource
+}
+
+export interface RelatedAnime {
+  relation: string
+  anime: AnimeSummary
+}
+
+export interface AnimeCharacter {
+  id: number
+  name: string
+  imageUrl: string | null
+  role: 'main' | 'supporting' | 'background'
+  voiceActor: { name: string; imageUrl: string | null } | null
+}
+
+export interface AnimeExtras {
+  relations: RelatedAnime[]
+  characters: AnimeCharacter[]
+  recommendations: AnimeSummary[]
+}
+
+export interface Screenshot {
+  thumb: string
+  full: string
 }
 
 export interface Genre {
@@ -425,7 +449,7 @@ export const adminSettingsSchema = z.object({
   anime365Token: z.string().trim().max(512).nullable().optional(),
   metadataSource: z.enum(METADATA_SOURCES).optional(),
   sources: z
-    .object({ anime365: sourcePatchSchema, jikan: sourcePatchSchema, shikimori: sourcePatchSchema, github: sourcePatchSchema })
+    .object({ anime365: sourcePatchSchema, jikan: sourcePatchSchema, shikimori: sourcePatchSchema, anilist: sourcePatchSchema, github: sourcePatchSchema })
     .partial()
     .optional(),
   github: z
