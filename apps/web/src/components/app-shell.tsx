@@ -21,7 +21,7 @@ import { useAppearance } from '../lib/appearance'
 import { NAV, isBeta } from '../lib/navigation'
 import { keys, useUser } from '../lib/queries'
 import { NotificationsPopover, useNotificationSound } from './notifications'
-import { RailLabel, RailProvider, RailTip, useRailButton } from './rail'
+import { RailLabel, RailProvider, RailTip, useRailButton, BetaIcon, RailIcon } from './rail'
 import { BetaBadge } from './watch-together'
 import { Footer } from './footer'
 import { TLink, TNavLink, useTransitionNavigate } from './transition-link'
@@ -60,7 +60,13 @@ function NavItems() {
     <>
       {nav.map((n) => (
         <NavItem key={n.to} to={n.to} end={n.end} label={iconOnly ? t(`nav.${n.key}`) : undefined}>
-          <n.icon />
+          {iconOnly && isBeta(n) ? (
+            <BetaIcon>
+              <n.icon />
+            </BetaIcon>
+          ) : (
+            <n.icon />
+          )}
           {iconOnly ? null : t(`nav.${n.key}`)}
           {!iconOnly && isBeta(n) ? <BetaBadge /> : null}
         </NavItem>
@@ -302,14 +308,29 @@ function SideRailContent({ position }: { position: 'left' | 'right' }) {
         {nav.map((n) => {
           const active = Boolean(matchPath({ path: n.to, end: n.end }, pathname))
           return (
-            <RailTip key={n.to} label={t(`nav.${n.key}`)} side={side}>
+            <RailTip
+              key={n.to}
+              label={
+                isBeta(n) ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    {t(`nav.${n.key}`)}
+                    <BetaBadge />
+                  </span>
+                ) : (
+                  t(`nav.${n.key}`)
+                )
+              }
+              side={side}
+            >
               <TNavLink
                 to={n.to}
                 end={n.end}
                 aria-label={t(`nav.${n.key}`)}
                 className={cn(railButton, active && 'text-foreground [&_svg]:text-accent')}
               >
-                <n.icon />
+                <RailIcon beta={isBeta(n)}>
+                  <n.icon />
+                </RailIcon>
                 <RailLabel badge={isBeta(n) ? <BetaBadge /> : undefined}>{t(`nav.${n.key}`)}</RailLabel>
               </TNavLink>
             </RailTip>

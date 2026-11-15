@@ -25,13 +25,28 @@ export function useRailButton() {
   return cn(RAIL_BUTTON, fill ? 'w-full' : 'w-11')
 }
 
-export function RailTip({ label, side, children }: { label: string; side: 'top' | 'bottom' | 'left' | 'right'; children: ReactElement }) {
+export function RailTip({ label, side, children }: { label: ReactNode; side: 'top' | 'bottom' | 'left' | 'right'; children: ReactElement }) {
   const { labels } = useRail()
   if (labels) return children
   return (
     <Tooltip content={label} side={side}>
       {children}
     </Tooltip>
+  )
+}
+
+export function RailIcon({ children, beta }: { children: ReactNode; beta?: boolean }) {
+  const { labels, expanded } = useRail()
+  if (!beta || (labels && expanded)) return children
+  return <BetaIcon>{children}</BetaIcon>
+}
+
+export function BetaIcon({ children }: { children: ReactNode }) {
+  return (
+    <span className="relative inline-flex shrink-0">
+      {children}
+      <span aria-hidden className="absolute -right-2.5 -top-2 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[0.6875rem] font-bold leading-none text-accent-foreground ring-2 ring-background">β</span>
+    </span>
   )
 }
 
