@@ -54,6 +54,12 @@ function syncTarget(playback: RoomPlayback, offset: number) {
 
 const COUNTDOWN_SECONDS = 5
 
+const SEGMENT_TONES: Record<SkipTime['kind'], string> = {
+  op: 'bg-amber-300/75',
+  ed: 'bg-amber-300/75',
+  recap: 'bg-sky-300/70',
+}
+
 function pickSource(sources: StreamSource[]): StreamSource {
   const preferred = Number(localStorage.getItem(QUALITY_KEY)) || 1080
   return sources.find((s) => s.height <= preferred) ?? sources[sources.length - 1] ?? sources[0]!
@@ -475,6 +481,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
 
   const VolumeIcon = muted || volume === 0 ? RiVolumeMuteFill : volume < 0.5 ? RiVolumeDownFill : RiVolumeUpFill
   const pct = duration ? (time / duration) * 100 : 0
+  const hoverSegment = hover ? skips?.find((s) => hover.time >= s.start && hover.time <= s.end) : undefined
 
   return (
     <div
@@ -639,11 +646,21 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
           <div className="relative h-1 w-full overflow-hidden rounded-full bg-white/20 transition-[height] group-hover/seek:h-1.5">
             <div className="absolute inset-y-0 left-0 bg-white/30" style={{ width: `${duration ? (buffered / duration) * 100 : 0}%` }} />
             <div className="absolute inset-y-0 left-0 bg-accent" style={{ width: `${pct}%` }} />
+            {duration
+              ? (skips ?? []).map((s) => (
+                  <div
+                    key={`${s.kind}:${s.start}`}
+                    className={cn('absolute inset-y-0', SEGMENT_TONES[s.kind])}
+                    style={{ left: `${(Math.max(0, s.start) / duration) * 100}%`, width: `${((Math.min(duration, s.end) - Math.max(0, s.start)) / duration) * 100}%` }}
+                  />
+                ))
+              : null}
           </div>
           <div className="absolute size-3 -translate-x-1/2 rounded-full bg-accent shadow zoom-layer transition-transform [--zoom:0] group-hover/seek:[--zoom:1]" style={{ left: `${pct}%` }} />
           {hover ? (
             <div className="absolute -top-8 -translate-x-1/2 rounded-md bg-black/80 px-2 py-0.5 font-mono text-xs" style={{ left: hover.x }}>
               {formatTime(hover.time)}
+              {hoverSegment ? <span className="ml-1.5 font-sans text-white/70">{t(`player.segment.${hoverSegment.kind}`)}</span> : null}
             </div>
           ) : null}
         </div>

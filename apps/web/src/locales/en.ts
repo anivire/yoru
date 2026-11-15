@@ -401,6 +401,7 @@ export const en: Messages = {
   },
   player: {
     skip: { op: 'Skip opening', ed: 'Skip ending', recap: 'Skip recap' },
+    segment: { op: 'Opening', ed: 'Ending', recap: 'Recap' },
     nextIn: 'Next episode in',
     watchNext: 'Watch now',
     noLibria: 'This anime is not on AniLibria. Try Anime365.',
