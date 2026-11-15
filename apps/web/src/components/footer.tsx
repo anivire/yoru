@@ -130,7 +130,7 @@ export function Footer({ scope, compact, className }: { scope: 'app' | 'public';
               <TLink to="/" className="w-fit">
                 <Logo />
               </TLink>
-              <p className="max-w-xs text-sm text-muted-foreground">{t('footer.tagline')}</p>
+              <p className="-mt-1.5 max-w-xs text-sm text-muted-foreground">{t('footer.tagline')}</p>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-3 text-sm text-muted-foreground">
                 {repoUrl ? (
                   <a href={repoUrl} target="_blank" rel="noreferrer" className={linkClass}>
