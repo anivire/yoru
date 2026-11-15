@@ -97,11 +97,13 @@ export function NavPositionSettings() {
   const { t } = useTranslation()
   const { navPosition, setNavPosition } = useAppearance()
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
+    <div role="radiogroup" aria-label={t('settings.navPosition.title')} className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
       {NAV_POSITIONS.map(({ value, icon: Icon }) => (
         <button
           key={value}
           type="button"
+          role="radio"
+          aria-checked={navPosition === value}
           onClick={() => setNavPosition(value)}
           className={cn(
             'flex cursor-pointer flex-col items-center gap-2 rounded-xl px-3 py-4 text-sm font-medium transition-colors',

@@ -117,6 +117,8 @@ function clickCue(target: Element): CueName | null {
   if (!el) return null
   const role = el.getAttribute('role')
   if (role === 'switch' || role === 'checkbox') return el.getAttribute('aria-checked') === 'true' ? 'off' : 'on'
+  const pressed = el.getAttribute('aria-pressed')
+  if (pressed === 'true' || pressed === 'false') return pressed === 'true' ? 'off' : 'on'
   if (role && LIGHT_ROLES.has(role)) return 'tick'
   return 'pop'
 }
