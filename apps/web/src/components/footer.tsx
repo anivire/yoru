@@ -30,9 +30,10 @@ function Column({ title, children }: { title: string; children: ReactNode }) {
 function External({ href, children }: { href: string; children: ReactNode }) {
   return (
     <li>
-      <a href={href} target="_blank" rel="noreferrer" className={cn(linkClass, 'group')}>
+      <a href={href} target="_blank" rel="noreferrer" className="group text-muted-foreground transition-colors hover:text-foreground">
         {children}
-        <RiExternalLinkLine className="size-3 opacity-0 transition-opacity group-hover:opacity-60" />
+        {'\u2060'}
+        <RiExternalLinkLine className="ml-1 inline-block size-3 align-[-0.0625em] opacity-0 transition-opacity group-hover:opacity-60" />
       </a>
     </li>
   )
@@ -58,14 +59,16 @@ function VersionBadge({ scope, centered }: { scope: 'app' | 'public'; centered?:
   if (!data) return <Skeleton className="h-4 w-24 rounded-full" />
   return (
     <span className="contents">
-      <a href={data.repoUrl} target="_blank" rel="noreferrer" className="hover:text-foreground">
-        v{data.version}
-      </a>
-      {data.commit && data.commitUrl ? (
-        <a href={data.commitUrl} target="_blank" rel="noreferrer" className="font-mono text-xs text-subtle-foreground hover:text-foreground">
-          {data.commit.slice(0, 7)}
+      <span className="inline-flex items-baseline gap-2 whitespace-nowrap">
+        <a href={data.repoUrl} target="_blank" rel="noreferrer" className="hover:text-foreground">
+          v{data.version}
         </a>
-      ) : null}
+        {data.commit && data.commitUrl ? (
+          <a href={data.commitUrl} target="_blank" rel="noreferrer" className="font-mono text-xs text-subtle-foreground hover:text-foreground">
+            {data.commit.slice(0, 7)}
+          </a>
+        ) : null}
+      </span>
       {data.updateAvailable ? (
         <span className={cn('flex basis-full', centered && 'justify-center')}>
           <a
@@ -156,7 +159,6 @@ export function Footer({ scope, compact, className }: { scope: 'app' | 'public';
                     <External href={repoUrl}>GitHub</External>
                     <External href={`${repoUrl}/commits`}>{t('footer.changelog')}</External>
                     <External href={`${repoUrl}/issues`}>{t('footer.issues')}</External>
-                    <External href={`${repoUrl}#readme`}>{t('footer.selfHost')}</External>
                   </>
                 ) : null}
               </Column>

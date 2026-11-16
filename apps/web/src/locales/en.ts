@@ -181,14 +181,13 @@ export const en: Messages = {
     episodeBadge: 'Episode {{episode}}',
   },
   footer: {
-    tagline: 'Anime tracker and player with subtitles and dubs. Runs on your own server.',
+    tagline: 'Anime tracker and player with subtitles and dubs.',
     browse: 'Browse',
     account: 'Account',
     sources: 'Sources',
     project: 'Project',
     changelog: 'Changelog',
     issues: 'Report a bug',
-    selfHost: 'Self-hosting guide',
   },
   version: {
     later: 'Later',
