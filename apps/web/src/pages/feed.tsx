@@ -256,6 +256,10 @@ export function FeedSkeleton() {
                     </div>
                   ))}
                 </div>
+                <div className="mt-2 flex gap-1.5">
+                  <Skeleton className="size-7 rounded-full" />
+                  <Skeleton className="h-7 w-28 rounded-full" />
+                </div>
               </li>
             ))}
           </ol>
