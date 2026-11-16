@@ -93,7 +93,7 @@ function FriendsWatching() {
   if (!watching.data?.length) return null
   return (
     <Section title={t('home.friends')} icon={<RiGroupFill />} hint={t('home.friendsHint')}>
-      <Rail>
+      <Rail size="poster">
         {watching.data.map((item) => (
           <AnimeCard key={`${item.user.id}-${item.anime.malId}`} anime={item.anime} subtitle={`${nameOf(item.user)} · ${t('feed.episodeShort', { episode: item.progress || 1 })}`} />
         ))}
