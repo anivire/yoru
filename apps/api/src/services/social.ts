@@ -126,6 +126,18 @@ export function personCards(viewerId: number, ids: number[]): PersonCard[] {
       .all()
       .map((row) => (row.userId === viewerId ? [row.friendId, row.status === 'accepted' ? 'friend' : 'outgoing'] : [row.userId, row.status === 'accepted' ? 'friend' : 'incoming'])),
   )
+  const hidden = hiddenUserIds(viewerId)
+  const visible = (id: number, visibility: Visibility) =>
+    id === viewerId || (visibility !== 'private' && !hidden.has(id) && (visibility === 'everyone' || relations.get(id) === 'friend'))
+  const friendCounts = new Map<number, number>()
+  for (const row of db
+    .select({ userId: friendships.userId, friendId: friendships.friendId })
+    .from(friendships)
+    .where(and(eq(friendships.status, 'accepted'), or(inArray(friendships.userId, unique), inArray(friendships.friendId, unique))))
+    .all()) {
+    friendCounts.set(row.userId, (friendCounts.get(row.userId) ?? 0) + 1)
+    friendCounts.set(row.friendId, (friendCounts.get(row.friendId) ?? 0) + 1)
+  }
   const banners = new Map(
     db
       .select({ malId: anime.malId, imageUrl: anime.imageUrl })
@@ -137,8 +149,8 @@ export function personCards(viewerId: number, ids: number[]): PersonCard[] {
   return ids.flatMap((id) => {
     const row = rows.get(id)
     if (!row) return []
-    const profile = canSee(viewerId, id, row.profileVisibility)
-    const list = profile && canSee(viewerId, id, row.listVisibility)
+    const profile = visible(id, row.profileVisibility)
+    const list = profile && visible(id, row.listVisibility)
     const count = counts.get(id)
     return [
       {
@@ -149,7 +161,7 @@ export function personCards(viewerId: number, ids: number[]): PersonCard[] {
         titles: list ? (count?.titles ?? 0) : null,
         watching: list ? (count?.watching ?? 0) : null,
         completed: list ? (count?.completed ?? 0) : null,
-        friends: profile && canSee(viewerId, id, row.friendsVisibility) ? friendIds(id).length : null,
+        friends: profile && visible(id, row.friendsVisibility) ? (friendCounts.get(id) ?? 0) : null,
       },
     ]
   })

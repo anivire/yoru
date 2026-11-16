@@ -18,7 +18,7 @@ import { airedEpisodes, ensureAnime, getAnimeRow } from '../services/anime'
 import { exportList } from '../services/export'
 import { activityData, logEpisodes, syncListActivity } from '../services/activity'
 import { homeData } from '../services/home'
-import { type ListFilters, allEntries, deleteEntry, filterEntries, listCounts, markWatched, saveEntry } from '../services/lists'
+import { type ListFilters, allEntries, deleteEntry, filterEntries, listCounts, listFacets, markWatched, saveEntry } from '../services/lists'
 
 const SORTS = ['updated', 'title', 'score', 'progress', 'year', 'added'] as const
 const DEFAULT_PAGE = 48
@@ -35,8 +35,7 @@ export function listPage(userId: number, query: (key: string) => string | undefi
     year: Number(query('year')) || undefined,
     sort: sort && SORTS.includes(sort) ? sort : 'score',
   }
-  const all = allEntries(userId)
-  const filtered = filterEntries(all, filters)
+  const filtered = filterEntries(allEntries(userId, filters.status), filters)
   const offset = Math.max(0, Number(query('offset')) || 0)
   const limit = Math.min(MAX_PAGE, Math.max(1, Number(query('limit')) || DEFAULT_PAGE))
   return {
@@ -44,10 +43,7 @@ export function listPage(userId: number, query: (key: string) => string | undefi
     counts: listCounts(userId),
     total: filtered.length,
     offset,
-    facets: {
-      years: [...new Set(all.map((e) => e.anime.year).filter((y): y is number => Boolean(y)))].sort((a, b) => b - a),
-      types: [...new Set(all.map((e) => e.anime.type).filter((v): v is string => Boolean(v)))],
-    },
+    facets: listFacets(userId),
   }
 }
 

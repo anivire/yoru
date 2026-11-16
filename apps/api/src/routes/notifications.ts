@@ -76,6 +76,16 @@ export const notificationRoutes = new Hono<AppEnv>()
     }
     return c.json(body)
   })
+  .get('/unread', (c) => {
+    const userId = c.get('user').id
+    const count = (table: typeof notifications | typeof socialNotifications) =>
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(table)
+        .where(and(eq(table.userId, userId), isNull(table.readAt)))
+        .get()!.count
+    return c.json({ unread: count(notifications) + count(socialNotifications) })
+  })
   .get('/sources', (c) => {
     const body: NotificationSources = {
       translations: TRANSLATION_SOURCES.filter((id) => isActive('video', id)),

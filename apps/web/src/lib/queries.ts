@@ -28,6 +28,8 @@ export const keys = {
   list: (params: object) => ['list', params] as const,
   listStatuses: ['list-statuses'] as const,
   notifications: ['notifications'] as const,
+  notificationsUnread: ['notifications', 'unread'] as const,
+  notificationsList: ['notifications', 'list'] as const,
 }
 
 export function useMe() {

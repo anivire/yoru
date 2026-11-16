@@ -204,6 +204,7 @@ export const api = {
   videoEpisodes: (malId: number, provider: string) => get<VideoEpisodes>(`/stream/${malId}/${provider}/episodes`),
 
   notifications: () => get<NotificationList>('/notifications'),
+  unreadNotifications: () => get<{ unread: number }>('/notifications/unread'),
   notificationSources: () => get<NotificationSources>('/notifications/sources'),
   readNotifications: (body: { ids?: number[]; socialIds?: number[] } = {}) => request<{ ok: true }>('POST', '/notifications/read', body),
   clearNotifications: () => request<{ ok: true }>('DELETE', '/notifications'),

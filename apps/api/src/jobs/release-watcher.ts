@@ -1,7 +1,7 @@
-import { and, eq, inArray, notInArray, sql } from 'drizzle-orm'
+import { and, eq, inArray, isNotNull, lt, notInArray, sql } from 'drizzle-orm'
 import { CALENDAR_SOURCES, type CalendarSource, type ReleaseSource, TRANSLATION_SOURCES } from '@yoru/shared'
 import { db, now } from '../db/client'
-import { listEntries, notifications, providerMappings, providerReleases, users } from '../db/schema'
+import { listEntries, notifications, providerMappings, providerReleases, socialNotifications, users } from '../db/schema'
 import { env } from '../env'
 import { cachePurgeExpired } from '../lib/http'
 import { purgeExpiredSessions } from '../lib/auth'
@@ -304,6 +304,21 @@ export async function checkReleases() {
   return created
 }
 
+const CLEANUP_KEY = 'cleanup_at'
+const CLEANUP_EVERY_MS = 86_400_000
+const KEEP_READ_MS = 90 * 86_400_000
+const KEEP_RELEASES_MS = 365 * 86_400_000
+
+function cleanup() {
+  const last = Date.parse(getSetting(CLEANUP_KEY) ?? '')
+  if (Number.isFinite(last) && Date.now() - last < CLEANUP_EVERY_MS) return
+  const readBefore = new Date(Date.now() - KEEP_READ_MS).toISOString()
+  db.delete(notifications).where(and(isNotNull(notifications.readAt), lt(notifications.createdAt, readBefore))).run()
+  db.delete(socialNotifications).where(and(isNotNull(socialNotifications.readAt), lt(socialNotifications.createdAt, readBefore))).run()
+  db.delete(providerReleases).where(lt(providerReleases.releasedAt, new Date(Date.now() - KEEP_RELEASES_MS).toISOString())).run()
+  setSetting(CLEANUP_KEY, now())
+}
+
 let timer: NodeJS.Timeout | null = null
 let running = false
 
@@ -315,6 +330,7 @@ async function tick() {
     if (created) console.log(`[releases] ${created} notification(s) created`)
     cachePurgeExpired()
     purgeExpiredSessions()
+    cleanup()
   } catch (error) {
     console.warn('[releases] check failed:', (error as Error).message)
   } finally {

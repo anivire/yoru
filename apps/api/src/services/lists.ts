@@ -38,14 +38,27 @@ export function getEntry(userId: number, malId: number): EntryRow | undefined {
     .get()
 }
 
-export function allEntries(userId: number): ListEntryWithAnime[] {
+export function allEntries(userId: number, status?: ListStatus): ListEntryWithAnime[] {
   return db
     .select({ entry: listEntries, anime })
     .from(listEntries)
     .innerJoin(anime, eq(anime.malId, listEntries.malId))
-    .where(eq(listEntries.userId, userId))
+    .where(status ? and(eq(listEntries.userId, userId), eq(listEntries.status, status)) : eq(listEntries.userId, userId))
     .all()
     .map(({ entry, anime: a }) => ({ ...toEntry(entry), anime: toSummary(a), latestEpisode: airedEpisode(a.malId, a.latestEpisode) }))
+}
+
+export function listFacets(userId: number): { years: number[]; types: string[] } {
+  const rows = db
+    .selectDistinct({ year: anime.year, type: anime.type })
+    .from(listEntries)
+    .innerJoin(anime, eq(anime.malId, listEntries.malId))
+    .where(eq(listEntries.userId, userId))
+    .all()
+  return {
+    years: [...new Set(rows.map((r) => r.year).filter((y): y is number => Boolean(y)))].sort((a, b) => b - a),
+    types: [...new Set(rows.map((r) => r.type).filter((v): v is string => Boolean(v)))],
+  }
 }
 
 export function listCounts(userId: number): ListCounts {
