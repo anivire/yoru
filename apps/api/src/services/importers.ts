@@ -4,7 +4,7 @@ import { db, now } from '../db/client'
 import { imports, listEntries, oauthStates } from '../db/schema'
 import { env } from '../env'
 import { randomToken } from '../lib/crypto'
-import { UpstreamError } from '../lib/http'
+import { UpstreamError, upstreamJson } from '../lib/http'
 import { oauthConfig, sourceEnabled, sourceUrl } from '../lib/sources'
 import { isoDate } from '../lib/time'
 import { upsertAnime } from './anime'
@@ -101,18 +101,11 @@ async function postToken(url: string, body: Record<string, string>, json: boolea
 }
 
 async function getJson<T>(url: string, token: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(url, {
+  return upstreamJson<T>('import', new URL(url).host, url, {
     ...init,
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
-      'User-Agent': env.userAgent,
-      ...(init.headers as Record<string, string> | undefined),
-    },
-    signal: AbortSignal.timeout(30_000),
+    headers: { Authorization: `Bearer ${token}`, ...(init.headers as Record<string, string> | undefined) },
+    timeoutMs: 30_000,
   })
-  if (!res.ok) throw new UpstreamError('import', res.status, `HTTP ${res.status} from ${new URL(url).host}`)
-  return (await res.json()) as T
 }
 
 export const ANILIST_STATUS: Record<string, ListStatus> = {

@@ -1,5 +1,4 @@
-import { env } from '../env'
-import { UpstreamError, cached } from '../lib/http'
+import { cached, SourceOffError, upstreamJson } from '../lib/http'
 import { sourceEnabled, sourceUrl } from '../lib/sources'
 
 const HOUR = 3_600_000
@@ -48,18 +47,8 @@ export interface KitsuEntry {
 }
 
 async function request<T>(path: string): Promise<T> {
-  if (!sourceEnabled('kitsu')) throw new UpstreamError('kitsu', 503, 'Kitsu is disabled')
-  let res: Response
-  try {
-    res = await fetch(`${sourceUrl('kitsu')}${path}`, {
-      headers: { Accept: 'application/vnd.api+json', 'User-Agent': env.userAgent },
-      signal: AbortSignal.timeout(15_000),
-    })
-  } catch (error) {
-    throw new UpstreamError('kitsu', 0, `Kitsu unreachable: ${(error as Error).message}`)
-  }
-  if (!res.ok) throw new UpstreamError('kitsu', res.status, `Kitsu HTTP ${res.status}`)
-  return (await res.json()) as T
+  if (!sourceEnabled('kitsu')) throw new SourceOffError('kitsu', 503, 'Kitsu is disabled')
+  return upstreamJson<T>('kitsu', 'Kitsu', `${sourceUrl('kitsu')}${path}`, { headers: { Accept: 'application/vnd.api+json' } })
 }
 
 function entries(list: KitsuList): KitsuEntry[] {

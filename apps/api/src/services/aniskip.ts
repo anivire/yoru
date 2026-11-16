@@ -1,6 +1,5 @@
 import type { SkipKind, SkipTime } from '@yoru/shared'
-import { env } from '../env'
-import { UpstreamError, cached } from '../lib/http'
+import { cached, upstream, UpstreamError } from '../lib/http'
 import { featureEnabled } from '../lib/features'
 import { sourceUrl } from '../lib/sources'
 
@@ -18,12 +17,7 @@ interface AniSkipResult {
 async function request(malId: number, episode: number, length: number): Promise<AniSkipResult[]> {
   const types = Object.keys(TYPE_KIND).map((t) => `types[]=${encodeURIComponent(t)}`).join('&')
   const url = `${sourceUrl('aniskip')}/v2/skip-times/${malId}/${episode}?${types}&episodeLength=${Math.round(length)}`
-  let res: Response
-  try {
-    res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': env.userAgent }, signal: AbortSignal.timeout(8000) })
-  } catch (error) {
-    throw new UpstreamError('aniskip', 0, `AniSkip unreachable: ${(error as Error).message}`)
-  }
+  const res = await upstream('aniskip', 'AniSkip', url, { timeoutMs: 8000 })
   if (res.status === 404) return []
   if (!res.ok) throw new UpstreamError('aniskip', res.status, `AniSkip HTTP ${res.status}`)
   const body = (await res.json()) as { found?: boolean; results?: AniSkipResult[] }

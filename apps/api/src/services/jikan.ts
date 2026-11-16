@@ -1,5 +1,4 @@
-import { env } from '../env'
-import { UpstreamError, cached, sleep } from '../lib/http'
+import { cached, sleep, upstream, UpstreamError } from '../lib/http'
 import { sourceUrl } from '../lib/sources'
 
 export interface JikanImageSet {
@@ -92,13 +91,10 @@ async function request<T>(path: string): Promise<T> {
     await throttle()
     let res: Response
     try {
-      res = await fetch(sourceUrl('jikan') + path, {
-        headers: { Accept: 'application/json', 'User-Agent': env.userAgent },
-        signal: AbortSignal.timeout(10_000),
-      })
+      res = await upstream('jikan', 'Jikan', sourceUrl('jikan') + path, { timeoutMs: 10_000 })
     } catch (error) {
       downUntil = Date.now() + 120_000
-      throw new UpstreamError('jikan', 0, `Jikan unreachable: ${(error as Error).message}`)
+      throw error
     }
     if (res.status === 429 || res.status >= 500) {
       if (attempt === 3) throw new UpstreamError('jikan', res.status, `Jikan HTTP ${res.status}`)

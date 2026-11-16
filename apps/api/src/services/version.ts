@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import type { ChangeType, Changelog, ChangelogEntry, VersionInfo } from '@yoru/shared'
 import { env } from '../env'
-import { cached } from '../lib/http'
+import { cached, SourceOffError, upstreamJson } from '../lib/http'
 import { featureEnabled } from '../lib/features'
 import { githubConfig, sourceUrl } from '../lib/sources'
 
@@ -47,16 +47,10 @@ const current = { version: detectVersion(), commit: detectCommit() }
 
 async function github<T>(route: string): Promise<T> {
   const { repo, token } = githubConfig()
-  const res = await fetch(`${sourceUrl('github')}/repos/${repo}${route}`, {
-    headers: {
-      Accept: 'application/vnd.github+json',
-      'User-Agent': env.userAgent,
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    signal: AbortSignal.timeout(10_000),
+  return upstreamJson<T>('github', 'GitHub', `${sourceUrl('github')}/repos/${repo}${route}`, {
+    headers: { Accept: 'application/vnd.github+json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    timeoutMs: 10_000,
   })
-  if (!res.ok) throw new Error(`GitHub HTTP ${res.status}`)
-  return (await res.json()) as T
 }
 
 interface GithubCommit {
@@ -78,7 +72,7 @@ async function versionAt(sha: string): Promise<string | null> {
 
 async function latestInfo(commit: string | null) {
   const { repo, branch } = githubConfig()
-  if (!featureEnabled('updates')) throw new Error('GitHub is disabled')
+  if (!featureEnabled('updates')) throw new SourceOffError('github', 503, 'GitHub is disabled')
   return cached(`github:latest:${repo}:${branch}:${commit ?? ''}`, LATEST_TTL, async () => {
     const head = await github<GithubCommit>(`/commits/${branch}`)
     let behindBy: number | null = null
@@ -116,7 +110,7 @@ function toEntry(commit: GithubCommit): ChangelogEntry {
 
 export async function changelog(page: number): Promise<Changelog> {
   const { repo, branch } = githubConfig()
-  if (!featureEnabled('updates')) throw new Error('GitHub is disabled')
+  if (!featureEnabled('updates')) throw new SourceOffError('github', 503, 'GitHub is disabled')
   const commits = await cached(`github:changelog:${repo}:${branch}:${page}`, LATEST_TTL, () =>
     github<GithubCommit[]>(`/commits?sha=${encodeURIComponent(branch)}&per_page=${CHANGELOG_PAGE}&page=${page}`),
   )

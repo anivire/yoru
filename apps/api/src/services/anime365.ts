@@ -1,6 +1,5 @@
 import type { Genre, StreamKind, StreamSource } from '@yoru/shared'
-import { env } from '../env'
-import { UpstreamError, cached } from '../lib/http'
+import { cached, upstream, UpstreamError } from '../lib/http'
 import { sourceUrl } from '../lib/sources'
 
 export interface A365Titles {
@@ -74,15 +73,7 @@ const HOUR = 3_600_000
 async function api<T>(path: string, params: Record<string, string | number> = {}): Promise<T> {
   const query = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]))
   const url = `${sourceUrl('anime365')}/api${path}${query.size ? `?${query}` : ''}`
-  let res: Response
-  try {
-    res = await fetch(url, {
-      headers: { Accept: 'application/json', 'User-Agent': env.userAgent },
-      signal: AbortSignal.timeout(20_000),
-    })
-  } catch (error) {
-    throw new UpstreamError('anime365', 0, `Anime365 unreachable: ${(error as Error).message}`)
-  }
+  const res = await upstream('anime365', 'Anime365', url, { timeoutMs: 20_000 })
   if (!res.ok) throw new UpstreamError('anime365', res.status, `Anime365 HTTP ${res.status} (${path})`)
   const body = (await res.json()) as { data?: T; error?: { code?: number; message?: string } }
   if (body.error) throw new UpstreamError('anime365', body.error.code ?? 500, `Anime365: ${body.error.message ?? 'error'}`)

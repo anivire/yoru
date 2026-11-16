@@ -1,5 +1,4 @@
-import { env } from '../env'
-import { UpstreamError, cached } from '../lib/http'
+import { cached, SourceOffError, upstreamJson } from '../lib/http'
 import { kodikToken, sourceEnabled, sourceUrl } from '../lib/sources'
 
 export interface KodikResult {
@@ -19,19 +18,9 @@ export function kodikAvailable(): boolean {
 
 async function request<T>(path: string, params: Record<string, string | number>): Promise<T> {
   const token = kodikToken()
-  if (!sourceEnabled('kodik') || !token) throw new UpstreamError('kodik', 503, 'Kodik is disabled or has no token')
+  if (!sourceEnabled('kodik') || !token) throw new SourceOffError('kodik', 503, 'Kodik is disabled or has no token')
   const query = new URLSearchParams({ token, ...Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)])) })
-  let res: Response
-  try {
-    res = await fetch(`${sourceUrl('kodik')}${path}?${query}`, {
-      headers: { Accept: 'application/json', 'User-Agent': env.userAgent },
-      signal: AbortSignal.timeout(15_000),
-    })
-  } catch (error) {
-    throw new UpstreamError('kodik', 0, `Kodik unreachable: ${(error as Error).message}`)
-  }
-  if (!res.ok) throw new UpstreamError('kodik', res.status, `Kodik HTTP ${res.status}`)
-  return (await res.json()) as T
+  return upstreamJson<T>('kodik', 'Kodik', `${sourceUrl('kodik')}${path}?${query}`)
 }
 
 function season(result: KodikResult) {

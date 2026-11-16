@@ -2,8 +2,7 @@ import type { AnimeSummary, Genre, Screenshot } from '@yoru/shared'
 import { inArray } from 'drizzle-orm'
 import { db, now } from '../db/client'
 import { anime } from '../db/schema'
-import { env } from '../env'
-import { UpstreamError, cacheGet, cached, sleep } from '../lib/http'
+import { cached, cacheGet, sleep, SourceOffError, upstream, UpstreamError } from '../lib/http'
 import { sourceEnabled, sourceUrl } from '../lib/sources'
 import { type AnimeRow, toSummary, upsertAnime } from './anime'
 
@@ -39,7 +38,7 @@ interface ShikiGenre {
 }
 
 function disabled<T>(): Promise<T> {
-  return Promise.reject(new UpstreamError('shikimori', 503, 'Shikimori is disabled'))
+  return Promise.reject(new SourceOffError('shikimori', 503, 'Shikimori is disabled'))
 }
 
 let queue: Promise<unknown> = Promise.resolve()
@@ -50,15 +49,7 @@ async function request<T>(path: string, params: Record<string, string | number> 
   if (wait > 0) await sleep(wait)
   lastRequestAt = Date.now()
   const query = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]))
-  let res: Response
-  try {
-    res = await fetch(`${sourceUrl('shikimori')}/api${path}${query.size ? `?${query}` : ''}`, {
-      headers: { Accept: 'application/json', 'User-Agent': env.userAgent },
-      signal: AbortSignal.timeout(15_000),
-    })
-  } catch (error) {
-    throw new UpstreamError('shikimori', 0, `Shikimori unreachable: ${(error as Error).message}`)
-  }
+  const res = await upstream('shikimori', 'Shikimori', `${sourceUrl('shikimori')}/api${path}${query.size ? `?${query}` : ''}`)
   if (!res.ok) throw new UpstreamError('shikimori', res.status, `Shikimori HTTP ${res.status} (${path})`)
   return (await res.json()) as T
 }

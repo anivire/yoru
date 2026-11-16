@@ -2,9 +2,8 @@ import { and, eq } from 'drizzle-orm'
 import type { AnilibriaRelease, StreamSource } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { providerMappings } from '../db/schema'
-import { env } from '../env'
 import { sourceEnabled, sourceUrl } from '../lib/sources'
-import { UpstreamError, cached } from '../lib/http'
+import { cached, SourceOffError, upstreamJson } from '../lib/http'
 import { getAnimeRow } from './anime'
 
 const PROVIDER = 'anilibria'
@@ -29,18 +28,8 @@ interface LibriaEpisode {
 }
 
 async function request<T>(path: string): Promise<T> {
-  if (!sourceEnabled('anilibria')) throw new UpstreamError('anilibria', 503, 'AniLibria is disabled')
-  let res: Response
-  try {
-    res = await fetch(`${sourceUrl('anilibria')}${path}`, {
-      headers: { Accept: 'application/json', 'User-Agent': env.userAgent },
-      signal: AbortSignal.timeout(20_000),
-    })
-  } catch (error) {
-    throw new UpstreamError('anilibria', 0, `AniLibria unreachable: ${(error as Error).message}`)
-  }
-  if (!res.ok) throw new UpstreamError('anilibria', res.status, `AniLibria HTTP ${res.status}`)
-  return (await res.json()) as T
+  if (!sourceEnabled('anilibria')) throw new SourceOffError('anilibria', 503, 'AniLibria is disabled')
+  return upstreamJson<T>('anilibria', 'AniLibria', `${sourceUrl('anilibria')}${path}`, { timeoutMs: 20_000 })
 }
 
 function search(query: string): Promise<LibriaRelease[]> {

@@ -1,5 +1,4 @@
-import { env } from '../env'
-import { UpstreamError, cached } from '../lib/http'
+import { cached, SourceOffError, upstream, UpstreamError } from '../lib/http'
 import { sourceEnabled, sourceUrl } from '../lib/sources'
 
 const DAY = 86_400_000
@@ -42,21 +41,7 @@ const QUERY = `query ($idMal: Int) {
 }`
 
 async function request(malId: number): Promise<AniListExtras | null> {
-  let res: Response
-  try {
-    res = await fetch(sourceUrl('anilist'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'User-Agent': env.userAgent },
-      body: JSON.stringify({ query: QUERY, variables: { idMal: malId } }),
-      signal: AbortSignal.timeout(15_000),
-    })
-  } catch (error) {
-    throw new UpstreamError('anilist', 0, `AniList unreachable: ${(error as Error).message}`)
-  }
-  if (res.status === 404) return null
-  if (!res.ok) throw new UpstreamError('anilist', res.status, `AniList HTTP ${res.status}`)
-  const body = (await res.json()) as { data?: { Media?: AniListExtras | null } }
-  return body.data?.Media ?? null
+  return (await graphql<{ Media?: AniListExtras | null }>(QUERY, { idMal: malId }))?.Media ?? null
 }
 
 export interface AniListFullMedia {
@@ -93,18 +78,8 @@ const SEARCH_QUERY = `query ($page: Int, $perPage: Int, $search: String, $format
 }`
 
 async function graphql<T>(query: string, variables: Record<string, unknown>): Promise<T | null> {
-  if (!sourceEnabled('anilist')) throw new UpstreamError('anilist', 503, 'AniList is disabled')
-  let res: Response
-  try {
-    res = await fetch(sourceUrl('anilist'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'User-Agent': env.userAgent },
-      body: JSON.stringify({ query, variables }),
-      signal: AbortSignal.timeout(15_000),
-    })
-  } catch (error) {
-    throw new UpstreamError('anilist', 0, `AniList unreachable: ${(error as Error).message}`)
-  }
+  if (!sourceEnabled('anilist')) throw new SourceOffError('anilist', 503, 'AniList is disabled')
+  const res = await upstream('anilist', 'AniList', sourceUrl('anilist'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query, variables }) })
   if (res.status === 404) return null
   if (!res.ok) throw new UpstreamError('anilist', res.status, `AniList HTTP ${res.status}`)
   return ((await res.json()) as { data?: T }).data ?? null
