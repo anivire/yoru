@@ -247,19 +247,31 @@ function NotificationsTab() {
   const user = useUser()
   const update = useUpdateUser()
   return (
-    <Block title={t('settings.notifications')} description={t('settings.notifyHint')}>
-      <Card className="py-1">
-        {(['notifySub', 'notifyVoice', 'notifyPremieres'] as const).map((key) => (
-          <label key={key} className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4">
-            <span>
+    <>
+      <Block title={t('settings.notifications')} description={t('settings.notifyHint')}>
+        <Card className="py-1">
+          {(['notifySub', 'notifyVoice', 'notifyPremieres'] as const).map((key) => (
+            <label key={key} className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4">
+              <span>
+                <span className="block text-sm">{t(`settings.${key}`)}</span>
+                {key === 'notifyPremieres' ? <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.notifyPremieresHint')}</span> : null}
+              </span>
+              <Switch checked={user[key]} onCheckedChange={(v) => update.mutate({ [key]: v })} />
+            </label>
+          ))}
+        </Card>
+      </Block>
+      <Block title={t('settings.socialNotifications')} description={t('settings.socialNotificationsHint')}>
+        <Card className="py-1">
+          {(['notifyFriends', 'notifyComments', 'notifyReactions', 'notifyRecommendations', 'notifyRooms'] as const).map((key) => (
+            <label key={key} className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4">
               <span className="block text-sm">{t(`settings.${key}`)}</span>
-              {key === 'notifyPremieres' ? <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.notifyPremieresHint')}</span> : null}
-            </span>
-            <Switch checked={user[key]} onCheckedChange={(v) => update.mutate({ [key]: v })} />
-          </label>
-        ))}
-      </Card>
-    </Block>
+              <Switch checked={user[key]} onCheckedChange={(v) => update.mutate({ [key]: v })} />
+            </label>
+          ))}
+        </Card>
+      </Block>
+    </>
   )
 }
 

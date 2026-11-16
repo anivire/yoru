@@ -36,6 +36,11 @@ export interface User {
   notifySub: boolean
   notifyVoice: boolean
   notifyPremieres: boolean
+  notifyFriends: boolean
+  notifyComments: boolean
+  notifyReactions: boolean
+  notifyRecommendations: boolean
+  notifyRooms: boolean
   hasOwnAnime365Token: boolean
   hasSharedAnime365Token: boolean
   russianTitles: boolean
@@ -535,6 +540,11 @@ export const userSettingsSchema = z.object({
   notifySub: z.boolean().optional(),
   notifyVoice: z.boolean().optional(),
   notifyPremieres: z.boolean().optional(),
+  notifyFriends: z.boolean().optional(),
+  notifyComments: z.boolean().optional(),
+  notifyReactions: z.boolean().optional(),
+  notifyRecommendations: z.boolean().optional(),
+  notifyRooms: z.boolean().optional(),
   anime365Token: z.string().trim().max(512).nullable().optional(),
 })
 

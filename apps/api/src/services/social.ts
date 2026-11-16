@@ -68,8 +68,19 @@ export function canSee(viewerId: number, ownerId: number, visibility: Visibility
   return visibility === 'everyone' || relation(viewerId, ownerId) === 'friend'
 }
 
+const NOTIFY_FLAGS = {
+  friend_request: users.notifyFriends,
+  friend_accepted: users.notifyFriends,
+  comment: users.notifyComments,
+  reaction: users.notifyReactions,
+  recommendation: users.notifyRecommendations,
+  room_invite: users.notifyRooms,
+} as const
+
 export function notify(input: { userId: number; actorId: number; type: (typeof socialNotifications.$inferInsert)['type']; malId?: number | null; refId?: number | null; text?: string | null }) {
   if (input.userId === input.actorId || blockedBetween(input.userId, input.actorId)) return
+  const wanted = db.select({ on: NOTIFY_FLAGS[input.type] }).from(users).where(eq(users.id, input.userId)).get()
+  if (!wanted?.on) return
   db.insert(socialNotifications)
     .values({ userId: input.userId, actorId: input.actorId, type: input.type, malId: input.malId ?? null, refId: input.refId ?? null, text: input.text ?? null, createdAt: now() })
     .run()

@@ -176,6 +176,11 @@ export const meRoutes = new Hono<AppEnv>()
   if (input.notifySub !== undefined) patch.notifySub = input.notifySub
   if (input.notifyVoice !== undefined) patch.notifyVoice = input.notifyVoice
   if (input.notifyPremieres !== undefined) patch.notifyPremieres = input.notifyPremieres
+  if (input.notifyFriends !== undefined) patch.notifyFriends = input.notifyFriends
+  if (input.notifyComments !== undefined) patch.notifyComments = input.notifyComments
+  if (input.notifyReactions !== undefined) patch.notifyReactions = input.notifyReactions
+  if (input.notifyRecommendations !== undefined) patch.notifyRecommendations = input.notifyRecommendations
+  if (input.notifyRooms !== undefined) patch.notifyRooms = input.notifyRooms
   if (input.anime365Token !== undefined) patch.anime365Token = input.anime365Token || null
   if (Object.keys(patch).length) db.update(users).set(patch).where(eq(users.id, user.id)).run()
   return c.json(toUser(db.select().from(users).where(eq(users.id, user.id)).get()!))
