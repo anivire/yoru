@@ -202,7 +202,7 @@ function FriendGrid({ username }: { username: string }) {
 export function UserGrid({ users, action }: { users: PersonCard[]; action?: (user: PersonCard) => ReactNode }) {
   const { t } = useTranslation()
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-3">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(9rem,10.5rem))] gap-3">
       {users.map((user) => {
         const stats = [user.titles !== null ? t('friends.titlesCount', { count: user.titles }) : null, user.friends !== null ? t('profile.friendsCount', { count: user.friends }) : null].filter(Boolean)
         return (
@@ -303,7 +303,7 @@ function TabSkeleton({ tab }: { tab: Tab }) {
 
 export function UserGridSkeleton({ count = 8 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-3">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(9rem,10.5rem))] gap-3">
       {Array.from({ length: count }, (_, i) => (
         <div key={i} className="flex flex-col overflow-hidden rounded-xl bg-surface">
           <Skeleton className="h-16 rounded-none" />
