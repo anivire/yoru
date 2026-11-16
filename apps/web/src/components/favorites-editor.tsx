@@ -9,7 +9,7 @@ import { api } from '../lib/api'
 import { errorMessage } from '../lib/queries'
 
 const SHOWCASE_SUGGESTIONS = 24
-const SHOWCASE_SKELETONS = 16
+const SHOWCASE_SKELETONS = 12
 
 function Editor({ profile }: { profile: ProfileSettings }) {
   const { t } = useTranslation()
@@ -86,13 +86,13 @@ function Editor({ profile }: { profile: ProfileSettings }) {
           </div>
           <span className="text-[0.8125rem] text-muted-foreground">{query ? t('profileSettings.showcaseResults') : t('profileSettings.showcaseTop')}</span>
           {options.isPending ? (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] grid-rows-[auto_auto] auto-rows-[0] gap-x-3 overflow-hidden">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-x-3">
               {Array.from({ length: SHOWCASE_SKELETONS }, (_, i) => (
                 <Skeleton key={i} className="mb-4 aspect-[2/3] rounded-xl" />
               ))}
             </div>
           ) : options.data?.items.length ? (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] grid-rows-[auto_auto] auto-rows-[0] gap-x-3 overflow-hidden px-1 pt-1 -mx-1 -mt-1">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-x-3">
               {options.data.items.map((entry) => {
                 const pinned = ids.includes(entry.malId)
                 return (
@@ -130,7 +130,7 @@ export function FavoritesDialog() {
         </Button>
       </DialogTrigger>
       <DialogContent title={t('profileSettings.showcase')} description={t('profileSettings.showcaseHint', { count: PROFILE_FAVORITES_MAX })} className="w-[min(92vw,44rem)]">
-        <div className="overflow-y-auto px-6 pb-6 pt-2">{profile.data ? <Editor profile={profile.data} /> : <Skeleton className="h-96 rounded-xl" />}</div>
+        <div className="px-6 pb-6 pt-2">{profile.data ? <Editor profile={profile.data} /> : <Skeleton className="h-96 rounded-xl" />}</div>
       </DialogContent>
     </Dialog>
   )
