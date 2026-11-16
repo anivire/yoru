@@ -27,19 +27,20 @@ import {
   RiUserFill,
   RiUserFollowFill,
 } from '@remixicon/react'
-import { type ReactNode } from 'react'
+import { type ReactNode, useDeferredValue } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, useSearchParams } from 'react-router'
 import { Page } from '../components/app-shell'
 import { AnimeCard } from '../components/anime-cards'
 import { TasteMatchCard } from '../components/social'
+import { PosterGridSkeleton } from '../components/skeletons'
 import { TLink } from '../components/transition-link'
 import { UserAvatar, nameOf } from '../components/user-avatar'
 import { api } from '../lib/api'
 import { formatDate } from '../lib/format'
 import { errorMessage, useUser } from '../lib/queries'
 import { useDocumentTitle } from '../lib/title'
-import { ActivityFeed } from './feed'
+import { ActivityFeed, FeedSkeleton } from './feed'
 import { ListBrowser } from './shared-list'
 import { StatsSkeleton, StatsView } from './stats'
 
@@ -193,7 +194,7 @@ function ProfileHeader({ profile }: { profile: UserProfile }) {
 function FriendGrid({ username }: { username: string }) {
   const { t } = useTranslation()
   const friends = useQuery({ queryKey: ['profile', username, 'friends'], queryFn: () => api.profileFriends(username) })
-  if (friends.isPending) return <Skeleton className="h-32 rounded-xl" />
+  if (friends.isPending) return <TabSkeleton tab="friends" />
   if (!friends.data?.length) return <EmptyState mood="sleepy" title={t('profile.noFriends')} />
   return <UserGrid users={friends.data} />
 }
@@ -253,6 +254,29 @@ function Overview({ profile }: { profile: UserProfile }) {
   )
 }
 
+function TabSkeleton({ tab }: { tab: Tab }) {
+  if (tab === 'stats') return <StatsSkeleton />
+  if (tab === 'list') {
+    return (
+      <div className="flex flex-col gap-4">
+        <Skeleton className="h-11 w-full max-w-3xl rounded-xl" />
+        <Skeleton className="h-11 w-full rounded-xl" />
+        <PosterGridSkeleton />
+      </div>
+    )
+  }
+  if (tab === 'friends') {
+    return (
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-2">
+        {[0, 1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-16 rounded-xl" />
+        ))}
+      </div>
+    )
+  }
+  return <FeedSkeleton />
+}
+
 function ProfileSkeleton() {
   return (
     <div>
@@ -278,6 +302,7 @@ export function ProfilePage() {
   const requested = (TABS as readonly string[]).includes(params.get('tab') ?? '') ? (params.get('tab') as Tab) : 'overview'
   const available: Record<Tab, boolean> = { overview: true, list: Boolean(data?.canSeeList), stats: Boolean(data?.canSeeStats), friends: true }
   const tab = available[requested] ? requested : 'overview'
+  const shownTab = useDeferredValue(tab)
   const setTab = (next: Tab) => setParams(next === 'overview' ? {} : { tab: next }, { replace: true })
 
   return (
@@ -306,11 +331,13 @@ export function ProfilePage() {
                   { value: 'friends', label: t('profile.tabs.friends'), icon: <RiGroupFill />, count: data.friends },
                 ]}
               />
-              {tab === 'overview' ? (
+              {shownTab !== tab ? (
+                <TabSkeleton tab={tab} />
+              ) : shownTab === 'overview' ? (
                 <Overview profile={data} />
-              ) : tab === 'list' ? (
+              ) : shownTab === 'list' ? (
                 <ListBrowser queryKey={['profile', username, 'list']} fetchPage={(p) => api.profileList(username, p)} />
-              ) : tab === 'stats' ? (
+              ) : shownTab === 'stats' ? (
                 <ProfileStats username={username} />
               ) : (
                 <FriendGrid username={username} />

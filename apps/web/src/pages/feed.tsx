@@ -219,7 +219,7 @@ function DaySection({ day, showUser }: { day: Day; showUser: boolean }) {
   )
 }
 
-function FeedSkeleton() {
+export function FeedSkeleton() {
   return (
     <div className="relative">
       <span aria-hidden className="absolute bottom-0 left-4 top-4 w-px -translate-x-1/2 bg-border" />

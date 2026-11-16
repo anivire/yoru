@@ -1,7 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { PROFILE_FAVORITES_MAX, type ProfileSettings, type ProfileVisibility, type User, type Visibility } from '@yoru/shared'
 import { Button, Card, Image, Input, Select, Skeleton, Switch, Textarea, cn, toast } from '@yoru/ui'
-import { RiAddFill, RiCheckFill, RiCloseFill, RiDeleteBin6Line, RiImageAddFill, RiImageFill, RiSearchLine } from '@remixicon/react'
+import { RiAddFill, RiCheckFill, RiCloseFill, RiDeleteBin6Line, RiImageAddFill, RiImageFill, RiSearchFill } from '@remixicon/react'
 import { type ChangeEvent, type ReactNode, useDeferredValue, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
@@ -140,12 +140,18 @@ function ProfileForm({ initial }: { initial: ProfileSettings }) {
   )
 }
 
+const SHOWCASE_SUGGESTIONS = 10
+
 function ShowcaseEditor({ profile }: { profile: ProfileSettings }) {
   const { t } = useTranslation()
   const client = useQueryClient()
   const [q, setQ] = useState('')
   const query = useDeferredValue(q.trim())
-  const results = useQuery({ queryKey: ['list', 'showcase', query], queryFn: () => api.list({ q: query, limit: 8 }), enabled: query.length > 0 })
+  const options = useQuery({
+    queryKey: ['list', 'showcase', query],
+    queryFn: () => api.list({ q: query || undefined, sort: 'score', limit: SHOWCASE_SUGGESTIONS }),
+    placeholderData: keepPreviousData,
+  })
   const save = useMutation({
     mutationFn: api.updateProfile,
     onSuccess: (next) => {
@@ -156,62 +162,73 @@ function ShowcaseEditor({ profile }: { profile: ProfileSettings }) {
   })
   const ids = profile.favorites.map((a) => a.malId)
   const full = ids.length >= PROFILE_FAVORITES_MAX
+  const remove = (malId: number) => save.mutate({ favorites: ids.filter((id) => id !== malId), ...(profile.bannerMalId === malId ? { bannerMalId: null } : {}) })
+  const toggle = (malId: number) => {
+    if (ids.includes(malId)) remove(malId)
+    else if (full) toast.error(t('profileSettings.showcaseFull', { count: PROFILE_FAVORITES_MAX }))
+    else save.mutate({ favorites: [...ids, malId] })
+  }
   return (
     <Block title={t('profileSettings.showcase')} description={t('profileSettings.showcaseHint', { count: PROFILE_FAVORITES_MAX })}>
-      <Card className="flex flex-col gap-4 p-5">
-        {profile.favorites.length ? (
-          <div className="flex flex-wrap gap-3">
-            {profile.favorites.map((anime) => {
-              const banner = profile.bannerMalId === anime.malId
-              return (
-                <div key={anime.malId} className="group relative w-20">
-                  <div className={cn('aspect-[2/3] overflow-hidden rounded-lg bg-muted', banner && 'ring-2 ring-accent ring-offset-2 ring-offset-surface')}>
-                    {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="size-full object-cover" /> : null}
-                  </div>
-                  <div className="absolute inset-x-1 top-1 flex justify-between">
-                    <button type="button" aria-pressed={banner} title={t('profileSettings.useAsBanner')} aria-label={t('profileSettings.useAsBanner')} onClick={() => save.mutate({ bannerMalId: banner ? null : anime.malId })} className={cn('grid size-6 cursor-pointer place-items-center rounded-full bg-black/60 text-white [&_svg]:size-3.5', banner && 'bg-accent text-accent-foreground')}>
-                      <RiImageFill />
-                    </button>
-                    <button type="button" title={t('profileSettings.unpin')} aria-label={t('profileSettings.unpin')} onClick={() => save.mutate({ favorites: ids.filter((id) => id !== anime.malId), ...(banner ? { bannerMalId: null } : {}) })} className="grid size-6 cursor-pointer place-items-center rounded-full bg-black/60 text-white [&_svg]:size-3.5">
-                      <RiCloseFill />
-                    </button>
-                  </div>
+      <Card className="flex flex-col gap-6 p-5">
+        <div className="grid grid-cols-5 gap-3 sm:max-w-xl">
+          {Array.from({ length: PROFILE_FAVORITES_MAX }, (_, i) => {
+            const anime = profile.favorites[i]
+            if (!anime) return <div key={i} className="aspect-[2/3] rounded-xl border-2 border-dashed border-border" />
+            const banner = profile.bannerMalId === anime.malId
+            return (
+              <div key={anime.malId} className={cn('group relative aspect-[2/3] overflow-hidden rounded-xl bg-muted', banner && 'ring-2 ring-accent ring-offset-2 ring-offset-surface')}>
+                {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="size-full object-cover" /> : null}
+                <div className="absolute inset-0 flex flex-col justify-end gap-1 bg-linear-to-t from-black/80 to-transparent p-1.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+                  <button type="button" aria-pressed={banner} onClick={() => save.mutate({ bannerMalId: banner ? null : anime.malId })} className="flex h-6 cursor-pointer items-center justify-center gap-1 rounded-md bg-white/20 text-[0.6875rem] font-medium text-white hover:bg-white/30 [&_svg]:size-3.5">
+                    <RiImageFill />
+                    {banner ? t('profileSettings.isBanner') : t('profileSettings.useAsBanner')}
+                  </button>
+                  <button type="button" onClick={() => remove(anime.malId)} className="flex h-6 cursor-pointer items-center justify-center gap-1 rounded-md bg-white/20 text-[0.6875rem] font-medium text-white hover:bg-white/30 [&_svg]:size-3.5">
+                    <RiCloseFill />
+                    {t('profileSettings.unpin')}
+                  </button>
                 </div>
-              )
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">{t('profileSettings.showcaseEmpty')}</p>
-        )}
-        <div className="relative max-w-md">
-          <RiSearchLine className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('profileSettings.showcaseSearch')} className="pl-9" disabled={full} />
+                {banner ? <span className="absolute left-1.5 top-1.5 rounded-md bg-accent px-1.5 py-0.5 text-[0.625rem] font-semibold text-accent-foreground">{t('profileSettings.isBanner')}</span> : null}
+              </div>
+            )
+          })}
         </div>
-        {query && results.data?.items.length ? (
-          <div className="flex flex-col gap-1">
-            {results.data.items.map((entry) => {
-              const pinned = ids.includes(entry.malId)
-              return (
-                <button
-                  key={entry.malId}
-                  type="button"
-                  disabled={pinned || full}
-                  onClick={() => {
-                    save.mutate({ favorites: [...ids, entry.malId] })
-                    setQ('')
-                  }}
-                  className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted disabled:cursor-default disabled:opacity-50"
-                >
-                  {entry.anime.imageUrl ? <Image src={entry.anime.imageUrl} alt="" className="h-10 w-7 shrink-0 rounded object-cover" /> : null}
-                  <span className="min-w-0 flex-1 truncate text-sm">
-                    <AnimeTitle anime={entry.anime} />
-                  </span>
-                  {pinned ? <RiCheckFill className="size-4 text-accent" /> : <RiAddFill className="size-4 text-muted-foreground" />}
-                </button>
-              )
-            })}
+        <div className="flex flex-col gap-3">
+          <div className="relative">
+            <RiSearchFill className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('profileSettings.showcaseSearch')} className="h-11 rounded-xl pl-10 text-[0.9375rem]" />
           </div>
-        ) : null}
+          <span className="text-[0.8125rem] text-muted-foreground">{query ? t('profileSettings.showcaseResults') : t('profileSettings.showcaseTop')}</span>
+          {options.isPending ? (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-3">
+              {Array.from({ length: SHOWCASE_SUGGESTIONS }, (_, i) => (
+                <Skeleton key={i} className="aspect-[2/3] rounded-xl" />
+              ))}
+            </div>
+          ) : options.data?.items.length ? (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-x-3 gap-y-4">
+              {options.data.items.map((entry) => {
+                const pinned = ids.includes(entry.malId)
+                return (
+                  <button key={entry.malId} type="button" aria-pressed={pinned} onClick={() => toggle(entry.malId)} className="group flex cursor-pointer flex-col gap-1.5 text-left">
+                    <span className={cn('relative block aspect-[2/3] overflow-hidden rounded-xl bg-muted', pinned && 'ring-2 ring-accent ring-offset-2 ring-offset-surface')}>
+                      {entry.anime.imageUrl ? <Image src={entry.anime.imageUrl} alt="" className="size-full object-cover transition-[filter] group-hover:brightness-110" /> : null}
+                      <span className={cn('absolute right-1.5 top-1.5 grid size-6 place-items-center rounded-full transition-opacity [&_svg]:size-4', pinned ? 'bg-accent text-accent-foreground' : 'bg-black/60 text-white opacity-0 group-hover:opacity-100')}>
+                        {pinned ? <RiCheckFill /> : <RiAddFill />}
+                      </span>
+                    </span>
+                    <span className="line-clamp-2 text-xs font-medium leading-snug">
+                      <AnimeTitle anime={entry.anime} />
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">{t('profileSettings.showcaseNothing')}</p>
+          )}
+        </div>
       </Card>
     </Block>
   )
@@ -243,7 +260,7 @@ function BlockedUsers() {
           )}
         />
       ) : (
-        <p className="px-1 text-sm text-muted-foreground">{t('profileSettings.noBlocked')}</p>
+        <Card className="px-5 py-4 text-sm text-muted-foreground">{t('profileSettings.noBlocked')}</Card>
       )}
     </Block>
   )

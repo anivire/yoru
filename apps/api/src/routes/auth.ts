@@ -50,7 +50,8 @@ export const authRoutes = new Hono<AppEnv>()
   })
   .get('/invite/:code', (c) => {
     const invite = findInvite(c.req.param('code'))
-    return c.json({ valid: Boolean(invite), role: invite?.role ?? null })
+    const inviter = invite?.createdBy ? db.select({ username: users.username, displayName: users.displayName }).from(users).where(eq(users.id, invite.createdBy)).get() : undefined
+    return c.json({ valid: Boolean(invite), role: invite?.role ?? null, inviter: inviter ?? null })
   })
   .post('/register', async (c) => {
     const input = await parseBody(c, registerSchema)
