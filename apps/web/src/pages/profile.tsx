@@ -185,7 +185,7 @@ function ProfileHeader({ profile }: { profile: UserProfile }) {
       {profile.bio ? <p className="mt-4 max-w-2xl whitespace-pre-line px-2 text-[0.9375rem] sm:px-5">{profile.bio}</p> : null}
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 px-2 text-[0.8125rem] text-muted-foreground sm:px-5">
         <span>{t('profile.joined', { date: formatDate(profile.createdAt, { month: 'long', year: 'numeric' }) })}</span>
-        {!profile.restricted ? <span>{t('profile.friendsCount', { count: profile.friends })}</span> : null}
+        {profile.canSeeFriends ? <span>{t('profile.friendsCount', { count: profile.friends })}</span> : null}
       </div>
     </header>
   )
@@ -240,6 +240,7 @@ function ProfileStats({ username }: { username: string }) {
 
 function Overview({ profile }: { profile: UserProfile }) {
   const { t } = useTranslation()
+  if (!profile.favorites.length && !profile.canSeeActivity && !(profile.relation !== 'self' && profile.canSeeList)) return <EmptyState mood="sleepy" title={t('profile.noOverview')} />
   return (
     <div className="grow-empty flex flex-col gap-10">
       {profile.favorites.length ? (
@@ -253,14 +254,16 @@ function Overview({ profile }: { profile: UserProfile }) {
         </section>
       ) : null}
       {profile.relation !== 'self' && profile.canSeeList ? <TasteMatchCard username={profile.user.username} /> : null}
-      <section className="grow-empty">
-        <h2 className="mb-4 text-lg font-semibold tracking-tight">{t('profile.activity')}</h2>
-        <ActivityFeed
-          queryKey={['profile', profile.user.username, 'feed']}
-          fetchPage={(before) => api.profileFeed(profile.user.username, before)}
-          empty={<EmptyState mood="sleepy" title={t('profile.noActivity')} />}
-        />
-      </section>
+      {profile.canSeeActivity ? (
+        <section className="grow-empty">
+          <h2 className="mb-4 text-lg font-semibold tracking-tight">{t('profile.activity')}</h2>
+          <ActivityFeed
+            queryKey={['profile', profile.user.username, 'feed']}
+            fetchPage={(before) => api.profileFeed(profile.user.username, before)}
+            empty={<EmptyState mood="sleepy" title={t('profile.noActivity')} />}
+          />
+        </section>
+      ) : null}
     </div>
   )
 }
@@ -357,7 +360,8 @@ export function ProfilePage() {
   useDocumentTitle(profile.data ? nameOf(profile.data.user) : null)
   const data = profile.data
   const requested = (TABS as readonly string[]).includes(params.get('tab') ?? '') ? (params.get('tab') as Tab) : 'overview'
-  const available: Record<Tab, boolean> = { overview: true, list: Boolean(data?.canSeeList), stats: Boolean(data?.canSeeStats), friends: true }
+  const available: Record<Tab, boolean> = { overview: true, list: Boolean(data?.canSeeList), stats: Boolean(data?.canSeeStats), friends: Boolean(data?.canSeeFriends) }
+  const everythingHidden = Boolean(data && data.relation !== 'self' && !data.canSeeList && !data.canSeeStats && !data.canSeeFriends && !data.canSeeActivity && !data.favorites.length)
   const tab = available[requested] ? requested : 'overview'
   const shownTab = useDeferredValue(tab)
   const setTab = (next: Tab) => setParams(next === 'overview' ? {} : { tab: next }, { replace: true })
@@ -373,6 +377,8 @@ export function ProfilePage() {
           <ProfileHeader profile={data} />
           {data.blocked ? (
             <EmptyState mood="sleepy" title={t('profile.blockedTitle')} description={t('profile.blockedHint')} />
+          ) : everythingHidden ? (
+            <EmptyState mood="sleepy" title={<span className="inline-flex items-center gap-2"><RiLockFill className="size-5" />{t('profile.hiddenTitle')}</span>} description={t('profile.hiddenHint')} />
           ) : data.restricted ? (
             <EmptyState mood="sleepy" title={<span className="inline-flex items-center gap-2"><RiLockFill className="size-5" />{t('profile.restrictedTitle')}</span>} description={t('profile.restrictedHint')} />
           ) : (
@@ -385,7 +391,7 @@ export function ProfilePage() {
                   { value: 'overview', label: t('profile.tabs.overview'), icon: <RiUserFill /> },
                   { value: 'list', label: t('profile.tabs.list'), icon: <RiBookShelfFill />, disabled: !data.canSeeList, title: data.canSeeList ? undefined : t('profile.hidden') },
                   { value: 'stats', label: t('profile.tabs.stats'), icon: <RiBarChart2Fill />, disabled: !data.canSeeStats, title: data.canSeeStats ? undefined : t('profile.hidden') },
-                  { value: 'friends', label: t('profile.tabs.friends'), icon: <RiGroupFill />, count: data.friends },
+                  { value: 'friends', label: t('profile.tabs.friends'), icon: <RiGroupFill />, count: data.canSeeFriends ? data.friends : undefined, disabled: !data.canSeeFriends, title: data.canSeeFriends ? undefined : t('profile.hidden') },
                 ]}
               />
               {shownTab !== tab ? (

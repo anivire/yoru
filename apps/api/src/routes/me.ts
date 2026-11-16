@@ -42,6 +42,7 @@ function readProfile(userId: number): ProfileSettings {
       profileVisibility: users.profileVisibility,
       listVisibility: users.listVisibility,
       statsVisibility: users.statsVisibility,
+      friendsVisibility: users.friendsVisibility,
       shareActivity: users.shareActivity,
       bannerMalId: users.bannerMalId,
       favorites: users.favorites,

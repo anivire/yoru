@@ -26,6 +26,7 @@ export const users = sqliteTable('users', {
   profileVisibility: text('profile_visibility', { enum: ['everyone', 'friends'] }).notNull().default('everyone'),
   listVisibility: text('list_visibility', { enum: ['everyone', 'friends', 'private'] }).notNull().default('everyone'),
   statsVisibility: text('stats_visibility', { enum: ['everyone', 'friends', 'private'] }).notNull().default('everyone'),
+  friendsVisibility: text('friends_visibility', { enum: ['everyone', 'friends', 'private'] }).notNull().default('everyone'),
   shareActivity: integer('share_activity', { mode: 'boolean' }).notNull().default(true),
   createdAt: text('created_at').notNull(),
 }, (t) => [uniqueIndex('users_username_idx').on(t.username), uniqueIndex('users_share_token_idx').on(t.shareToken)])

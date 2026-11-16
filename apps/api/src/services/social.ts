@@ -132,7 +132,7 @@ export function personCards(viewerId: number, ids: number[]): PersonCard[] {
         banner: profile && row.bannerMalId ? (banners.get(row.bannerMalId) ?? null) : null,
         bio: profile ? row.bio : null,
         titles: profile && canSee(viewerId, id, row.listVisibility) ? (titles.get(id) ?? 0) : null,
-        friends: profile ? friendIds(id).length : null,
+        friends: profile && canSee(viewerId, id, row.friendsVisibility) ? friendIds(id).length : null,
       },
     ]
   })

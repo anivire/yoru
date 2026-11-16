@@ -124,6 +124,7 @@ export const userRoutes = new Hono<AppEnv>()
     const hidden = restricted(viewer.id, owner)
     const canSeeList = !hidden && canSee(viewer.id, owner.id, owner.listVisibility)
     const canSeeStats = !hidden && canSee(viewer.id, owner.id, owner.statsVisibility)
+    const canSeeFriends = !hidden && canSee(viewer.id, owner.id, owner.friendsVisibility)
     const body: UserProfile = {
       user: toCard(owner),
       bio: hidden ? null : owner.bio,
@@ -133,7 +134,9 @@ export const userRoutes = new Hono<AppEnv>()
       restricted: hidden,
       canSeeList,
       canSeeStats,
-      friends: hidden ? 0 : friendIds(owner.id).length,
+      canSeeFriends,
+      canSeeActivity: !hidden && (owner.id === viewer.id || owner.shareActivity),
+      friends: canSeeFriends ? friendIds(owner.id).length : 0,
       statuses: canSeeList || canSeeStats ? statusCounts(owner.id) : null,
       banner: hidden ? null : bannerUrl(owner.bannerMalId),
       favorites: hidden ? [] : summariesFor(owner.favorites),
@@ -156,7 +159,7 @@ export const userRoutes = new Hono<AppEnv>()
   .get('/:username/feed', (c) => {
     const viewer = c.get('user')
     const owner = ownerByName(viewer.id, c.req.param('username'))
-    if (restricted(viewer.id, owner)) return c.json({ items: [], nextBefore: null })
+    if (restricted(viewer.id, owner) || (owner.id !== viewer.id && !owner.shareActivity)) return c.json({ items: [], nextBefore: null })
     return c.json(feedPage(viewer.id, { before: c.req.query('before') || null, limit: Number(c.req.query('limit')) || 60, scope: { userId: owner.id } }))
   })
   .get('/:username/match', (c) => {
@@ -168,7 +171,7 @@ export const userRoutes = new Hono<AppEnv>()
   .get('/:username/friends', (c) => {
     const viewer = c.get('user')
     const owner = ownerByName(viewer.id, c.req.param('username'))
-    if (restricted(viewer.id, owner)) return c.json([] satisfies UserCard[])
+    if (restricted(viewer.id, owner) || !canSee(viewer.id, owner.id, owner.friendsVisibility)) return c.json([] satisfies PersonCard[])
     const hidden = hiddenUserIds(viewer.id)
     const ids = friendIds(owner.id).filter((id) => !hidden.has(id))
     return c.json(personCards(viewer.id, ids) satisfies PersonCard[])

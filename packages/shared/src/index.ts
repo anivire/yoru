@@ -668,6 +668,7 @@ export interface ProfileSettings {
   profileVisibility: ProfileVisibility
   listVisibility: Visibility
   statsVisibility: Visibility
+  friendsVisibility: Visibility
   shareActivity: boolean
   bannerMalId: number | null
   favorites: AnimeSummary[]
@@ -683,6 +684,7 @@ export const profileUpdateSchema = z.object({
   profileVisibility: z.enum(['everyone', 'friends']).optional(),
   listVisibility: z.enum(VISIBILITIES).optional(),
   statsVisibility: z.enum(VISIBILITIES).optional(),
+  friendsVisibility: z.enum(VISIBILITIES).optional(),
   shareActivity: z.boolean().optional(),
 })
 
@@ -697,6 +699,8 @@ export interface UserProfile {
   restricted: boolean
   canSeeList: boolean
   canSeeStats: boolean
+  canSeeFriends: boolean
+  canSeeActivity: boolean
   friends: number
   statuses: Record<ListStatus, number> | null
   banner: string | null

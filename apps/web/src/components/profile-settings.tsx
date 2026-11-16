@@ -127,6 +127,9 @@ function ProfileForm({ initial }: { initial: ProfileSettings }) {
           <Row label={t('profileSettings.statsVisibility')}>
             <Select value={initial.statsVisibility} onValueChange={(v) => save.mutate({ statsVisibility: v as Visibility })} options={(['everyone', 'friends', 'private'] as const).map(visibility)} className="sm:w-56" />
           </Row>
+          <Row label={t('profileSettings.friendsVisibility')}>
+            <Select value={initial.friendsVisibility} onValueChange={(v) => save.mutate({ friendsVisibility: v as Visibility })} options={(['everyone', 'friends', 'private'] as const).map(visibility)} className="sm:w-56" />
+          </Row>
           <label className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4">
             <span className="min-w-0">
               <span className="block text-sm">{t('profileSettings.shareActivity')}</span>

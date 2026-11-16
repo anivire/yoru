@@ -92,6 +92,13 @@
       "when": 1794835976645,
       "tag": "0012_social_notify",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1794837879763,
+      "tag": "0013_friends_visibility",
+      "breakpoints": true
     }
   ]
 }
