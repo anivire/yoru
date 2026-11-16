@@ -1,7 +1,7 @@
 import { type InfiniteData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { type Comment, type CommentTarget, type FeedPage, REACTIONS, type Reaction, type ReactionCount, type UserCard } from '@yoru/shared'
-import { Button, Dialog, DialogContent, DialogTrigger, Popover, PopoverContent, PopoverTrigger, Skeleton, StarIcon, Textarea, Tooltip, cn, toast } from '@yoru/ui'
-import { RiChat3Line, RiDeleteBin6Line, RiEdit2Line, RiEmotionFill, RiSendPlaneFill, RiShareForwardFill, RiUserAddFill } from '@remixicon/react'
+import { Button, Dialog, DialogContent, DialogTrigger, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Popover, PopoverContent, PopoverTrigger, Skeleton, StarIcon, Textarea, Tooltip, cn, toast } from '@yoru/ui'
+import { RiChat3Line, RiDeleteBin6Fill, RiEdit2Fill, RiEmotionFill, RiMoreFill, RiSendPlaneFill, RiShareForwardFill, RiUserAddFill } from '@remixicon/react'
 import { type FormEvent, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
@@ -121,18 +121,27 @@ function CommentItem({ comment, onChanged }: { comment: Comment; onChanged: () =
             </Tooltip>
           ) : null}
           {!editing && (comment.canEdit || comment.canDelete) ? (
-            <div className="ml-auto flex gap-0.5">
-              {comment.canEdit ? (
-                <Button size="icon-sm" variant="ghost" className="size-6" aria-label={t('notes.edit')} title={t('notes.edit')} onClick={() => setEditing(true)}>
-                  <RiEdit2Line />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="icon-sm" variant="ghost" className="ml-auto size-6" aria-label={t('profile.more')} loading={remove.isPending}>
+                  <RiMoreFill />
                 </Button>
-              ) : null}
-              {comment.canDelete ? (
-                <Button size="icon-sm" variant="ghost" className="size-6 hover:text-danger" aria-label={t('notes.delete')} title={t('notes.delete')} loading={remove.isPending} onClick={() => remove.mutate()}>
-                  <RiDeleteBin6Line />
-                </Button>
-              ) : null}
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {comment.canEdit ? (
+                  <DropdownMenuItem onSelect={() => setEditing(true)}>
+                    <RiEdit2Fill />
+                    {t('notes.edit')}
+                  </DropdownMenuItem>
+                ) : null}
+                {comment.canDelete ? (
+                  <DropdownMenuItem onSelect={() => remove.mutate()} className="text-danger data-[highlighted]:bg-danger-soft">
+                    <RiDeleteBin6Fill />
+                    {t('notes.delete')}
+                  </DropdownMenuItem>
+                ) : null}
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : null}
         </div>
         {editing ? (
