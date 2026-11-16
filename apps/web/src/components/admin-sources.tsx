@@ -37,7 +37,7 @@ function AniSkipMark() {
   )
 }
 
-function SourceIcon({ id }: { id: DataSourceId }) {
+export function SourceIcon({ id }: { id: DataSourceId }) {
   if (id === 'anime365') return <Anime365Mark />
   if (id === 'jikan') return <ProviderIcon provider="mal" />
   if (id === 'shikimori') return <ProviderIcon provider="shikimori" />

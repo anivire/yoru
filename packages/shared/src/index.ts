@@ -24,6 +24,20 @@ export type MetadataSource = (typeof METADATA_SOURCES)[number]
 export const PROVIDER_CATEGORIES = ['metadata', 'search', 'video'] as const
 export type ProviderCategory = (typeof PROVIDER_CATEGORIES)[number]
 
+export interface ProviderEntryInfo {
+  id: string
+  name: string
+  builtin: boolean
+  enabled: boolean
+  available: boolean
+}
+
+export type ProvidersSettings = Record<ProviderCategory, ProviderEntryInfo[]>
+
+export const providerOrderSchema = z.object({
+  entries: z.array(z.object({ id: z.string().min(1).max(64), enabled: z.boolean() })).max(50),
+})
+
 export const SEARCH_FEATURES = ['sort', 'upcoming', 'genres'] as const
 export type SearchFeature = (typeof SEARCH_FEATURES)[number]
 

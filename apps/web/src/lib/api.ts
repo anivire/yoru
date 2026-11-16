@@ -57,7 +57,7 @@ import type {
   StreamResult,
   Translation,
   User,
-  VersionInfo, AnimeExtras, Screenshot, VideoEpisodes, VideoProviderInfo } from '@yoru/shared'
+  VersionInfo, AnimeExtras, Screenshot, VideoEpisodes, VideoProviderInfo, ProviderCategory, ProvidersSettings } from '@yoru/shared'
 import type { FeedScope } from './appearance'
 
 export class ApiError extends Error {
@@ -225,5 +225,7 @@ export const api = {
     deleteUser: (id: number) => request<{ ok: true }>('DELETE', `/admin/users/${id}`),
     settings: () => get<AdminSettings>('/admin/settings'),
     saveSettings: (patch: AdminSettingsInput) => request<{ ok: true }>('PUT', '/admin/settings', patch),
+    providers: () => get<ProvidersSettings>('/admin/providers'),
+    saveProviders: (category: ProviderCategory, entries: { id: string; enabled: boolean }[]) => request<{ ok: true }>('PUT', `/admin/providers/${category}`, { entries }),
   },
 }

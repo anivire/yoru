@@ -19,9 +19,10 @@ import {
   StatusDot,
   toast,
 } from '@yoru/ui'
-import { RiAddFill, RiDatabase2Fill, RiDeleteBin6Fill, RiFileCopyFill, RiGroupFill, RiKey2Fill, RiShieldUserFill, RiTicket2Fill } from '@remixicon/react'
+import { RiAddFill, RiDatabase2Fill, RiStackFill, RiDeleteBin6Fill, RiFileCopyFill, RiGroupFill, RiKey2Fill, RiShieldUserFill, RiTicket2Fill } from '@remixicon/react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Providers } from '../components/admin-providers'
 import { useSearchParams } from 'react-router'
 import { DataSources, OAuthSettings } from '../components/admin-sources'
 import { Moderation } from '../components/admin-moderation'
@@ -247,10 +248,10 @@ function Users() {
   )
 }
 
-const TABS = ['invites', 'users', 'moderation', 'sources', 'oauth'] as const
+const TABS = ['invites', 'users', 'moderation', 'sources', 'providers', 'oauth'] as const
 type Tab = (typeof TABS)[number]
-const TAB_ICONS = { invites: RiTicket2Fill, users: RiGroupFill, moderation: RiShieldUserFill, sources: RiDatabase2Fill, oauth: RiKey2Fill } satisfies Record<Tab, unknown>
-const TAB_LABELS = { invites: 'admin.invites', users: 'admin.users', moderation: 'admin.tabs.moderation', sources: 'admin.tabs.sources', oauth: 'admin.tabs.oauth' } as const satisfies Record<Tab, string>
+const TAB_ICONS = { invites: RiTicket2Fill, users: RiGroupFill, moderation: RiShieldUserFill, sources: RiDatabase2Fill, providers: RiStackFill, oauth: RiKey2Fill } satisfies Record<Tab, unknown>
+const TAB_LABELS = { invites: 'admin.invites', users: 'admin.users', moderation: 'admin.tabs.moderation', sources: 'admin.tabs.sources', providers: 'admin.tabs.providers', oauth: 'admin.tabs.oauth' } as const satisfies Record<Tab, string>
 
 export function AdminPage() {
   const { t } = useTranslation()
@@ -275,6 +276,7 @@ export function AdminPage() {
         {tab === 'users' ? <Users /> : null}
         {tab === 'moderation' ? <Moderation /> : null}
         {tab === 'sources' ? <DataSources /> : null}
+        {tab === 'providers' ? <Providers /> : null}
         {tab === 'oauth' ? <OAuthSettings /> : null}
       </div>
     </Page>

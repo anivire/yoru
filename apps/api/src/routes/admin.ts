@@ -8,17 +8,23 @@ import {
   type DataSourceId,
   type ImportProvider,
   type Invite,
+  type ProviderCategory,
+  type ProviderEntryInfo,
+  type ProvidersSettings,
   IMPORT_PROVIDERS,
+  PROVIDER_CATEGORIES,
   adminSettingsSchema,
   inviteInputSchema,
+  providerOrderSchema,
 } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { invites, users } from '../db/schema'
 import { env } from '../env'
 import { type AppEnv, requireAdmin, requireAuth } from '../lib/auth'
 import { randomToken } from '../lib/crypto'
+import { badRequest } from '../lib/http'
 import { getSetting, setSetting } from '../lib/settings'
-import { primaryProvider } from '../providers/chain'
+import { chainEntries, knownProviders, primaryProvider, setChainEntries } from '../providers/chain'
 import { githubConfig, oauthConfig, setSourceEnabled, setSourceUrl } from '../lib/sources'
 import { intParam, parseBody } from '../lib/validate'
 import { clearDiscoverCache } from '../services/discover'
@@ -91,6 +97,29 @@ export const adminRoutes = new Hono<AppEnv>()
     if (id === c.get('user').id) throw new HTTPException(400, { message: 'CANNOT_DELETE_SELF' })
     removeAvatar(id)
     db.delete(users).where(eq(users.id, id)).run()
+    return c.json({ ok: true })
+  })
+  .get('/providers', (c) => {
+    const body = Object.fromEntries(
+      PROVIDER_CATEGORIES.map((category) => {
+        const providers = new Map(knownProviders(category).map((p) => [p.id, p]))
+        return [
+          category,
+          chainEntries(category).map((entry): ProviderEntryInfo => {
+            const provider = providers.get(entry.id)!
+            return { id: entry.id, name: provider.name, builtin: provider.builtin, enabled: entry.enabled, available: provider.available() }
+          }),
+        ]
+      }),
+    ) as ProvidersSettings
+    return c.json(body)
+  })
+  .put('/providers/:category', async (c) => {
+    const category = c.req.param('category') as ProviderCategory
+    if (!PROVIDER_CATEGORIES.includes(category)) badRequest('Invalid category')
+    const { entries } = await parseBody(c, providerOrderSchema)
+    const known = new Set(knownProviders(category).map((p) => p.id))
+    setChainEntries(category, entries.filter((e) => known.has(e.id)))
     return c.json({ ok: true })
   })
   .get('/settings', (c) => {
