@@ -53,7 +53,7 @@ function Editor({ profile }: { profile: ProfileSettings }) {
     else save.mutate({ favorites: [...ids, malId] })
   }
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
         <div className="grid grid-cols-5 gap-3">
           {Array.from({ length: PROFILE_FAVORITES_MAX }, (_, i) => {
             const anime = profile.favorites[i]
@@ -80,11 +80,13 @@ function Editor({ profile }: { profile: ProfileSettings }) {
           })}
         </div>
         <div className="flex flex-col gap-3">
-          <div className="relative">
-            <RiSearchFill className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('profileSettings.showcaseSearch')} className="h-11 rounded-xl pl-10 text-[0.9375rem]" />
+          <div className="sticky top-0 z-10 -mx-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-border bg-popover px-6 py-3">
+            <span className="text-sm font-semibold">{query ? t('profileSettings.showcaseResults') : t('profileSettings.showcaseTop')}</span>
+            <div className="relative w-full sm:w-64">
+              <RiSearchFill className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
+              <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('profileSettings.showcaseSearch')} className="h-9 rounded-lg pl-9 text-sm" />
+            </div>
           </div>
-          <span className="text-[0.8125rem] text-muted-foreground">{query ? t('profileSettings.showcaseResults') : t('profileSettings.showcaseTop')}</span>
           {options.isPending ? (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-x-3">
               {Array.from({ length: SHOWCASE_SKELETONS }, (_, i) => (
