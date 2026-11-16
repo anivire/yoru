@@ -57,7 +57,7 @@ export function RoomPage() {
           title={t('room.missing')}
           description={t('room.missingHint')}
           action={
-            <Button asChild variant="secondary">
+            <Button asChild variant="accent">
               <TLink to="/">{t('room.home')}</TLink>
             </Button>
           }

@@ -196,7 +196,7 @@ export const en: Messages = {
     noRequests: 'No requests',
     cancel: 'Cancel',
     empty: 'No friends yet',
-    emptyHint: 'Find people you know with the search below',
+    emptyHint: 'Find people you know on this server and send them a request',
     search: 'Find friends',
     searchHint: 'By name or username',
     searchPlaceholder: 'Name or username',

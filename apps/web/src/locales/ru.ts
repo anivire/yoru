@@ -194,7 +194,7 @@ export const ru = {
     noRequests: 'Заявок нет',
     cancel: 'Отменить',
     empty: 'Друзей пока нет',
-    emptyHint: 'Найдите знакомых через поиск ниже',
+    emptyHint: 'Найдите знакомых на этом сервере и отправьте им заявку',
     search: 'Найти друзей',
     searchHint: 'По имени или логину',
     searchPlaceholder: 'Имя или логин',

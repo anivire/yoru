@@ -74,7 +74,12 @@ export function FriendsPage() {
         data.friends.length ? (
           <UserGrid users={data.friends} />
         ) : (
-          <EmptyState mood="sleepy" title={t('friends.empty')} description={t('friends.emptyHint')} action={<Button variant="secondary" onClick={() => setView('search')}>{t('friends.search')}</Button>} />
+          <EmptyState mood="sleepy" title={t('friends.empty')} description={t('friends.emptyHint')} action={
+              <Button variant="accent" onClick={() => setView('search')}>
+                <RiSearchLine />
+                {t('friends.search')}
+              </Button>
+            } />
         )
       ) : !requests ? (
         <EmptyState mood="sleepy" title={t('friends.noRequests')} />
