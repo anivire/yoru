@@ -265,29 +265,71 @@ function TabSkeleton({ tab }: { tab: Tab }) {
       </div>
     )
   }
-  if (tab === 'friends') {
-    return (
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-2">
-        {[0, 1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-16 rounded-xl" />
-        ))}
-      </div>
-    )
-  }
-  return <FeedSkeleton />
+  if (tab === 'friends') return <UserGridSkeleton />
+  return (
+    <div className="flex flex-col gap-10">
+      <section>
+        <Skeleton className="mb-4 h-6 w-32 rounded-md" />
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-3 gap-y-4">
+          {Array.from({ length: 5 }, (_, i) => (
+            <div key={i} className="flex flex-col gap-2">
+              <Skeleton className="aspect-[2/3] rounded-xl" />
+              <Skeleton className="h-4 w-4/5 rounded-md" />
+            </div>
+          ))}
+        </div>
+      </section>
+      <section>
+        <Skeleton className="mb-4 h-6 w-48 rounded-md" />
+        <FeedSkeleton />
+      </section>
+    </div>
+  )
+}
+
+export function UserGridSkeleton({ count = 8 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-2">
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="flex items-center gap-3 rounded-xl bg-surface p-3">
+          <Skeleton className="size-10 shrink-0 rounded-full" />
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <Skeleton className="h-4 w-3/5 rounded-md" />
+            <Skeleton className="h-3 w-2/5 rounded-md" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 function ProfileSkeleton() {
   return (
     <div>
-      <Skeleton className="h-28 rounded-2xl sm:h-36" />
-      <div className="-mt-12 flex items-end gap-4 px-2 sm:-mt-14 sm:px-5">
-        <Skeleton className="size-24 rounded-full ring-4 ring-background sm:size-28" />
-        <div className="flex flex-col gap-2 pb-1">
-          <Skeleton className="h-7 w-48 rounded-md" />
-          <Skeleton className="h-4 w-24 rounded-md" />
+      <header className="mb-8">
+        <Skeleton className="h-28 rounded-2xl sm:h-44" />
+        <div className="relative z-10 -mt-12 flex flex-wrap items-end gap-4 px-2 sm:-mt-14 sm:px-5">
+          <Skeleton className="size-24 rounded-full ring-4 ring-background sm:size-28" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2 pb-1">
+            <Skeleton className="h-7 w-48 max-w-full rounded-md" />
+            <Skeleton className="h-4 w-24 rounded-md" />
+          </div>
+          <div className="flex gap-2 pb-1">
+            <Skeleton className="h-9 w-40 rounded-lg" />
+            <Skeleton className="size-9 rounded-lg" />
+          </div>
         </div>
-      </div>
+        <div className="mt-4 flex max-w-2xl flex-col gap-2 px-2 sm:px-5">
+          <Skeleton className="h-4 w-full rounded-md" />
+          <Skeleton className="h-4 w-2/3 rounded-md" />
+        </div>
+        <div className="mt-3 flex gap-4 px-2 sm:px-5">
+          <Skeleton className="h-3.5 w-32 rounded-md" />
+          <Skeleton className="h-3.5 w-20 rounded-md" />
+        </div>
+      </header>
+      <Skeleton className="mb-6 h-10 w-full max-w-lg rounded-xl" />
+      <TabSkeleton tab="overview" />
     </div>
   )
 }

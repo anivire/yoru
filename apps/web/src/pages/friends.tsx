@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, EmptyState, Input, Segmented, Skeleton, toast } from '@yoru/ui'
+import { Button, EmptyState, Input, Segmented, toast } from '@yoru/ui'
 import { RiCheckFill, RiCloseFill, RiGroupFill, RiSearchLine, RiUserReceivedFill } from '@remixicon/react'
 import { type ReactNode, useDeferredValue, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -7,7 +7,7 @@ import { Page, PageHeader, Section } from '../components/app-shell'
 import { api } from '../lib/api'
 import { errorMessage } from '../lib/queries'
 import { useDocumentTitle } from '../lib/title'
-import { UserGrid } from './profile'
+import { UserGrid, UserGridSkeleton } from './profile'
 
 function useFriendMutation(fn: (id: number) => Promise<unknown>) {
   const { t } = useTranslation()
@@ -40,16 +40,6 @@ function PeopleSearch() {
         <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('friends.searchPlaceholder')} className="h-11 rounded-xl pl-10" autoFocus />
       </div>
       {content}
-    </div>
-  )
-}
-
-function UserGridSkeleton() {
-  return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-2">
-      {[0, 1, 2].map((i) => (
-        <Skeleton key={i} className="h-16 rounded-xl" />
-      ))}
     </div>
   )
 }
