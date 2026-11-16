@@ -1,11 +1,13 @@
 import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import type { NotificationList } from '@yoru/shared'
+import { type NotificationList, type NotificationSources, TRANSLATION_SOURCES } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { anime, notifications, socialNotifications, users } from '../db/schema'
 import { type AppEnv, requireAuth } from '../lib/auth'
 import { parseBody } from '../lib/validate'
+import { activeCalendars } from '../jobs/release-watcher'
+import { isActive } from '../providers/chain'
 import { cardColumns, hiddenUserIds, toCard } from '../services/social'
 
 const readSchema = z.object({ ids: z.array(z.number().int()).max(500).optional(), socialIds: z.array(z.number().int()).max(500).optional() })
@@ -63,6 +65,7 @@ export const notificationRoutes = new Hono<AppEnv>()
         episode: n.episode,
         type: n.type,
         kind: n.kind,
+        source: n.provider,
         author: n.author,
         animeTitle: title ?? `#${n.malId}`,
         titles: { title: title ?? `#${n.malId}`, titleEnglish: titleEnglish ?? null, titleJapanese: titleJapanese ?? null, titleRussian: titleRussian || null },
@@ -70,6 +73,13 @@ export const notificationRoutes = new Hono<AppEnv>()
         createdAt: n.createdAt,
         readAt: n.readAt,
       })),
+    }
+    return c.json(body)
+  })
+  .get('/sources', (c) => {
+    const body: NotificationSources = {
+      translations: TRANSLATION_SOURCES.filter((id) => isActive('video', id)),
+      calendars: activeCalendars(),
     }
     return c.json(body)
   })

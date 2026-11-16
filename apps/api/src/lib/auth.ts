@@ -3,7 +3,7 @@ import type { Context } from 'hono'
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
 import { createMiddleware } from 'hono/factory'
 import { HTTPException } from 'hono/http-exception'
-import type { User } from '@yoru/shared'
+import type { CalendarSource, TranslationSource, User } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { sessions, users } from '../db/schema'
 import { env, secureCookies } from '../env'
@@ -34,6 +34,10 @@ export function toUser(row: UserRow): User {
     notifySub: row.notifySub,
     notifyVoice: row.notifyVoice,
     notifyPremieres: row.notifyPremieres,
+    notifyAired: row.notifyAired,
+    notifySource: (row.notifySource as TranslationSource | null) ?? null,
+    premiereSource: (row.premiereSource as TranslationSource | null) ?? null,
+    airedSource: (row.airedSource as CalendarSource | null) ?? null,
     notifyFriends: row.notifyFriends,
     notifyComments: row.notifyComments,
     notifyReactions: row.notifyReactions,

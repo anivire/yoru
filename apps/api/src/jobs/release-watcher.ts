@@ -1,19 +1,39 @@
 import { and, eq, inArray, notInArray, sql } from 'drizzle-orm'
+import { CALENDAR_SOURCES, type CalendarSource, type ReleaseSource, TRANSLATION_SOURCES } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { listEntries, notifications, providerMappings, providerReleases, users } from '../db/schema'
 import { env } from '../env'
 import { cachePurgeExpired } from '../lib/http'
 import { purgeExpiredSessions } from '../lib/auth'
 import { getSetting, setSetting } from '../lib/settings'
-import { getAnimeRow, setLatestEpisode, upsertA365Summaries } from '../services/anime'
+import { featureEnabled } from '../lib/features'
+import { isActive } from '../providers/chain'
+import { ensureAnime, getAnimeRow, setLatestEpisode, upsertA365Summaries } from '../services/anime'
 import { type A365Translation, RELEASE_TYPES, anime365, seriesTitle } from '../services/anime365'
+import { anilibriaLatest } from '../services/anilibria'
+import { kodikRecent } from '../services/kodik'
 import { PROVIDER } from '../services/provider'
+import { shikimori } from '../services/shikimori'
 
 const PAGE = 100
 const MAX_PAGES = 10
 const RECENT_MS = 3 * 86_400_000
 const MAIN_TYPES = ['tv', 'ova', 'ona', 'movie']
 const NOTIFY_STATUSES = ['watching', 'rewatching', 'planning'] as const
+const LATEST_LIMIT = 50
+const KODIK_LIMIT = 100
+
+type ReleaseKind = 'sub' | 'voice' | 'raw'
+
+interface Release {
+  provider: string
+  malId: number
+  episode: number
+  kind: ReleaseKind
+  translationId: number
+  author: string | null
+  releasedAt: string
+}
 
 async function fetchNew(type: string): Promise<A365Translation[]> {
   const cursorKey = `release_cursor_${type}`
@@ -34,27 +54,80 @@ async function fetchNew(type: string): Promise<A365Translation[]> {
   return fresh.sort((a, b) => a.id - b.id)
 }
 
-function notifyUsers(malId: number, episode: number, kind: 'sub' | 'voice', author: string | null) {
-  const pref = kind === 'sub' ? users.notifySub : users.notifyVoice
+function activeSources(): Set<string> {
+  return new Set(TRANSLATION_SOURCES.filter((id) => isActive('video', id)))
+}
+
+export function activeCalendars(): CalendarSource[] {
+  return CALENDAR_SOURCES.filter((id) => id !== 'shikimori' || featureEnabled('discover'))
+}
+
+function wantsSource(chosen: string | null, provider: string, active: Set<string>): boolean {
+  return !chosen || chosen === provider || !active.has(chosen)
+}
+
+function notifyUsers(release: Release) {
+  const pref = release.kind === 'raw' ? users.notifyAired : release.kind === 'sub' ? users.notifySub : users.notifyVoice
   const targets = db
-    .select({ userId: listEntries.userId })
+    .select({ userId: listEntries.userId, source: users.notifySource, calendar: users.airedSource })
     .from(listEntries)
     .innerJoin(users, eq(users.id, listEntries.userId))
     .where(
       and(
-        eq(listEntries.malId, malId),
+        eq(listEntries.malId, release.malId),
         inArray(listEntries.status, [...NOTIFY_STATUSES]),
         eq(pref, true),
       ),
     )
     .all()
-  for (const { userId } of targets) {
-    db.insert(notifications)
-      .values({ userId, malId, episode, kind, author, createdAt: now() })
+  const wanted =
+    release.kind === 'raw'
+      ? targets.filter((row) => wantsSource(row.calendar, release.provider, new Set(activeCalendars())))
+      : targets.filter((row) => wantsSource(row.source, release.provider, activeSources()))
+  let created = 0
+  for (const { userId } of wanted) {
+    created += db
+      .insert(notifications)
+      .values({ userId, malId: release.malId, episode: release.episode, kind: release.kind, type: release.kind === 'raw' ? 'aired' : 'episode', provider: release.provider, author: release.author, createdAt: now() })
       .onConflictDoNothing()
-      .run()
+      .run().changes
   }
-  return targets.length
+  return created
+}
+
+function store(release: Release): boolean {
+  return db
+    .insert(providerReleases)
+    .values({ provider: release.provider, malId: release.malId, episode: release.episode, kind: release.kind, translationId: release.translationId, author: release.author, releasedAt: release.releasedAt })
+    .onConflictDoNothing()
+    .run().changes > 0
+}
+
+function isRecent(release: Release): boolean {
+  const releasedAt = Date.parse(release.releasedAt)
+  return !Number.isFinite(releasedAt) || Date.now() - releasedAt <= RECENT_MS
+}
+
+function record(release: Release, notify: boolean): number {
+  if (!store(release) || !notify || !isRecent(release)) return 0
+  return notifyUsers(release)
+}
+
+function known(provider: string, malId: number, episode: number, kind: ReleaseKind): boolean {
+  return Boolean(
+    db
+      .select({ episode: providerReleases.episode })
+      .from(providerReleases)
+      .where(and(eq(providerReleases.provider, provider), eq(providerReleases.malId, malId), eq(providerReleases.episode, episode), eq(providerReleases.kind, kind)))
+      .get(),
+  )
+}
+
+function firstRun(provider: string): boolean {
+  const key = `release_seeded_${provider}`
+  if (getSetting(key)) return false
+  setSetting(key, now())
+  return true
 }
 
 function a365Time(value: string | undefined): number {
@@ -68,29 +141,41 @@ function isPremiere(t: A365Translation, malId: number): boolean {
   if (!recentTitle) return false
   const firstUpload = a365Time(ep.firstUploadedDateTime)
   if (!Number.isFinite(firstUpload) || Date.now() - firstUpload > RECENT_MS) return false
-  const releases = db
-    .select({ n: sql<number>`count(*)` })
-    .from(providerReleases)
-    .where(and(eq(providerReleases.malId, malId), eq(providerReleases.provider, PROVIDER)))
-    .get()
-  return (releases?.n ?? 0) === 1
+  return firstForProvider(PROVIDER, malId)
 }
 
-function notifyPremiere(t: A365Translation, malId: number, kind: 'sub' | 'voice', author: string | null) {
-  if (t.series) upsertA365Summaries([t.series])
-  const inList = db.select({ userId: listEntries.userId }).from(listEntries).where(eq(listEntries.malId, malId))
+function firstForProvider(provider: string, malId: number): boolean {
+  const row = db
+    .select({ n: sql<number>`count(*)` })
+    .from(providerReleases)
+    .where(and(eq(providerReleases.malId, malId), eq(providerReleases.provider, provider)))
+    .get()
+  return (row?.n ?? 0) === 1
+}
+
+function recentYear(year: number | null | undefined): boolean {
+  return (year ?? 0) >= new Date().getFullYear() - 1
+}
+
+async function notifyPremiere(release: Release) {
+  if (!getAnimeRow(release.malId)) await ensureAnime(release.malId).catch(() => undefined)
+  const inList = db.select({ userId: listEntries.userId }).from(listEntries).where(eq(listEntries.malId, release.malId))
+  const active = activeSources()
   const targets = db
-    .select({ id: users.id })
+    .select({ id: users.id, source: users.premiereSource })
     .from(users)
     .where(and(eq(users.notifyPremieres, true), notInArray(users.id, inList)))
     .all()
+    .filter((row) => wantsSource(row.source, release.provider, active))
+  let created = 0
   for (const { id } of targets) {
-    db.insert(notifications)
-      .values({ userId: id, malId, episode: 1, kind, type: 'premiere', author, createdAt: now() })
+    created += db
+      .insert(notifications)
+      .values({ userId: id, malId: release.malId, episode: 1, kind: release.kind, type: 'premiere', provider: release.provider, author: release.author, createdAt: now() })
       .onConflictDoNothing()
-      .run()
+      .run().changes
   }
-  return targets.length
+  return created
 }
 
 function rememberMapping(t: A365Translation, malId: number) {
@@ -101,7 +186,8 @@ function rememberMapping(t: A365Translation, malId: number) {
     .run()
 }
 
-export async function checkReleases() {
+async function checkAnime365() {
+  if (!isActive('video', PROVIDER)) return null
   let created = 0
   for (const type of RELEASE_TYPES) {
     const kind = type === 'voiceRu' ? 'voice' : 'sub'
@@ -114,18 +200,107 @@ export async function checkReleases() {
       rememberMapping(t, malId)
       if (getAnimeRow(malId)) setLatestEpisode(malId, episode)
       const author = t.authorsSummary || null
-      const inserted = db
-        .insert(providerReleases)
-        .values({ provider: PROVIDER, malId, episode, kind, translationId: t.id, author, releasedAt: t.activeDateTime ?? now() })
-        .onConflictDoNothing()
-        .run()
-      if (!inserted.changes) continue
       const activeAt = a365Time(t.activeDateTime)
-      if (Number.isFinite(activeAt) && Date.now() - activeAt > RECENT_MS) continue
-      created += notifyUsers(malId, episode, kind, author)
-      if (isPremiere(t, malId)) created += notifyPremiere(t, malId, kind, author)
+      const releasedAt = Number.isFinite(activeAt) ? new Date(activeAt).toISOString() : now()
+      const release: Release = { provider: PROVIDER, malId, episode, kind, translationId: t.id, author, releasedAt }
+      if (!store(release) || !isRecent(release)) continue
+      created += notifyUsers(release)
+      if (isPremiere(t, malId)) {
+        if (t.series) upsertA365Summaries([t.series])
+        created += await notifyPremiere(release)
+      }
     }
   }
+  return created
+}
+
+async function checkAnilibria() {
+  if (!isActive('video', 'anilibria')) return null
+  const seeding = firstRun('anilibria')
+  let created = 0
+  for (const r of await anilibriaLatest(LATEST_LIMIT)) {
+    const malId = r.mal?.id ?? r.shikimori?.id
+    const episode = Math.round(Number(r.latest_episode?.ordinal))
+    if (!malId || !Number.isInteger(episode) || episode <= 0) continue
+    const releasedAt = r.latest_episode?.updated_at ?? r.fresh_at ?? now()
+    const release: Release = { provider: 'anilibria', malId, episode, kind: 'voice', translationId: r.id, author: null, releasedAt }
+    if (!store(release) || seeding || !isRecent(release)) continue
+    created += notifyUsers(release)
+    if (episode === 1 && (r.is_ongoing || recentYear(r.year)) && firstForProvider('anilibria', malId)) created += await notifyPremiere(release)
+  }
+  return created
+}
+
+async function checkKodik() {
+  if (!isActive('video', 'kodik')) return null
+  const seeding = firstRun('kodik')
+  let created = 0
+  for (const r of await kodikRecent(KODIK_LIMIT)) {
+    const malId = Number(r.shikimori_id)
+    const episode = Number(r.last_episode)
+    if (!Number.isInteger(malId) || malId <= 0 || !Number.isInteger(episode) || episode <= 0) continue
+    const kind = r.translation.type === 'subtitles' ? 'sub' : 'voice'
+    const release: Release = { provider: 'kodik', malId, episode, kind, translationId: r.translation.id, author: r.translation.title || null, releasedAt: r.updated_at }
+    if (!store(release) || seeding || !isRecent(release)) continue
+    created += notifyUsers(release)
+    if (episode === 1 && recentYear(r.year) && firstForProvider('kodik', malId)) created += await notifyPremiere(release)
+  }
+  return created
+}
+
+async function checkSchedule() {
+  if (!featureEnabled('discover')) return null
+  const seeding = firstRun('shikimori')
+  let created = 0
+  for (const e of await shikimori.calendar()) {
+    const airedAt = Date.parse(e.next_episode_at)
+    const justAired = airedAt <= Date.now()
+    const episode = justAired ? e.next_episode : e.next_episode - 1
+    if (!Number.isInteger(episode) || episode <= 0) continue
+    const releasedAt = justAired ? new Date(airedAt).toISOString() : now()
+    const tracked = justAired || known('shikimori', e.anime.id, episode - 1, 'raw')
+    created += record({ provider: 'shikimori', malId: e.anime.id, episode, kind: 'raw', translationId: 0, author: null, releasedAt }, !seeding && tracked)
+  }
+  return created
+}
+
+export interface ReleaseCheck {
+  checkedAt: string
+  error: string | null
+}
+
+const CHECKS_KEY = 'release_checks'
+const LAST_RUN_KEY = 'release_last_run'
+
+export function releaseChecks(): Partial<Record<ReleaseSource, ReleaseCheck>> {
+  try {
+    return JSON.parse(getSetting(CHECKS_KEY) ?? '{}') as Partial<Record<ReleaseSource, ReleaseCheck>>
+  } catch {
+    return {}
+  }
+}
+
+export function lastReleaseRun(): string | null {
+  return getSetting(LAST_RUN_KEY)
+}
+
+export async function checkReleases() {
+  let created = 0
+  const checks = releaseChecks()
+  for (const [id, check] of [['anime365', checkAnime365], ['anilibria', checkAnilibria], ['kodik', checkKodik], ['shikimori', checkSchedule]] as const) {
+    try {
+      const count = await check()
+      if (count === null) continue
+      created += count
+      checks[id] = { checkedAt: now(), error: null }
+    } catch (error) {
+      const message = (error as Error).message
+      checks[id] = { checkedAt: now(), error: message }
+      console.warn(`[releases] ${id} check failed:`, message)
+    }
+  }
+  setSetting(CHECKS_KEY, JSON.stringify(checks))
+  setSetting(LAST_RUN_KEY, now())
   return created
 }
 

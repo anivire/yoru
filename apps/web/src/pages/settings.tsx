@@ -1,14 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, type User } from '@yoru/shared'
+import { type DataSourceId, EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, type User } from '@yoru/shared'
 import { Badge, Button, Card, CardContent, Code, Field, Input, LogoMark, Segmented, Skeleton, Spinner, StepSlider, Switch, cn, toast } from '@yoru/ui'
-import { RiAlertFill, RiArrowUpDownFill, RiCheckboxCircleFill, RiBracesFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiIdCardFill, RiLockFill, RiNotification3Fill, RiPaletteFill, RiPlayCircleFill, RiShieldFill, RiUser3Fill, RiVolumeUpFill } from '@remixicon/react'
+import { RiAlertFill, RiArrowUpDownFill, RiBracesFill, RiCheckboxCircleFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiIdCardFill, RiLockFill, RiNotification3Fill, RiPaletteFill, RiPlayCircleFill, RiShieldFill, RiStackFill, RiUser3Fill, RiVolumeUpFill } from '@remixicon/react'
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { Page, PageHeader } from '../components/app-shell'
-import { SecretForm } from '../components/admin-sources'
+import { SecretForm, SourceIcon } from '../components/admin-sources'
 import { BackdropPicker, FeedScopePicker, HomeLayoutSettings, NavPositionSettings, NavigationSettings } from '../components/layout-settings'
 import { SessionsList } from '../components/sessions'
+import { SOURCE_LABELS } from '../components/notifications'
 import { Flag, LANGUAGES, useChangeLanguage } from '../components/language'
 import { TitleLanguagePicker } from '../components/appearance-panel'
 import { PROVIDER_NAMES, ProviderIcon } from '../components/providers'
@@ -249,23 +250,95 @@ function AccountTab() {
   )
 }
 
+function SourceChoice<T extends DataSourceId>({ value, available, pending, onChange }: { value: T | null; available: readonly T[]; pending: boolean; onChange: (value: T | null) => void }) {
+  const { t } = useTranslation()
+  const current = value && available.includes(value) ? value : null
+  const options: { id: T | null; icon: ReactNode; label: string; hint?: string }[] = [
+    {
+      id: null,
+      icon: (
+        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-field text-muted-foreground [&_svg]:size-[1.125rem]">
+          <RiStackFill />
+        </span>
+      ),
+      label: t('settings.anySource'),
+      hint: t('settings.anySourceHint'),
+    },
+    ...available.map((id) => ({ id, icon: <SourceIcon id={id} />, label: SOURCE_LABELS[id] ?? id })),
+  ]
+  return (
+    <div role="radiogroup" aria-label={t('settings.notifySourceTitle')} className="pb-1">
+      <div className="px-5 pb-1 pt-4 text-xs font-medium text-muted-foreground">{t('settings.notifySourceTitle')}</div>
+      {pending ? (
+        <div className="flex flex-col gap-1 px-5 py-2">
+          <Skeleton className="h-12 rounded-lg" />
+          <Skeleton className="h-12 rounded-lg" />
+        </div>
+      ) : !available.length ? (
+        <p className="px-5 py-3 text-[0.8125rem] text-muted-foreground">{t('settings.noSources')}</p>
+      ) : (
+        options.map((option) => {
+          const checked = option.id === current
+          return (
+            <button
+              key={option.id ?? 'any'}
+              type="button"
+              role="radio"
+              aria-checked={checked}
+              onClick={() => !checked && onChange(option.id)}
+              className="flex w-full cursor-pointer items-center gap-3 px-5 py-2.5 text-left transition-colors hover:bg-muted"
+            >
+              {option.icon}
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm">{option.label}</span>
+                {option.hint ? <span className="block text-[0.8125rem] text-muted-foreground">{option.hint}</span> : null}
+              </span>
+              <span className={cn('grid size-5 shrink-0 place-items-center rounded-full border-2 transition-colors', checked ? 'border-accent' : 'border-border')}>
+                {checked ? <span className="size-2.5 rounded-full bg-accent" /> : null}
+              </span>
+            </button>
+          )
+        })
+      )}
+    </div>
+  )
+}
+
+function SwitchRow({ label, checked, onChange }: { label: ReactNode; checked: boolean; onChange: (value: boolean) => void }) {
+  return (
+    <label className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4">
+      <span className="block text-sm">{label}</span>
+      <Switch checked={checked} onCheckedChange={onChange} />
+    </label>
+  )
+}
+
 function NotificationsTab() {
   const { t } = useTranslation()
   const user = useUser()
   const update = useUpdateUser()
+  const sources = useQuery({ queryKey: ['notification-sources'], queryFn: api.notificationSources })
+  const translations = sources.data?.translations ?? []
+  const calendars = sources.data?.calendars ?? []
   return (
     <>
       <Block title={t('settings.notifications')} description={t('settings.notifyHint')}>
         <Card className="py-1">
-          {(['notifySub', 'notifyVoice', 'notifyPremieres'] as const).map((key) => (
-            <label key={key} className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4">
-              <span>
-                <span className="block text-sm">{t(`settings.${key}`)}</span>
-                {key === 'notifyPremieres' ? <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.notifyPremieresHint')}</span> : null}
-              </span>
-              <Switch checked={user[key]} onCheckedChange={(v) => update.mutate({ [key]: v })} />
-            </label>
-          ))}
+          <SwitchRow label={t('settings.notifySub')} checked={user.notifySub} onChange={(notifySub) => update.mutate({ notifySub })} />
+          <SwitchRow label={t('settings.notifyVoice')} checked={user.notifyVoice} onChange={(notifyVoice) => update.mutate({ notifyVoice })} />
+          {user.notifySub || user.notifyVoice ? <SourceChoice value={user.notifySource} available={translations} pending={sources.isPending} onChange={(notifySource) => update.mutate({ notifySource })} /> : null}
+        </Card>
+      </Block>
+      <Block title={t('settings.notifyPremieres')} description={t('settings.notifyPremieresHint')}>
+        <Card className="py-1">
+          <SwitchRow label={t('settings.premieresSwitch')} checked={user.notifyPremieres} onChange={(notifyPremieres) => update.mutate({ notifyPremieres })} />
+          {user.notifyPremieres ? <SourceChoice value={user.premiereSource} available={translations} pending={sources.isPending} onChange={(premiereSource) => update.mutate({ premiereSource })} /> : null}
+        </Card>
+      </Block>
+      <Block title={t('settings.airedTitle')} description={t('settings.notifyAiredHint')}>
+        <Card className="py-1">
+          <SwitchRow label={t('settings.notifyAired')} checked={user.notifyAired} onChange={(notifyAired) => update.mutate({ notifyAired })} />
+          {user.notifyAired ? <SourceChoice value={user.airedSource} available={calendars} pending={sources.isPending} onChange={(airedSource) => update.mutate({ airedSource })} /> : null}
         </Card>
       </Block>
       <Block title={t('settings.socialNotifications')} description={t('settings.socialNotificationsHint')}>

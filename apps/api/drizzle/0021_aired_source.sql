@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `aired_source` text;

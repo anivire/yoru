@@ -1,5 +1,8 @@
 import type {
   AvatarCrop,
+  NotificationSources,
+  UserSettingsInput,
+  ReleaseStatus,
   Changelog,
   PersonCard,
   FriendTitles,
@@ -111,7 +114,7 @@ export const api = {
   deleteAccount: (password: string) => request<{ ok: true }>('POST', '/me/delete', { password }),
   changePassword: (currentPassword: string, newPassword: string) =>
     request<{ ok: true }>('POST', '/auth/password', { currentPassword, newPassword }),
-  updateSettings: (patch: Partial<Pick<User, 'locale' | 'notifySub' | 'notifyVoice'>> & { anime365Token?: string | null }) =>
+  updateSettings: (patch: UserSettingsInput) =>
     request<User>('PATCH', '/me/settings', patch),
 
   home: () => get<HomeData>('/home'),
@@ -201,6 +204,7 @@ export const api = {
   videoEpisodes: (malId: number, provider: string) => get<VideoEpisodes>(`/stream/${malId}/${provider}/episodes`),
 
   notifications: () => get<NotificationList>('/notifications'),
+  notificationSources: () => get<NotificationSources>('/notifications/sources'),
   readNotifications: (body: { ids?: number[]; socialIds?: number[] } = {}) => request<{ ok: true }>('POST', '/notifications/read', body),
   clearNotifications: () => request<{ ok: true }>('DELETE', '/notifications'),
 
@@ -219,6 +223,7 @@ export const api = {
 
   admin: {
     invites: () => get<Invite[]>('/admin/invites'),
+    releases: () => get<ReleaseStatus>('/admin/releases'),
     createInvite: (note: string | null, expiresInDays: number | null, multiUse: boolean) => request<Invite[]>('POST', '/admin/invites', { note, expiresInDays, multiUse }),
     deleteInvite: (id: number) => request<Invite[]>('DELETE', `/admin/invites/${id}`),
     users: () => get<AdminUser[]>('/admin/users'),

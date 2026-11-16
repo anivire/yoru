@@ -13,6 +13,8 @@ import { AnimeTitle, animePath } from '../lib/anime-title'
 import { RailLabel, RailTip, useRailButton } from './rail'
 import { UserAvatar, nameOf } from './user-avatar'
 
+export const SOURCE_LABELS: Record<string, string> = { anime365: 'Anime365', anilibria: 'AniLibria', kodik: 'Kodik', shikimori: 'Shikimori' }
+
 export function useNotificationSound() {
   const { data } = useQuery({ queryKey: keys.notifications, queryFn: api.notifications, refetchInterval: 60_000, refetchOnWindowFocus: true })
   const previous = useRef<number | null>(null)
@@ -126,7 +128,7 @@ export function NotificationsPopover({ side = 'bottom', rail = false }: { side?:
               return (
               <TLink
                 key={n.id}
-                to={`${animePath(n.malId)}?episode=${n.episode}&kind=${n.kind}`}
+                to={n.kind === 'raw' ? animePath(n.malId) : `${animePath(n.malId)}?episode=${n.episode}&kind=${n.kind}`}
                 onClick={() => !n.readAt && readOne.mutate(n.id)}
                 className={cn('flex gap-3 rounded-lg px-2.5 py-2.5 transition-colors hover:bg-muted', n.readAt && 'opacity-60')}
               >
@@ -136,17 +138,17 @@ export function NotificationsPopover({ side = 'bottom', rail = false }: { side?:
                     {!n.readAt ? <StatusDot tone="accent" /> : null}
                     <span className="truncate text-sm font-medium"><AnimeTitle anime={n.titles} /></span>
                   </div>
-                  <div className="mt-0.5 text-[0.8125rem] text-muted-foreground">{n.type === 'premiere' ? t('notifications.premiere') : t('notifications.released', { episode: n.episode })}</div>
+                  <div className="mt-0.5 text-[0.8125rem] text-muted-foreground">{n.type === 'premiere' ? t('notifications.premiere') : n.type === 'aired' ? t('notifications.aired', { episode: n.episode }) : t('notifications.released', { episode: n.episode })}</div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                     {n.type === 'premiere' ? (
                       <Badge size="sm" variant="accent">
                         {t('notifications.premiereBadge')}
                       </Badge>
                     ) : null}
-                    <Badge size="sm" variant={n.kind === 'sub' ? 'info' : 'warning'}>
-                      {t(`notifications.${n.kind}`)}
+                    <Badge size="sm" variant={n.kind === 'raw' ? 'neutral' : n.kind === 'sub' ? 'info' : 'warning'}>
+                      {n.kind === 'raw' ? t('notifications.airedBadge') : t(`notifications.${n.kind}`)}
                     </Badge>
-                    {n.author ? <span className="truncate text-xs text-subtle-foreground">{n.author}</span> : null}
+                    <span className="truncate text-xs text-subtle-foreground">{[n.source ? (SOURCE_LABELS[n.source] ?? n.source) : null, n.author].filter(Boolean).join(' · ')}</span>
                     <span className="ml-auto font-mono text-[0.6875rem] text-subtle-foreground">{relativeTime(n.createdAt)}</span>
                   </div>
                 </div>

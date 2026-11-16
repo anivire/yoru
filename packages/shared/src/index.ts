@@ -124,6 +124,10 @@ export interface User {
   notifySub: boolean
   notifyVoice: boolean
   notifyPremieres: boolean
+  notifyAired: boolean
+  notifySource: TranslationSource | null
+  premiereSource: TranslationSource | null
+  airedSource: CalendarSource | null
   notifyFriends: boolean
   notifyComments: boolean
   notifyReactions: boolean
@@ -425,10 +429,11 @@ export interface HomeData {
 
 export interface Notification {
   id: number
-  type: 'episode' | 'premiere'
+  type: 'episode' | 'premiere' | 'aired'
   malId: number
   episode: number
-  kind: StreamKind
+  kind: StreamKind | 'raw'
+  source: string | null
   author: string | null
   animeTitle: string
   titles: AnimeTitles
@@ -517,6 +522,34 @@ export interface SkipTime {
   kind: SkipKind
   start: number
   end: number
+}
+
+export const RELEASE_SOURCES = ['anime365', 'anilibria', 'kodik', 'shikimori'] as const
+export type ReleaseSource = (typeof RELEASE_SOURCES)[number]
+export const TRANSLATION_SOURCES = ['anime365', 'anilibria', 'kodik'] as const
+export type TranslationSource = (typeof TRANSLATION_SOURCES)[number]
+export const CALENDAR_SOURCES = ['shikimori'] as const
+export type CalendarSource = (typeof CALENDAR_SOURCES)[number]
+
+export interface NotificationSources {
+  translations: TranslationSource[]
+  calendars: CalendarSource[]
+}
+
+export interface ReleaseSourceStatus {
+  id: ReleaseSource
+  checkedAt: string | null
+  error: string | null
+  lastFoundAt: string | null
+  lastNotifiedAt: string | null
+  notified24h: number
+}
+
+export interface ReleaseStatus {
+  intervalMinutes: number
+  lastRunAt: string | null
+  nextRunAt: string | null
+  sources: ReleaseSourceStatus[]
 }
 
 export interface DataSourceInfo {
@@ -649,6 +682,10 @@ export const userSettingsSchema = z.object({
   notifySub: z.boolean().optional(),
   notifyVoice: z.boolean().optional(),
   notifyPremieres: z.boolean().optional(),
+  notifyAired: z.boolean().optional(),
+  notifySource: z.enum(TRANSLATION_SOURCES).nullable().optional(),
+  premiereSource: z.enum(TRANSLATION_SOURCES).nullable().optional(),
+  airedSource: z.enum(CALENDAR_SOURCES).nullable().optional(),
   notifyFriends: z.boolean().optional(),
   notifyComments: z.boolean().optional(),
   notifyReactions: z.boolean().optional(),
@@ -656,6 +693,8 @@ export const userSettingsSchema = z.object({
   notifyRooms: z.boolean().optional(),
   anime365Token: z.string().trim().max(512).nullable().optional(),
 })
+
+export type UserSettingsInput = z.infer<typeof userSettingsSchema>
 
 const sourcePatchSchema = z.object({
   enabled: z.boolean().optional(),

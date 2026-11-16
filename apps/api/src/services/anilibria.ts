@@ -140,3 +140,17 @@ export async function anilibriaRelease(malId: number): Promise<AnilibriaRelease>
       .filter((e) => Number.isInteger(e.number) && e.number > 0 && e.sources.length),
   }
 }
+
+export interface LibriaLatest {
+  id: number
+  year: number | null
+  is_ongoing?: boolean | null
+  mal?: { id: number | null } | null
+  shikimori?: { id: number | null } | null
+  fresh_at: string | null
+  latest_episode?: { ordinal: number; updated_at: string | null } | null
+}
+
+export function anilibriaLatest(limit: number): Promise<LibriaLatest[]> {
+  return request<LibriaLatest[]>(`/anime/releases/latest?limit=${limit}`)
+}

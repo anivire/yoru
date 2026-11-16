@@ -14,10 +14,12 @@ import {
   type ProviderGroup,
   type ProviderEntryInfo,
   type ProvidersSettings,
+  type ReleaseStatus,
   IMPORT_PROVIDERS,
   DATA_SOURCES,
   FEATURES,
   PROVIDER_GROUPS,
+  RELEASE_SOURCES,
   adminSettingsSchema,
   extensionInstallSchema,
   extensionPatchSchema,
@@ -25,7 +27,7 @@ import {
   providerOrderSchema,
 } from '@yoru/shared'
 import { db, now } from '../db/client'
-import { invites, users } from '../db/schema'
+import { invites, notifications, providerReleases, users } from '../db/schema'
 import { env } from '../env'
 import { type AppEnv, requireAdmin, requireAuth } from '../lib/auth'
 import { randomToken } from '../lib/crypto'
@@ -40,6 +42,7 @@ import { clearDiscoverCache } from '../services/discover'
 import { oauthConfigured, providerEnabled, redirectUri } from '../services/importers'
 import { resetSourceStatus, sourceInfos } from '../services/sources'
 import { removeAvatar } from './users'
+import { lastReleaseRun, releaseChecks } from '../jobs/release-watcher'
 import { moderationRoutes } from './moderation'
 import { avatarUrl } from '../services/social'
 
@@ -169,6 +172,37 @@ export const adminRoutes = new Hono<AppEnv>()
     if (!DATA_SOURCES.includes(id)) badRequest('Invalid source')
     resetSourceStatus(id)
     return c.json(sourceInfos())
+  })
+  .get('/releases', (c) => {
+    const checks = releaseChecks()
+    const since = new Date(Date.now() - 86_400_000).toISOString()
+    const notified = new Map(
+      db
+        .select({ provider: notifications.provider, last: sql<string>`max(${notifications.createdAt})`, recent: sql<number>`sum(case when ${notifications.createdAt} > ${since} then 1 else 0 end)` })
+        .from(notifications)
+        .groupBy(notifications.provider)
+        .all()
+        .map((row) => [row.provider, row]),
+    )
+    const lastRunAt = lastReleaseRun()
+    const status: ReleaseStatus = {
+      intervalMinutes: env.releasePollMinutes,
+      lastRunAt,
+      nextRunAt: lastRunAt ? new Date(Date.parse(lastRunAt) + env.releasePollMinutes * 60_000).toISOString() : null,
+      sources: RELEASE_SOURCES.map((id) => {
+        const found = db.select({ releasedAt: providerReleases.releasedAt }).from(providerReleases).where(eq(providerReleases.provider, id)).orderBy(sql`rowid desc`).limit(1).get()
+        const sent = notified.get(id)
+        return {
+          id,
+          checkedAt: checks[id]?.checkedAt ?? null,
+          error: checks[id]?.error ?? null,
+          lastFoundAt: found?.releasedAt ?? null,
+          lastNotifiedAt: sent?.last ?? null,
+          notified24h: Number(sent?.recent ?? 0),
+        }
+      }),
+    }
+    return c.json(status)
   })
   .get('/settings', (c) => {
     const github = githubConfig()

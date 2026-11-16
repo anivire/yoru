@@ -63,3 +63,15 @@ export const kodik = {
     })
   },
 }
+
+export interface KodikListItem {
+  shikimori_id?: string | null
+  year?: number | null
+  last_episode?: number | null
+  updated_at: string
+  translation: { id: number; title: string; type: 'voice' | 'subtitles' }
+}
+
+export function kodikRecent(limit: number): Promise<KodikListItem[]> {
+  return request<{ results?: KodikListItem[] }>('/list', { types: 'anime-serial', sort: 'updated_at', order: 'desc', limit }).then((body) => body.results ?? [])
+}

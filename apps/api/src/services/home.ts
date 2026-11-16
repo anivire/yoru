@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, max } from 'drizzle-orm'
+import { and, desc, eq, inArray, max, ne } from 'drizzle-orm'
 import type { ContinueItem, HomeData, UpcomingItem } from '@yoru/shared'
 import { db } from '../db/client'
 import { activity, anime, listEntries, providerReleases, watchProgress } from '../db/schema'
@@ -111,7 +111,7 @@ export async function homeData(userId: number): Promise<HomeData> {
     const rows = db
       .select({ malId: providerReleases.malId, episode: providerReleases.episode, releasedAt: providerReleases.releasedAt })
       .from(providerReleases)
-      .where(inArray(providerReleases.malId, continueWatching.map((c) => c.anime.malId)))
+      .where(and(inArray(providerReleases.malId, continueWatching.map((c) => c.anime.malId)), ne(providerReleases.kind, 'raw')))
       .all()
     for (const r of rows) {
       const key = `${r.malId}:${r.episode}`
