@@ -217,7 +217,7 @@ export const api = {
 
   admin: {
     invites: () => get<Invite[]>('/admin/invites'),
-    createInvite: (note: string | null, expiresInDays: number | null) => request<Invite[]>('POST', '/admin/invites', { note, expiresInDays }),
+    createInvite: (note: string | null, expiresInDays: number | null, multiUse: boolean) => request<Invite[]>('POST', '/admin/invites', { note, expiresInDays, multiUse }),
     deleteInvite: (id: number) => request<Invite[]>('DELETE', `/admin/invites/${id}`),
     users: () => get<AdminUser[]>('/admin/users'),
     deleteUser: (id: number) => request<{ ok: true }>('DELETE', `/admin/users/${id}`),

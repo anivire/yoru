@@ -44,6 +44,8 @@ function listInvites(): Invite[] {
       expiresAt: invite.expiresAt,
       usedAt: invite.usedAt,
       usedBy,
+      multiUse: invite.multiUse,
+      uses: invite.uses,
     }))
 }
 
@@ -55,7 +57,7 @@ export const adminRoutes = new Hono<AppEnv>()
     const input = await parseBody(c, inviteInputSchema)
     const expiresAt = input.expiresInDays ? new Date(Date.now() + input.expiresInDays * 86_400_000).toISOString() : null
     db.insert(invites)
-      .values({ code: randomToken(12), note: input.note ?? null, createdBy: c.get('user').id, createdAt: now(), expiresAt })
+      .values({ code: randomToken(12), note: input.note ?? null, multiUse: input.multiUse ?? false, createdBy: c.get('user').id, createdAt: now(), expiresAt })
       .run()
     return c.json(listInvites())
   })

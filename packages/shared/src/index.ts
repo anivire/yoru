@@ -364,6 +364,8 @@ export interface Invite {
   expiresAt: string | null
   usedAt: string | null
   usedBy: string | null
+  multiUse: boolean
+  uses: number
 }
 
 export interface VersionInfo {
@@ -535,6 +537,7 @@ export const progressInputSchema = z.object({
 export const inviteInputSchema = z.object({
   note: z.string().trim().max(200).nullable().optional(),
   expiresInDays: z.number().int().min(1).max(365).nullable().optional(),
+  multiUse: z.boolean().optional(),
 })
 
 export const userSettingsSchema = z.object({

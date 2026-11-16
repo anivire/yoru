@@ -34,7 +34,7 @@ import { useUser } from '../lib/queries'
 import { useDocumentTitle } from '../lib/title'
 
 function inviteState(invite: Invite): 'used' | 'expired' | 'active' {
-  if (invite.usedAt) return 'used'
+  if (invite.usedAt && !invite.multiUse) return 'used'
   if (invite.expiresAt && Date.parse(invite.expiresAt) < Date.now()) return 'expired'
   return 'active'
 }
@@ -73,9 +73,10 @@ function Invites() {
   const invites = useQuery({ queryKey: ['admin', 'invites'], queryFn: api.admin.invites })
   const [note, setNote] = useState('')
   const [days, setDays] = useState('7')
+  const [uses, setUses] = useState('single')
   const setData = (data: Invite[]) => client.setQueryData(['admin', 'invites'], data)
   const create = useMutation({
-    mutationFn: () => api.admin.createInvite(note.trim() || null, days === 'never' ? null : Number(days)),
+    mutationFn: () => api.admin.createInvite(note.trim() || null, days === 'never' ? null : Number(days), uses === 'unlimited'),
     onSuccess: (data) => {
       setData(data)
       setNote('')
@@ -92,7 +93,7 @@ function Invites() {
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <form
-          className="grid gap-2 sm:grid-cols-[1fr_10rem_auto] sm:items-end"
+          className="grid gap-2 sm:grid-cols-[1fr_10rem_11rem_auto] sm:items-end"
           onSubmit={(e) => {
             e.preventDefault()
             create.mutate()
@@ -110,6 +111,16 @@ function Invites() {
                 { value: '7', label: t('admin.days', { count: 7 }) },
                 { value: '30', label: t('admin.days', { count: 30 }) },
                 { value: 'never', label: t('admin.never') },
+              ]}
+            />
+          </Field>
+          <Field label={t('admin.uses')}>
+            <Select
+              value={uses}
+              onValueChange={setUses}
+              options={[
+                { value: 'single', label: t('admin.usesSingle') },
+                { value: 'unlimited', label: t('admin.usesUnlimited') },
               ]}
             />
           </Field>
@@ -135,7 +146,7 @@ function Invites() {
               const tone = state === 'active' ? 'success' : state === 'used' ? 'neutral' : 'danger'
               const badge = (
                 <Badge size="sm" variant={tone} className="max-w-full">
-                  <span className="truncate">{state === 'used' ? t('admin.used', { user: invite.usedBy ?? '?' }) : t(`admin.${state}`)}</span>
+                  <span className="truncate">{state === 'used' ? t('admin.used', { user: invite.usedBy ?? '?' }) : state === 'active' && invite.multiUse ? t('admin.multiUse') : t(`admin.${state}`)}</span>
                 </Badge>
               )
               return (
@@ -148,6 +159,7 @@ function Invites() {
                     <div className="text-xs text-muted-foreground">
                       {[
                         invite.note,
+                        invite.multiUse ? t('admin.joinedCount', { count: invite.uses }) : null,
                         t('admin.createdOn', { date: formatDate(invite.createdAt) }),
                         invite.expiresAt ? t('admin.validUntil', { date: formatDate(invite.expiresAt) }) : t('admin.noExpiry'),
                       ]

@@ -1,4 +1,4 @@
-import { and, eq, gt, isNull, or } from 'drizzle-orm'
+import { and, eq, gt, isNull, or, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 import { changePasswordSchema, loginSchema, registerSchema } from '@yoru/shared'
@@ -22,7 +22,7 @@ function findInvite(code: string) {
   return db
     .select()
     .from(invites)
-    .where(and(eq(invites.code, code), isNull(invites.usedAt), or(isNull(invites.expiresAt), gt(invites.expiresAt, now()))))
+    .where(and(eq(invites.code, code), or(isNull(invites.usedAt), eq(invites.multiUse, true)), or(isNull(invites.expiresAt), gt(invites.expiresAt, now()))))
     .get()
 }
 
@@ -64,10 +64,13 @@ export const authRoutes = new Hono<AppEnv>()
     const user = db.transaction((tx) => {
       const created = tx
         .insert(users)
-        .values({ username: input.username, passwordHash, role: invite.role, createdAt: now() })
+        .values({ username: input.username, passwordHash, role: invite.role, invitedBy: invite.createdBy, createdAt: now() })
         .returning()
         .get()
-      tx.update(invites).set({ usedAt: now(), usedBy: created.id }).where(eq(invites.id, invite.id)).run()
+      tx.update(invites)
+        .set(invite.multiUse ? { uses: sql`${invites.uses} + 1` } : { usedAt: now(), usedBy: created.id, uses: 1 })
+        .where(eq(invites.id, invite.id))
+        .run()
       return created
     })
     if (invite.createdBy) notify({ userId: invite.createdBy, actorId: user.id, type: 'invite_accepted' })

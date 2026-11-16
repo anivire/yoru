@@ -114,12 +114,14 @@ export const meRoutes = new Hono<AppEnv>()
   })
   .get('/account', (c) => {
     const user = c.get('user')
-    const invite = db
-      .select({ by: inviter.username, at: invites.usedAt })
-      .from(invites)
-      .leftJoin(inviter, eq(inviter.id, invites.createdBy))
-      .where(eq(invites.usedBy, user.id))
-      .get()
+    const invite = user.invitedBy
+      ? db.select({ by: users.username }).from(users).where(eq(users.id, user.invitedBy)).get()
+      : db
+          .select({ by: inviter.username })
+          .from(invites)
+          .leftJoin(inviter, eq(inviter.id, invites.createdBy))
+          .where(eq(invites.usedBy, user.id))
+          .get()
     const active = db
       .select({ createdAt: sessions.createdAt })
       .from(sessions)

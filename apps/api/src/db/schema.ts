@@ -29,6 +29,7 @@ export const users = sqliteTable('users', {
   statsVisibility: text('stats_visibility', { enum: ['everyone', 'friends', 'private'] }).notNull().default('everyone'),
   friendsVisibility: text('friends_visibility', { enum: ['everyone', 'friends', 'private'] }).notNull().default('everyone'),
   shareActivity: integer('share_activity', { mode: 'boolean' }).notNull().default(true),
+  invitedBy: integer('invited_by'),
   createdAt: text('created_at').notNull(),
 }, (t) => [uniqueIndex('users_username_idx').on(t.username), uniqueIndex('users_share_token_idx').on(t.shareToken)])
 
@@ -49,6 +50,8 @@ export const invites = sqliteTable('invites', {
   note: text('note'),
   createdBy: integer('created_by').references(() => users.id, { onDelete: 'set null' }),
   usedBy: integer('used_by').references(() => users.id, { onDelete: 'set null' }),
+  multiUse: integer('multi_use', { mode: 'boolean' }).notNull().default(false),
+  uses: integer('uses').notNull().default(0),
   createdAt: text('created_at').notNull(),
   expiresAt: text('expires_at'),
   usedAt: text('used_at'),
