@@ -34,14 +34,12 @@ export const authRoutes = new Hono<AppEnv>()
   })
   .post('/login', async (c) => {
     const { username, password } = await parseBody(c, loginSchema)
-    const ip = c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || 'local'
-    const key = `${ip}:${username.toLowerCase()}`
-    checkLoginRate(key)
+    checkLoginRate(c, username)
     const user = db.select().from(users).where(eq(users.username, username)).get()
     if (!user || !(await verifyPassword(password, user.passwordHash))) {
       throw new HTTPException(401, { message: 'INVALID_CREDENTIALS' })
     }
-    resetLoginRate(key)
+    resetLoginRate(c, username)
     createSession(c, user.id)
     return c.json(toUser(user))
   })

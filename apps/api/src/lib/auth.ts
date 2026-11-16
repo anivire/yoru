@@ -2,6 +2,7 @@ import { and, eq, gt, lt } from 'drizzle-orm'
 import type { Context } from 'hono'
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
 import { createMiddleware } from 'hono/factory'
+import { getConnInfo } from '@hono/node-server/conninfo'
 import { HTTPException } from 'hono/http-exception'
 import type { CalendarSource, TranslationSource, User } from '@yoru/shared'
 import { db, now } from '../db/client'
@@ -51,7 +52,15 @@ export function toUser(row: UserRow): User {
 }
 
 export function clientIp(c: Context): string | null {
-  return c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || c.req.header('x-real-ip') || null
+  const forwarded = c.req.header('x-forwarded-for')?.split(',').map((part) => part.trim()).filter(Boolean)
+  if (forwarded?.length) return forwarded[forwarded.length - 1]!
+  const real = c.req.header('x-real-ip')
+  if (real) return real
+  try {
+    return getConnInfo(c).remote.address ?? null
+  } catch {
+    return null
+  }
 }
 
 export function currentSessionId(c: Context): string | null {
@@ -116,18 +125,34 @@ export const requireAdmin = createMiddleware<AppEnv>(async (c, next) => {
 })
 
 const attempts = new Map<string, { count: number; resetAt: number }>()
+const LOGIN_WINDOW_MS = 15 * 60_000
+const ACCOUNT_LIMIT = 10
+const IP_LIMIT = 30
 
-export function checkLoginRate(key: string) {
-  const entry = attempts.get(key)
+function countAttempt(key: string, limit: number) {
   const t = Date.now()
+  const entry = attempts.get(key)
   if (!entry || entry.resetAt < t) {
-    attempts.set(key, { count: 1, resetAt: t + 15 * 60_000 })
+    attempts.set(key, { count: 1, resetAt: t + LOGIN_WINDOW_MS })
     return
   }
   entry.count += 1
-  if (entry.count > 10) throw new HTTPException(429, { message: 'Too many attempts, try again later' })
+  if (entry.count > limit) throw new HTTPException(429, { message: 'Too many attempts, try again later' })
 }
 
-export function resetLoginRate(key: string) {
-  attempts.delete(key)
+function loginKeys(c: Context, username: string) {
+  const ip = clientIp(c) ?? 'unknown'
+  return { ip: `ip:${ip}`, account: `${ip}:${username.toLowerCase()}` }
+}
+
+export function checkLoginRate(c: Context, username: string) {
+  const t = Date.now()
+  for (const [key, entry] of attempts) if (entry.resetAt < t) attempts.delete(key)
+  const keys = loginKeys(c, username)
+  countAttempt(keys.ip, IP_LIMIT)
+  countAttempt(keys.account, ACCOUNT_LIMIT)
+}
+
+export function resetLoginRate(c: Context, username: string) {
+  attempts.delete(loginKeys(c, username).account)
 }
