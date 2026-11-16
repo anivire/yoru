@@ -1,4 +1,4 @@
-import { type CueName, type PlayOptions, type SoundSet, type Spec, type ThemeName, play as foleyPlay, getAnalyser, getSet, set, toBuffer, unlock as foleyUnlock } from '@foleyjs/core'
+import { type CueName, type PlayOptions, type SoundSet, type Spec, type ThemeName, play as foleyPlay, getAnalyser, getSet, set, unlock as foleyUnlock } from '@foleyjs/core'
 import { onStep, onToast } from '@yoru/ui'
 import { useSyncExternalStore } from 'react'
 
@@ -20,21 +20,17 @@ export interface SoundSettings {
 }
 
 const STORAGE_KEY = 'yoru:sounds'
-const GAIN = 2
-const LOUDNESS_WINDOW = 0.1
-const PEAK_LIMIT = 0.28
 const CLICK = 'click'
 const AWAKE_MS = 30_000
 const HUM_LEVEL = 1e-4
 const DUCK = 0.35
-const LEVELS: Partial<Record<CueName, number>> = { glide: 0.6, tap: 0.85, switch: 0.85, pop: 0.85, thock: 0.85, tick: 0.7, hover: 0.5, on: 1, off: 1, rise: 0.8, bubble: 1, chime: 1, ready: 1, success: 1, error: 1, warning: 1 }
-const DEFAULTS: SoundSettings = { enabled: false, volume: '60', theme: 'soft', click: 'glide', interface: true, notifications: true, feedback: true }
+const DEFAULTS: SoundSettings = { enabled: true, volume: '40', theme: 'mechanical', click: 'glide', interface: true, notifications: true, feedback: true }
 
 function load(): SoundSettings {
   try {
     const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') as Partial<SoundSettings>
     return {
-      enabled: raw.enabled === true,
+      enabled: raw.enabled !== false,
       volume: SOUND_VOLUMES.includes(raw.volume as SoundVolume) ? (raw.volume as SoundVolume) : DEFAULTS.volume,
       theme: SOUND_THEMES.includes(raw.theme as (typeof SOUND_THEMES)[number]) ? (raw.theme as ThemeName) : DEFAULTS.theme,
       click: CLICK_SOUNDS.includes(raw.click as ClickSound) ? (raw.click as ClickSound) : DEFAULTS.click,
@@ -71,68 +67,9 @@ function soundSet(theme: ThemeName): SoundSet {
   return result
 }
 
-interface Level {
-  gain: number
-  peak: number
-}
-
-function peak(buffer: AudioBuffer) {
-  let max = 0
-  for (let c = 0; c < buffer.numberOfChannels; c++) {
-    for (const x of buffer.getChannelData(c)) max = Math.max(max, Math.abs(x))
-  }
-  return max
-}
-
-function loudness(buffer: AudioBuffer) {
-  const data = buffer.getChannelData(0)
-  const size = Math.round(buffer.sampleRate * LOUDNESS_WINDOW)
-  let sum = 0
-  let best = 0
-  for (let i = 0; i < data.length; i++) {
-    sum += (data[i] ?? 0) ** 2
-    if (i >= size) sum -= (data[i - size] ?? 0) ** 2
-    if (sum > best) best = sum
-  }
-  return best
-}
-
-const gains = new Map<ThemeName, Partial<Record<CueName, Level>>>()
-let reference: Promise<number> | null = null
-
-function measure(theme: ThemeName) {
-  if (gains.has(theme) || typeof OfflineAudioContext === 'undefined') return
-  const current: Partial<Record<CueName, Level>> = {}
-  gains.set(theme, current)
-  if (!reference) {
-    set({ theme: soundSet('default') })
-    reference = toBuffer('on').then((buffer) => (buffer ? loudness(buffer) : 0))
-  }
-  set({ theme: soundSet(theme) })
-  const names = Object.keys(LEVELS) as CueName[]
-  const rendered = names.map((name) => toBuffer(name))
-  set({ theme: soundSet(state.theme) })
-  void Promise.all([reference, ...rendered])
-    .then(([target, ...buffers]) => {
-      names.forEach((name, i) => {
-        const buffer = buffers[i] as AudioBuffer | null
-        const level = buffer ? loudness(buffer) : 0
-        if (buffer && target && level) current[name] = { gain: Math.min(8, Math.max(0.25, Math.sqrt((target as number) / level) * (LEVELS[name] ?? 1))), peak: peak(buffer) }
-      })
-    })
-    .catch(() => gains.delete(theme))
-}
-
 let state = load()
 let observer: MutationObserver | null = null
 const listeners = new Set<() => void>()
-
-function levelFor(name: CueName) {
-  const level = gains.get(state.theme)?.[name]
-  if (!level) return 1
-  const master = (Number(state.volume) / 100) * GAIN
-  return level.peak ? Math.min(level.gain, PEAK_LIMIT / (level.peak * master)) : level.gain
-}
 
 function play(name: CueName, opts?: PlayOptions) {
   unlock()
@@ -140,7 +77,7 @@ function play(name: CueName, opts?: PlayOptions) {
   let calls = 0
   Math.random = () => (++calls <= 2 ? 0.5 : random())
   try {
-    foleyPlay(name, { ...opts, volume: (opts?.volume ?? 1) * levelFor(name) })
+    foleyPlay(name, opts)
   } finally {
     Math.random = random
   }
@@ -192,9 +129,8 @@ function playEntering(records: MutationRecord[]) {
 }
 
 function apply() {
-  set({ muted: !state.enabled, volume: (Number(state.volume) / 100) * GAIN, theme: soundSet(state.theme) })
-  if (state.enabled) measure(state.theme)
-  else sleep()
+  set({ muted: !state.enabled, volume: Number(state.volume) / 100, theme: soundSet(state.theme) })
+  if (!state.enabled) sleep()
   const watch = state.enabled && state.interface
   if (watch && !observer) {
     observer = new MutationObserver(playEntering)
