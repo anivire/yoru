@@ -16,7 +16,7 @@ function Block({ title, description, children }: { title: ReactNode; description
 }
 
 const CATEGORIES: { key: SoundCategory; icon: RemixiconComponentType; sample: CueName }[] = [
-  { key: 'interface', icon: RiCursorFill, sample: 'pop' },
+  { key: 'interface', icon: RiCursorFill, sample: 'glide' },
   { key: 'notifications', icon: RiNotification3Fill, sample: 'bubble' },
   { key: 'feedback', icon: RiCheckboxCircleFill, sample: 'success' },
 ]
@@ -38,10 +38,10 @@ export function SoundsTab() {
               value={sounds.volume}
               onChange={(volume) => {
                 updateSounds({ volume })
-                preview('pop')
+                preview('glide')
               }}
               label={t('settings.sound.volume')}
-              options={SOUND_VOLUMES.map((v) => ({ value: v, label: `${v}%` }))}
+              options={SOUND_VOLUMES.map((v, i) => ({ value: v, label: <span className={cn(i % 2 === 0 && i > 0 && 'max-sm:hidden')}>{v}%</span> }))}
             />
           </div>
         </Card>

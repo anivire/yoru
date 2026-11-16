@@ -10,6 +10,7 @@ import { formatTime } from '../../lib/format'
 import { assToVtt } from './ass-to-vtt'
 import { useAppearance } from '../../lib/appearance'
 import { IS_IOS } from '../../lib/device'
+import { duckSounds } from '../../lib/sounds'
 
 const RATES = [0.75, 1, 1.25, 1.5, 2]
 const QUALITY_KEY = 'yoru:quality'
@@ -120,6 +121,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
     nudgeRef.current = true
     v.playbackRate = value
   }
+  useEffect(() => () => duckSounds(false), [])
   useEffect(() => {
     rateRef.current = rate
   }, [rate])
@@ -503,6 +505,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
           playsInline
           preload="metadata"
           onPlay={() => {
+            duckSounds(true)
             setPlaying(true)
             setCountdown(null)
             setBlocked(false)
@@ -510,6 +513,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
             reportSync()
           }}
           onPause={() => {
+            duckSounds(false)
             setPlaying(false)
             setControls(true)
             save(true)
@@ -539,6 +543,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
             save()
           }}
           onEnded={() => {
+            duckSounds(false)
             save(true)
             if (autoNext && onNext) setCountdown(COUNTDOWN_SECONDS)
           }}
