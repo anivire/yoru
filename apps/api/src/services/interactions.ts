@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm'
-import type { Comment, CommentTarget, FriendEntry, FriendTitles, FriendWatching, Reaction, ReactionCount, TasteMatch } from '@yoru/shared'
+import type { Comment, CommentTarget, FriendEntry, FriendTitles, FriendWatching, Reaction, ReactionCount } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { anime, animeNotes, comments, feedEvents, listEntries, reactions, recommendations, users } from '../db/schema'
 import { notFound } from '../lib/http'
@@ -162,33 +162,6 @@ export function deleteComment(viewer: Viewer, id: number) {
 
 export function deleteTargetComments(target: CommentTarget, ids: number[]) {
   if (ids.length) db.delete(comments).where(and(eq(comments.targetType, target), inArray(comments.targetId, ids))).run()
-}
-
-const MATCH_MIN_RATED = 3
-const SUGGESTION_SCORE = 8
-const SUGGESTION_LIMIT = 12
-
-export function tasteMatch(viewerId: number, ownerId: number): TasteMatch {
-  const mine = new Map(db.select({ malId: listEntries.malId, score: listEntries.score }).from(listEntries).where(eq(listEntries.userId, viewerId)).all().map((r) => [r.malId, r.score]))
-  const theirs = db.select({ entry: listEntries, anime }).from(listEntries).innerJoin(anime, eq(anime.malId, listEntries.malId)).where(eq(listEntries.userId, ownerId)).all()
-  let shared = 0
-  let rated = 0
-  let difference = 0
-  for (const { entry } of theirs) {
-    if (!mine.has(entry.malId)) continue
-    shared++
-    const score = mine.get(entry.malId)
-    if (score && entry.score) {
-      rated++
-      difference += Math.abs(score - entry.score)
-    }
-  }
-  const suggestions = theirs
-    .filter(({ entry }) => !mine.has(entry.malId) && (entry.score ?? 0) >= SUGGESTION_SCORE)
-    .sort((a, b) => (b.entry.score ?? 0) - (a.entry.score ?? 0))
-    .slice(0, SUGGESTION_LIMIT)
-    .map(({ anime: row }) => toSummary(row))
-  return { percent: rated >= MATCH_MIN_RATED ? Math.round(100 * (1 - difference / rated / 9)) : null, shared, rated, suggestions }
 }
 
 export function friendEntries(viewerId: number, malId: number): FriendEntry[] {

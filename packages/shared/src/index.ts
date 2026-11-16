@@ -754,13 +754,6 @@ export interface ModerationProfile {
   createdAt: string
 }
 
-export interface TasteMatch {
-  percent: number | null
-  shared: number
-  rated: number
-  suggestions: AnimeSummary[]
-}
-
 export interface FriendEntry {
   user: UserCard
   status: ListStatus

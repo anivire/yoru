@@ -7,8 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { relativeTime } from '../lib/format'
 import { StatusIcon } from '../lib/list-status'
-import { errorMessage, useUser } from '../lib/queries'
-import { AnimeCard } from './anime-cards'
+import { errorMessage, optimistic, useUser } from '../lib/queries'
 import { TLink } from './transition-link'
 import { UserAvatar, nameOf } from './user-avatar'
 
@@ -34,6 +33,7 @@ export function ReactionBar({ eventId, reactions, comments, onComments, comments
   const [open, setOpen] = useState(false)
   const react = useMutation({
     mutationFn: (emoji: Reaction) => api.toggleReaction(eventId, emoji),
+    meta: optimistic,
     onMutate: (emoji) => {
       client.setQueriesData({ predicate: (query) => isFeedPages(query.state.data) }, (data: unknown) => {
         if (!isFeedPages(data)) return data
@@ -344,39 +344,6 @@ export function FriendsOnAnime({ malId, total }: { malId: number; total: number 
           </TLink>
         ))}
       </div>
-    </section>
-  )
-}
-
-const TASTE_MATCH_MIN = 3
-
-export function TasteMatchCard({ username }: { username: string }) {
-  const { t } = useTranslation()
-  const match = useQuery({ queryKey: ['profile', username, 'match'], queryFn: () => api.tasteMatch(username), retry: false })
-  if (!match.data) return null
-  const { percent, shared, rated, suggestions } = match.data
-  return (
-    <section className="flex flex-col gap-5 rounded-xl bg-surface p-4 sm:p-5">
-      <div className="flex items-start gap-4">
-        <span className="min-w-16 text-3xl font-semibold tabular-nums text-accent">{percent === null ? '—' : `${percent}%`}</span>
-        <div className="min-w-0">
-          <div className="text-sm font-semibold">{t('social.tasteMatch')}</div>
-          <p className="mt-0.5 text-[0.8125rem] text-muted-foreground">
-            {percent === null ? t('social.tasteMatchFew', { rated, min: TASTE_MATCH_MIN }) : t('social.tasteMatchBasis', { count: rated })} {t('social.sharedTitles', { count: shared })}
-          </p>
-          <p className="mt-1 text-xs text-subtle-foreground">{t('social.tasteMatchHow')}</p>
-        </div>
-      </div>
-      {suggestions.length ? (
-        <div>
-          <h3 className="mb-3 text-sm font-semibold">{t('social.suggestions')}</h3>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-3 gap-y-4">
-            {suggestions.map((anime) => (
-              <AnimeCard key={anime.malId} anime={anime} />
-            ))}
-          </div>
-        </div>
-      ) : null}
     </section>
   )
 }
