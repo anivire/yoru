@@ -146,6 +146,7 @@ Use what exists before writing something new.
 - **Section and tab headers** get an icon chip: `grid size-9 place-items-center rounded-xl bg-accent-soft text-accent [&_svg]:size-[1.125rem]`.
 - **Icon-only information** (stat chips, buttons) gets a `Tooltip` and an `aria-label` or `sr-only` label.
 - **Menus**: a `⋮` ghost `icon-sm` button with `RiMore2Fill`; every item has an icon; destructive items use `text-danger data-[highlighted]:bg-danger-soft [&_svg]:text-danger` and come first or are separated with `DropdownMenuSeparator`.
+- **Reordering**: anything the user can put in order (home sections, favourite voice-overs, providers) is sorted by drag and drop with `@dnd-kit`, never with up/down buttons. Follow `SortableSection` in `components/layout-settings.tsx`: a `RiDraggable` grab handle on the left (also the keyboard handle), `restrictToVertical`, `PointerSensor` with a 4px activation distance plus `KeyboardSensor`, the dragged row lifted with `bg-raised shadow-lg`, and a `Switch` on the right when items can be turned off.
 - **Tabs**: `Segmented` for horizontal tabs; a vertical list with the sliding indicator inside a sidebar card. Hidden or locked options stay visible, dimmed, with a lock icon and a tooltip explaining why.
 - **Loading**: skeletons shaped like the real content, `skeleton-fill` for lists, `Button loading` for actions. Optimistic mutations set `meta: optimistic` (from `lib/queries.ts`) so the corner spinner shows.
 - **Empty and error states**: `EmptyState`, growing to the footer (see `AGENTS.md`).
