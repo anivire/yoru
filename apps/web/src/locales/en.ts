@@ -163,6 +163,8 @@ export const en: Messages = {
     restrictedTitle: 'This profile is visible to friends only',
     restrictedHint: 'Send a friend request to see their list and activity',
     favorites: 'Favourites',
+    editFavorites: 'Edit',
+    noFavorites: 'Add up to {{count}} titles you want people to see first',
     blockedTitle: 'You blocked this user',
     blockedHint: 'They cannot see your profile or activity. You can unblock them from the menu on the right',
   },

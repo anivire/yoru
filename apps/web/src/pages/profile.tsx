@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { PersonCard, UserProfile } from '@yoru/shared'
+import { PROFILE_FAVORITES_MAX, type PersonCard, type UserProfile } from '@yoru/shared'
 import {
   Button,
   DropdownMenu,
@@ -41,6 +41,7 @@ import { formatDate } from '../lib/format'
 import { errorMessage, useUser } from '../lib/queries'
 import { useDocumentTitle } from '../lib/title'
 import { ActivityFeed, FeedSkeleton } from './feed'
+import { FavoritesDialog } from '../components/favorites-editor'
 import { ListBrowser } from './shared-list'
 import { StatsSkeleton, StatsView } from './stats'
 
@@ -241,17 +242,25 @@ function ProfileStats({ username }: { username: string }) {
 
 function Overview({ profile }: { profile: UserProfile }) {
   const { t } = useTranslation()
-  if (!profile.favorites.length && !profile.canSeeActivity && !(profile.relation !== 'self' && profile.canSeeList)) return <EmptyState mood="sleepy" title={t('profile.noOverview')} />
+  const self = profile.relation === 'self'
+  if (!self && !profile.favorites.length && !profile.canSeeActivity && !(profile.relation !== 'self' && profile.canSeeList)) return <EmptyState mood="sleepy" title={t('profile.noOverview')} />
   return (
     <div className="grow-empty flex flex-col gap-10">
-      {profile.favorites.length ? (
+      {profile.favorites.length || self ? (
         <section className="rounded-xl bg-surface p-4 sm:p-5">
-          <h2 className="mb-3 text-sm font-semibold">{t('profile.favorites')}</h2>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-3 gap-y-4">
-            {profile.favorites.map((anime) => (
-              <AnimeCard key={anime.malId} anime={anime} />
-            ))}
+          <div className="mb-3 flex min-h-8 items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold">{t('profile.favorites')}</h2>
+            {self ? <FavoritesDialog /> : null}
           </div>
+          {profile.favorites.length ? (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-3 gap-y-4">
+              {profile.favorites.map((anime) => (
+                <AnimeCard key={anime.malId} anime={anime} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">{t('profile.noFavorites', { count: PROFILE_FAVORITES_MAX })}</p>
+          )}
         </section>
       ) : null}
       {profile.relation !== 'self' && profile.canSeeList ? <TasteMatchCard username={profile.user.username} /> : null}
@@ -284,7 +293,7 @@ function TabSkeleton({ tab }: { tab: Tab }) {
   return (
     <div className="grow-empty flex flex-col gap-10">
       <section className="rounded-xl bg-surface p-4 sm:p-5">
-        <Skeleton className="mb-3 h-5 w-28 rounded-md" />
+        <Skeleton className="mb-3 h-8 w-28 rounded-md" />
         <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-3 gap-y-4">
           {Array.from({ length: 5 }, (_, i) => (
             <div key={i} className="flex flex-col gap-2">
