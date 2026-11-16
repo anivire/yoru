@@ -185,7 +185,7 @@ function ProfileHeader({ profile }: { profile: UserProfile }) {
       </div>
       {profile.bio ? <p className="mt-4 max-w-2xl whitespace-pre-line px-2 text-[0.9375rem] sm:px-5">{profile.bio}</p> : null}
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 px-2 text-[0.8125rem] text-muted-foreground sm:px-5">
-        <span>{t('profile.joined', { date: formatDate(profile.createdAt, { month: 'long', year: 'numeric' }) })}</span>
+        <span>{t('profile.joined', { date: formatDate(profile.createdAt, { day: 'numeric', month: 'long', year: 'numeric' }) })}</span>
         {profile.canSeeFriends ? <span>{t('profile.friendsCount', { count: profile.friends })}</span> : null}
       </div>
     </header>
