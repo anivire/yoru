@@ -1,5 +1,5 @@
 import { env } from '../env'
-import { randomToken } from '../lib/crypto'
+import { sha256 } from '../lib/crypto'
 import { UpstreamError, notFound } from '../lib/http'
 
 interface Target {
@@ -10,11 +10,13 @@ interface Target {
 
 const TTL_MS = 6 * 3_600_000
 const LIMIT = 20_000
+const CONNECT_TIMEOUT_MS = 30_000
 const PASS_HEADERS = ['content-type', 'content-length', 'content-range', 'accept-ranges', 'last-modified', 'etag']
 const targets = new Map<string, Target>()
 
 export function proxyUrl(url: string, headers: Record<string, string>): string {
-  const token = randomToken(16)
+  const token = sha256(JSON.stringify([url, headers])).slice(0, 32)
+  targets.delete(token)
   targets.set(token, { url, headers, expires: Date.now() + TTL_MS })
   while (targets.size > LIMIT) targets.delete(targets.keys().next().value!)
   return `/api/stream/proxy/${token}`
@@ -35,14 +37,20 @@ function rewritePlaylist(text: string, base: string, headers: Record<string, str
 export async function proxyResponse(token: string, range: string | undefined): Promise<Response> {
   const target = targets.get(token)
   if (!target || target.expires < Date.now()) notFound('PROXY_EXPIRED')
+  targets.delete(token)
+  targets.set(token, target)
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), CONNECT_TIMEOUT_MS)
   let res: Response
   try {
     res = await fetch(target.url, {
       headers: { 'User-Agent': env.userAgent, ...target.headers, ...(range ? { Range: range } : {}) },
-      signal: AbortSignal.timeout(30_000),
+      signal: controller.signal,
     })
   } catch (error) {
     throw new UpstreamError('extension', 0, `Video source unreachable: ${(error as Error).message}`)
+  } finally {
+    clearTimeout(timer)
   }
   const type = res.headers.get('content-type') ?? ''
   if (/mpegurl/i.test(type) || /\.m3u8($|[?#])/i.test(target.url)) {
