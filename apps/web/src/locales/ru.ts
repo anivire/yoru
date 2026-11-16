@@ -195,7 +195,7 @@ export const ru = {
     cancel: 'Отменить',
     empty: 'Друзей пока нет',
     emptyHint: 'Найдите знакомых через поиск ниже',
-    search: 'Найти пользователя',
+    search: 'Найти друзей',
     searchHint: 'По имени или логину',
     searchPlaceholder: 'Имя или логин',
     noResults: 'Никого не нашли',
@@ -231,7 +231,8 @@ export const ru = {
     showcaseFull: 'В витрине уже {{count}} тайтлов, сначала уберите один',
     isBanner: 'Фон',
     showcaseSearch: 'Найти в своём списке',
-    useAsBanner: 'Сделать фоном',
+    useAsBanner: 'Сделать фоном профиля',
+    removeBanner: 'Убрать с фона',
     unpin: 'Убрать',
   },
   feed: {

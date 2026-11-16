@@ -197,7 +197,7 @@ export const en: Messages = {
     cancel: 'Cancel',
     empty: 'No friends yet',
     emptyHint: 'Find people you know with the search below',
-    search: 'Find a user',
+    search: 'Find friends',
     searchHint: 'By name or username',
     searchPlaceholder: 'Name or username',
     noResults: 'Nobody found',
@@ -233,7 +233,8 @@ export const en: Messages = {
     showcaseFull: 'The showcase already has {{count}} titles, remove one first',
     isBanner: 'Banner',
     showcaseSearch: 'Search your list',
-    useAsBanner: 'Use as banner',
+    useAsBanner: 'Use as profile banner',
+    removeBanner: 'Stop using as banner',
     unpin: 'Remove',
   },
   feed: {
