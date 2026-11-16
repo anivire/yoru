@@ -3,7 +3,7 @@ import type { ScheduleItem } from '@yoru/shared'
 import { Button, EmptyState, Image, Segmented, cn } from '@yoru/ui'
 import { useAppearance } from '../lib/appearance'
 import { RiArrowLeftSFill, RiArrowRightSFill } from '@remixicon/react'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AnimeHoverCard } from '../components/anime-hover'
 import { Page, PageHeader } from '../components/app-shell'
@@ -141,6 +141,8 @@ export function SchedulePage() {
   const { pageWidth } = useAppearance()
   const narrow = pageWidth === '3xl' || pageWidth === '4xl'
   const [scope, setScope] = useState<'mine' | 'all'>('mine')
+  const [listScope, setListScope] = useState(scope)
+  const [switching, startSwitch] = useTransition()
   const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1))
   const range = useMemo(() => monthRange(month), [month])
   const { data, isPending, isError } = useQuery({
@@ -152,14 +154,14 @@ export function SchedulePage() {
   const byDay = useMemo(() => {
     const map = new Map<string, ScheduleItem[]>()
     for (const item of data ?? []) {
-      if (scope === 'mine' && !item.listStatus) continue
+      if (listScope === 'mine' && !item.listStatus) continue
       const key = dayKey(new Date(item.airingAt))
       const list = map.get(key) ?? []
       list.push(item)
       map.set(key, list)
     }
     return map
-  }, [data, scope])
+  }, [data, listScope])
 
   const cells = useMemo(() => buildCells(range.days, byDay), [range, byDay])
   const today = startOfDay(new Date())
@@ -175,7 +177,10 @@ export function SchedulePage() {
         actions={
           <Segmented
             value={scope}
-            onChange={setScope}
+            onChange={(next) => {
+              setScope(next)
+              startSwitch(() => setListScope(next))
+            }}
             options={[
               { value: 'mine', label: t('schedule.mine') },
               { value: 'all', label: t('schedule.all') },
@@ -196,7 +201,7 @@ export function SchedulePage() {
         </Button>
       </div>
 
-      {isPending ? (
+      {isPending || switching ? (
         <ScheduleSkeleton />
       ) : isError ? (
         <EmptyState mood="error" title={t('schedule.empty')} />
@@ -242,7 +247,7 @@ export function SchedulePage() {
                 )
               })
             ) : (
-              <EmptyState mood="sleepy" title={scope === 'mine' ? t('schedule.emptyMine') : t('schedule.empty')} />
+              <EmptyState mood="sleepy" title={listScope === 'mine' ? t('schedule.emptyMine') : t('schedule.empty')} />
             )}
           </div>
 
