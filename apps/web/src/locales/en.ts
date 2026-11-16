@@ -178,7 +178,7 @@ export const en: Messages = {
   },
   notes: {
     title: 'Notes',
-    hint: 'Thoughts on an episode or the whole show. Only you can see them',
+    hint: 'Thoughts on an episode or the whole show. Private ones are only for you, the rest are visible to everyone on this server',
     placeholder: 'What do you think?',
     episode: 'Episode',
     add: 'Add',
@@ -186,6 +186,8 @@ export const en: Messages = {
     delete: 'Delete',
     empty: 'No notes yet',
     episodeBadge: 'Episode {{episode}}',
+    private: 'Only for me',
+    privateBadge: 'Only you can see this',
   },
   footer: {
     tagline: 'Anime tracker and player with subtitles and dubs.',

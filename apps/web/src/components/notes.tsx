@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { AnimeNote, NoteInput } from '@yoru/shared'
-import { Button, Input, Skeleton, Tooltip, cn, toast } from '@yoru/ui'
-import { RiDeleteBin6Line, RiEdit2Line, RiStickyNoteFill } from '@remixicon/react'
+import { Button, Input, Skeleton, Switch, Tooltip, cn, toast } from '@yoru/ui'
+import { RiDeleteBin6Line, RiEdit2Line, RiLockFill, RiStickyNoteFill } from '@remixicon/react'
 import { type FormEvent, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
@@ -18,14 +18,16 @@ function NoteForm({ initial, submitLabel, pending, onSubmit, onCancel }: { initi
   const { t } = useTranslation()
   const [text, setText] = useState(initial?.text ?? '')
   const [episode, setEpisode] = useState(initial?.episode ? String(initial.episode) : '')
+  const [isPrivate, setIsPrivate] = useState(initial?.private ?? true)
   const submit = (e: FormEvent) => {
     e.preventDefault()
     if (!text.trim()) return
     const number = Number(episode)
-    onSubmit({ text: text.trim(), episode: Number.isInteger(number) && number > 0 ? number : null })
+    onSubmit({ text: text.trim(), episode: Number.isInteger(number) && number > 0 ? number : null, private: isPrivate })
     if (!initial) {
       setText('')
       setEpisode('')
+      setIsPrivate(true)
     }
   }
   return (
@@ -35,6 +37,10 @@ function NoteForm({ initial, submitLabel, pending, onSubmit, onCancel }: { initi
         <label className="flex items-center gap-2 text-[0.8125rem] text-muted-foreground">
           {t('notes.episode')}
           <Input value={episode} onChange={(e) => setEpisode(e.target.value.replace(/\D/g, ''))} inputMode="numeric" placeholder="-" className="h-8 w-16 text-center" />
+        </label>
+        <label className="flex cursor-pointer items-center gap-2 text-[0.8125rem] text-muted-foreground">
+          <Switch checked={isPrivate} onCheckedChange={setIsPrivate} />
+          {t('notes.private')}
         </label>
         <div className="ml-auto flex gap-2">
           {onCancel ? (
@@ -55,9 +61,15 @@ export function NoteBody({ note }: { note: AnimeNote }) {
   const { t } = useTranslation()
   return (
     <div className="flex flex-col gap-1.5">
-      {note.episode ? (
+      {note.episode || note.private ? (
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span className="rounded-full bg-field px-2 py-0.5 font-medium">{t('notes.episodeBadge', { episode: note.episode })}</span>
+          {note.episode ? <span className="rounded-full bg-field px-2 py-0.5 font-medium">{t('notes.episodeBadge', { episode: note.episode })}</span> : null}
+          {note.private ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-field px-2 py-0.5 font-medium">
+              <RiLockFill className="size-3" />
+              {t('notes.privateBadge')}
+            </span>
+          ) : null}
         </div>
       ) : null}
       <Markdown text={note.text} />

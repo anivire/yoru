@@ -64,6 +64,13 @@
       "when": 1794773045515,
       "tag": "0008_feed_and_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1794827613880,
+      "tag": "0009_private_notes",
+      "breakpoints": true
     }
   ]
 }

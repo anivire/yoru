@@ -63,7 +63,7 @@ function toNote(row: NoteRow, username: string): AnimeNote {
 }
 
 function visibleTo(viewerId: number) {
-  return eq(animeNotes.userId, viewerId)
+  return or(eq(animeNotes.userId, viewerId), eq(animeNotes.private, false))
 }
 
 export function animeNotesFor(viewerId: number, malId: number): AnimeNote[] {
@@ -81,7 +81,7 @@ export function createNote(userId: number, malId: number, input: NoteInput): Ani
   const at = now()
   const row = db
     .insert(animeNotes)
-    .values({ userId, malId, episode: input.episode ?? null, text: input.text, private: input.private ?? false, createdAt: at, updatedAt: at })
+    .values({ userId, malId, episode: input.episode ?? null, text: input.text, private: input.private ?? true, createdAt: at, updatedAt: at })
     .returning()
     .get()
   record(userId, malId, 'note', { noteId: row.id })
