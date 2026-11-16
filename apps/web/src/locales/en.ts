@@ -226,7 +226,7 @@ export const en: Messages = {
     cropTitle: 'Avatar',
     cropHint: 'Drag and zoom the picture to choose what goes inside the circle',
     cropZoom: 'Zoom',
-    avatarTooLarge: 'The image is too large',
+    avatarTooLarge: 'The image is too large: up to 512 KB, or 4 MB for a GIF',
     avatarInvalid: 'Could not read the image',
     displayName: 'Display name',
     displayNamePlaceholder: 'What people should call you',

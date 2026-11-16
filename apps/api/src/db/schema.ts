@@ -21,6 +21,7 @@ export const users = sqliteTable('users', {
   displayName: text('display_name'),
   bio: text('bio'),
   avatarVersion: integer('avatar_version'),
+  avatarCrop: text('avatar_crop', { mode: 'json' }).$type<{ x: number; y: number; w: number; h: number }>(),
   bannerMalId: integer('banner_mal_id'),
   favorites: text('favorites', { mode: 'json' }).$type<number[]>().notNull().default([]),
   profileVisibility: text('profile_visibility', { enum: ['everyone', 'friends'] }).notNull().default('everyone'),

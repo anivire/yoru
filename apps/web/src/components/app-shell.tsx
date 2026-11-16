@@ -238,12 +238,12 @@ function UserMenu({ side = 'bottom', rail = false }: { side?: 'top' | 'bottom' |
     <DropdownMenuTrigger asChild>
       {rail ? (
         <button type="button" aria-label={t('nav.account')} className={railButton}>
-          {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="size-5 shrink-0 rounded-full object-cover" /> : <RiUser3Fill />}
+          {user.avatarUrl ? <UserAvatar user={user} className="size-5" /> : <RiUser3Fill />}
           <RailLabel>{nameOf(user)}</RailLabel>
         </button>
       ) : (
         <Button variant="secondary" size="icon" aria-label={t('nav.account')} className="overflow-hidden rounded-full">
-          {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="size-full object-cover" /> : <span className="text-[0.8125rem] font-semibold uppercase">{nameOf(user).slice(0, 1)}</span>}
+          {user.avatarUrl ? <UserAvatar user={user} className="size-full rounded-none" /> : <span className="text-[0.8125rem] font-semibold uppercase">{nameOf(user).slice(0, 1)}</span>}
         </Button>
       )}
     </DropdownMenuTrigger>

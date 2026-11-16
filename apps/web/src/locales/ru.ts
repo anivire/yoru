@@ -224,7 +224,7 @@ export const ru = {
     cropTitle: 'Аватар',
     cropHint: 'Перетащите картинку и приблизьте, чтобы выбрать, что попадёт в круг',
     cropZoom: 'Масштаб',
-    avatarTooLarge: 'Картинка слишком большая',
+    avatarTooLarge: 'Картинка слишком большая: до 512 КБ, для GIF до 4 МБ',
     avatarInvalid: 'Не получилось прочитать картинку',
     displayName: 'Отображаемое имя',
     displayNamePlaceholder: 'Как к вам обращаться',

@@ -3,7 +3,7 @@ import path from 'node:path'
 import { and, desc, eq, or, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { LIST_STATUSES, type ListStatus, type PersonCard, type UserProfile } from '@yoru/shared'
+import { type AvatarCrop, LIST_STATUSES, type ListStatus, type PersonCard, type UserProfile } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { blocks, friendships, listEntries, users } from '../db/schema'
 import { env } from '../env'
@@ -19,6 +19,7 @@ import { listPage } from './list'
 const SEARCH_LIMIT = 20
 const RECENT_LIMIT = 20
 export const MAX_AVATAR_BYTES = 512 * 1024
+export const MAX_GIF_AVATAR_BYTES = 4 * 1024 * 1024
 const avatarDir = path.join(env.dataDir, 'avatars')
 
 const moderateSchema = z.object({ avatar: z.boolean().optional(), bio: z.boolean().optional(), displayName: z.boolean().optional() })
@@ -34,18 +35,19 @@ export function imageType(bytes: Uint8Array): string | null {
   if (bytes.length > 12 && ascii(0, 4) === 'RIFF' && ascii(8, 12) === 'WEBP') return 'image/webp'
   if (bytes.length > 8 && bytes[0] === 0x89 && ascii(1, 4) === 'PNG') return 'image/png'
   if (bytes.length > 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'image/jpeg'
+  if (bytes.length > 6 && ascii(0, 4) === 'GIF8') return 'image/gif'
   return null
 }
 
-export function saveAvatar(userId: number, bytes: Uint8Array) {
+export function saveAvatar(userId: number, bytes: Uint8Array, crop: AvatarCrop | null) {
   fs.mkdirSync(avatarDir, { recursive: true })
   fs.writeFileSync(avatarPath(userId), bytes)
-  db.update(users).set({ avatarVersion: Date.now() }).where(eq(users.id, userId)).run()
+  db.update(users).set({ avatarVersion: Date.now(), avatarCrop: crop }).where(eq(users.id, userId)).run()
 }
 
 export function removeAvatar(userId: number) {
   fs.rmSync(avatarPath(userId), { force: true })
-  db.update(users).set({ avatarVersion: null }).where(eq(users.id, userId)).run()
+  db.update(users).set({ avatarVersion: null, avatarCrop: null }).where(eq(users.id, userId)).run()
 }
 
 function ownerByName(viewerId: number, username: string): OwnerRow {

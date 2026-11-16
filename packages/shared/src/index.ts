@@ -31,6 +31,7 @@ export interface User {
   username: string
   displayName: string | null
   avatarUrl: string | null
+  avatarCrop: AvatarCrop | null
   role: UserRole
   locale: Locale
   notifySub: boolean
@@ -398,6 +399,7 @@ export interface AdminUser {
   username: string
   displayName: string | null
   avatarUrl: string | null
+  avatarCrop: AvatarCrop | null
   role: UserRole
   createdAt: string
   entries: number
@@ -648,11 +650,19 @@ export type RoomServerMessage =
   | { type: 'members'; members: RoomMember[] }
   | { type: 'pong'; now: number }
 
+export interface AvatarCrop {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
 export interface UserCard {
   id: number
   username: string
   displayName: string | null
   avatarUrl: string | null
+  avatarCrop: AvatarCrop | null
 }
 
 export type FeedUser = UserCard

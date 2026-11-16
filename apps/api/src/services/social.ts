@@ -1,19 +1,19 @@
 import { and, eq, inArray, or, sql } from 'drizzle-orm'
-import type { AnimeSummary, PersonCard, Relation, UserCard, Visibility } from '@yoru/shared'
+import type { AnimeSummary, AvatarCrop, PersonCard, Relation, UserCard, Visibility } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { anime, blocks, friendships, listEntries, socialNotifications, users } from '../db/schema'
 import { toSummary } from './anime'
 
-type CardRow = { id: number; username: string; displayName: string | null; avatarVersion: number | null }
+type CardRow = { id: number; username: string; displayName: string | null; avatarVersion: number | null; avatarCrop: AvatarCrop | null }
 
-export const cardColumns = { id: users.id, username: users.username, displayName: users.displayName, avatarVersion: users.avatarVersion }
+export const cardColumns = { id: users.id, username: users.username, displayName: users.displayName, avatarVersion: users.avatarVersion, avatarCrop: users.avatarCrop }
 
 export function avatarUrl(id: number, version: number | null) {
   return version ? `/api/users/${id}/avatar?v=${version}` : null
 }
 
 export function toCard(row: CardRow): UserCard {
-  return { id: row.id, username: row.username, displayName: row.displayName, avatarUrl: avatarUrl(row.id, row.avatarVersion) }
+  return { id: row.id, username: row.username, displayName: row.displayName, avatarUrl: avatarUrl(row.id, row.avatarVersion), avatarCrop: row.avatarVersion ? row.avatarCrop : null }
 }
 
 export function cardsFor(ids: number[]): Map<number, UserCard> {

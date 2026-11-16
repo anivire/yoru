@@ -70,6 +70,7 @@ export const adminRoutes = new Hono<AppEnv>()
         username: users.username,
         displayName: users.displayName,
         avatarVersion: users.avatarVersion,
+        avatarCrop: users.avatarCrop,
         role: users.role,
         createdAt: users.createdAt,
         entries: sql<number>`(select count(*) from "list_entries" as "le" where "le"."user_id" = "users"."id")`,
@@ -79,7 +80,7 @@ export const adminRoutes = new Hono<AppEnv>()
       .from(users)
       .orderBy(users.createdAt)
       .all()
-      .map(({ avatarVersion, ...row }) => ({ ...row, avatarUrl: avatarUrl(row.id, avatarVersion) }))
+      .map(({ avatarVersion, avatarCrop, ...row }) => ({ ...row, avatarUrl: avatarUrl(row.id, avatarVersion), avatarCrop: avatarVersion ? avatarCrop : null }))
     return c.json(rows)
   })
   .delete('/users/:id', (c) => {

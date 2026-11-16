@@ -2,14 +2,14 @@ import { and, count, desc, eq, gt, ne } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
-import { type AccountInfo, type ProfileSettings, type PersonCard, type SessionInfo, type ShareInfo, confirmPasswordSchema, profileUpdateSchema, shareUpdateSchema, userSettingsSchema } from '@yoru/shared'
+import { type AccountInfo, type AvatarCrop, type ProfileSettings, type PersonCard, type SessionInfo, type ShareInfo, confirmPasswordSchema, profileUpdateSchema, shareUpdateSchema, userSettingsSchema } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { activity, animeNotes, blocks, feedEvents, imports, invites, listEntries, notifications, sessions, users, watchProgress } from '../db/schema'
 import { type AppEnv, currentSessionId, destroySession, requireAuth, toUser } from '../lib/auth'
 import { randomToken, verifyPassword } from '../lib/crypto'
 import { parseBody } from '../lib/validate'
 import { personCards, summariesFor } from '../services/social'
-import { MAX_AVATAR_BYTES, imageType, removeAvatar, saveAvatar } from './users'
+import { MAX_AVATAR_BYTES, MAX_GIF_AVATAR_BYTES, imageType, removeAvatar, saveAvatar } from './users'
 
 const inviter = alias(users, 'inviter')
 
@@ -32,6 +32,16 @@ function shareColumns(flags: { list?: boolean; stats?: boolean }) {
 function readShare(userId: number): ShareInfo {
   const row = db.select({ token: users.shareToken, list: users.shareList, stats: users.shareStats }).from(users).where(eq(users.id, userId)).get()
   return { token: row?.token ?? null, list: row?.list ?? true, stats: row?.stats ?? false }
+}
+
+const MAX_CROP_SCALE = 100
+
+function parseCrop(value: string | undefined): AvatarCrop | null {
+  const parts = (value ?? '').split(',').map(Number)
+  if (parts.length !== 4 || parts.some((n) => !Number.isFinite(n))) return null
+  const [x, y, w, h] = parts as [number, number, number, number]
+  if (w < 1 || h < 1 || w > MAX_CROP_SCALE || h > MAX_CROP_SCALE || x < 0 || y < 0 || x > w - 1 || y > h - 1) return null
+  return { x, y, w, h }
 }
 
 function readProfile(userId: number): ProfileSettings {
@@ -72,9 +82,10 @@ export const meRoutes = new Hono<AppEnv>()
   })
   .put('/avatar', async (c) => {
     const bytes = new Uint8Array(await c.req.arrayBuffer())
-    if (bytes.length > MAX_AVATAR_BYTES) throw new HTTPException(413, { message: 'AVATAR_TOO_LARGE' })
-    if (!imageType(bytes)) throw new HTTPException(400, { message: 'AVATAR_INVALID' })
-    saveAvatar(c.get('user').id, bytes)
+    const type = imageType(bytes)
+    if (!type) throw new HTTPException(400, { message: 'AVATAR_INVALID' })
+    if (bytes.length > (type === 'image/gif' ? MAX_GIF_AVATAR_BYTES : MAX_AVATAR_BYTES)) throw new HTTPException(413, { message: 'AVATAR_TOO_LARGE' })
+    saveAvatar(c.get('user').id, bytes, type === 'image/gif' ? parseCrop(c.req.query('crop')) : null)
     return c.json(toUser(db.select().from(users).where(eq(users.id, c.get('user').id)).get()!))
   })
   .delete('/avatar', (c) => {

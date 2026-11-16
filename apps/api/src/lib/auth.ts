@@ -27,6 +27,7 @@ export function toUser(row: UserRow): User {
     username: row.username,
     displayName: row.displayName,
     avatarUrl: row.avatarVersion ? `/api/users/${row.id}/avatar?v=${row.avatarVersion}` : null,
+    avatarCrop: row.avatarVersion ? row.avatarCrop : null,
     role: row.role,
     locale: row.locale,
     notifySub: row.notifySub,

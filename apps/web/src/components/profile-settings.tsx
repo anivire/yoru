@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { PROFILE_FAVORITES_MAX, type ProfileSettings, type ProfileUpdate, type ProfileVisibility, type User, type Visibility } from '@yoru/shared'
+import { type AvatarCrop, PROFILE_FAVORITES_MAX, type ProfileSettings, type ProfileUpdate, type ProfileVisibility, type User, type Visibility } from '@yoru/shared'
 import { Button, Card, Dialog, DialogContent, Image, Input, Select, Skeleton, Switch, Textarea, Tooltip, cn, toast } from '@yoru/ui'
 import { RiAddFill, RiCheckFill, RiCloseFill, RiDeleteBin6Line, RiImageAddFill, RiImageFill, RiSearchFill, RiZoomInLine, RiZoomOutLine } from '@remixicon/react'
 import { type ChangeEvent, type ReactNode, useDeferredValue, useRef, useState } from 'react'
@@ -16,6 +16,7 @@ const BIO_MAX = 300
 const NAME_MAX = 40
 
 const CROP_VIEW = 256
+const MAX_GIF_BYTES = 4 * 1024 * 1024
 const MAX_ZOOM = 3
 const WHEEL_ZOOM = 0.002
 
@@ -25,7 +26,7 @@ interface Crop {
   zoom: number
 }
 
-function AvatarCropper({ src, pending, onCancel, onSave }: { src: string; pending: boolean; onCancel: () => void; onSave: (image: Blob) => void }) {
+function AvatarCropper({ file, src, pending, onCancel, onSave }: { file: File; src: string; pending: boolean; onCancel: () => void; onSave: (upload: { image: Blob; crop: AvatarCrop | null }) => void }) {
   const { t } = useTranslation()
   const image = useRef<HTMLImageElement>(null)
   const drag = useRef<{ px: number; py: number; x: number; y: number } | null>(null)
@@ -47,11 +48,20 @@ function AvatarCropper({ src, pending, onCancel, onSave }: { src: string; pendin
     const el = image.current
     if (!el || !size) return
     const scale = scaleFor(crop.zoom)
+    if (file.type === 'image/gif') {
+      if (file.size > MAX_GIF_BYTES) {
+        toast.error(t('profileSettings.avatarTooLarge'))
+        return
+      }
+      const side = CROP_VIEW / scale
+      onSave({ image: file, crop: { x: -crop.x / scale / side, y: -crop.y / scale / side, w: size.w / side, h: size.h / side } })
+      return
+    }
     const canvas = document.createElement('canvas')
     canvas.width = AVATAR_SIZE
     canvas.height = AVATAR_SIZE
     canvas.getContext('2d')!.drawImage(el, -crop.x / scale, -crop.y / scale, CROP_VIEW / scale, CROP_VIEW / scale, 0, 0, AVATAR_SIZE, AVATAR_SIZE)
-    canvas.toBlob((blob) => (blob ? onSave(blob) : toast.error(t('profileSettings.avatarInvalid'))), 'image/webp', 0.9)
+    canvas.toBlob((blob) => (blob ? onSave({ image: blob, crop: null }) : toast.error(t('profileSettings.avatarInvalid'))), 'image/webp', 0.9)
   }
   const scale = scaleFor(crop.zoom)
   return (
@@ -129,9 +139,9 @@ function AvatarEditor() {
     client.setQueryData(keys.me, next)
     void client.invalidateQueries({ queryKey: ['profile'] })
   }
-  const [source, setSource] = useState<string | null>(null)
+  const [source, setSource] = useState<{ file: File; url: string } | null>(null)
   const close = () => {
-    if (source) URL.revokeObjectURL(source)
+    if (source) URL.revokeObjectURL(source.url)
     setSource(null)
   }
   const upload = useMutation({
@@ -146,11 +156,11 @@ function AvatarEditor() {
   const pick = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     e.target.value = ''
-    if (file) setSource(URL.createObjectURL(file))
+    if (file) setSource({ file, url: URL.createObjectURL(file) })
   }
   return (
     <div className="flex items-center gap-4 px-5 py-4">
-      {source ? <AvatarCropper key={source} src={source} pending={upload.isPending} onCancel={close} onSave={(image) => upload.mutate(image)} /> : null}
+      {source ? <AvatarCropper key={source.url} file={source.file} src={source.url} pending={upload.isPending} onCancel={close} onSave={(result) => upload.mutate(result)} /> : null}
       <UserAvatar user={user} className="size-16 text-2xl" />
       <div className="flex flex-wrap gap-2">
         <input ref={input} type="file" accept="image/*" className="hidden" onChange={pick} />

@@ -1,4 +1,5 @@
 import type {
+  AvatarCrop,
   Changelog,
   PersonCard,
   FriendTitles,
@@ -157,7 +158,7 @@ export const api = {
   moderateUser: (id: number, body: { avatar?: boolean; bio?: boolean; displayName?: boolean }) => request<{ ok: boolean }>('POST', `/users/${id}/moderate`, body),
   myProfile: () => get<ProfileSettings>('/me/profile'),
   updateProfile: (body: ProfileUpdate) => request<ProfileSettings>('PATCH', '/me/profile', body),
-  uploadAvatar: (image: Blob) => request<User>('PUT', '/me/avatar', image),
+  uploadAvatar: ({ image, crop }: { image: Blob; crop: AvatarCrop | null }) => request<User>('PUT', `/me/avatar${crop ? qs({ crop: [crop.x, crop.y, crop.w, crop.h].join(',') }) : ''}`, image),
   deleteAvatar: () => request<User>('DELETE', '/me/avatar'),
   blocks: () => get<PersonCard[]>('/me/blocks'),
   friends: () => get<FriendsOverview>('/friends'),
