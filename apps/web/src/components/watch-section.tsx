@@ -52,7 +52,7 @@ function authorKey(malId: number, kind: StreamKind) {
   return `yoru:author:${malId}:${kind}`
 }
 
-function PlayerMessage({ children, mood = 'thinking', action }: { children: ReactNode; mood?: 'thinking' | 'error' | 'sleepy'; action?: ReactNode }) {
+function PlayerMessage({ children, mood = 'thinking', action }: { children?: ReactNode; mood?: 'thinking' | 'error' | 'sleepy'; action?: ReactNode }) {
   return (
     <div className="grid aspect-video w-full place-items-center rounded-xl bg-inset p-6">
       <div className="flex max-w-sm flex-col items-center gap-3 text-center text-sm text-muted-foreground">
@@ -66,7 +66,7 @@ function PlayerMessage({ children, mood = 'thinking', action }: { children: Reac
 
 function defaultEpisode(episodes: Episode[], entry: ListEntry | null): number | null {
   const available = episodes.filter((e) => e.available)
-  if (!available.length) return episodes[0]?.number ?? null
+  if (!available.length) return null
   const next = (entry?.progress ?? 0) + 1
   return available.find((e) => e.number === next)?.number ?? available.find((e) => e.number > next)?.number ?? available[0]!.number
 }
@@ -242,7 +242,7 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
     } else if (!libriaRelease.data?.releaseId) {
       body = <PlayerMessage>{t('player.noLibria')}</PlayerMessage>
     } else if (!episode) {
-      body = <PlayerMessage>{t('player.selectEpisode')}</PlayerMessage>
+      body = <PlayerMessage mood="sleepy" />
     } else if (!libriaEpisode) {
       body = <PlayerMessage mood="sleepy">{t('player.notAvailable')}</PlayerMessage>
     } else {
@@ -257,7 +257,7 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
   } else if (!match.data?.providerId) {
     body = <PlayerMessage>{t('player.noMatch')}</PlayerMessage>
   } else if (!episode) {
-    body = <PlayerMessage>{t('player.selectEpisode')}</PlayerMessage>
+    body = <PlayerMessage mood="sleepy" />
   } else if (!available) {
     body = <PlayerMessage mood="sleepy">{t('player.notAvailable')}</PlayerMessage>
   } else if (translations.isPending || (translationId && stream.isPending)) {

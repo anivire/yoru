@@ -625,7 +625,6 @@ export const en: Messages = {
     tokenMissing: 'Anime365 token is not set. Add it in settings.',
     tokenInvalid: 'Anime365 token is invalid or the subscription is inactive',
     noSources: 'Anime365 returned no video links',
-    selectEpisode: 'Select an episode',
     next: 'Next episode',
     prev: 'Previous episode',
     autoplay: 'Autoplay',
