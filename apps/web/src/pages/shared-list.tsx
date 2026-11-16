@@ -1,5 +1,5 @@
 import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { LIST_STATUSES, type ShareKind } from '@yoru/shared'
+import { LIST_STATUSES, type ListResponse, type ShareKind } from '@yoru/shared'
 import { RiBarChart2Fill, RiBookShelfFill } from '@remixicon/react'
 import { EmptyState, Segmented } from '@yoru/ui'
 import { useEffect, useMemo, useRef } from 'react'
@@ -17,13 +17,13 @@ import { StatsSkeleton, StatsView } from './stats'
 
 const PAGE_SIZE = 48
 
-function SharedList({ token }: { token: string }) {
+export function ListBrowser({ queryKey, fetchPage, external = false }: { queryKey: readonly unknown[]; fetchPage: (params: Record<string, string | number | undefined>) => Promise<ListResponse>; external?: boolean }) {
   const { t } = useTranslation()
   const { status, filters, set } = useListParams()
   const [view, setView] = useListView()
   const query = useInfiniteQuery({
-    queryKey: ['public-list', token, filters],
-    queryFn: ({ pageParam }) => api.publicList(token, { ...filters, offset: pageParam, limit: PAGE_SIZE }),
+    queryKey: [...queryKey, filters],
+    queryFn: ({ pageParam }) => fetchPage({ ...filters, offset: pageParam, limit: PAGE_SIZE }),
     initialPageParam: 0,
     getNextPageParam: (last) => (last.offset + last.items.length < last.total ? last.offset + last.items.length : undefined),
     placeholderData: keepPreviousData,
@@ -49,7 +49,7 @@ function SharedList({ token }: { token: string }) {
 
   if (isError) return <EmptyState mood="error" title={t('share.notFound')} description={t('share.notFoundHint')} />
   return (
-    <>
+    <div className="grow-empty">
       <Segmented
         className="[&_button]:h-9"
         value={status}
@@ -71,7 +71,7 @@ function SharedList({ token }: { token: string }) {
       ) : !items.length ? (
         <EmptyState mood="sleepy" title={t('lists.empty')} />
       ) : view === 'table' ? (
-        <ListTable items={items} external />
+        <ListTable items={items} external={external} />
       ) : (
         <PosterGrid fullRows={hasNextPage}>
           {items.map((e) => (
@@ -83,7 +83,7 @@ function SharedList({ token }: { token: string }) {
               rewatches={e.rewatches}
               userScore={e.score}
               coloredScore
-              href={`https://myanimelist.net/anime/${e.malId}`}
+              href={external ? `https://myanimelist.net/anime/${e.malId}` : undefined}
             />
           ))}
         </PosterGrid>
@@ -93,7 +93,7 @@ function SharedList({ token }: { token: string }) {
           {isFetchingNextPage ? view === 'table' ? <ListTableSkeleton rows={4} /> : <PosterGridSkeleton count={6} /> : <div className="h-px" />}
         </div>
       ) : null}
-    </>
+    </div>
   )
 }
 
@@ -143,7 +143,7 @@ export function SharedListPage() {
               />
             ) : null}
           </div>
-          {!info ? <PosterGridSkeleton /> : tab === 'stats' ? <SharedStats token={token} /> : <SharedList token={token} />}
+          {!info ? <PosterGridSkeleton /> : tab === 'stats' ? <SharedStats token={token} /> : <ListBrowser queryKey={['public-list', token]} fetchPage={(params) => api.publicList(token, params)} external />}
         </>
       )}
     </PublicShell>

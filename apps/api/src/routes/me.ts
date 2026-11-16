@@ -2,12 +2,14 @@ import { and, count, desc, eq, gt, ne } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
-import { type AccountInfo, type SessionInfo, type ShareInfo, confirmPasswordSchema, shareUpdateSchema, userSettingsSchema } from '@yoru/shared'
+import { type AccountInfo, type AvatarCrop, type ProfileSettings, type PersonCard, type SessionInfo, type ShareInfo, confirmPasswordSchema, profileUpdateSchema, shareUpdateSchema, userSettingsSchema } from '@yoru/shared'
 import { db, now } from '../db/client'
-import { activity, animeNotes, feedEvents, imports, invites, listEntries, notifications, sessions, users, watchProgress } from '../db/schema'
+import { activity, animeNotes, blocks, feedEvents, imports, invites, listEntries, notifications, sessions, users, watchProgress } from '../db/schema'
 import { type AppEnv, currentSessionId, destroySession, requireAuth, toUser } from '../lib/auth'
 import { randomToken, verifyPassword } from '../lib/crypto'
 import { parseBody } from '../lib/validate'
+import { personCards, summariesFor } from '../services/social'
+import { MAX_AVATAR_BYTES, MAX_GIF_AVATAR_BYTES, imageType, removeAvatar, saveAvatar } from './users'
 
 const inviter = alias(users, 'inviter')
 
@@ -32,8 +34,68 @@ function readShare(userId: number): ShareInfo {
   return { token: row?.token ?? null, list: row?.list ?? true, stats: row?.stats ?? false }
 }
 
+const MAX_CROP_SCALE = 100
+
+function parseCrop(value: string | undefined): AvatarCrop | null {
+  const parts = (value ?? '').split(',').map(Number)
+  if (parts.length !== 4 || parts.some((n) => !Number.isFinite(n))) return null
+  const [x, y, w, h] = parts as [number, number, number, number]
+  if (w < 1 || h < 1 || w > MAX_CROP_SCALE || h > MAX_CROP_SCALE || x < 0 || y < 0 || x > w - 1 || y > h - 1) return null
+  return { x, y, w, h }
+}
+
+function readProfile(userId: number): ProfileSettings {
+  const row = db
+    .select({
+      displayName: users.displayName,
+      bio: users.bio,
+      profileVisibility: users.profileVisibility,
+      listVisibility: users.listVisibility,
+      statsVisibility: users.statsVisibility,
+      friendsVisibility: users.friendsVisibility,
+      shareActivity: users.shareActivity,
+      bannerMalId: users.bannerMalId,
+      favorites: users.favorites,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .get()!
+  return { ...row, favorites: summariesFor(row.favorites) }
+}
+
 export const meRoutes = new Hono<AppEnv>()
   .use(requireAuth)
+  .get('/profile', (c) => c.json(readProfile(c.get('user').id)))
+  .patch('/profile', async (c) => {
+    const input = await parseBody(c, profileUpdateSchema)
+    const known = (ids: number[]) => new Set(summariesFor(ids).map((a) => a.malId))
+    const favorites = input.favorites ? [...new Set(input.favorites)].filter((id) => known(input.favorites!).has(id)) : undefined
+    const patch = {
+      ...input,
+      ...(input.displayName !== undefined ? { displayName: input.displayName || null } : {}),
+      ...(input.bio !== undefined ? { bio: input.bio || null } : {}),
+      ...(favorites !== undefined ? { favorites } : {}),
+      ...(input.bannerMalId ? { bannerMalId: known([input.bannerMalId]).has(input.bannerMalId) ? input.bannerMalId : null } : {}),
+    }
+    if (Object.keys(patch).length) db.update(users).set(patch).where(eq(users.id, c.get('user').id)).run()
+    return c.json(readProfile(c.get('user').id))
+  })
+  .put('/avatar', async (c) => {
+    const bytes = new Uint8Array(await c.req.arrayBuffer())
+    const type = imageType(bytes)
+    if (!type) throw new HTTPException(400, { message: 'AVATAR_INVALID' })
+    if (bytes.length > (type === 'image/gif' ? MAX_GIF_AVATAR_BYTES : MAX_AVATAR_BYTES)) throw new HTTPException(413, { message: 'AVATAR_TOO_LARGE' })
+    saveAvatar(c.get('user').id, bytes, type === 'image/gif' ? parseCrop(c.req.query('crop')) : null)
+    return c.json(toUser(db.select().from(users).where(eq(users.id, c.get('user').id)).get()!))
+  })
+  .delete('/avatar', (c) => {
+    removeAvatar(c.get('user').id)
+    return c.json(toUser(db.select().from(users).where(eq(users.id, c.get('user').id)).get()!))
+  })
+  .get('/blocks', (c) => {
+    const rows = db.select({ id: blocks.blockedId }).from(blocks).where(eq(blocks.userId, c.get('user').id)).orderBy(desc(blocks.createdAt)).all()
+    return c.json(personCards(c.get('user').id, rows.map((row) => row.id)) satisfies PersonCard[])
+  })
   .get('/share', (c) => c.json(readShare(c.get('user').id)))
   .post('/share', async (c) => {
     const flags = await parseBody(c, shareUpdateSchema)
@@ -114,6 +176,7 @@ export const meRoutes = new Hono<AppEnv>()
       if (admins <= 1) throw new HTTPException(400, { message: 'LAST_ADMIN' })
     }
     destroySession(c)
+    removeAvatar(user.id)
     db.delete(users).where(eq(users.id, user.id)).run()
     return c.json({ ok: true })
   })
@@ -125,6 +188,11 @@ export const meRoutes = new Hono<AppEnv>()
   if (input.notifySub !== undefined) patch.notifySub = input.notifySub
   if (input.notifyVoice !== undefined) patch.notifyVoice = input.notifyVoice
   if (input.notifyPremieres !== undefined) patch.notifyPremieres = input.notifyPremieres
+  if (input.notifyFriends !== undefined) patch.notifyFriends = input.notifyFriends
+  if (input.notifyComments !== undefined) patch.notifyComments = input.notifyComments
+  if (input.notifyReactions !== undefined) patch.notifyReactions = input.notifyReactions
+  if (input.notifyRecommendations !== undefined) patch.notifyRecommendations = input.notifyRecommendations
+  if (input.notifyRooms !== undefined) patch.notifyRooms = input.notifyRooms
   if (input.anime365Token !== undefined) patch.anime365Token = input.anime365Token || null
   if (Object.keys(patch).length) db.update(users).set(patch).where(eq(users.id, user.id)).run()
   return c.json(toUser(db.select().from(users).where(eq(users.id, user.id)).get()!))

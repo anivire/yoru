@@ -90,9 +90,9 @@ const LINE_WIDTHS = ['w-full', 'w-11/12', 'w-5/6']
 
 function ChangelogSkeleton() {
   return (
-    <div className="relative">
+    <div className="skeleton-fill relative">
       <span aria-hidden className="absolute bottom-0 left-1.5 top-2 w-px bg-border sm:left-[9.875rem]" />
-      {[3, 2, 2].map((count, i) => (
+      {[3, 2, 2, 4, 1, 3, 2, 3, 2, 1].map((count, i) => (
         <section key={i} className="relative pb-10 pl-8 last:pb-0 sm:grid sm:grid-cols-[9rem_1fr] sm:gap-8 sm:pl-0">
           <span aria-hidden className="absolute left-0 top-1.5 size-3 rounded-full bg-muted ring-4 ring-background sm:left-[9.5rem]" />
           <div className="mb-3 flex flex-col gap-1.5 sm:mb-0 sm:items-end">
@@ -126,7 +126,7 @@ export function ChangelogPage() {
 
   return (
     <Page>
-      <div className="w-full max-w-3xl">
+      <div className="grow-empty w-full max-w-3xl">
         <PageHeader title={t('changelog.title')} description={t('changelog.description')} />
         {log.isPending ? (
           <ChangelogSkeleton />

@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
-import type { FeedItem } from '@yoru/shared'
-import { Button, EmptyState, Skeleton, StarIcon, cn } from '@yoru/ui'
+import type { FeedItem, FeedPage as FeedPageData } from '@yoru/shared'
+import { Button, EmptyState, Segmented, Skeleton, StarIcon, cn } from '@yoru/ui'
 import { RiAddCircleFill, RiArrowDownSLine, RiPlayCircleFill, RiStickyNoteFill } from '@remixicon/react'
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -8,8 +8,11 @@ import { AnimeCard } from '../components/anime-cards'
 import { Page, PageHeader } from '../components/app-shell'
 import { NoteBody } from '../components/notes'
 import { TLink } from '../components/transition-link'
+import { CommentThread, ReactionBar } from '../components/social'
+import { UserAvatar, nameOf } from '../components/user-avatar'
 import { useAnimeTitle } from '../lib/anime-title'
 import { api } from '../lib/api'
+import { FEED_SCOPES, useAppearance } from '../lib/appearance'
 import { StatusIcon } from '../lib/list-status'
 import { useDocumentTitle } from '../lib/title'
 
@@ -33,10 +36,10 @@ function dayKey(date: Date) {
 }
 
 function groupKey(item: FeedItem) {
-  if (item.type === 'added') return `added:${item.status}`
-  if (item.type === 'status') return `status:${item.to}`
-  if (item.type === 'note') return `note:${item.id}`
-  return item.type
+  if (item.type === 'added') return `${item.user.id}:added:${item.status}`
+  if (item.type === 'status') return `${item.user.id}:status:${item.to}`
+  if (item.type === 'note') return `${item.user.id}:note:${item.id}`
+  return `${item.user.id}:${item.type}`
 }
 
 function absorb(day: Day, item: FeedItem): boolean {
@@ -44,7 +47,7 @@ function absorb(day: Day, item: FeedItem): boolean {
   for (const group of day.groups) {
     for (let i = 0; i < group.items.length; i++) {
       const other = group.items[i]!
-      if (other.type !== item.type || other.anime.malId !== item.anime.malId) continue
+      if (other.type !== item.type || other.anime.malId !== item.anime.malId || other.user.id !== item.user.id) continue
       if (other.type === 'score') return true
       if (other.type === 'episodes' && item.type === 'episodes' && item.to + 1 >= other.from && other.to + 1 >= item.from) {
         group.items[i] = { ...other, from: Math.min(other.from, item.from), to: Math.max(other.to, item.to) }
@@ -122,18 +125,31 @@ function NoteEntry({ item }: { item: Extract<FeedItem, { type: 'note' }> }) {
   )
 }
 
-function GroupEntry({ group }: { group: Group }) {
+function GroupEntry({ group, showUser }: { group: Group; showUser: boolean }) {
   const { t, i18n } = useTranslation()
   const heading = useGroupHeading()(group)
   const [open, setOpen] = useState(false)
   const first = group.items[0]!
+  const [thread, setThread] = useState(first.comments > 0)
   const time = new Intl.DateTimeFormat(i18n.language, { hour: '2-digit', minute: '2-digit' }).format(new Date(first.createdAt))
   const shown = open ? group.items : group.items.slice(0, COLLAPSED)
   return (
     <li className="relative pb-7 pl-11 last:pb-0">
-      <span className="absolute left-0 top-0 grid size-8 place-items-center rounded-full bg-surface ring-4 ring-background [&_svg]:size-4">{heading.icon}</span>
+      {showUser ? (
+        <TLink to={`/u/${first.user.username}`} className="absolute left-0 top-0 rounded-full ring-4 ring-background">
+          <UserAvatar user={first.user} className="size-8" />
+        </TLink>
+      ) : (
+        <span className="absolute left-0 top-0 grid size-8 place-items-center rounded-full bg-surface ring-4 ring-background [&_svg]:size-4">{heading.icon}</span>
+      )}
       <div className="mb-3 flex min-h-8 flex-wrap items-center gap-x-2 gap-y-0.5">
-        <span className="text-sm font-semibold">{heading.text}</span>
+        {showUser ? (
+          <TLink to={`/u/${first.user.username}`} className="text-sm font-semibold transition-colors hover:text-accent">
+            {nameOf(first.user)}
+          </TLink>
+        ) : null}
+        {showUser ? <span className="grid size-4 place-items-center [&_svg]:size-4">{heading.icon}</span> : null}
+        <span className={cn('text-sm', showUser ? 'text-muted-foreground' : 'font-semibold')}>{heading.text}</span>
         {group.items.length > 1 ? <span className="rounded-full bg-field px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">{group.items.length}</span> : null}
         <span className="font-mono text-xs text-subtle-foreground">{time}</span>
       </div>
@@ -153,6 +169,8 @@ function GroupEntry({ group }: { group: Group }) {
           ) : null}
         </>
       )}
+      <ReactionBar eventId={first.id} reactions={first.reactions} comments={first.comments} commentsOpen={thread} onComments={() => setThread(!thread)} />
+      {thread ? <CommentThread target={first.type === 'note' ? 'note' : 'event'} id={first.type === 'note' ? first.note.id : first.id} /> : null}
     </li>
   )
 }
@@ -186,7 +204,7 @@ function DayHeader({ day, open, onToggle }: { day: Day; open: boolean; onToggle:
   )
 }
 
-function DaySection({ day }: { day: Day }) {
+function DaySection({ day, showUser }: { day: Day; showUser: boolean }) {
   const [open, setOpen] = useState(true)
   return (
     <section className={cn('relative last:mb-0', open ? 'mb-12' : 'mb-6')}>
@@ -194,7 +212,7 @@ function DaySection({ day }: { day: Day }) {
       {open ? (
         <ol>
           {day.groups.map((group) => (
-            <GroupEntry key={`${group.key}:${group.items[0]!.id}`} group={group} />
+            <GroupEntry key={`${group.key}:${group.items[0]!.id}`} group={group} showUser={showUser} />
           ))}
         </ol>
       ) : null}
@@ -202,11 +220,11 @@ function DaySection({ day }: { day: Day }) {
   )
 }
 
-function FeedSkeleton() {
+export function FeedSkeleton() {
   return (
-    <div className="relative">
+    <div className="skeleton-fill relative">
       <span aria-hidden className="absolute bottom-0 left-4 top-4 w-px -translate-x-1/2 bg-border" />
-      {[[3, 1], [2]].map((groups, i) => (
+      {[[3, 1], [2], [4, 2], [1, 3], [2, 2]].map((groups, i) => (
         <section key={i} className="relative mb-12 last:mb-0">
           <div className="relative mb-5 flex items-center gap-3">
             <span className="grid size-8 shrink-0 place-items-center">
@@ -238,6 +256,10 @@ function FeedSkeleton() {
                     </div>
                   ))}
                 </div>
+                <div className="mt-2 flex gap-1.5">
+                  <Skeleton className="size-7 rounded-full" />
+                  <Skeleton className="h-7 w-28 rounded-full" />
+                </div>
               </li>
             ))}
           </ol>
@@ -247,43 +269,62 @@ function FeedSkeleton() {
   )
 }
 
-export function FeedPage() {
+export function ActivityFeed({ queryKey, fetchPage, showUser = false, empty }: { queryKey: readonly unknown[]; fetchPage: (before: string | undefined) => Promise<FeedPageData>; showUser?: boolean; empty: ReactNode }) {
   const { t } = useTranslation()
-  useDocumentTitle(t('feed.title'))
   const feed = useInfiniteQuery({
-    queryKey: ['feed'],
-    queryFn: ({ pageParam }) => api.feed({ before: pageParam ?? undefined }),
+    queryKey,
+    queryFn: ({ pageParam }) => fetchPage(pageParam ?? undefined),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextBefore,
   })
   const items = feed.data?.pages.flatMap((p) => p.items) ?? []
   const days = buildDays(items)
+  if (feed.isPending) return <FeedSkeleton />
+  if (feed.isError) return <EmptyState mood="error" title={t('common.error')} description={feed.error.message} action={<Button onClick={() => feed.refetch()}>{t('common.retry')}</Button>} />
+  if (!items.length) return empty
+  return (
+    <div className="relative">
+      <span aria-hidden className="absolute bottom-0 left-4 top-4 w-px -translate-x-1/2 bg-border" />
+      {days.map((day) => (
+        <DaySection key={day.key} day={day} showUser={showUser} />
+      ))}
+      {feed.hasNextPage ? (
+        <div className="relative flex justify-center pt-8">
+          <Button variant="secondary" loading={feed.isFetchingNextPage} onClick={() => feed.fetchNextPage()}>
+            {t('search.more')}
+          </Button>
+        </div>
+      ) : null}
+    </div>
+  )
+}
 
+export function FeedPage() {
+  const { t } = useTranslation()
+  useDocumentTitle(t('feed.title'))
+  const { feedScope } = useAppearance()
+  const [scope, setScope] = useState(feedScope)
   return (
     <Page>
-      <div className="w-full">
-        <PageHeader title={t('feed.title')} description={t('feed.description')} />
-        {feed.isPending ? (
-          <FeedSkeleton />
-        ) : feed.isError ? (
-          <EmptyState mood="error" title={t('common.error')} description={feed.error.message} action={<Button onClick={() => feed.refetch()}>{t('common.retry')}</Button>} />
-        ) : !items.length ? (
-          <EmptyState mood="sleepy" title={t('feed.empty')} description={t('feed.emptyHint')} />
-        ) : (
-          <div className="relative">
-            <span aria-hidden className="absolute bottom-0 left-4 top-4 w-px -translate-x-1/2 bg-border" />
-            {days.map((day) => (
-              <DaySection key={day.key} day={day} />
-            ))}
-            {feed.hasNextPage ? (
-              <div className="relative flex justify-center pt-8">
-                <Button variant="secondary" loading={feed.isFetchingNextPage} onClick={() => feed.fetchNextPage()}>
-                  {t('search.more')}
-                </Button>
-              </div>
-            ) : null}
-          </div>
-        )}
+      <div className="grow-empty w-full">
+        <PageHeader
+          title={t('feed.title')}
+          description={t('feed.description')}
+          actions={
+            <Segmented
+              value={scope}
+              onChange={setScope}
+              options={FEED_SCOPES.map((value) => ({ value, label: t(`feed.scopes.${value}`) }))}
+            />
+          }
+        />
+        <ActivityFeed
+          key={scope}
+          queryKey={['feed', scope]}
+          fetchPage={(before) => api.feed({ before, scope })}
+          showUser={scope !== 'me'}
+          empty={scope === 'friends' ? <EmptyState mood="sleepy" title={t('feed.friendsEmpty')} description={t('feed.friendsEmptyHint')} /> : <EmptyState mood="sleepy" title={t('feed.empty')} description={t('feed.emptyHint')} />}
+        />
       </div>
     </Page>
   )

@@ -16,6 +16,7 @@ import {
 } from '../lib/auth'
 import { hashPassword, verifyPassword } from '../lib/crypto'
 import { parseBody } from '../lib/validate'
+import { notify } from '../services/social'
 
 function findInvite(code: string) {
   return db
@@ -50,7 +51,8 @@ export const authRoutes = new Hono<AppEnv>()
   })
   .get('/invite/:code', (c) => {
     const invite = findInvite(c.req.param('code'))
-    return c.json({ valid: Boolean(invite), role: invite?.role ?? null })
+    const inviter = invite?.createdBy ? db.select({ username: users.username, displayName: users.displayName }).from(users).where(eq(users.id, invite.createdBy)).get() : undefined
+    return c.json({ valid: Boolean(invite), role: invite?.role ?? null, inviter: inviter ?? null })
   })
   .post('/register', async (c) => {
     const input = await parseBody(c, registerSchema)
@@ -68,6 +70,7 @@ export const authRoutes = new Hono<AppEnv>()
       tx.update(invites).set({ usedAt: now(), usedBy: created.id }).where(eq(invites.id, invite.id)).run()
       return created
     })
+    if (invite.createdBy) notify({ userId: invite.createdBy, actorId: user.id, type: 'invite_accepted' })
     createSession(c, user.id)
     return c.json(toUser(user))
   })

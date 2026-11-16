@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { AnimeNote, NoteInput } from '@yoru/shared'
-import { Button, Input, Skeleton, Tooltip, cn, toast } from '@yoru/ui'
-import { RiDeleteBin6Line, RiEdit2Line, RiStickyNoteFill } from '@remixicon/react'
+import { Button, Input, Skeleton, Switch, Tooltip, cn, toast } from '@yoru/ui'
+import { RiChat3Line, RiDeleteBin6Line, RiEdit2Line, RiLockFill, RiStickyNoteFill } from '@remixicon/react'
 import { type FormEvent, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
@@ -9,23 +9,24 @@ import { relativeTime } from '../lib/format'
 import { errorMessage, useUser } from '../lib/queries'
 import { Section } from './app-shell'
 import { Markdown, MarkdownEditor } from './markdown'
-
-export function UserAvatar({ name, className }: { name: string; className?: string }) {
-  return <span className={cn('grid size-9 shrink-0 place-items-center rounded-full bg-accent text-sm font-semibold uppercase text-accent-foreground', className)}>{name.slice(0, 1)}</span>
-}
+import { TLink } from './transition-link'
+import { CommentThread } from './social'
+import { UserAvatar, nameOf } from './user-avatar'
 
 function NoteForm({ initial, submitLabel, pending, onSubmit, onCancel }: { initial?: AnimeNote; submitLabel: string; pending: boolean; onSubmit: (input: NoteInput) => void; onCancel?: () => void }) {
   const { t } = useTranslation()
   const [text, setText] = useState(initial?.text ?? '')
   const [episode, setEpisode] = useState(initial?.episode ? String(initial.episode) : '')
+  const [isPrivate, setIsPrivate] = useState(initial?.private ?? true)
   const submit = (e: FormEvent) => {
     e.preventDefault()
     if (!text.trim()) return
     const number = Number(episode)
-    onSubmit({ text: text.trim(), episode: Number.isInteger(number) && number > 0 ? number : null })
+    onSubmit({ text: text.trim(), episode: Number.isInteger(number) && number > 0 ? number : null, private: isPrivate })
     if (!initial) {
       setText('')
       setEpisode('')
+      setIsPrivate(true)
     }
   }
   return (
@@ -35,6 +36,10 @@ function NoteForm({ initial, submitLabel, pending, onSubmit, onCancel }: { initi
         <label className="flex items-center gap-2 text-[0.8125rem] text-muted-foreground">
           {t('notes.episode')}
           <Input value={episode} onChange={(e) => setEpisode(e.target.value.replace(/\D/g, ''))} inputMode="numeric" placeholder="-" className="h-8 w-16 text-center" />
+        </label>
+        <label className="flex cursor-pointer items-center gap-2 text-[0.8125rem] text-muted-foreground">
+          <Switch checked={isPrivate} onCheckedChange={setIsPrivate} />
+          {t('notes.private')}
         </label>
         <div className="ml-auto flex gap-2">
           {onCancel ? (
@@ -55,9 +60,15 @@ export function NoteBody({ note }: { note: AnimeNote }) {
   const { t } = useTranslation()
   return (
     <div className="flex flex-col gap-1.5">
-      {note.episode ? (
+      {note.episode || note.private ? (
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span className="rounded-full bg-field px-2 py-0.5 font-medium">{t('notes.episodeBadge', { episode: note.episode })}</span>
+          {note.episode ? <span className="rounded-full bg-field px-2 py-0.5 font-medium">{t('notes.episodeBadge', { episode: note.episode })}</span> : null}
+          {note.private ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-field px-2 py-0.5 font-medium">
+              <RiLockFill className="size-3" />
+              {t('notes.privateBadge')}
+            </span>
+          ) : null}
         </div>
       ) : null}
       <Markdown text={note.text} />
@@ -70,6 +81,7 @@ function NoteCard({ note, malId }: { note: AnimeNote; malId: number }) {
   const user = useUser()
   const client = useQueryClient()
   const [editing, setEditing] = useState(false)
+  const [thread, setThread] = useState(note.comments > 0)
   const refresh = () => {
     void client.invalidateQueries({ queryKey: ['notes', malId] })
     void client.invalidateQueries({ queryKey: ['feed'] })
@@ -86,18 +98,24 @@ function NoteCard({ note, malId }: { note: AnimeNote; malId: number }) {
   const own = note.user.id === user.id
   return (
     <article className="flex gap-3 rounded-xl bg-surface p-4">
-      <UserAvatar name={note.user.username} />
+      <TLink to={`/u/${note.user.username}`} className="shrink-0">
+        <UserAvatar user={note.user} />
+      </TLink>
       <div className="min-w-0 flex-1">
         <div className="mb-1.5 flex items-center gap-2">
-          <span className="truncate text-sm font-semibold">{note.user.username}</span>
+          <TLink to={`/u/${note.user.username}`} className="truncate text-sm font-semibold transition-colors hover:text-accent">
+            {nameOf(note.user)}
+          </TLink>
           <Tooltip content={new Date(note.createdAt).toLocaleString()}>
             <span className="shrink-0 text-xs text-subtle-foreground">{relativeTime(note.createdAt)}</span>
           </Tooltip>
-          {own && !editing ? (
+          {(own || user.role === 'admin') && !editing ? (
             <div className="ml-auto flex gap-0.5">
-              <Button size="icon-sm" variant="ghost" aria-label={t('notes.edit')} title={t('notes.edit')} onClick={() => setEditing(true)}>
-                <RiEdit2Line />
-              </Button>
+              {own ? (
+                <Button size="icon-sm" variant="ghost" aria-label={t('notes.edit')} title={t('notes.edit')} onClick={() => setEditing(true)}>
+                  <RiEdit2Line />
+                </Button>
+              ) : null}
               <Button size="icon-sm" variant="ghost" aria-label={t('notes.delete')} title={t('notes.delete')} loading={remove.isPending} onClick={() => remove.mutate()} className="hover:text-danger">
                 <RiDeleteBin6Line />
               </Button>
@@ -105,6 +123,15 @@ function NoteCard({ note, malId }: { note: AnimeNote; malId: number }) {
           ) : null}
         </div>
         {editing ? <NoteForm initial={note} submitLabel={t('common.save')} pending={update.isPending} onSubmit={(input) => update.mutate(input)} onCancel={() => setEditing(false)} /> : <NoteBody note={note} />}
+        {!note.private && !editing ? (
+          <>
+            <Button size="sm" variant="ghost" className={cn('mt-2 h-7 rounded-full px-2.5', thread && 'bg-muted')} onClick={() => setThread(!thread)}>
+              <RiChat3Line />
+              {note.comments ? <span className="font-mono text-xs tabular-nums">{note.comments}</span> : t('social.comment')}
+            </Button>
+            {thread ? <CommentThread target="note" id={note.id} /> : null}
+          </>
+        ) : null}
       </div>
     </article>
   )

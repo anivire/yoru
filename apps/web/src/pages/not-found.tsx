@@ -12,12 +12,7 @@ export function NotFoundPage() {
     <Page>
       <EmptyState
         mood="error"
-        title={
-          <>
-            <span className="block font-mono text-sm text-subtle-foreground">404</span>
-            {t('notFound.title')}
-          </>
-        }
+        title={t('notFound.title')}
         description={t('notFound.text')}
         action={
           <Button asChild variant="accent">

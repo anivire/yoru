@@ -29,11 +29,19 @@ export type UserRole = 'admin' | 'user'
 export interface User {
   id: number
   username: string
+  displayName: string | null
+  avatarUrl: string | null
+  avatarCrop: AvatarCrop | null
   role: UserRole
   locale: Locale
   notifySub: boolean
   notifyVoice: boolean
   notifyPremieres: boolean
+  notifyFriends: boolean
+  notifyComments: boolean
+  notifyReactions: boolean
+  notifyRecommendations: boolean
+  notifyRooms: boolean
   hasOwnAnime365Token: boolean
   hasSharedAnime365Token: boolean
   russianTitles: boolean
@@ -327,8 +335,24 @@ export interface Notification {
   readAt: string | null
 }
 
+export type SocialNotificationType = 'friend_request' | 'friend_accepted' | 'recommendation' | 'comment' | 'reaction' | 'room_invite' | 'invite_accepted'
+
+export interface SocialNotification {
+  id: number
+  type: SocialNotificationType
+  actor: UserCard
+  malId: number | null
+  titles: AnimeTitles | null
+  imageUrl: string | null
+  refId: number | null
+  text: string | null
+  createdAt: string
+  readAt: string | null
+}
+
 export interface NotificationList {
   items: Notification[]
+  social: SocialNotification[]
   unread: number
 }
 
@@ -373,9 +397,14 @@ export interface Changelog {
 export interface AdminUser {
   id: number
   username: string
+  displayName: string | null
+  avatarUrl: string | null
+  avatarCrop: AvatarCrop | null
   role: UserRole
   createdAt: string
   entries: number
+  friends: number
+  comments: number
 }
 
 export type SkipKind = 'op' | 'ed' | 'recap'
@@ -513,6 +542,11 @@ export const userSettingsSchema = z.object({
   notifySub: z.boolean().optional(),
   notifyVoice: z.boolean().optional(),
   notifyPremieres: z.boolean().optional(),
+  notifyFriends: z.boolean().optional(),
+  notifyComments: z.boolean().optional(),
+  notifyReactions: z.boolean().optional(),
+  notifyRecommendations: z.boolean().optional(),
+  notifyRooms: z.boolean().optional(),
   anime365Token: z.string().trim().max(512).nullable().optional(),
 })
 
@@ -616,9 +650,137 @@ export type RoomServerMessage =
   | { type: 'members'; members: RoomMember[] }
   | { type: 'pong'; now: number }
 
-export interface FeedUser {
+export interface AvatarCrop {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+export interface UserCard {
   id: number
   username: string
+  displayName: string | null
+  avatarUrl: string | null
+  avatarCrop: AvatarCrop | null
+}
+
+export type FeedUser = UserCard
+
+export const VISIBILITIES = ['everyone', 'friends', 'private'] as const
+export type Visibility = (typeof VISIBILITIES)[number]
+export type ProfileVisibility = Exclude<Visibility, 'private'>
+export type Relation = 'self' | 'friend' | 'outgoing' | 'incoming' | 'none'
+
+export interface ProfileSettings {
+  displayName: string | null
+  bio: string | null
+  profileVisibility: ProfileVisibility
+  listVisibility: Visibility
+  statsVisibility: Visibility
+  friendsVisibility: Visibility
+  shareActivity: boolean
+  bannerMalId: number | null
+  favorites: AnimeSummary[]
+}
+
+export const PROFILE_FAVORITES_MAX = 5
+
+export const profileUpdateSchema = z.object({
+  bannerMalId: z.number().int().positive().nullable().optional(),
+  favorites: z.array(z.number().int().positive()).max(PROFILE_FAVORITES_MAX).optional(),
+  displayName: z.string().trim().max(40).nullable().optional(),
+  bio: z.string().trim().max(300).nullable().optional(),
+  profileVisibility: z.enum(['everyone', 'friends']).optional(),
+  listVisibility: z.enum(VISIBILITIES).optional(),
+  statsVisibility: z.enum(VISIBILITIES).optional(),
+  friendsVisibility: z.enum(VISIBILITIES).optional(),
+  shareActivity: z.boolean().optional(),
+})
+
+export type ProfileUpdate = z.infer<typeof profileUpdateSchema>
+
+export interface UserProfile {
+  user: UserCard
+  bio: string | null
+  createdAt: string
+  relation: Relation
+  blocked: boolean
+  restricted: boolean
+  canSeeList: boolean
+  canSeeStats: boolean
+  canSeeFriends: boolean
+  canSeeActivity: boolean
+  friends: number
+  statuses: Record<ListStatus, number> | null
+  banner: string | null
+  favorites: AnimeSummary[]
+}
+
+export type FriendTitles = Record<number, UserCard[]>
+
+export interface FriendWatching {
+  user: UserCard
+  anime: AnimeSummary
+  status: ListStatus
+  progress: number
+  updatedAt: string
+}
+
+export const roomInviteSchema = z.object({
+  roomId: z.string().min(1).max(64),
+  friendIds: z.array(z.number().int().positive()).min(1).max(50),
+})
+
+export interface ModerationComment {
+  id: number
+  user: UserCard
+  text: string
+  createdAt: string
+  anime: AnimeSummary | null
+}
+
+export interface ModerationNote {
+  id: number
+  user: UserCard
+  text: string
+  createdAt: string
+  anime: AnimeSummary | null
+}
+
+export interface ModerationProfile {
+  user: UserCard
+  bio: string | null
+  createdAt: string
+}
+
+export interface FriendEntry {
+  user: UserCard
+  status: ListStatus
+  progress: number
+  score: number | null
+}
+
+export const recommendSchema = z.object({
+  malId: z.number().int().positive(),
+  friendIds: z.array(z.number().int().positive()).min(1).max(50),
+  message: z.string().trim().max(300).nullable().optional(),
+})
+
+export interface PersonCard extends UserCard {
+  relation: Relation
+  banner: string | null
+  bio: string | null
+  titles: number | null
+  watching: number | null
+  completed: number | null
+  friends: number | null
+}
+
+export interface FriendsOverview {
+  friends: PersonCard[]
+  incoming: PersonCard[]
+  outgoing: PersonCard[]
 }
 
 export interface AnimeNote {
@@ -630,6 +792,7 @@ export interface AnimeNote {
   createdAt: string
   updatedAt: string
   user: FeedUser
+  comments: number
 }
 
 export const noteInputSchema = z.object({
@@ -639,11 +802,43 @@ export const noteInputSchema = z.object({
 })
 export type NoteInput = z.infer<typeof noteInputSchema>
 
+export const REACTIONS = ['❤️', '🔥', '😂', '😭', '👀', '👍', '🎉', '😍', '😮', '🤔', '💀', '✨'] as const
+export type Reaction = (typeof REACTIONS)[number]
+
+export interface ReactionCount {
+  emoji: Reaction
+  count: number
+  mine: boolean
+  users: string[]
+}
+
+export type CommentTarget = 'event' | 'note'
+
+export interface Comment {
+  id: number
+  user: UserCard
+  text: string
+  createdAt: string
+  updatedAt: string
+  canEdit: boolean
+  canDelete: boolean
+}
+
+export const commentInputSchema = z.object({
+  target: z.enum(['event', 'note']),
+  id: z.number().int().positive(),
+  text: z.string().trim().min(1).max(1000),
+})
+
+export const reactionInputSchema = z.object({ emoji: z.enum(REACTIONS) })
+
 interface FeedBase {
   id: number
   createdAt: string
   user: FeedUser
   anime: AnimeSummary
+  reactions: ReactionCount[]
+  comments: number
 }
 
 export type FeedItem = FeedBase &

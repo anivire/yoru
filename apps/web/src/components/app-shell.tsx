@@ -8,24 +8,27 @@ import {
   DropdownMenuTrigger,
   Logo,
   LogoMark,
+  Spinner,
   Tooltip,
   cn,
   useSlidingIndicator,
 } from '@yoru/ui'
-import { RiLogoutBoxRFill, RiMenuFill, RiSearchFill, RiSettings3Fill, RiShieldFill, RiUser3Fill } from '@remixicon/react'
+import { RiAccountCircleFill, RiGroupFill, RiLogoutBoxRFill, RiMenuFill, RiSearchFill, RiSettings3Fill, RiShieldFill, RiUser3Fill } from '@remixicon/react'
 import { type ReactNode, type RefObject, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { matchPath, useLocation, useNavigate } from 'react-router'
 import { api } from '../lib/api'
 import { useAppearance } from '../lib/appearance'
 import { NAV, isBeta } from '../lib/navigation'
-import { keys, useUser } from '../lib/queries'
+import { keys, useOptimisticSaving, useUser } from '../lib/queries'
 import { NotificationsPopover, useNotificationSound } from './notifications'
 import { RailLabel, RailProvider, RailTip, useRailButton, BetaIcon, RailIcon } from './rail'
 import { BetaBadge } from './watch-together'
 import { Footer } from './footer'
 import { TLink, TNavLink, useTransitionNavigate } from './transition-link'
 import { AppearancePopover } from './appearance-panel'
+import { FriendTitlesProvider } from './friend-titles'
+import { UserAvatar, nameOf } from './user-avatar'
 
 const NAV_ITEM = 'relative inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-medium transition-colors [&_svg]:size-4 [&_svg]:shrink-0'
 
@@ -177,9 +180,9 @@ function ProfileLabel() {
   const user = useUser()
   return (
     <DropdownMenuLabel className="flex items-center gap-3 px-3 py-2">
-      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-soft text-sm font-semibold uppercase text-accent">{user.username.slice(0, 1)}</span>
+      <UserAvatar user={user} />
       <span className="min-w-0">
-        <span className="block truncate text-sm font-medium text-foreground">{user.username}</span>
+        <span className="block truncate text-sm font-medium text-foreground">{nameOf(user)}</span>
         <span className="block text-xs font-normal text-muted-foreground">{user.role === 'admin' ? t('nav.roleAdmin') : t('nav.roleUser')}</span>
       </span>
     </DropdownMenuLabel>
@@ -200,6 +203,14 @@ function AccountItems({ settings = true }: { settings?: boolean }) {
   }
   return (
     <>
+      <DropdownMenuItem onSelect={() => go(`/u/${user.username}`)}>
+        <RiAccountCircleFill />
+        {t('nav.profile')}
+      </DropdownMenuItem>
+      <DropdownMenuItem onSelect={() => go('/friends')}>
+        <RiGroupFill />
+        {t('nav.friends')}
+      </DropdownMenuItem>
       {settings ? (
         <DropdownMenuItem onSelect={() => go('/settings')}>
           <RiSettings3Fill />
@@ -228,12 +239,12 @@ function UserMenu({ side = 'bottom', rail = false }: { side?: 'top' | 'bottom' |
     <DropdownMenuTrigger asChild>
       {rail ? (
         <button type="button" aria-label={t('nav.account')} className={railButton}>
-          <RiUser3Fill />
-          <RailLabel>{user.username}</RailLabel>
+          {user.avatarUrl ? <UserAvatar user={user} className="size-5" /> : <RiUser3Fill />}
+          <RailLabel>{nameOf(user)}</RailLabel>
         </button>
       ) : (
-        <Button variant="secondary" size="icon" aria-label={t('nav.account')} className="rounded-full">
-          <span className="text-[0.8125rem] font-semibold uppercase">{user.username.slice(0, 1)}</span>
+        <Button variant="secondary" size="icon" aria-label={t('nav.account')} className="overflow-hidden rounded-full">
+          {user.avatarUrl ? <UserAvatar user={user} className="size-full rounded-none" /> : <span className="text-[0.8125rem] font-semibold uppercase">{nameOf(user).slice(0, 1)}</span>}
         </Button>
       )}
     </DropdownMenuTrigger>
@@ -461,14 +472,36 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="flex-1">{children}</main>
+      <main className="flex flex-1 flex-col">
+        <FriendTitlesProvider>{children}</FriendTitlesProvider>
+      </main>
       <Footer scope="app" />
+      <SavingIndicator dock={dock} />
+    </div>
+  )
+}
+
+function SavingIndicator({ dock }: { dock: boolean }) {
+  const { t } = useTranslation()
+  const saving = useOptimisticSaving()
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={cn(
+        'pointer-events-none fixed right-4 bottom-4 z-50 flex size-9 items-center justify-center rounded-full bg-raised text-muted-foreground shadow-lg transition-[opacity,scale] duration-200 md:right-[calc(var(--rail-right,0px)+1.5rem)] md:bottom-6',
+        dock && 'md:bottom-24',
+        saving ? 'scale-100 opacity-100' : 'scale-75 opacity-0',
+      )}
+    >
+      <Spinner />
+      <span className="sr-only">{saving ? t('common.saving') : null}</span>
     </div>
   )
 }
 
 export function Page({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn('page-frame w-full px-4 pb-8 pt-4 sm:px-6 sm:pt-(--page-top,2rem)', className)}>{children}</div>
+  return <div className={cn('page-frame w-full flex-1 px-4 pb-8 pt-4 sm:px-6 sm:pt-(--page-top,2rem)', className)}>{children}</div>
 }
 
 export function PageHeader({ title, description, actions }: { title: ReactNode; description?: ReactNode; actions?: ReactNode }) {

@@ -139,7 +139,7 @@ export function TogetherPage() {
         </Section>
       ) : null}
 
-      <Section title={t('room.page.pick')} hint={t('room.page.pickHint')} icon={<RiPlayCircleFill />}>
+      <Section className="grow-empty" title={t('room.page.pick')} hint={t('room.page.pickHint')} icon={<RiPlayCircleFill />}>
         <div className="relative mb-4">
           <RiSearchFill className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('room.page.search')} className="h-11 rounded-xl pl-10 text-[0.9375rem]" />

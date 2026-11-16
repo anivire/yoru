@@ -129,6 +129,16 @@ export function InvitePageInner() {
   const invite = useQuery({ queryKey: ['invite', code], queryFn: () => api.invite(code) })
   return (
     <AuthLayout title={t('auth.inviteTitle')} subtitle={t('auth.inviteSubtitle')}>
+      {invite.data?.inviter ? (
+        <div className="-mt-2 mb-5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          {t('auth.invitedBy')}
+          <span className="inline-flex max-w-full items-center gap-2 rounded-lg bg-field px-2.5 py-1">
+            <span className="grid size-5 shrink-0 place-items-center rounded-full bg-accent text-[0.625rem] font-semibold uppercase text-accent-foreground">{(invite.data.inviter.displayName || invite.data.inviter.username).slice(0, 1)}</span>
+            {invite.data.inviter.displayName ? <span className="truncate font-medium text-foreground">{invite.data.inviter.displayName}</span> : null}
+            <span className={invite.data.inviter.displayName ? 'truncate text-muted-foreground' : 'truncate font-medium text-foreground'}>@{invite.data.inviter.username}</span>
+          </span>
+        </div>
+      ) : null}
       {invite.isPending ? (
         <div className="h-40" />
       ) : invite.data?.valid ? (

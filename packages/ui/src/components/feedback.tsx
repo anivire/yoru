@@ -30,9 +30,9 @@ export function EmptyState({
   className?: string
 }) {
   return (
-    <div className={cn('flex flex-col items-center justify-center gap-3 rounded-xl bg-inset px-6 py-12 text-center', className)}>
+    <div className={cn('empty-state flex w-full flex-col items-center justify-center gap-3 self-stretch rounded-xl bg-inset px-6 py-12 text-center', className)}>
       <Mascot mood={mood} size={56} />
-      <div>
+      <div className="flex max-w-md flex-col items-center">
         <div className="text-[0.9375rem] font-medium">{title}</div>
         {description ? <div className="mt-1 text-sm text-muted-foreground">{description}</div> : null}
       </div>

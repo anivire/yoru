@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, type User } from '@yoru/shared'
 import { Badge, Button, Card, CardContent, Code, Field, Input, LogoMark, Segmented, Skeleton, Spinner, StepSlider, Switch, cn, toast } from '@yoru/ui'
-import { RiAlertFill, RiArrowUpDownFill, RiCheckboxCircleFill, RiBracesFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiLockFill, RiNotification3Fill, RiPaletteFill, RiPlayCircleFill, RiShieldFill, RiUser3Fill, RiVolumeUpFill } from '@remixicon/react'
+import { RiAlertFill, RiArrowUpDownFill, RiCheckboxCircleFill, RiBracesFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiIdCardFill, RiLockFill, RiNotification3Fill, RiPaletteFill, RiPlayCircleFill, RiShieldFill, RiUser3Fill, RiVolumeUpFill } from '@remixicon/react'
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { Page, PageHeader } from '../components/app-shell'
 import { SecretForm } from '../components/admin-sources'
-import { BackdropPicker, HomeLayoutSettings, NavPositionSettings, NavigationSettings } from '../components/layout-settings'
+import { BackdropPicker, FeedScopePicker, HomeLayoutSettings, NavPositionSettings, NavigationSettings } from '../components/layout-settings'
 import { SessionsList } from '../components/sessions'
 import { Flag, LANGUAGES, useChangeLanguage } from '../components/language'
 import { TitleLanguagePicker } from '../components/appearance-panel'
@@ -23,14 +23,15 @@ import { useDocumentTitle } from '../lib/title'
 import { PlayerTab } from '../components/player-settings'
 import { SoundsTab } from '../components/sound-settings'
 import { DangerZone } from '../components/danger-zone'
+import { ProfileTab } from '../components/profile-settings'
 import { ANIME365_LOGO, SEANIME_LOGO } from '../lib/logos'
 
-const TABS = ['appearance', 'player', 'sounds', 'account', 'notifications', 'import'] as const
+const TABS = ['appearance', 'player', 'sounds', 'profile', 'account', 'notifications', 'import'] as const
 type Tab = (typeof TABS)[number]
 
 const EXPORT_ICONS = { yoru: RiBracesFill, json: RiBracesFill, csv: RiFileExcel2Fill, 'mal-xml': RiFileCodeFill } satisfies Record<ExportFormat, unknown>
 
-const TAB_ICONS = { appearance: RiPaletteFill, player: RiPlayCircleFill, sounds: RiVolumeUpFill, account: RiUser3Fill, notifications: RiNotification3Fill, import: RiArrowUpDownFill } satisfies Record<Tab, unknown>
+const TAB_ICONS = { appearance: RiPaletteFill, player: RiPlayCircleFill, sounds: RiVolumeUpFill, profile: RiIdCardFill, account: RiUser3Fill, notifications: RiNotification3Fill, import: RiArrowUpDownFill } satisfies Record<Tab, unknown>
 
 function useUpdateUser() {
   const client = useQueryClient()
@@ -57,7 +58,7 @@ export function Block({ title, description, children, className }: { title: Reac
 
 function AppearanceTab() {
   const { t } = useTranslation()
-  const { pageWidth, setPageWidth, pageWidthOptions, expandSynopsis, setExpandSynopsis } = useAppearance()
+  const { pageWidth, setPageWidth, pageWidthOptions, expandSynopsis, setExpandSynopsis, friendAvatars, setFriendAvatars } = useAppearance()
   const user = useUser()
   const changeLanguage = useChangeLanguage()
   return (
@@ -93,6 +94,20 @@ function AppearanceTab() {
             </span>
             <Switch checked={expandSynopsis} onCheckedChange={setExpandSynopsis} />
           </label>
+          <label className="flex cursor-pointer items-center justify-between gap-4 px-5 py-3">
+            <span>
+              <span className="block text-sm">{t('settings.friendAvatars')}</span>
+              <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.friendAvatarsHint')}</span>
+            </span>
+            <Switch checked={friendAvatars} onCheckedChange={setFriendAvatars} />
+          </label>
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 py-3">
+            <span>
+              <span className="block text-sm">{t('settings.feedScope')}</span>
+              <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.feedScopeHint')}</span>
+            </span>
+            <FeedScopePicker />
+          </div>
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 py-3">
             <span>
               <span className="block text-sm">{t('settings.backdrop.title')}</span>
@@ -239,19 +254,31 @@ function NotificationsTab() {
   const user = useUser()
   const update = useUpdateUser()
   return (
-    <Block title={t('settings.notifications')} description={t('settings.notifyHint')}>
-      <Card className="py-1">
-        {(['notifySub', 'notifyVoice', 'notifyPremieres'] as const).map((key) => (
-          <label key={key} className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4">
-            <span>
+    <>
+      <Block title={t('settings.notifications')} description={t('settings.notifyHint')}>
+        <Card className="py-1">
+          {(['notifySub', 'notifyVoice', 'notifyPremieres'] as const).map((key) => (
+            <label key={key} className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4">
+              <span>
+                <span className="block text-sm">{t(`settings.${key}`)}</span>
+                {key === 'notifyPremieres' ? <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.notifyPremieresHint')}</span> : null}
+              </span>
+              <Switch checked={user[key]} onCheckedChange={(v) => update.mutate({ [key]: v })} />
+            </label>
+          ))}
+        </Card>
+      </Block>
+      <Block title={t('settings.socialNotifications')} description={t('settings.socialNotificationsHint')}>
+        <Card className="py-1">
+          {(['notifyFriends', 'notifyComments', 'notifyReactions', 'notifyRecommendations', 'notifyRooms'] as const).map((key) => (
+            <label key={key} className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4">
               <span className="block text-sm">{t(`settings.${key}`)}</span>
-              {key === 'notifyPremieres' ? <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.notifyPremieresHint')}</span> : null}
-            </span>
-            <Switch checked={user[key]} onCheckedChange={(v) => update.mutate({ [key]: v })} />
-          </label>
-        ))}
-      </Card>
-    </Block>
+              <Switch checked={user[key]} onCheckedChange={(v) => update.mutate({ [key]: v })} />
+            </label>
+          ))}
+        </Card>
+      </Block>
+    </>
   )
 }
 
@@ -514,6 +541,7 @@ export function SettingsPage() {
         {tab === 'appearance' ? <AppearanceTab /> : null}
         {tab === 'player' ? <PlayerTab /> : null}
         {tab === 'sounds' ? <SoundsTab /> : null}
+        {tab === 'profile' ? <ProfileTab /> : null}
         {tab === 'account' ? <AccountTab /> : null}
         {tab === 'notifications' ? <NotificationsTab /> : null}
         {tab === 'import' ? <ImportTab /> : null}

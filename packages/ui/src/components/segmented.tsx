@@ -1,5 +1,6 @@
 import { type ReactNode, useRef } from 'react'
 import { cn } from '../lib/cn'
+import { Tooltip } from './overlay'
 import { useSlidingIndicator } from '../lib/indicator'
 
 export interface SegmentedOption<T extends string> {
@@ -30,7 +31,7 @@ export function Segmented<T extends string>({
     <div
       ref={ref}
       role="tablist"
-      className={cn('relative inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-xl bg-foreground/[0.05] p-1 scrollbar-none', className)}
+      className={cn('relative inline-flex max-w-full items-center gap-0.5 self-start overflow-x-auto rounded-xl bg-foreground/[0.05] p-1 scrollbar-none', className)}
     >
       <span
         aria-hidden
@@ -39,14 +40,14 @@ export function Segmented<T extends string>({
       />
       {options.map((option) => {
         const active = option.value === value
-        return (
+        const button = (
           <button
             key={option.value}
             type="button"
             role="tab"
             aria-selected={active}
             disabled={option.disabled}
-            title={option.title}
+            title={option.disabled ? undefined : option.title}
             onClick={() => onChange(option.value)}
             className={cn(
               'relative inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg font-medium transition-colors [&_svg]:shrink-0',
@@ -63,6 +64,12 @@ export function Segmented<T extends string>({
               </span>
             ) : null}
           </button>
+        )
+        if (!option.disabled || !option.title) return button
+        return (
+          <Tooltip key={option.value} content={option.title}>
+            <span className="inline-flex">{button}</span>
+          </Tooltip>
         )
       })}
     </div>
