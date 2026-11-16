@@ -36,6 +36,8 @@ startAnimeBackfill()
 startRussianTitles()
 backfillAllFeeds()
 
+for (const signal of ['SIGTERM', 'SIGINT'] as const) process.once(signal, () => process.exit(0))
+
 serve({ fetch: app.fetch, port: env.port, hostname: env.host, websocket: { server: new WebSocketServer({ noServer: true, maxPayload: 16 * 1024 }) } }, (info) => {
   console.log(`[yoru] api listening on http://${info.address}:${info.port}`)
 })
