@@ -13,7 +13,7 @@ import {
   useSlidingIndicator,
 } from '@yoru/ui'
 import { RiLogoutBoxRFill, RiMenuFill, RiSearchFill, RiSettings3Fill, RiShieldFill, RiUser3Fill } from '@remixicon/react'
-import { type ReactNode, useEffect, useRef, useState } from 'react'
+import { type ReactNode, type RefObject, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { matchPath, useLocation, useNavigate } from 'react-router'
 import { api } from '../lib/api'
@@ -27,64 +27,98 @@ import { Footer } from './footer'
 import { TLink, TNavLink, useTransitionNavigate } from './transition-link'
 import { AppearancePopover } from './appearance-panel'
 
-function NavItem({ to, children, end, label }: { to: string; children: ReactNode; end?: boolean; label?: string }) {
-  return (
-    <TNavLink
-      to={to}
-      end={end}
-      aria-label={label}
-      title={label}
-      className={({ isActive }) =>
-        cn(
-          'relative inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors [&_svg]:size-4 [&_svg]:shrink-0',
-          isActive ? 'text-foreground [&_svg]:text-accent' : 'text-muted-foreground hover:text-foreground',
-        )
-      }
-    >
-      {children}
-    </TNavLink>
-  )
-}
+const NAV_ITEM = 'relative inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-medium transition-colors [&_svg]:size-4 [&_svg]:shrink-0'
 
 function useVisibleNav() {
   const { hiddenNav } = useAppearance()
   return NAV.filter((n) => !hiddenNav.includes(n.key))
 }
 
-function NavItems() {
+function NavItems({ compact = false, side = 'bottom' }: { compact?: boolean; side?: 'top' | 'bottom' }) {
   const { t } = useTranslation()
   const nav = useVisibleNav()
-  const { pageWidth } = useAppearance()
-  const iconOnly = pageWidth === '3xl'
+  const { pathname } = useLocation()
   return (
     <>
-      {nav.map((n) => (
-        <NavItem key={n.to} to={n.to} end={n.end} label={iconOnly ? t(`nav.${n.key}`) : undefined}>
-          {iconOnly && isBeta(n) ? (
-            <BetaIcon>
+      {nav.map((n) => {
+        const label = t(`nav.${n.key}`)
+        const active = Boolean(matchPath({ path: n.to, end: n.end }, pathname))
+        const link = (
+          <TNavLink
+            key={n.to}
+            to={n.to}
+            end={n.end}
+            aria-label={compact ? label : undefined}
+            className={cn(NAV_ITEM, active ? 'text-foreground [&_svg]:text-accent' : 'text-muted-foreground hover:text-foreground')}
+          >
+            {compact && isBeta(n) ? (
+              <BetaIcon>
+                <n.icon />
+              </BetaIcon>
+            ) : (
               <n.icon />
-            </BetaIcon>
-          ) : (
-            <n.icon />
-          )}
-          {iconOnly ? null : t(`nav.${n.key}`)}
-          {!iconOnly && isBeta(n) ? <BetaBadge /> : null}
-        </NavItem>
-      ))}
+            )}
+            {compact ? null : label}
+            {!compact && isBeta(n) ? <BetaBadge /> : null}
+          </TNavLink>
+        )
+        if (!compact) return link
+        return (
+          <Tooltip
+            key={n.to}
+            side={side}
+            content={
+              isBeta(n) ? (
+                <span className="inline-flex items-center gap-1.5">
+                  {label}
+                  <BetaBadge />
+                </span>
+              ) : (
+                label
+              )
+            }
+          >
+            {link}
+          </Tooltip>
+        )
+      })}
     </>
   )
 }
 
-function DesktopNav() {
+function useFits(frame: RefObject<HTMLElement | null>, content: RefObject<HTMLElement | null>) {
+  const [fits, setFits] = useState(true)
+  useEffect(() => {
+    const outer = frame.current
+    const inner = content.current
+    if (!outer || !inner) return
+    const observer = new ResizeObserver(() => setFits(inner.offsetWidth <= outer.clientWidth))
+    observer.observe(outer)
+    observer.observe(inner)
+    return () => observer.disconnect()
+  }, [frame, content])
+  return fits
+}
+
+function DesktopNav({ side }: { side: 'top' | 'bottom' }) {
   const ref = useRef<HTMLElement>(null)
+  const frame = useRef<HTMLDivElement>(null)
+  const full = useRef<HTMLDivElement>(null)
   const { pathname } = useLocation()
   const { pageWidth, hiddenNav } = useAppearance()
-  const indicator = useSlidingIndicator(ref, '[aria-current="page"]', `${pathname}|${pageWidth}|${hiddenNav.join()}`)
+  const fits = useFits(frame, full)
+  const compact = side === 'top' || !fits
+  const indicator = useSlidingIndicator(ref, '[aria-current="page"]', `${pathname}|${pageWidth}|${hiddenNav.join()}|${compact}`)
   return (
-    <nav ref={ref} className="relative mx-auto hidden items-center gap-1 md:flex">
-      <span aria-hidden style={indicator} className="pointer-events-none absolute rounded-lg bg-muted duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]" />
-      <NavItems />
-    </nav>
+    <div ref={frame} className="relative hidden min-w-0 flex-1 justify-center md:flex">
+      <div ref={full} inert aria-hidden className="pointer-events-none invisible absolute left-0 top-0 flex w-max items-center gap-1">
+        <NavItems />
+      </div>
+      <nav ref={ref} className="relative flex items-center gap-1">
+        <span aria-hidden style={indicator} className="pointer-events-none absolute rounded-lg bg-muted duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]" />
+        <NavItems compact={compact} side={side} />
+      </nav>
+    </div>
   )
 }
 
@@ -347,52 +381,7 @@ function SideRailContent({ position }: { position: 'left' | 'right' }) {
   )
 }
 
-function BottomDock() {
-  const { t } = useTranslation()
-  const ref = useRef<HTMLElement>(null)
-  const { pathname } = useLocation()
-  const { hiddenNav, appearanceButton } = useAppearance()
-  const nav = useVisibleNav()
-  const indicator = useSlidingIndicator(ref, '[aria-current="page"]', `${pathname}|${hiddenNav.join()}|bottom`)
-  return (
-    <aside data-app-chrome className="pointer-events-none fixed inset-x-0 bottom-3 z-40 hidden justify-center px-4 [view-transition-name:site-rail] md:flex">
-      <div className="pointer-events-auto flex h-14 items-center gap-1 rounded-full bg-background/70 px-2 backdrop-blur-2xl backdrop-saturate-150">
-        <TLink to="/" aria-label="yoru" className="grid size-11 place-items-center">
-          <LogoMark size={26} />
-        </TLink>
-        <span aria-hidden className="mx-1 h-6 w-px bg-border" />
-        <nav ref={ref} className="relative flex items-center gap-1">
-          <span aria-hidden style={indicator} className="pointer-events-none absolute rounded-xl bg-muted duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]" />
-          {nav.map((n) => {
-            const active = Boolean(matchPath({ path: n.to, end: n.end }, pathname))
-            return (
-              <Tooltip key={n.to} content={t(`nav.${n.key}`)} side="top">
-                <TNavLink
-                  to={n.to}
-                  end={n.end}
-                  aria-label={t(`nav.${n.key}`)}
-                  className={cn(
-                    'relative grid size-11 place-items-center rounded-xl transition-colors [&_svg]:size-5',
-                    active ? 'text-foreground [&_svg]:text-accent' : 'text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  <n.icon />
-                </TNavLink>
-              </Tooltip>
-            )
-          })}
-        </nav>
-        <span aria-hidden className="mx-1 h-6 w-px bg-border" />
-        {appearanceButton ? <AppearancePopover side="top" rail full /> : null}
-        <SettingsButton side="top" rail />
-        <NotificationsPopover side="top" rail />
-        <UserMenu side="top" rail />
-      </div>
-    </aside>
-  )
-}
-
-export function useHeader() {
+export function useHeader(bottom = false) {
   const ref = useRef<HTMLElement>(null)
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
@@ -400,25 +389,31 @@ export function useHeader() {
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     const header = ref.current
-    const observer = new ResizeObserver(() => {
-      if (header) document.documentElement.style.setProperty('--header-h', `${header.offsetHeight}px`)
-    })
+    const measure = () => {
+      if (!header) return
+      const height = getComputedStyle(header).position === 'fixed' ? 0 : header.offsetHeight
+      document.documentElement.style.setProperty('--header-h', `${height}px`)
+    }
+    const observer = new ResizeObserver(measure)
     if (header) observer.observe(header)
+    window.addEventListener('resize', measure, { passive: true })
     return () => {
       window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', measure)
       observer.disconnect()
     }
-  }, [])
+  }, [bottom])
   return { ref, scrolled }
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useTranslation()
-  const header = useHeader()
   const { navPosition, navLabels, appearanceButton } = useAppearance()
-  useNotificationSound()
   const rail = navPosition === 'left' || navPosition === 'right' ? navPosition : null
   const dock = navPosition === 'bottom'
+  const header = useHeader(dock)
+  const side = dock ? 'top' : 'bottom'
+  useNotificationSound()
   return (
     <div
       className={cn(
@@ -432,32 +427,32 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
     >
       {rail ? <SideRail position={rail} /> : null}
-      {dock ? <BottomDock /> : null}
-      <header data-app-chrome ref={header.ref} className={cn('sticky top-0 z-40 pt-2', (rail || dock) && 'md:hidden')}>
+      <header data-app-chrome ref={header.ref} className={cn('sticky top-0 z-40 pt-2', rail && 'md:hidden', dock && 'md:fixed md:inset-x-0 md:top-auto md:bottom-0 md:pb-3 md:pt-0')}>
         <div className="page-frame px-4 sm:px-6">
           <div
             className={cn(
               'flex h-12 items-center gap-3 -mx-2 rounded-full px-2 transition-[background-color,backdrop-filter] duration-300 [view-transition-name:site-header] sm:h-14 sm:gap-4 sm:-mx-4 sm:px-4',
               header.scrolled ? 'bg-background/55 backdrop-blur-2xl backdrop-saturate-150' : 'bg-transparent',
+              dock && 'md:bg-background/70 md:backdrop-blur-2xl md:backdrop-saturate-150',
             )}
           >
             <TLink to="/" className="flex shrink-0 items-center">
               <Logo className="[&>span]:text-[0.9375rem] [&_svg]:size-6 sm:[&>span]:text-[17px] sm:[&_svg]:size-7" />
             </TLink>
-            <DesktopNav />
-            <div className="ml-auto flex items-center gap-1.5 sm:gap-2 md:ml-0">
+            <DesktopNav side={side} />
+            <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2 md:ml-0">
               <Button asChild variant="ghost" size="icon" className="rounded-full md:hidden">
                 <TLink to="/search" aria-label={t('nav.search')}>
                   <RiSearchFill />
                 </TLink>
               </Button>
               <div className="hidden items-center gap-2 md:flex">
-                {appearanceButton && !rail && !dock ? <AppearancePopover full /> : null}
-                <SettingsButton />
+                {appearanceButton && !rail ? <AppearancePopover side={side} full /> : null}
+                <SettingsButton side={side} />
               </div>
-              <NotificationsPopover />
+              <NotificationsPopover side={side} />
               <div className="hidden md:block">
-                <UserMenu />
+                <UserMenu side={side} />
               </div>
               <div className="md:hidden">
                 <MobileMenu />
