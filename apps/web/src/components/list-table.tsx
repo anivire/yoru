@@ -1,5 +1,5 @@
 import type { ListEntryWithAnime } from '@yoru/shared'
-import { Image, Progress, StarIcon, cn } from '@yoru/ui'
+import { Image, Progress, Segmented, StarIcon, cn } from '@yoru/ui'
 import { RiLayoutGridFill, RiLayoutRowFill, RiRepeatFill } from '@remixicon/react'
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -25,19 +25,15 @@ export function useListView() {
 export function ViewToggle({ view, onChange }: { view: ListView; onChange: (v: ListView) => void }) {
   const { t } = useTranslation()
   return (
-    <div className="ml-auto flex h-11 items-center gap-0.5 rounded-xl bg-inset p-1">
-      {(['grid', 'table'] as const).map((v) => (
-        <button
-          key={v}
-          type="button"
-          aria-label={t(`lists.${v}`)}
-          onClick={() => onChange(v)}
-          className={cn('grid size-9 cursor-pointer place-items-center rounded-lg', view === v ? 'bg-raised text-foreground shadow-sm shadow-black/20' : 'text-muted-foreground')}
-        >
-          {v === 'grid' ? <RiLayoutGridFill className="size-4" /> : <RiLayoutRowFill className="size-4" />}
-        </button>
-      ))}
-    </div>
+    <Segmented
+      className="ml-auto [&_button]:h-9 [&_button]:px-3"
+      value={view}
+      onChange={onChange}
+      options={[
+        { value: 'grid', icon: <RiLayoutGridFill />, label: <span className="sr-only">{t('lists.grid')}</span>, title: t('lists.grid') },
+        { value: 'table', icon: <RiLayoutRowFill />, label: <span className="sr-only">{t('lists.table')}</span>, title: t('lists.table') },
+      ]}
+    />
   )
 }
 
