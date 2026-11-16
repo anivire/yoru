@@ -22,6 +22,7 @@ export interface SoundSettings {
 const STORAGE_KEY = 'yoru:sounds'
 const GAIN = 2
 const LOUDNESS_WINDOW = 0.1
+const PEAK_LIMIT = 0.28
 const CLICK = 'click'
 const AWAKE_MS = 30_000
 const HUM_LEVEL = 1e-4
@@ -70,6 +71,19 @@ function soundSet(theme: ThemeName): SoundSet {
   return result
 }
 
+interface Level {
+  gain: number
+  peak: number
+}
+
+function peak(buffer: AudioBuffer) {
+  let max = 0
+  for (let c = 0; c < buffer.numberOfChannels; c++) {
+    for (const x of buffer.getChannelData(c)) max = Math.max(max, Math.abs(x))
+  }
+  return max
+}
+
 function loudness(buffer: AudioBuffer) {
   const data = buffer.getChannelData(0)
   const size = Math.round(buffer.sampleRate * LOUDNESS_WINDOW)
@@ -83,12 +97,12 @@ function loudness(buffer: AudioBuffer) {
   return best
 }
 
-const gains = new Map<ThemeName, Partial<Record<CueName, number>>>()
+const gains = new Map<ThemeName, Partial<Record<CueName, Level>>>()
 let reference: Promise<number> | null = null
 
 function measure(theme: ThemeName) {
   if (gains.has(theme) || typeof OfflineAudioContext === 'undefined') return
-  const current: Partial<Record<CueName, number>> = {}
+  const current: Partial<Record<CueName, Level>> = {}
   gains.set(theme, current)
   if (!reference) {
     set({ theme: soundSet('default') })
@@ -103,7 +117,7 @@ function measure(theme: ThemeName) {
       names.forEach((name, i) => {
         const buffer = buffers[i] as AudioBuffer | null
         const level = buffer ? loudness(buffer) : 0
-        if (target && level) current[name] = Math.min(8, Math.max(0.25, Math.sqrt((target as number) / level) * (LEVELS[name] ?? 1)))
+        if (buffer && target && level) current[name] = { gain: Math.min(8, Math.max(0.25, Math.sqrt((target as number) / level) * (LEVELS[name] ?? 1))), peak: peak(buffer) }
       })
     })
     .catch(() => gains.delete(theme))
@@ -113,13 +127,20 @@ let state = load()
 let observer: MutationObserver | null = null
 const listeners = new Set<() => void>()
 
+function levelFor(name: CueName) {
+  const level = gains.get(state.theme)?.[name]
+  if (!level) return 1
+  const master = (Number(state.volume) / 100) * GAIN
+  return level.peak ? Math.min(level.gain, PEAK_LIMIT / (level.peak * master)) : level.gain
+}
+
 function play(name: CueName, opts?: PlayOptions) {
   unlock()
   const random = Math.random
   let calls = 0
   Math.random = () => (++calls <= 2 ? 0.5 : random())
   try {
-    foleyPlay(name, { ...opts, volume: (opts?.volume ?? 1) * (gains.get(state.theme)?.[name] ?? 1) })
+    foleyPlay(name, { ...opts, volume: (opts?.volume ?? 1) * levelFor(name) })
   } finally {
     Math.random = random
   }

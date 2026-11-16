@@ -1,7 +1,7 @@
 {
   "name": "api",
   "private": true,
-  "version": "0.58.0",
+  "version": "0.58.1",
   "type": "module",
   "scripts": {
     "dev": "node --watch --watch-preserve-output --env-file-if-exists=../../.env --import tsx src/index.ts",
