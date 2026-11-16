@@ -1,11 +1,13 @@
 import { and, eq, or } from 'drizzle-orm'
 import { Hono } from 'hono'
-import type { FriendsOverview, Relation } from '@yoru/shared'
+import { type FriendsOverview, type Relation, recommendSchema } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { friendships, users } from '../db/schema'
 import { type AppEnv, requireAuth } from '../lib/auth'
 import { notFound } from '../lib/http'
-import { intParam } from '../lib/validate'
+import { intParam, parseBody } from '../lib/validate'
+import { ensureAnime, getAnimeRow } from '../services/anime'
+import { friendEntries, recommend } from '../services/interactions'
 import { blockedBetween, cardsFor, hiddenUserIds, notify, relation } from '../services/social'
 
 function pair(a: number, b: number) {
@@ -36,6 +38,12 @@ export const friendRoutes = new Hono<AppEnv>()
       outgoing: rows.filter((row) => row.status === 'pending' && row.userId === viewerId).map((row) => card(row.friendId)),
     }
     return c.json(body)
+  })
+  .get('/anime/:malId', (c) => c.json(friendEntries(c.get('user').id, intParam(c, 'malId'))))
+  .post('/recommend', async (c) => {
+    const input = await parseBody(c, recommendSchema)
+    if (!getAnimeRow(input.malId)) await ensureAnime(input.malId)
+    return c.json({ sent: recommend(c.get('user').id, input.malId, input.friendIds, input.message || null) })
   })
   .post('/:id', (c) => {
     const viewerId = c.get('user').id

@@ -8,6 +8,7 @@ import { AnimeCard } from '../components/anime-cards'
 import { Page, PageHeader } from '../components/app-shell'
 import { NoteBody } from '../components/notes'
 import { TLink } from '../components/transition-link'
+import { CommentThread, ReactionBar } from '../components/social'
 import { UserAvatar, nameOf } from '../components/user-avatar'
 import { useAnimeTitle } from '../lib/anime-title'
 import { api } from '../lib/api'
@@ -127,6 +128,7 @@ function GroupEntry({ group, showUser }: { group: Group; showUser: boolean }) {
   const { t, i18n } = useTranslation()
   const heading = useGroupHeading()(group)
   const [open, setOpen] = useState(false)
+  const [thread, setThread] = useState(false)
   const first = group.items[0]!
   const time = new Intl.DateTimeFormat(i18n.language, { hour: '2-digit', minute: '2-digit' }).format(new Date(first.createdAt))
   const shown = open ? group.items : group.items.slice(0, COLLAPSED)
@@ -166,6 +168,8 @@ function GroupEntry({ group, showUser }: { group: Group; showUser: boolean }) {
           ) : null}
         </>
       )}
+      <ReactionBar eventId={first.id} reactions={first.reactions} mine={first.myReaction} comments={first.comments} commentsOpen={thread} onComments={() => setThread(!thread)} />
+      {thread ? <CommentThread target={first.type === 'note' ? 'note' : 'event'} id={first.type === 'note' ? first.note.id : first.id} /> : null}
     </li>
   )
 }

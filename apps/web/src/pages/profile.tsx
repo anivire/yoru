@@ -31,6 +31,7 @@ import { type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, useSearchParams } from 'react-router'
 import { Page } from '../components/app-shell'
+import { TasteMatchCard } from '../components/social'
 import { TLink } from '../components/transition-link'
 import { UserAvatar, nameOf } from '../components/user-avatar'
 import { api } from '../lib/api'
@@ -221,6 +222,7 @@ function Overview({ profile }: { profile: UserProfile }) {
   const { t } = useTranslation()
   return (
     <div className="flex flex-col gap-10">
+      {profile.relation !== 'self' && profile.canSeeList ? <TasteMatchCard username={profile.user.username} /> : null}
       {profile.statuses ? <StatusStrip statuses={profile.statuses} /> : null}
       <section>
         <h2 className="mb-4 text-lg font-semibold tracking-tight">{t('profile.activity')}</h2>

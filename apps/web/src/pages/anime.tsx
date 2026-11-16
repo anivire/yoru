@@ -14,6 +14,7 @@ import { LinkList, LinkLogo, LinkRow, ServiceLinks } from '../components/service
 import { AnimePageSkeleton } from '../components/skeletons'
 import { WatchSection } from '../components/watch-section'
 import { NotesSection } from '../components/notes'
+import { FriendsOnAnime, RecommendButton } from '../components/social'
 import { api } from '../lib/api'
 import { useAppearance } from '../lib/appearance'
 import { formatDate, formatDateTime, relativeTime, seasonLabel, typeLabel } from '../lib/format'
@@ -154,6 +155,7 @@ function MobileEntryRow({ anime, entry }: { anime: AnimeDetails; entry: ListEntr
         <ListEditor malId={anime.malId} entry={entry} total={anime.episodes} aired={airedLimit(anime)} compact={Boolean(entry)} />
       </div>
       {entry ? <StatusBadge status={entry.status} className="h-7 gap-1.5 pl-2 pr-3 text-sm [&_svg]:size-4" /> : null}
+      <RecommendButton malId={anime.malId} className="w-full max-w-64" />
     </div>
   )
 }
@@ -187,8 +189,9 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
             ) : (
               <div className="aspect-[2/3] w-full rounded-xl bg-muted shadow-2xl" />
             )}
-            <div className="hidden sm:block">
+            <div className="hidden flex-col gap-2 sm:flex">
               <ListEditor malId={anime.malId} entry={entry} total={anime.episodes} aired={airedLimit(anime)} />
+              <RecommendButton malId={anime.malId} className="w-full" />
             </div>
             <Links anime={anime} className="hidden sm:block" />
           </div>
@@ -280,6 +283,7 @@ export function AnimePage() {
         <ScreenshotsSection malId={data.anime.malId} />
         <h2 className="mb-4 text-xl font-semibold tracking-tight">{t('anime.streaming')}</h2>
         <WatchSection anime={data.anime} entry={data.entry} />
+        <FriendsOnAnime malId={data.anime.malId} total={data.anime.episodes} />
         <NotesSection malId={data.anime.malId} />
         <AnimeExtrasSections malId={data.anime.malId} />
       </Page>

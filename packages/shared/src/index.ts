@@ -679,6 +679,26 @@ export interface UserProfile {
   statuses: Record<ListStatus, number> | null
 }
 
+export interface TasteMatch {
+  percent: number | null
+  shared: number
+  rated: number
+  suggestions: AnimeSummary[]
+}
+
+export interface FriendEntry {
+  user: UserCard
+  status: ListStatus
+  progress: number
+  score: number | null
+}
+
+export const recommendSchema = z.object({
+  malId: z.number().int().positive(),
+  friendIds: z.array(z.number().int().positive()).min(1).max(50),
+  message: z.string().trim().max(300).nullable().optional(),
+})
+
 export interface FriendsOverview {
   friends: UserCard[]
   incoming: UserCard[]
@@ -694,6 +714,7 @@ export interface AnimeNote {
   createdAt: string
   updatedAt: string
   user: FeedUser
+  comments: number
 }
 
 export const noteInputSchema = z.object({
@@ -703,11 +724,42 @@ export const noteInputSchema = z.object({
 })
 export type NoteInput = z.infer<typeof noteInputSchema>
 
+export const REACTIONS = ['❤️', '🔥', '😂', '😭', '👀'] as const
+export type Reaction = (typeof REACTIONS)[number]
+
+export interface ReactionCount {
+  emoji: Reaction
+  count: number
+}
+
+export type CommentTarget = 'event' | 'note'
+
+export interface Comment {
+  id: number
+  user: UserCard
+  text: string
+  createdAt: string
+  updatedAt: string
+  canEdit: boolean
+  canDelete: boolean
+}
+
+export const commentInputSchema = z.object({
+  target: z.enum(['event', 'note']),
+  id: z.number().int().positive(),
+  text: z.string().trim().min(1).max(1000),
+})
+
+export const reactionInputSchema = z.object({ emoji: z.enum(REACTIONS).nullable() })
+
 interface FeedBase {
   id: number
   createdAt: string
   user: FeedUser
   anime: AnimeSummary
+  reactions: ReactionCount[]
+  myReaction: Reaction | null
+  comments: number
 }
 
 export type FeedItem = FeedBase &

@@ -12,6 +12,7 @@ import { notFound } from '../lib/http'
 import { intParam, parseBody } from '../lib/validate'
 import { blockedBetween, canSee, cardColumns, friendIds, hiddenUserIds, relation, toCard } from '../services/social'
 import { feedPage } from '../services/feed'
+import { tasteMatch } from '../services/interactions'
 import { userStats } from '../services/stats'
 import { listPage } from './list'
 
@@ -156,6 +157,12 @@ export const userRoutes = new Hono<AppEnv>()
     const owner = ownerByName(viewer.id, c.req.param('username'))
     if (restricted(viewer.id, owner)) return c.json({ items: [], nextBefore: null })
     return c.json(feedPage(viewer.id, { before: c.req.query('before') || null, limit: Number(c.req.query('limit')) || 60, scope: { userId: owner.id } }))
+  })
+  .get('/:username/match', (c) => {
+    const viewer = c.get('user')
+    const owner = ownerByName(viewer.id, c.req.param('username'))
+    if (owner.id === viewer.id || restricted(viewer.id, owner) || !canSee(viewer.id, owner.id, owner.listVisibility)) notFound('LIST_HIDDEN')
+    return c.json(tasteMatch(viewer.id, owner.id))
   })
   .get('/:username/friends', (c) => {
     const viewer = c.get('user')
