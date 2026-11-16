@@ -62,7 +62,7 @@ export function ListFilterBar({
           </button>
         ) : null}
       </div>
-      <div className="mb-8 mt-3 flex flex-wrap items-center gap-3">
+      <div className="mb-6 mt-3 flex flex-wrap items-center gap-3">
         <Select
           className="h-11 w-44 rounded-xl px-3.5"
           icon={<RiTvFill />}

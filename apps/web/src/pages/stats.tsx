@@ -162,10 +162,10 @@ function Muted({ children }: { children: ReactNode }) {
 
 export function StatsSkeleton() {
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-6">
       <Skeleton className="h-56 rounded-2xl" />
       <Skeleton className="h-52 rounded-xl" />
-      <div className="grid gap-10 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         <Skeleton className="h-64 rounded-xl" />
         <Skeleton className="h-64 rounded-xl" />
       </div>
@@ -204,7 +204,7 @@ export function StatsView({ stats }: { stats: UserStats }) {
         <StatusStrip statuses={stats.statuses} />
       </div>
 
-      <Section title={t('stats.monthly')} hint={t('stats.monthlyHint')} icon={<RiCalendar2Fill />}>
+      <Section title={t('stats.monthly')} hint={t('stats.monthlyHint')} icon={<RiCalendar2Fill />} className="mt-6">
         <Panel>
           <ColumnChart
             height="h-36 sm:h-48"
@@ -216,7 +216,7 @@ export function StatsView({ stats }: { stats: UserStats }) {
         </Panel>
       </Section>
 
-      <div className="mt-8 grid grid-cols-1 gap-x-6 gap-y-8 sm:mt-10 sm:gap-y-10 @4xl:grid-cols-2 [&>section]:mt-0 [&>section]:min-w-0 [&>section]:flex [&>section]:flex-col">
+      <div className="mt-6 grid grid-cols-1 gap-6 @4xl:grid-cols-2 [&>section]:mt-0 [&>section]:min-w-0 [&>section]:flex [&>section]:flex-col">
         <Section title={t('stats.scores')} hint={topScore ? t('stats.scoresHint', { score: topScore.score }) : undefined} icon={<StarIcon />}>
           <Panel>
             <ColumnChart columns={stats.scores.map((s) => ({ key: String(s.score), label: String(s.score), value: s.count, tip: t('stats.scoreTip', { score: s.score, count: s.count }) }))} />
@@ -259,7 +259,7 @@ export function StatsView({ stats }: { stats: UserStats }) {
           </Panel>
         </Section>
       </div>
-      <p className="mt-10 text-xs text-subtle-foreground">{t('stats.estimateNote')}</p>
+      <p className="mt-6 text-xs text-subtle-foreground">{t('stats.estimateNote')}</p>
     </div>
   )
 }
