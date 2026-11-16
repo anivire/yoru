@@ -1,7 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { PROFILE_FAVORITES_MAX, type ProfileSettings, type ProfileUpdate, type ProfileVisibility, type User, type Visibility } from '@yoru/shared'
-import { Button, Card, Image, Input, Select, Skeleton, Switch, Textarea, Tooltip, cn, toast } from '@yoru/ui'
-import { RiAddFill, RiCheckFill, RiCloseFill, RiDeleteBin6Line, RiImageAddFill, RiImageFill, RiSearchFill } from '@remixicon/react'
+import { Button, Card, Dialog, DialogContent, Image, Input, Select, Skeleton, Switch, Textarea, Tooltip, cn, toast } from '@yoru/ui'
+import { RiAddFill, RiCheckFill, RiCloseFill, RiDeleteBin6Line, RiImageAddFill, RiImageFill, RiSearchFill, RiZoomInLine, RiZoomOutLine } from '@remixicon/react'
 import { type ChangeEvent, type ReactNode, useDeferredValue, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
@@ -15,15 +15,97 @@ const AVATAR_SIZE = 256
 const BIO_MAX = 300
 const NAME_MAX = 40
 
-async function squareImage(file: File): Promise<Blob> {
-  const bitmap = await createImageBitmap(file)
-  const side = Math.min(bitmap.width, bitmap.height)
-  const canvas = document.createElement('canvas')
-  canvas.width = AVATAR_SIZE
-  canvas.height = AVATAR_SIZE
-  canvas.getContext('2d')!.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, AVATAR_SIZE, AVATAR_SIZE)
-  bitmap.close()
-  return new Promise((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('AVATAR_INVALID'))), 'image/webp', 0.9))
+const CROP_VIEW = 256
+const MAX_ZOOM = 3
+const WHEEL_ZOOM = 0.002
+
+interface Crop {
+  x: number
+  y: number
+  zoom: number
+}
+
+function AvatarCropper({ src, pending, onCancel, onSave }: { src: string; pending: boolean; onCancel: () => void; onSave: (image: Blob) => void }) {
+  const { t } = useTranslation()
+  const image = useRef<HTMLImageElement>(null)
+  const drag = useRef<{ px: number; py: number; x: number; y: number } | null>(null)
+  const [size, setSize] = useState<{ w: number; h: number } | null>(null)
+  const [crop, setCrop] = useState<Crop>({ x: 0, y: 0, zoom: 1 })
+  const scaleFor = (zoom: number, natural = size) => (natural ? (CROP_VIEW / Math.min(natural.w, natural.h)) * zoom : 1)
+  const clamp = (x: number, y: number, zoom: number): Crop => {
+    if (!size) return { x, y, zoom }
+    const scale = scaleFor(zoom)
+    return { x: Math.min(0, Math.max(CROP_VIEW - size.w * scale, x)), y: Math.min(0, Math.max(CROP_VIEW - size.h * scale, y)), zoom }
+  }
+  const zoomTo = (value: number) => {
+    const zoom = Math.min(MAX_ZOOM, Math.max(1, value))
+    const ratio = scaleFor(zoom) / scaleFor(crop.zoom)
+    const center = CROP_VIEW / 2
+    setCrop(clamp(center - (center - crop.x) * ratio, center - (center - crop.y) * ratio, zoom))
+  }
+  const save = () => {
+    const el = image.current
+    if (!el || !size) return
+    const scale = scaleFor(crop.zoom)
+    const canvas = document.createElement('canvas')
+    canvas.width = AVATAR_SIZE
+    canvas.height = AVATAR_SIZE
+    canvas.getContext('2d')!.drawImage(el, -crop.x / scale, -crop.y / scale, CROP_VIEW / scale, CROP_VIEW / scale, 0, 0, AVATAR_SIZE, AVATAR_SIZE)
+    canvas.toBlob((blob) => (blob ? onSave(blob) : toast.error(t('profileSettings.avatarInvalid'))), 'image/webp', 0.9)
+  }
+  const scale = scaleFor(crop.zoom)
+  return (
+    <Dialog open onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent title={t('profileSettings.cropTitle')} description={t('profileSettings.cropHint')}>
+        <div className="flex flex-col items-center gap-5 px-4 pb-6 pt-2 sm:px-6">
+          <div
+            className="relative cursor-grab touch-none select-none overflow-hidden rounded-xl bg-black active:cursor-grabbing"
+            style={{ width: CROP_VIEW, height: CROP_VIEW }}
+            onPointerDown={(e) => {
+              e.currentTarget.setPointerCapture(e.pointerId)
+              drag.current = { px: e.clientX, py: e.clientY, x: crop.x, y: crop.y }
+            }}
+            onPointerMove={(e) => {
+              const start = drag.current
+              if (start) setCrop(clamp(start.x + e.clientX - start.px, start.y + e.clientY - start.py, crop.zoom))
+            }}
+            onPointerUp={() => (drag.current = null)}
+            onPointerCancel={() => (drag.current = null)}
+            onWheel={(e) => zoomTo(crop.zoom - e.deltaY * WHEEL_ZOOM)}
+          >
+            <img
+              ref={image}
+              src={src}
+              alt=""
+              draggable={false}
+              onLoad={(e) => {
+                const natural = { w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight }
+                const fit = scaleFor(1, natural)
+                setSize(natural)
+                setCrop({ x: (CROP_VIEW - natural.w * fit) / 2, y: (CROP_VIEW - natural.h * fit) / 2, zoom: 1 })
+              }}
+              className={cn('absolute max-w-none', !size && 'invisible')}
+              style={size ? { left: crop.x, top: crop.y, width: size.w * scale, height: size.h * scale } : undefined}
+            />
+            <div aria-hidden className="pointer-events-none absolute inset-0 rounded-full shadow-[0_0_0_999px_rgb(0_0_0/0.55)] ring-2 ring-white/70" />
+          </div>
+          <div className="flex w-full items-center gap-3 text-muted-foreground [&_svg]:size-4 [&_svg]:shrink-0" style={{ maxWidth: CROP_VIEW }}>
+            <RiZoomOutLine />
+            <input type="range" min={1} max={MAX_ZOOM} step={0.01} value={crop.zoom} onChange={(e) => zoomTo(Number(e.target.value))} aria-label={t('profileSettings.cropZoom')} className="w-full cursor-pointer accent-accent" />
+            <RiZoomInLine />
+          </div>
+          <div className="flex w-full justify-end gap-2">
+            <Button variant="ghost" onClick={onCancel}>
+              {t('common.cancel')}
+            </Button>
+            <Button variant="accent" disabled={!size} loading={pending} onClick={save}>
+              {t('common.save')}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
 }
 
 function Row({ label, hint, children }: { label: ReactNode; hint?: ReactNode; children: ReactNode }) {
@@ -47,15 +129,28 @@ function AvatarEditor() {
     client.setQueryData(keys.me, next)
     void client.invalidateQueries({ queryKey: ['profile'] })
   }
-  const upload = useMutation({ mutationFn: async (file: File) => api.uploadAvatar(await squareImage(file)), onSuccess: done, onError: (e) => toast.error(errorMessage(e, t)) })
+  const [source, setSource] = useState<string | null>(null)
+  const close = () => {
+    if (source) URL.revokeObjectURL(source)
+    setSource(null)
+  }
+  const upload = useMutation({
+    mutationFn: api.uploadAvatar,
+    onSuccess: (next) => {
+      done(next)
+      close()
+    },
+    onError: (e) => toast.error(errorMessage(e, t)),
+  })
   const remove = useMutation({ mutationFn: api.deleteAvatar, onSuccess: done, onError: (e) => toast.error(errorMessage(e, t)) })
   const pick = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     e.target.value = ''
-    if (file) upload.mutate(file)
+    if (file) setSource(URL.createObjectURL(file))
   }
   return (
     <div className="flex items-center gap-4 px-5 py-4">
+      {source ? <AvatarCropper key={source} src={source} pending={upload.isPending} onCancel={close} onSave={(image) => upload.mutate(image)} /> : null}
       <UserAvatar user={user} className="size-16 text-2xl" />
       <div className="flex flex-wrap gap-2">
         <input ref={input} type="file" accept="image/*" className="hidden" onChange={pick} />
