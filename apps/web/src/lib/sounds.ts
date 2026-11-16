@@ -24,13 +24,13 @@ const CLICK = 'click'
 const AWAKE_MS = 30_000
 const HUM_LEVEL = 1e-4
 const DUCK = 0.35
-const DEFAULTS: SoundSettings = { enabled: true, volume: '40', theme: 'mechanical', click: 'glide', interface: true, notifications: true, feedback: true }
+const DEFAULTS: SoundSettings = { enabled: false, volume: '40', theme: 'mechanical', click: 'glide', interface: true, notifications: true, feedback: true }
 
 function load(): SoundSettings {
   try {
     const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') as Partial<SoundSettings>
     return {
-      enabled: raw.enabled !== false,
+      enabled: raw.enabled === true,
       volume: SOUND_VOLUMES.includes(raw.volume as SoundVolume) ? (raw.volume as SoundVolume) : DEFAULTS.volume,
       theme: SOUND_THEMES.includes(raw.theme as (typeof SOUND_THEMES)[number]) ? (raw.theme as ThemeName) : DEFAULTS.theme,
       click: CLICK_SOUNDS.includes(raw.click as ClickSound) ? (raw.click as ClickSound) : DEFAULTS.click,
