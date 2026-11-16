@@ -6,7 +6,7 @@ export const SOUND_THEMES = ['soft', 'default', 'mechanical', 'glass'] as const 
 export const SOUND_VOLUMES = ['10', '20', '30', '40', '50', '60', '70', '80', '90', '100'] as const
 export type SoundVolume = (typeof SOUND_VOLUMES)[number]
 export type SoundCategory = 'interface' | 'notifications' | 'feedback'
-export const CLICK_SOUNDS = ['glide', 'tap', 'switch', 'pop', 'thock'] as const satisfies readonly CueName[]
+export const CLICK_SOUNDS = ['tick', 'hover', 'glide', 'pop', 'tap', 'switch', 'thock'] as const satisfies readonly CueName[]
 export type ClickSound = (typeof CLICK_SOUNDS)[number]
 
 export interface SoundSettings {

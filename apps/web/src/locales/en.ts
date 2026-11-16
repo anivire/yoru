@@ -570,7 +570,7 @@ export const en: Messages = {
       themes: { soft: 'Soft', default: 'Default', mechanical: 'Mechanical', glass: 'Glass' },
       click: 'Click sound',
       clickHint: 'What buttons, tabs and menu items sound like',
-      clicks: { glide: 'Smooth', tap: 'Short', switch: 'Snap', pop: 'Bubble', thock: 'Key' },
+      clicks: { tick: 'Grain', hover: 'Breath', glide: 'Smooth', tap: 'Short', switch: 'Snap', pop: 'Bubble', thock: 'Key' },
       categories: 'What makes a sound',
       categoriesHint: 'For example, keep only notifications',
       interface: 'Interface',

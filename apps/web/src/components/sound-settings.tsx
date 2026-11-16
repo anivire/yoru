@@ -68,7 +68,7 @@ export function SoundsTab() {
               preview(click)
             }}
             options={CLICK_SOUNDS.map((v) => ({ value: v, label: t(`settings.sound.clicks.${v}`) }))}
-            className="grid w-full grid-cols-3 sm:inline-flex sm:w-auto"
+            className="grid w-full grid-cols-2 sm:inline-flex sm:w-auto"
           />
         </div>
       </Block>
