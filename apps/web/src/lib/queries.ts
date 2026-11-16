@@ -203,6 +203,9 @@ export function errorMessage(error: unknown, t: (key: string) => string): string
     YORU_EMPTY: 'settings.seanime.empty',
     INVALID_PASSWORD: 'settings.danger.wrongPassword',
     LAST_ADMIN: 'settings.danger.lastAdmin',
+    AVATAR_TOO_LARGE: 'profileSettings.avatarTooLarge',
+    AVATAR_INVALID: 'profileSettings.avatarInvalid',
+    USER_NOT_FOUND: 'profile.notFound',
   }
   return map[error.message] ? t(map[error.message]!) : error.message
 }

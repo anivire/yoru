@@ -1,10 +1,11 @@
-import type { AnimeNote, FeedItem, FeedPage, ListStatus, NoteInput } from '@yoru/shared'
+import type { AnimeNote, FeedItem, FeedPage, ListStatus, NoteInput, UserCard } from '@yoru/shared'
 import { and, asc, desc, eq, gte, inArray, lt, or } from 'drizzle-orm'
 import { db, now } from '../db/client'
 import { activity, anime, animeNotes, feedEvents, listEntries, users } from '../db/schema'
 import { getSetting, setSetting } from '../lib/settings'
 import { notFound } from '../lib/http'
 import { toSummary } from './anime'
+import { cardColumns, friendIds, hiddenUserIds, toCard } from './social'
 
 const EPISODE_MERGE_MS = 6 * 60 * 60_000
 const MAX_PAGE = 300
@@ -49,7 +50,7 @@ function recordEpisodes(userId: number, malId: number, from: number, to: number)
 
 type NoteRow = typeof animeNotes.$inferSelect
 
-function toNote(row: NoteRow, username: string): AnimeNote {
+function toNote(row: NoteRow, user: UserCard): AnimeNote {
   return {
     id: row.id,
     malId: row.malId,
@@ -58,7 +59,7 @@ function toNote(row: NoteRow, username: string): AnimeNote {
     private: row.private,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-    user: { id: row.userId, username },
+    user,
   }
 }
 
@@ -66,15 +67,23 @@ function visibleTo(viewerId: number) {
   return or(eq(animeNotes.userId, viewerId), eq(animeNotes.private, false))
 }
 
+function noteWithUser(id: number): AnimeNote {
+  const row = db.select({ note: animeNotes, user: cardColumns }).from(animeNotes).innerJoin(users, eq(users.id, animeNotes.userId)).where(eq(animeNotes.id, id)).get()
+  if (!row) notFound('NOTE_NOT_FOUND')
+  return toNote(row.note, toCard(row.user))
+}
+
 export function animeNotesFor(viewerId: number, malId: number): AnimeNote[] {
+  const hidden = hiddenUserIds(viewerId)
   return db
-    .select({ note: animeNotes, username: users.username })
+    .select({ note: animeNotes, user: cardColumns })
     .from(animeNotes)
     .innerJoin(users, eq(users.id, animeNotes.userId))
     .where(and(eq(animeNotes.malId, malId), visibleTo(viewerId)))
     .orderBy(desc(animeNotes.createdAt))
     .all()
-    .map((r) => toNote(r.note, r.username))
+    .filter((r) => !hidden.has(r.note.userId))
+    .map((r) => toNote(r.note, toCard(r.user)))
 }
 
 export function createNote(userId: number, malId: number, input: NoteInput): AnimeNote {
@@ -85,13 +94,12 @@ export function createNote(userId: number, malId: number, input: NoteInput): Ani
     .returning()
     .get()
   record(userId, malId, 'note', { noteId: row.id })
-  const user = db.select({ username: users.username }).from(users).where(eq(users.id, userId)).get()
-  return toNote(row, user?.username ?? '')
+  return noteWithUser(row.id)
 }
 
-function ownNote(userId: number, id: number): NoteRow {
+function ownNote(userId: number, id: number, moderator = false): NoteRow {
   const row = db.select().from(animeNotes).where(eq(animeNotes.id, id)).get()
-  if (!row || row.userId !== userId) notFound('NOTE_NOT_FOUND')
+  if (!row || (row.userId !== userId && !moderator)) notFound('NOTE_NOT_FOUND')
   return row
 }
 
@@ -101,14 +109,13 @@ export function updateNote(userId: number, id: number, input: NoteInput): AnimeN
     .set({ text: input.text, ...(input.episode !== undefined ? { episode: input.episode } : {}), ...(input.private !== undefined ? { private: input.private } : {}), updatedAt: now() })
     .where(eq(animeNotes.id, id))
     .run()
-  const row = db.select({ note: animeNotes, username: users.username }).from(animeNotes).innerJoin(users, eq(users.id, animeNotes.userId)).where(eq(animeNotes.id, id)).get()!
-  return toNote(row.note, row.username)
+  return noteWithUser(id)
 }
 
-export function deleteNote(userId: number, id: number) {
-  const row = ownNote(userId, id)
+export function deleteNote(userId: number, id: number, moderator = false) {
+  const row = ownNote(userId, id, moderator)
   db.delete(animeNotes).where(eq(animeNotes.id, id)).run()
-  const events = db.select({ id: feedEvents.id, data: feedEvents.data }).from(feedEvents).where(and(eq(feedEvents.userId, userId), eq(feedEvents.malId, row.malId), eq(feedEvents.type, 'note'))).all()
+  const events = db.select({ id: feedEvents.id, data: feedEvents.data }).from(feedEvents).where(and(eq(feedEvents.userId, row.userId), eq(feedEvents.malId, row.malId), eq(feedEvents.type, 'note'))).all()
   const stale = events.filter((e) => (e.data as { noteId?: number }).noteId === id).map((e) => e.id)
   if (stale.length) db.delete(feedEvents).where(inArray(feedEvents.id, stale)).run()
 }
@@ -121,15 +128,28 @@ function parseCursor(value: string | null) {
   return split > 0 && Number.isInteger(id) && createdAt ? { createdAt, id } : null
 }
 
-export function feedPage(viewerId: number, options: { before: string | null; limit: number }): FeedPage {
+export type FeedScope = 'me' | 'friends' | { userId: number }
+
+function feedAuthors(viewerId: number, scope: FeedScope): number[] {
+  if (scope === 'me') return [viewerId]
+  const hidden = hiddenUserIds(viewerId)
+  const candidates = scope === 'friends' ? friendIds(viewerId) : [scope.userId]
+  if (!candidates.length) return []
+  const sharing = new Set(db.select({ id: users.id }).from(users).where(and(inArray(users.id, candidates), eq(users.shareActivity, true))).all().map((r) => r.id))
+  return candidates.filter((id) => id === viewerId || (sharing.has(id) && !hidden.has(id)))
+}
+
+export function feedPage(viewerId: number, options: { before: string | null; limit: number; scope?: FeedScope }): FeedPage {
   const limit = Math.min(MAX_PAGE, Math.max(1, options.limit))
   const cursor = parseCursor(options.before)
+  const authors = feedAuthors(viewerId, options.scope ?? 'me')
+  if (!authors.length) return { items: [], nextBefore: null }
   const conditions = [
-    eq(feedEvents.userId, viewerId),
+    inArray(feedEvents.userId, authors),
     cursor ? or(lt(feedEvents.createdAt, cursor.createdAt), and(eq(feedEvents.createdAt, cursor.createdAt), lt(feedEvents.id, cursor.id))) : undefined,
   ].filter((c) => c !== undefined)
   const rows = db
-    .select({ event: feedEvents, username: users.username, anime })
+    .select({ event: feedEvents, user: cardColumns, anime })
     .from(feedEvents)
     .innerJoin(users, eq(users.id, feedEvents.userId))
     .innerJoin(anime, eq(anime.malId, feedEvents.malId))
@@ -150,8 +170,9 @@ export function feedPage(viewerId: number, options: { before: string | null; lim
       : [],
   )
   const items: FeedItem[] = []
-  for (const { event, username, anime: row } of page) {
-    const base = { id: event.id, createdAt: event.createdAt, user: { id: event.userId, username }, anime: toSummary(row) }
+  for (const { event, user: userRow, anime: row } of page) {
+    const user = toCard(userRow)
+    const base = { id: event.id, createdAt: event.createdAt, user, anime: toSummary(row) }
     const data = event.data as Record<string, unknown>
     if (event.type === 'added') items.push({ ...base, type: 'added', status: data.status as ListStatus })
     else if (event.type === 'status') items.push({ ...base, type: 'status', from: data.from as ListStatus, to: data.to as ListStatus })
@@ -159,7 +180,7 @@ export function feedPage(viewerId: number, options: { before: string | null; lim
     else if (event.type === 'episodes') items.push({ ...base, type: 'episodes', from: Number(data.from), to: Number(data.to) })
     else {
       const note = notes.get(Number(data.noteId))
-      if (note) items.push({ ...base, type: 'note', note: toNote(note, username) })
+      if (note) items.push({ ...base, type: 'note', note: toNote(note, user) })
     }
   }
   const last = page[page.length - 1]?.event

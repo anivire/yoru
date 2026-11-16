@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { EXPORT_FORMATS, type ExportFormat, IMPORT_PROVIDERS, type ImportProvider, type User } from '@yoru/shared'
 import { Badge, Button, Card, CardContent, Code, Field, Input, LogoMark, Segmented, Skeleton, Spinner, StepSlider, Switch, cn, toast } from '@yoru/ui'
-import { RiAlertFill, RiArrowUpDownFill, RiCheckboxCircleFill, RiBracesFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiLockFill, RiNotification3Fill, RiPaletteFill, RiPlayCircleFill, RiShieldFill, RiUser3Fill, RiVolumeUpFill } from '@remixicon/react'
+import { RiAlertFill, RiArrowUpDownFill, RiCheckboxCircleFill, RiBracesFill, RiDownload2Fill, RiFileCodeFill, RiFileExcel2Fill, RiFileUploadFill, RiIdCardFill, RiLockFill, RiNotification3Fill, RiPaletteFill, RiPlayCircleFill, RiShieldFill, RiUser3Fill, RiVolumeUpFill } from '@remixicon/react'
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
@@ -23,14 +23,15 @@ import { useDocumentTitle } from '../lib/title'
 import { PlayerTab } from '../components/player-settings'
 import { SoundsTab } from '../components/sound-settings'
 import { DangerZone } from '../components/danger-zone'
+import { ProfileTab } from '../components/profile-settings'
 import { ANIME365_LOGO, SEANIME_LOGO } from '../lib/logos'
 
-const TABS = ['appearance', 'player', 'sounds', 'account', 'notifications', 'import'] as const
+const TABS = ['appearance', 'player', 'sounds', 'profile', 'account', 'notifications', 'import'] as const
 type Tab = (typeof TABS)[number]
 
 const EXPORT_ICONS = { yoru: RiBracesFill, json: RiBracesFill, csv: RiFileExcel2Fill, 'mal-xml': RiFileCodeFill } satisfies Record<ExportFormat, unknown>
 
-const TAB_ICONS = { appearance: RiPaletteFill, player: RiPlayCircleFill, sounds: RiVolumeUpFill, account: RiUser3Fill, notifications: RiNotification3Fill, import: RiArrowUpDownFill } satisfies Record<Tab, unknown>
+const TAB_ICONS = { appearance: RiPaletteFill, player: RiPlayCircleFill, sounds: RiVolumeUpFill, profile: RiIdCardFill, account: RiUser3Fill, notifications: RiNotification3Fill, import: RiArrowUpDownFill } satisfies Record<Tab, unknown>
 
 function useUpdateUser() {
   const client = useQueryClient()
@@ -514,6 +515,7 @@ export function SettingsPage() {
         {tab === 'appearance' ? <AppearanceTab /> : null}
         {tab === 'player' ? <PlayerTab /> : null}
         {tab === 'sounds' ? <SoundsTab /> : null}
+        {tab === 'profile' ? <ProfileTab /> : null}
         {tab === 'account' ? <AccountTab /> : null}
         {tab === 'notifications' ? <NotificationsTab /> : null}
         {tab === 'import' ? <ImportTab /> : null}

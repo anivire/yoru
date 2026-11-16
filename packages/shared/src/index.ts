@@ -29,6 +29,8 @@ export type UserRole = 'admin' | 'user'
 export interface User {
   id: number
   username: string
+  displayName: string | null
+  avatarUrl: string | null
   role: UserRole
   locale: Locale
   notifySub: boolean
@@ -327,8 +329,24 @@ export interface Notification {
   readAt: string | null
 }
 
+export type SocialNotificationType = 'friend_request' | 'friend_accepted' | 'recommendation' | 'comment' | 'reaction'
+
+export interface SocialNotification {
+  id: number
+  type: SocialNotificationType
+  actor: UserCard
+  malId: number | null
+  titles: AnimeTitles | null
+  imageUrl: string | null
+  refId: number | null
+  text: string | null
+  createdAt: string
+  readAt: string | null
+}
+
 export interface NotificationList {
   items: Notification[]
+  social: SocialNotification[]
   unread: number
 }
 
@@ -616,9 +634,55 @@ export type RoomServerMessage =
   | { type: 'members'; members: RoomMember[] }
   | { type: 'pong'; now: number }
 
-export interface FeedUser {
+export interface UserCard {
   id: number
   username: string
+  displayName: string | null
+  avatarUrl: string | null
+}
+
+export type FeedUser = UserCard
+
+export const VISIBILITIES = ['everyone', 'friends', 'private'] as const
+export type Visibility = (typeof VISIBILITIES)[number]
+export type ProfileVisibility = Exclude<Visibility, 'private'>
+export type Relation = 'self' | 'friend' | 'outgoing' | 'incoming' | 'none'
+
+export interface ProfileSettings {
+  displayName: string | null
+  bio: string | null
+  profileVisibility: ProfileVisibility
+  listVisibility: Visibility
+  statsVisibility: Visibility
+  shareActivity: boolean
+}
+
+export const profileUpdateSchema = z.object({
+  displayName: z.string().trim().max(40).nullable().optional(),
+  bio: z.string().trim().max(300).nullable().optional(),
+  profileVisibility: z.enum(['everyone', 'friends']).optional(),
+  listVisibility: z.enum(VISIBILITIES).optional(),
+  statsVisibility: z.enum(VISIBILITIES).optional(),
+  shareActivity: z.boolean().optional(),
+})
+
+export interface UserProfile {
+  user: UserCard
+  bio: string | null
+  createdAt: string
+  relation: Relation
+  blocked: boolean
+  restricted: boolean
+  canSeeList: boolean
+  canSeeStats: boolean
+  friends: number
+  statuses: Record<ListStatus, number> | null
+}
+
+export interface FriendsOverview {
+  friends: UserCard[]
+  incoming: UserCard[]
+  outgoing: UserCard[]
 }
 
 export interface AnimeNote {

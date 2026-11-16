@@ -12,7 +12,7 @@ import {
   cn,
   useSlidingIndicator,
 } from '@yoru/ui'
-import { RiLogoutBoxRFill, RiMenuFill, RiSearchFill, RiSettings3Fill, RiShieldFill, RiUser3Fill } from '@remixicon/react'
+import { RiAccountCircleFill, RiGroupFill, RiLogoutBoxRFill, RiMenuFill, RiSearchFill, RiSettings3Fill, RiShieldFill, RiUser3Fill } from '@remixicon/react'
 import { type ReactNode, type RefObject, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { matchPath, useLocation, useNavigate } from 'react-router'
@@ -26,6 +26,7 @@ import { BetaBadge } from './watch-together'
 import { Footer } from './footer'
 import { TLink, TNavLink, useTransitionNavigate } from './transition-link'
 import { AppearancePopover } from './appearance-panel'
+import { UserAvatar, nameOf } from './user-avatar'
 
 const NAV_ITEM = 'relative inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-medium transition-colors [&_svg]:size-4 [&_svg]:shrink-0'
 
@@ -177,9 +178,9 @@ function ProfileLabel() {
   const user = useUser()
   return (
     <DropdownMenuLabel className="flex items-center gap-3 px-3 py-2">
-      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-soft text-sm font-semibold uppercase text-accent">{user.username.slice(0, 1)}</span>
+      <UserAvatar user={user} />
       <span className="min-w-0">
-        <span className="block truncate text-sm font-medium text-foreground">{user.username}</span>
+        <span className="block truncate text-sm font-medium text-foreground">{nameOf(user)}</span>
         <span className="block text-xs font-normal text-muted-foreground">{user.role === 'admin' ? t('nav.roleAdmin') : t('nav.roleUser')}</span>
       </span>
     </DropdownMenuLabel>
@@ -200,6 +201,14 @@ function AccountItems({ settings = true }: { settings?: boolean }) {
   }
   return (
     <>
+      <DropdownMenuItem onSelect={() => go(`/u/${user.username}`)}>
+        <RiAccountCircleFill />
+        {t('nav.profile')}
+      </DropdownMenuItem>
+      <DropdownMenuItem onSelect={() => go('/friends')}>
+        <RiGroupFill />
+        {t('nav.friends')}
+      </DropdownMenuItem>
       {settings ? (
         <DropdownMenuItem onSelect={() => go('/settings')}>
           <RiSettings3Fill />
@@ -228,12 +237,12 @@ function UserMenu({ side = 'bottom', rail = false }: { side?: 'top' | 'bottom' |
     <DropdownMenuTrigger asChild>
       {rail ? (
         <button type="button" aria-label={t('nav.account')} className={railButton}>
-          <RiUser3Fill />
-          <RailLabel>{user.username}</RailLabel>
+          {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="size-5 shrink-0 rounded-full object-cover" /> : <RiUser3Fill />}
+          <RailLabel>{nameOf(user)}</RailLabel>
         </button>
       ) : (
-        <Button variant="secondary" size="icon" aria-label={t('nav.account')} className="rounded-full">
-          <span className="text-[0.8125rem] font-semibold uppercase">{user.username.slice(0, 1)}</span>
+        <Button variant="secondary" size="icon" aria-label={t('nav.account')} className="overflow-hidden rounded-full">
+          {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="size-full object-cover" /> : <span className="text-[0.8125rem] font-semibold uppercase">{nameOf(user).slice(0, 1)}</span>}
         </Button>
       )}
     </DropdownMenuTrigger>

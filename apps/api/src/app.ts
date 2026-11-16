@@ -21,6 +21,8 @@ import { notificationRoutes } from './routes/notifications'
 import { feedRoutes, noteRoutes } from './routes/feed'
 import { roomRoutes } from './routes/rooms'
 import { statsRoutes } from './routes/stats'
+import { friendRoutes } from './routes/friends'
+import { userRoutes } from './routes/users'
 import { streamRoutes } from './routes/stream'
 import { buildInfo, changelog, versionInfo } from './services/version'
 
@@ -57,6 +59,8 @@ app.route('/api/rooms', roomRoutes)
 app.route('/api/feed', feedRoutes)
 app.route('/api/notes', noteRoutes)
 app.route('/api/notifications', notificationRoutes)
+app.route('/api/users', userRoutes)
+app.route('/api/friends', friendRoutes)
 app.route('/api/import', importRoutes)
 app.route('/api/discover', discoverRoutes)
 app.route('/api/schedule', scheduleRoutes)

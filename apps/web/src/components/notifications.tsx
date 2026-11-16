@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { Notification, SocialNotification } from '@yoru/shared'
 import { Badge, Button, Image, Mascot, Popover, PopoverContent, PopoverTrigger, StatusDot, cn } from '@yoru/ui'
 import { RiCheckDoubleFill, RiDeleteBin6Fill, RiNotification3Fill } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
@@ -10,6 +11,7 @@ import { useEffect, useRef } from 'react'
 import { TLink } from './transition-link'
 import { AnimeTitle } from '../lib/anime-title'
 import { RailLabel, RailTip, useRailButton } from './rail'
+import { UserAvatar, nameOf } from './user-avatar'
 
 export function useNotificationSound() {
   const { data } = useQuery({ queryKey: keys.notifications, queryFn: api.notifications, refetchInterval: 60_000, refetchOnWindowFocus: true })
@@ -22,6 +24,37 @@ export function useNotificationSound() {
   }, [unread])
 }
 
+function socialLink(n: SocialNotification) {
+  if (n.type === 'friend_request') return '/friends'
+  if (n.type === 'friend_accepted') return `/u/${n.actor.username}`
+  if (n.type === 'recommendation' && n.malId) return `/anime/${n.malId}`
+  return '/feed'
+}
+
+function SocialItem({ n, onOpen }: { n: SocialNotification; onOpen: () => void }) {
+  const { t } = useTranslation()
+  const name = nameOf(n.actor)
+  return (
+    <TLink to={socialLink(n)} onClick={onOpen} className={cn('flex gap-3 rounded-lg px-2.5 py-2.5 transition-colors hover:bg-muted', n.readAt && 'opacity-60')}>
+      <UserAvatar user={n.actor} className="size-10" />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start gap-2">
+          {!n.readAt ? <StatusDot tone="accent" className="mt-1.5" /> : null}
+          <span className="text-sm">{t(`notifications.social.${n.type}`, { name, emoji: n.text ?? '' })}</span>
+        </div>
+        {n.titles ? (
+          <div className="mt-0.5 truncate text-[0.8125rem] font-medium text-muted-foreground">
+            <AnimeTitle anime={n.titles} />
+          </div>
+        ) : null}
+        {n.type !== 'reaction' && n.text ? <p className="mt-1 line-clamp-2 text-[0.8125rem] text-muted-foreground">{n.text}</p> : null}
+        <div className="mt-1 font-mono text-[0.6875rem] text-subtle-foreground">{relativeTime(n.createdAt)}</div>
+      </div>
+      {n.imageUrl ? <Image src={n.imageUrl} alt="" className="h-14 w-10 shrink-0 rounded-md object-cover" loading="lazy" /> : null}
+    </TLink>
+  )
+}
+
 export function NotificationsPopover({ side = 'bottom', rail = false }: { side?: 'top' | 'bottom' | 'left' | 'right'; rail?: boolean }) {
   const { t } = useTranslation()
   const client = useQueryClient()
@@ -29,7 +62,12 @@ export function NotificationsPopover({ side = 'bottom', rail = false }: { side?:
   const refresh = () => client.invalidateQueries({ queryKey: keys.notifications })
   const readAll = useMutation({ mutationFn: () => api.readNotifications(), onSuccess: refresh })
   const clear = useMutation({ mutationFn: api.clearNotifications, onSuccess: refresh })
-  const readOne = useMutation({ mutationFn: (id: number) => api.readNotifications([id]), onSuccess: refresh })
+  const readOne = useMutation({ mutationFn: (id: number) => api.readNotifications({ ids: [id] }), onSuccess: refresh })
+  const readSocial = useMutation({ mutationFn: (id: number) => api.readNotifications({ socialIds: [id] }), onSuccess: refresh })
+  const entries: ({ kind: 'episode'; n: Notification } | { kind: 'social'; n: SocialNotification })[] = [
+    ...(data?.items ?? []).map((n) => ({ kind: 'episode' as const, n })),
+    ...(data?.social ?? []).map((n) => ({ kind: 'social' as const, n })),
+  ].sort((a, b) => b.n.createdAt.localeCompare(a.n.createdAt))
   const unread = data?.unread ?? 0
   const railButton = useRailButton()
 
@@ -69,19 +107,22 @@ export function NotificationsPopover({ side = 'bottom', rail = false }: { side?:
               <RiCheckDoubleFill />
               {t('notifications.readAll')}
             </Button>
-            <Button size="icon-sm" variant="ghost" onClick={() => clear.mutate()} disabled={!data?.items.length} aria-label={t('notifications.clear')}>
+            <Button size="icon-sm" variant="ghost" onClick={() => clear.mutate()} disabled={!entries.length} aria-label={t('notifications.clear')}>
               <RiDeleteBin6Fill />
             </Button>
           </div>
         </div>
         <div className="flex max-h-[60vh] flex-col gap-0.5 overflow-y-auto p-1.5">
-          {!data?.items.length ? (
+          {!entries.length ? (
             <div className="flex flex-col items-center gap-2 px-6 py-10 text-center text-sm text-muted-foreground">
               <Mascot mood="sleepy" size={44} />
               {t('notifications.empty')}
             </div>
           ) : (
-            data.items.map((n) => (
+            entries.map((entry) => {
+              if (entry.kind === 'social') return <SocialItem key={`s${entry.n.id}`} n={entry.n} onOpen={() => !entry.n.readAt && readSocial.mutate(entry.n.id)} />
+              const n = entry.n
+              return (
               <TLink
                 key={n.id}
                 to={`/anime/${n.malId}?episode=${n.episode}&kind=${n.kind}`}
@@ -109,7 +150,8 @@ export function NotificationsPopover({ side = 'bottom', rail = false }: { side?:
                   </div>
                 </div>
               </TLink>
-            ))
+              )
+            })
           )}
         </div>
       </PopoverContent>

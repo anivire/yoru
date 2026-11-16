@@ -23,6 +23,7 @@ import { intParam, parseBody } from '../lib/validate'
 import { clearDiscoverCache } from '../services/discover'
 import { oauthConfigured, providerEnabled, redirectUri } from '../services/importers'
 import { resetSourceStatus, sourceInfos } from '../services/sources'
+import { removeAvatar } from './users'
 
 const usedByUser = alias(users, 'used_by_user')
 
@@ -76,6 +77,7 @@ export const adminRoutes = new Hono<AppEnv>()
   .delete('/users/:id', (c) => {
     const id = intParam(c, 'id')
     if (id === c.get('user').id) throw new HTTPException(400, { message: 'CANNOT_DELETE_SELF' })
+    removeAvatar(id)
     db.delete(users).where(eq(users.id, id)).run()
     return c.json({ ok: true })
   })

@@ -33,7 +33,7 @@ function HeroStat({ icon, value, approx, label, hint, tone = 'text-accent', icon
   )
 }
 
-function StatusStrip({ statuses }: { statuses: UserStats['statuses'] }) {
+export function StatusStrip({ statuses }: { statuses: UserStats['statuses'] }) {
   const { t } = useTranslation()
   const total = LIST_STATUSES.reduce((sum, s) => sum + statuses[s], 0)
   if (!total) return null

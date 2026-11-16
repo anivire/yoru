@@ -2,12 +2,14 @@ import { and, count, desc, eq, gt, ne } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
-import { type AccountInfo, type SessionInfo, type ShareInfo, confirmPasswordSchema, shareUpdateSchema, userSettingsSchema } from '@yoru/shared'
+import { type AccountInfo, type ProfileSettings, type SessionInfo, type ShareInfo, type UserCard, confirmPasswordSchema, profileUpdateSchema, shareUpdateSchema, userSettingsSchema } from '@yoru/shared'
 import { db, now } from '../db/client'
-import { activity, animeNotes, feedEvents, imports, invites, listEntries, notifications, sessions, users, watchProgress } from '../db/schema'
+import { activity, animeNotes, blocks, feedEvents, imports, invites, listEntries, notifications, sessions, users, watchProgress } from '../db/schema'
 import { type AppEnv, currentSessionId, destroySession, requireAuth, toUser } from '../lib/auth'
 import { randomToken, verifyPassword } from '../lib/crypto'
 import { parseBody } from '../lib/validate'
+import { cardColumns, toCard } from '../services/social'
+import { MAX_AVATAR_BYTES, imageType, removeAvatar, saveAvatar } from './users'
 
 const inviter = alias(users, 'inviter')
 
@@ -32,8 +34,50 @@ function readShare(userId: number): ShareInfo {
   return { token: row?.token ?? null, list: row?.list ?? true, stats: row?.stats ?? false }
 }
 
+function readProfile(userId: number): ProfileSettings {
+  const row = db
+    .select({
+      displayName: users.displayName,
+      bio: users.bio,
+      profileVisibility: users.profileVisibility,
+      listVisibility: users.listVisibility,
+      statsVisibility: users.statsVisibility,
+      shareActivity: users.shareActivity,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .get()!
+  return row
+}
+
 export const meRoutes = new Hono<AppEnv>()
   .use(requireAuth)
+  .get('/profile', (c) => c.json(readProfile(c.get('user').id)))
+  .patch('/profile', async (c) => {
+    const input = await parseBody(c, profileUpdateSchema)
+    const patch = {
+      ...input,
+      ...(input.displayName !== undefined ? { displayName: input.displayName || null } : {}),
+      ...(input.bio !== undefined ? { bio: input.bio || null } : {}),
+    }
+    if (Object.keys(patch).length) db.update(users).set(patch).where(eq(users.id, c.get('user').id)).run()
+    return c.json(readProfile(c.get('user').id))
+  })
+  .put('/avatar', async (c) => {
+    const bytes = new Uint8Array(await c.req.arrayBuffer())
+    if (bytes.length > MAX_AVATAR_BYTES) throw new HTTPException(413, { message: 'AVATAR_TOO_LARGE' })
+    if (!imageType(bytes)) throw new HTTPException(400, { message: 'AVATAR_INVALID' })
+    saveAvatar(c.get('user').id, bytes)
+    return c.json(toUser(db.select().from(users).where(eq(users.id, c.get('user').id)).get()!))
+  })
+  .delete('/avatar', (c) => {
+    removeAvatar(c.get('user').id)
+    return c.json(toUser(db.select().from(users).where(eq(users.id, c.get('user').id)).get()!))
+  })
+  .get('/blocks', (c) => {
+    const rows = db.select(cardColumns).from(blocks).innerJoin(users, eq(users.id, blocks.blockedId)).where(eq(blocks.userId, c.get('user').id)).orderBy(desc(blocks.createdAt)).all()
+    return c.json(rows.map(toCard) satisfies UserCard[])
+  })
   .get('/share', (c) => c.json(readShare(c.get('user').id)))
   .post('/share', async (c) => {
     const flags = await parseBody(c, shareUpdateSchema)
@@ -114,6 +158,7 @@ export const meRoutes = new Hono<AppEnv>()
       if (admins <= 1) throw new HTTPException(400, { message: 'LAST_ADMIN' })
     }
     destroySession(c)
+    removeAvatar(user.id)
     db.delete(users).where(eq(users.id, user.id)).run()
     return c.json({ ok: true })
   })

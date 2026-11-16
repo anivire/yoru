@@ -25,6 +25,8 @@ export function toUser(row: UserRow): User {
   return {
     id: row.id,
     username: row.username,
+    displayName: row.displayName,
+    avatarUrl: row.avatarVersion ? `/api/users/${row.id}/avatar?v=${row.avatarVersion}` : null,
     role: row.role,
     locale: row.locale,
     notifySub: row.notifySub,

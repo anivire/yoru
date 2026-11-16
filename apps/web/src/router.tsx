@@ -21,6 +21,8 @@ import { StatsPage } from './pages/stats'
 import { RoomPage } from './pages/room'
 import { TogetherPage } from './pages/together'
 import { ChangelogPage } from './pages/changelog'
+import { FriendsPage } from './pages/friends'
+import { ProfilePage } from './pages/profile'
 import { FeedPage } from './pages/feed'
 
 function Splash() {
@@ -119,6 +121,8 @@ export const router = createBrowserRouter([
           { path: 'together', element: <TogetherPage /> },
           { path: 'feed', element: <FeedPage /> },
           { path: 'changelog', element: <ChangelogPage /> },
+          { path: 'friends', element: <FriendsPage /> },
+          { path: 'u/:username', element: <ProfilePage /> },
           { path: 'anime/:id', element: <AnimePage /> },
           { path: 'settings/:tab?', element: <SettingsPage /> },
           { element: <RequireAdmin />, children: [{ path: 'admin', element: <AdminPage /> }] },

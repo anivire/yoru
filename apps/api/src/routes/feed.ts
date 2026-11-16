@@ -10,6 +10,7 @@ export const feedRoutes = new Hono<AppEnv>().use(requireAuth).get('/', (c) =>
     feedPage(c.get('user').id, {
       before: c.req.query('before') || null,
       limit: Number(c.req.query('limit')) || 150,
+      scope: c.req.query('scope') === 'friends' ? 'friends' : 'me',
     }),
   ),
 )
@@ -25,6 +26,7 @@ export const noteRoutes = new Hono<AppEnv>()
   })
   .patch('/:id', async (c) => c.json(updateNote(c.get('user').id, intParam(c, 'id'), await parseBody(c, noteInputSchema))))
   .delete('/:id', (c) => {
-    deleteNote(c.get('user').id, intParam(c, 'id'))
+    const user = c.get('user')
+    deleteNote(user.id, intParam(c, 'id'), user.role === 'admin')
     return c.json({ ok: true })
   })

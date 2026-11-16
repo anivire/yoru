@@ -13,6 +13,13 @@ export const users = sqliteTable('users', {
   shareToken: text('share_token'),
   shareList: integer('share_list', { mode: 'boolean' }).notNull().default(true),
   shareStats: integer('share_stats', { mode: 'boolean' }).notNull().default(false),
+  displayName: text('display_name'),
+  bio: text('bio'),
+  avatarVersion: integer('avatar_version'),
+  profileVisibility: text('profile_visibility', { enum: ['everyone', 'friends'] }).notNull().default('everyone'),
+  listVisibility: text('list_visibility', { enum: ['everyone', 'friends', 'private'] }).notNull().default('everyone'),
+  statsVisibility: text('stats_visibility', { enum: ['everyone', 'friends', 'private'] }).notNull().default('everyone'),
+  shareActivity: integer('share_activity', { mode: 'boolean' }).notNull().default(true),
   createdAt: text('created_at').notNull(),
 }, (t) => [uniqueIndex('users_username_idx').on(t.username), uniqueIndex('users_share_token_idx').on(t.shareToken)])
 
@@ -193,3 +200,58 @@ export const feedEvents = sqliteTable('feed_events', {
   data: text('data', { mode: 'json' }).$type<Record<string, unknown>>().notNull().default({}),
   createdAt: text('created_at').notNull(),
 }, (t) => [index('feed_events_created_idx').on(t.createdAt), index('feed_events_user_idx').on(t.userId, t.createdAt)])
+
+export const friendships = sqliteTable('friendships', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  friendId: integer('friend_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  status: text('status', { enum: ['pending', 'accepted'] }).notNull().default('pending'),
+  createdAt: text('created_at').notNull(),
+  acceptedAt: text('accepted_at'),
+}, (t) => [uniqueIndex('friendships_pair_idx').on(t.userId, t.friendId), index('friendships_friend_idx').on(t.friendId)])
+
+export const blocks = sqliteTable('blocks', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  blockedId: integer('blocked_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: text('created_at').notNull(),
+}, (t) => [uniqueIndex('blocks_pair_idx').on(t.userId, t.blockedId), index('blocks_blocked_idx').on(t.blockedId)])
+
+export const reactions = sqliteTable('reactions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  eventId: integer('event_id').notNull().references(() => feedEvents.id, { onDelete: 'cascade' }),
+  emoji: text('emoji').notNull(),
+  createdAt: text('created_at').notNull(),
+}, (t) => [uniqueIndex('reactions_user_event_idx').on(t.userId, t.eventId), index('reactions_event_idx').on(t.eventId)])
+
+export const comments = sqliteTable('comments', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  targetType: text('target_type', { enum: ['event', 'note'] }).notNull(),
+  targetId: integer('target_id').notNull(),
+  text: text('text').notNull(),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+}, (t) => [index('comments_target_idx').on(t.targetType, t.targetId, t.createdAt), index('comments_user_idx').on(t.userId)])
+
+export const recommendations = sqliteTable('recommendations', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  friendId: integer('friend_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  malId: integer('mal_id').notNull(),
+  message: text('message'),
+  createdAt: text('created_at').notNull(),
+}, (t) => [index('recommendations_friend_idx').on(t.friendId, t.createdAt)])
+
+export const socialNotifications = sqliteTable('social_notifications', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  actorId: integer('actor_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  type: text('type', { enum: ['friend_request', 'friend_accepted', 'recommendation', 'comment', 'reaction'] }).notNull(),
+  malId: integer('mal_id'),
+  refId: integer('ref_id'),
+  text: text('text'),
+  createdAt: text('created_at').notNull(),
+  readAt: text('read_at'),
+}, (t) => [index('social_notifications_user_idx').on(t.userId, t.createdAt)])

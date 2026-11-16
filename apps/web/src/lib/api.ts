@@ -1,5 +1,10 @@
 import type {
   Changelog,
+  FriendsOverview,
+  ProfileSettings,
+  Relation,
+  UserCard,
+  UserProfile,
   SkipTime,
   AccountInfo,
   ActivityData,
@@ -54,11 +59,12 @@ export class ApiError extends Error {
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const form = body instanceof FormData
+  const blob = body instanceof Blob
   const res = await fetch(`/api${path}`, {
     method,
     credentials: 'same-origin',
-    headers: body === undefined || form ? undefined : { 'Content-Type': 'application/json' },
-    body: body === undefined ? undefined : form ? body : JSON.stringify(body),
+    headers: body === undefined || form ? undefined : { 'Content-Type': blob ? body.type : 'application/json' },
+    body: body === undefined ? undefined : form || blob ? body : JSON.stringify(body),
   })
   if (!res.ok) {
     let message = res.statusText
@@ -128,7 +134,24 @@ export const api = {
   deleteShare: () => request<ShareInfo>('DELETE', '/me/share'),
   createRoom: (body: { malId: number; media: RoomMedia }) => request<RoomInfo>('POST', '/rooms', body),
   rooms: () => get<RoomListItem[]>('/rooms'),
-  feed: (params: { before?: string }) => get<FeedPage>(`/feed${qs(params)}`),
+  feed: (params: { before?: string; scope?: 'me' | 'friends' }) => get<FeedPage>(`/feed${qs(params)}`),
+  searchUsers: (q: string) => get<UserCard[]>(`/users${qs({ q })}`),
+  profile: (username: string) => get<UserProfile>(`/users/${encodeURIComponent(username)}`),
+  profileList: (username: string, params: Record<string, string | number | undefined>) => get<ListResponse>(`/users/${encodeURIComponent(username)}/list${qs(params)}`),
+  profileStats: (username: string, tz: string) => get<UserStats>(`/users/${encodeURIComponent(username)}/stats${qs({ tz })}`),
+  profileFriends: (username: string) => get<UserCard[]>(`/users/${encodeURIComponent(username)}/friends`),
+  profileFeed: (username: string, before?: string) => get<FeedPage>(`/users/${encodeURIComponent(username)}/feed${qs({ before })}`),
+  blockUser: (id: number) => request<{ ok: boolean }>('POST', `/users/${id}/block`),
+  unblockUser: (id: number) => request<{ ok: boolean }>('DELETE', `/users/${id}/block`),
+  moderateUser: (id: number, body: { avatar?: boolean; bio?: boolean; displayName?: boolean }) => request<{ ok: boolean }>('POST', `/users/${id}/moderate`, body),
+  myProfile: () => get<ProfileSettings>('/me/profile'),
+  updateProfile: (body: Partial<ProfileSettings>) => request<ProfileSettings>('PATCH', '/me/profile', body),
+  uploadAvatar: (image: Blob) => request<User>('PUT', '/me/avatar', image),
+  deleteAvatar: () => request<User>('DELETE', '/me/avatar'),
+  blocks: () => get<UserCard[]>('/me/blocks'),
+  friends: () => get<FriendsOverview>('/friends'),
+  addFriend: (id: number) => request<{ relation: Relation }>('POST', `/friends/${id}`),
+  removeFriend: (id: number) => request<{ relation: Relation }>('DELETE', `/friends/${id}`),
   notes: (malId: number) => get<AnimeNote[]>(`/notes/anime/${malId}`),
   createNote: (malId: number, body: NoteInput) => request<AnimeNote>('POST', `/notes/anime/${malId}`, body),
   updateNote: (id: number, body: NoteInput) => request<AnimeNote>('PATCH', `/notes/${id}`, body),
@@ -149,7 +172,7 @@ export const api = {
   stream: (translationId: number, author: string) => get<StreamResult>(`/stream/translation/${translationId}${qs({ author })}`),
 
   notifications: () => get<NotificationList>('/notifications'),
-  readNotifications: (ids?: number[]) => request<{ ok: true }>('POST', '/notifications/read', { ids }),
+  readNotifications: (body: { ids?: number[]; socialIds?: number[] } = {}) => request<{ ok: true }>('POST', '/notifications/read', body),
   clearNotifications: () => request<{ ok: true }>('DELETE', '/notifications'),
 
   importStatus: () => get<ImportStatus>('/import/status'),

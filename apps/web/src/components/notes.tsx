@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { AnimeNote, NoteInput } from '@yoru/shared'
-import { Button, Input, Skeleton, Switch, Tooltip, cn, toast } from '@yoru/ui'
+import { Button, Input, Skeleton, Switch, Tooltip, toast } from '@yoru/ui'
 import { RiDeleteBin6Line, RiEdit2Line, RiLockFill, RiStickyNoteFill } from '@remixicon/react'
 import { type FormEvent, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -9,10 +9,8 @@ import { relativeTime } from '../lib/format'
 import { errorMessage, useUser } from '../lib/queries'
 import { Section } from './app-shell'
 import { Markdown, MarkdownEditor } from './markdown'
-
-export function UserAvatar({ name, className }: { name: string; className?: string }) {
-  return <span className={cn('grid size-9 shrink-0 place-items-center rounded-full bg-accent text-sm font-semibold uppercase text-accent-foreground', className)}>{name.slice(0, 1)}</span>
-}
+import { TLink } from './transition-link'
+import { UserAvatar, nameOf } from './user-avatar'
 
 function NoteForm({ initial, submitLabel, pending, onSubmit, onCancel }: { initial?: AnimeNote; submitLabel: string; pending: boolean; onSubmit: (input: NoteInput) => void; onCancel?: () => void }) {
   const { t } = useTranslation()
@@ -98,10 +96,14 @@ function NoteCard({ note, malId }: { note: AnimeNote; malId: number }) {
   const own = note.user.id === user.id
   return (
     <article className="flex gap-3 rounded-xl bg-surface p-4">
-      <UserAvatar name={note.user.username} />
+      <TLink to={`/u/${note.user.username}`} className="shrink-0">
+        <UserAvatar user={note.user} />
+      </TLink>
       <div className="min-w-0 flex-1">
         <div className="mb-1.5 flex items-center gap-2">
-          <span className="truncate text-sm font-semibold">{note.user.username}</span>
+          <TLink to={`/u/${note.user.username}`} className="truncate text-sm font-semibold transition-colors hover:text-accent">
+            {nameOf(note.user)}
+          </TLink>
           <Tooltip content={new Date(note.createdAt).toLocaleString()}>
             <span className="shrink-0 text-xs text-subtle-foreground">{relativeTime(note.createdAt)}</span>
           </Tooltip>
