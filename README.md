@@ -1,14 +1,23 @@
 <div align="center">
 
-<img src="apps/web/public/favicon.svg" width="96" alt="yoru logo">
+<img src="apps/web/public/favicon.svg" width="88" alt="yoru logo">
 
 # yoru
 
-A self-hosted anime tracker and player built around [Anime365](https://smotret-anime.app): Russian subtitles over the original audio or Russian voice-over, your lists, a release calendar and a discovery page, all in one place for you and the people you invite.
+**A self-hosted anime tracker and player for you and the people you invite.**
+
+Lists, a player with subtitles or dubs, a release calendar, friends and a shared feed.<br>
+Titles and video come from the providers you pick and put in order, and extensions add your own.
+
+[![Version](https://img.shields.io/github/package-json/v/anivire/yoru?style=flat-square&color=5b54d6&label=version)](https://github.com/anivire/yoru/commits/master)
+[![Docker](https://img.shields.io/badge/runs_on-Docker-2496ED?style=flat-square&logo=docker&logoColor=white)](#getting-started)
+[![Interface](https://img.shields.io/badge/interface-English_%C2%B7_Russian-8b5cf6?style=flat-square)](#features)
+
+[Features](#features) · [Getting started](#getting-started) · [Dokploy](docs/deploy/dokploy.md) · [Coolify](docs/deploy/coolify.md) · [Sources](#sources) · [Extensions](docs/extensions/README.md)
 
 </div>
 
-![yoru home page](docs/home.webp)
+![Home page](docs/home.webp)
 
 ![My lists](docs/lists.webp)
 
@@ -16,27 +25,43 @@ A self-hosted anime tracker and player built around [Anime365](https://smotret-a
 
 ## Features
 
-- **Player** with Anime365 translations: pick subtitles or voice-over, choose the author, resume where you stopped. Set a default translation type and star favourite translations right from the player, kept separately for subtitles and voice-over, and every new anime starts with them.
-- **Anime pages** with related titles in watch order, characters with their voice actors, similar anime, a screenshot gallery, the trailer and links to MyAnimeList, Shikimori, AniList, AniDB and Crunchyroll. Genres open a filtered search.
-- **Lists** with statuses, progress, scores, rewatches and notes; grid and table views with filters and sorting. Edits are saved in the background and do not reshuffle the list under you.
-- **Feed**: a personal timeline of everything you do: list additions, status changes, scores, watched episodes and notes, grouped by day, with bursts like a list import folded into a single row. Past activity is rebuilt from your lists and watch history on the first start.
-- **Notes** on any anime, optionally tied to an episode, written in Markdown with a formatting toolbar and preview. Notes are private to you and show up in your feed.
-- **Stats**: hours watched, episodes, mean score and list breakdown up top, then episodes by month, your score distribution, favourite genres and studios, formats, release years and seasons.
-- **Public link**: share a read-only page with your list, your stats or both; each section can be turned on and off without changing the link.
-- **Watch party** (beta): open a room for an anime, send the link, and everyone in it shares pause, seeking, playback speed, the episode and the translation. Playback stays in sync by gently nudging speed instead of jumping, and open rooms are listed for everyone on the server.
-- **Home** with continue watching, upcoming episodes from your lists, a GitHub-style watch activity grid and what you are watching now. Sections can be reordered and hidden.
-- **Schedule** as a month calendar: aired episodes, the ones still waiting for a translation, and what comes next.
-- **Discover**: seasonal highlights, trending by genre, recently released translations, top rated and upcoming.
-- **Notifications** when a new episode with subtitles or voice-over appears for anime in your lists, and optionally when a brand-new title premieres.
-- **Title language**: show anime titles in romaji, English, Japanese or Russian, independent of the interface language.
-- **Import** from AniList, Shikimori and MyAnimeList, or from a Seanime offline account; **export** to JSON, CSV and MAL XML.
-- **Invites only**: the admin creates invite links, there is no open registration.
-- **Appearance**: light and dark schemes, a dozen color presets, an adjustable page width, and navigation at the top, at the bottom or as a side rail on the left or right.
-- **Russian and English** interface.
+**Watch**
+- Player with video from Anime365, AniLibria, Kodik or your own extensions. If the first source has no episode, the next one is used.
+- Subtitles or voice-over, a favourite translation author for each, and playback that resumes where you stopped.
+- Skip buttons for openings and endings.
+- Watch together (beta): a room where pause, seeking, speed, the episode and the translation stay in sync for everyone.
 
-## Install
+**Track**
+- Lists with statuses, progress, scores, rewatches and notes, in a grid or a table with filters and sorting.
+- Notes in Markdown on any anime or episode, private or shared with friends.
+- Stats: hours watched, scores, genres, studios, seasons and more.
+- Notifications when a new episode gets subtitles or voice-over, and optionally when a new title premieres.
+- Import from AniList, Shikimori, MyAnimeList or Seanime; export to JSON, CSV and MAL XML.
 
-yoru ships as a single Docker image with the API, the web app and an SQLite database in a volume.
+**Discover**
+- Home page with continue watching, upcoming episodes and a watch activity grid.
+- Discover page with seasonal highlights, trending, top rated, upcoming and fresh translations.
+- Schedule as a month calendar of aired and upcoming episodes.
+- Anime pages with related titles in watch order, characters and voice actors, similar anime, screenshots and the trailer.
+
+**Together**
+- Profiles with an avatar (GIFs too), favourites and privacy settings for the list, stats and friends.
+- Friends, a feed of their activity, reactions and comments.
+- Recommend an anime to a friend or invite friends to a watch together room.
+- Blocking, and moderation tools for admins.
+- Public read-only link to your list or stats, for people without an account.
+
+**Make it yours**
+- Light and dark themes, colour presets, page width, and navigation on any side of the screen.
+- Anime titles in romaji, English, Japanese or Russian.
+- Interface in Russian and English.
+- Interface sounds with several themes (off by default).
+
+## Getting started
+
+You need a server with [Docker](https://docs.docker.com/engine/install/). On **Dokploy** or **Coolify**, follow the step-by-step guide instead: [Dokploy](docs/deploy/dokploy.md), [Coolify](docs/deploy/coolify.md).
+
+**1. Download yoru**
 
 ```bash
 git clone https://github.com/anivire/yoru.git
@@ -44,110 +69,77 @@ cd yoru
 cp .env.example .env
 ```
 
-Set at least `APP_URL` (the address you will open in the browser) and, ideally, `ANIME365_TOKEN`, then start it:
+**2. Set the address and the admin account**
+
+Open `.env` and set three values:
+
+```env
+APP_URL=https://yoru.example.com   # the address you will open yoru at
+ADMIN_USERNAME=admin               # your login
+ADMIN_PASSWORD=a-long-password     # 8 characters or more
+```
+
+**3. Start it**
 
 ```bash
 docker compose up -d --build
 ```
 
-The container listens on port `3000`. The compose file publishes it on a random host port so it can sit behind a reverse proxy; change `"3000"` to `"3000:3000"` in `docker-compose.yml` to expose it directly.
+The first build takes a few minutes. yoru listens on port `3000` inside the container; put it behind your reverse proxy (Caddy, Traefik, nginx), or change `"3000"` to `"3000:3000"` in `docker-compose.yml` to open it at `http://<server>:3000` directly.
 
-Watch party rooms use a WebSocket on `/api/rooms/<id>/ws`, so a reverse proxy in front of yoru has to forward WebSocket upgrades (`Upgrade` and `Connection` headers). Traefik and Caddy do this by default; for nginx add `proxy_http_version 1.1`, `proxy_set_header Upgrade $http_upgrade` and `proxy_set_header Connection "upgrade"`.
+**4. Log in and invite people**
 
-The database lives in `/data` inside the container, which the compose file keeps in the `yoru-data` volume. If you deploy through a platform such as Dokploy, Coolify or Portainer, make sure `/data` is mounted to a persistent volume, otherwise every redeploy starts with an empty database.
+Open `APP_URL` and log in with the admin you set. There is no open registration: create invite links under **Management → Invites** and send them to your friends.
 
-### First login
+That's it. AniLibria video works right away; for Anime365 and Kodik add their tokens under **Management → Sources** (see [Video tokens](#video-tokens)).
 
-On an empty database yoru creates the first admin in one of two ways:
-
-- set `ADMIN_USERNAME` and `ADMIN_PASSWORD` (8+ characters) in `.env`, or
-- leave them empty and open the invite link the server prints to its log on start: `[yoru] no admin yet, create one at …/invite/<code>`.
-
-Everyone else joins through invites created in the admin panel.
-
-## Anime365 token
-
-Anime365 only hands out video links to accounts with an active subscription, so yoru needs an `access_token`.
-
-1. Log in at [smotret-anime.app](https://smotret-anime.app) in your browser.
-2. Create an API app and generate an `access_token`.
-3. Paste it into **Admin panel → Data sources → Anime365** to share it with everyone, or into **Settings → Account** to use your own.
-
-A personal token wins over the shared one. `ANIME365_TOKEN` in `.env` works as the shared token too.
-
-## Data sources
-
-| Service | Used for | Required |
-|---|---|---|
-| [Anime365](https://smotret-anime.app) | Video, translations and subtitles, released episodes and notifications, recently released on Discover, links to AniList, AniDB and Crunchyroll, metadata when Jikan is off | Yes |
-| [Jikan](https://jikan.moe) (MyAnimeList) | Synopses, posters, studios, trailers, weekly airing times, episode titles and thumbnails, search filters | No, Anime365 can serve metadata instead |
-| [Shikimori](https://shikimori.io) | Discover, release calendar and upcoming episodes, banners and the screenshot gallery, Russian titles, Shikimori list import | No |
-| [AniList](https://anilist.co) | Related titles, characters and voice actors, similar anime on the anime page | No |
-| GitHub | Version and update check | No |
-| AniList, Shikimori, MyAnimeList OAuth | List import | No |
-
-Every source has a card in **Admin panel → Data sources** with its live status, an on/off switch and an API URL override. Values from `.env` are the defaults; whatever you change in the panel applies right away without a restart. Turning an optional source off only hides the parts of the app that depend on it.
-
-### Self-hosted Jikan
-
-If `api.jikan.moe` is unreachable from your server, run your own instance next to yoru:
-
-```env
-COMPOSE_PROFILES=jikan
-JIKAN_URL=http://jikan:8080/v4
-JIKAN_DB_PASSWORD=change-me
-JIKAN_REDIS_PASSWORD=change-me
-JIKAN_TYPESENSE_KEY=change-me
-```
-
-The `jikan` profile starts jikan-rest with MongoDB, Redis and Typesense. Expect around 1 GB of RAM for the whole stack.
-
-## Configuration
-
-| Variable | Default | What it does |
-|---|---|---|
-| `APP_URL` | `http://localhost:5173` | Public address; used for invite links, OAuth redirects and secure cookies on `https://` |
-| `ADMIN_USERNAME`, `ADMIN_PASSWORD` | | First admin on an empty database |
-| `ANIME365_TOKEN` | | Shared Anime365 token |
-| `METADATA_SOURCE` | `jikan` | `jikan` or `anime365` |
-| `ANIME365_URL`, `JIKAN_URL`, `SHIKIMORI_URL`, `ANILIST_URL` | public instances | API base URLs |
-| `ANILIST_CLIENT_ID`, `ANILIST_CLIENT_SECRET` | | AniList import |
-| `SHIKIMORI_CLIENT_ID`, `SHIKIMORI_CLIENT_SECRET` | | Shikimori import |
-| `MAL_CLIENT_ID`, `MAL_CLIENT_SECRET` | | MyAnimeList import |
-| `GITHUB_REPO`, `GITHUB_BRANCH`, `GITHUB_TOKEN` | `anivire/yoru`, `master` | Update check; the token is only needed for a private repository |
-| `HTTPS_PROXY` | | Route outgoing requests through a proxy |
-| `RELEASE_POLL_MINUTES` | `5` | How often new Anime365 releases are checked |
-| `SESSION_DAYS` | `30` | Login session lifetime |
-| `DATA_DIR`, `DATABASE_PATH` | `./data`, `<DATA_DIR>/yoru.db` | Where the database lives; the Docker image uses `/data` |
-
-OAuth keys and the GitHub settings can also be entered in the admin panel.
-
-## Import and export
-
-**From a service.** Create an OAuth app on AniList, Shikimori or MyAnimeList with the redirect URI shown in the admin panel (`<APP_URL>/api/import/<provider>/callback`), add its keys, and every user gets an import button in **Settings → Import and export**.
-
-**From Seanime.** Seanime keeps an offline list in `offline/local.db` inside its data folder:
-
-| OS | Path |
-|---|---|
-| Windows | `%APPDATA%\Seanime\offline\local.db` |
-| macOS | `~/Library/Application Support/Seanime/offline/local.db` |
-| Linux | `~/.config/Seanime/offline/local.db` |
-
-Close Seanime and upload that file under **Import from a file**. Statuses, progress, scores, rewatches, notes and dates are carried over; entries without a MyAnimeList ID are skipped.
-
-**Export** gives you JSON (a full copy), CSV for spreadsheets, or MAL XML that MyAnimeList, Shikimori and AniList can import.
-
-## Updates
-
-The footer shows the running version and commit. When the configured GitHub branch has newer commits, an **Update available** badge links to the comparison. After you deploy a new version, open tabs show a prompt to reload, so nobody keeps running stale code. Pull and rebuild to update:
+### Updating
 
 ```bash
 git pull
 docker compose up -d --build
 ```
 
-Database migrations run automatically on start.
+Your data stays in the `yoru-data` volume, and database migrations run on start.
+
+### Good to know
+
+- **No admin in `.env`?** Leave `ADMIN_USERNAME` and `ADMIN_PASSWORD` empty and open the link yoru prints to its log on the first start (`docker compose logs yoru`): `[yoru] no admin yet, create one at …/invite/<code>`.
+- **Behind nginx**, forward WebSockets so watch together rooms work: `proxy_http_version 1.1`, `proxy_set_header Upgrade $http_upgrade` and `proxy_set_header Connection "upgrade"`. Caddy and Traefik do it by default.
+
+### Video tokens
+
+- **Anime365** gives video only to accounts with an active subscription. Create an API app on [smotret-anime.app](https://smotret-anime.app), generate an `access_token` and paste it into the Anime365 settings under **Management → Sources** (for everyone) or **Settings → Account** (just for you).
+- **Kodik** issues tokens on request; paste it into the Kodik settings. Kodik plays in its own player, so skip buttons and watch together are not available with it.
+
+## Sources
+
+Everything yoru takes from other services is set up in **Management → Sources**. Drag providers into order, switch them on or off and open their settings; changes apply without a restart, and values from `.env` are only the defaults.
+
+| Group | Providers | Used for |
+|---|---|---|
+| **Primary** | [MyAnimeList](https://myanimelist.net) via [Jikan](https://jikan.moe), [AniList](https://anilist.co), [Shikimori](https://shikimori.io), [Kitsu](https://kitsu.app), [Anime365](https://smotret-anime.app) | Anime data and search. Providers are asked top to bottom until one answers; only MyAnimeList is on by default. |
+| **Video** | [Anime365](https://smotret-anime.app), [AniLibria](https://anilibria.top), Kodik | The player, in order. |
+| **Features** | Shikimori, AniList, [AniSkip](https://aniskip.com), GitHub | Discover and schedule, screenshots, Russian titles, related titles and characters, skip times, the update check. Each has its own switch. |
+
+## Configuration
+
+All variables are optional except `APP_URL`. Tokens, OAuth keys, API addresses and the GitHub settings can also be changed in the admin panel.
+
+| Variable | Default | What it does |
+|---|---|---|
+| `APP_URL` | `http://localhost:5173` | Public address, used for invite links, OAuth redirects and secure cookies |
+| `ADMIN_USERNAME`, `ADMIN_PASSWORD` | | First admin on an empty database |
+| `ANIME365_TOKEN`, `KODIK_TOKEN` | | Shared video tokens; Kodik stays off without one |
+| `ANILIST_CLIENT_ID`, `ANILIST_CLIENT_SECRET` | | AniList import |
+| `SHIKIMORI_CLIENT_ID`, `SHIKIMORI_CLIENT_SECRET` | | Shikimori import |
+| `MAL_CLIENT_ID`, `MAL_CLIENT_SECRET` | | MyAnimeList import |
+| `ANIME365_URL`, `JIKAN_URL`, `SHIKIMORI_URL`, `ANILIST_URL`, `KITSU_URL`, `ANILIBRIA_URL`, `KODIK_URL` | public instances | API addresses |
+| `GITHUB_REPO`, `GITHUB_BRANCH`, `GITHUB_TOKEN` | `anivire/yoru`, `master` | Update check; the token is only for a private repository |
+| `RELEASE_POLL_MINUTES` | `5` | How often new Anime365 releases are checked |
+| `SESSION_DAYS` | `30` | Login session lifetime |
+| `DATA_DIR`, `DATABASE_PATH` | `./data`, `<DATA_DIR>/yoru.db` | Database location; the Docker image uses `/data` |
+| `METADATA_SOURCE` | `jikan` | Legacy: `anime365` puts Anime365 first until the order is saved in the admin panel |
 
 ## Development
 
@@ -155,16 +147,10 @@ Requires Node.js 22.12 or newer.
 
 ```bash
 npm install
-npm run dev
+npm run dev          # web on localhost:5173, API on port 3000
+npm run typecheck    # TypeScript across the workspace
+npm run build        # production build
+npm run db:generate  # new Drizzle migration after schema changes
 ```
 
-The web app runs on [localhost:5173](http://localhost:5173) and proxies `/api` to the API on port `3000`. The API reads `.env` from the repository root and keeps its database in `apps/api/data`.
-
-| Command | What it does |
-|---|---|
-| `npm run dev` | Web and API in watch mode |
-| `npm run build` | Production build of every package |
-| `npm run typecheck` | TypeScript checks across the workspace |
-| `npm run db:generate` | New Drizzle migration from schema changes |
-
-The repository is an Nx workspace: `apps/api` (Hono, Drizzle, SQLite), `apps/web` (React, React Router, TanStack Query, Tailwind CSS), `packages/ui` (shared components) and `packages/shared` (types and validation).
+The API reads `.env` from the repository root and keeps its database in `apps/api/data`. The repository is an Nx workspace: `apps/api` (Hono, Drizzle, SQLite), `apps/web` (React, TanStack Query, Tailwind CSS), `packages/ui` (shared components) and `packages/shared` (types). See [AGENTS.md](AGENTS.md) for code conventions and [DESIGN.md](DESIGN.md) for the design system.
