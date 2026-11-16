@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Guide for coding agents working on yoru, a self-hosted anime tracker and player. `README.md` covers what the app does, deployment and configuration; this file covers how to change the code.
+Guide for coding agents working on yoru, a self-hosted anime tracker and player. `README.md` covers what the app does, deployment and configuration; this file covers how to change the code. `DESIGN.md` is the design system: tokens, type scale, spacing, components and UI patterns. Read it before changing anything visual.
 
 ## Layout
 
@@ -38,8 +38,11 @@ There is no test suite. Before finishing a change, run the typecheck for every p
 
 ## Frontend conventions
 
-- **Text**: every user-facing string goes through i18next. Add the key to both `src/locales/ru.ts` and `src/locales/en.ts`; `en` is typed against `ru`, so a missing key is a type error. Russian is the primary language. Avoid decorative arrows like `→` in UI text.
+- **Text**: every user-facing string goes through i18next. Add the key to both `src/locales/ru.ts` and `src/locales/en.ts`; `en` is typed against `ru`, so a missing key is a type error. Avoid decorative arrows like `→` in UI text.
 - **Data**: API calls live in `src/lib/api.ts`, query keys in `src/lib/queries.ts`. Use TanStack Query, not ad-hoc fetches.
+- **Optimistic updates**: update the cache in `onMutate` (or immediately, as list entries do), roll back or invalidate on error, and pass `meta: optimistic` so the saving spinner in the bottom right corner (`SavingIndicator` in `app-shell.tsx`) shows while the request is in flight. Mutations that write the same record share a `scope` so they run in order.
+- **Anime links**: anime pages live at `/anime/<malId>-<romaji-slug>`. Build links with `animePath(malId, title)` from `lib/anime-title.ts`, never by hand; the page parses the leading id and replaces a missing or wrong slug.
+- **People** are shown with `UserGrid` from `pages/profile.tsx` (avatar, name, friend badge, coloured counts, `⋮` menu to add or remove friends). Pass `menu={false}` where the list already has its own actions.
 - **Appearance settings** (theme, scheme, page width, nav position, favourite translations, etc.) live in `src/lib/appearance.tsx`, persisted to `localStorage`. New settings need a field, a normalizer in `load()` that tolerates old or missing values, and a setter.
 - **Page width**: page containers use the `page-frame` utility (`apps/web/src/styles.css`) instead of `mx-auto max-w-…`. It centers content and reserves space only on the side where the navigation rail sits. Top padding uses `sm:pt-(--page-top,…)` so titles line up with the rail logo.
 - **Navigation positions**: `left`, `top`, `bottom`, `right` in `app-shell.tsx`. On phones the bar is always at the top.
@@ -60,8 +63,11 @@ There is no test suite. Before finishing a change, run the typecheck for every p
 ## Backend conventions
 
 - Routes validate input with helpers from `src/lib/validate.ts` and return JSON; shared response types belong in `packages/shared`.
-- External services go through `src/lib/http.ts`. Each optional source can be disabled in the admin panel, so code must handle a source being off (`sourceEnabled`).
-- Schema changes: edit `src/db/schema.ts`, run `npm run db:generate`, commit the generated SQL and the `drizzle/meta` snapshot.
+- External services go through `src/lib/http.ts`. Each optional source can be disabled in the admin panel, so code must handle a source being off (`sourceEnabled`) and fall back where possible. When a source gains a new use, add it to that source's list in the admin panel (`admin.sources.*` in the locales).
+- Metadata: Jikan (MyAnimeList) by default, Anime365 when Jikan is off. Search queries in Cyrillic go to Shikimori, which has Russian titles and shares MyAnimeList ids, with Anime365 as the fallback. Shikimori also feeds Discover, the schedule, screenshots and Russian titles.
+- Errors the user can see are thrown as short upper-case codes (`notFound('LIST_HIDDEN')`, `HTTPException(400, { message: 'INVITE_INVALID' })`) and translated in `errorMessage()` in `apps/web/src/lib/queries.ts`.
+- Invites can be single-use or reusable (`invites.multi_use`, counted in `uses`); who invited a user is stored on `users.invited_by`.
+- Schema changes: edit `src/db/schema.ts`, run `npm run db:generate`, rename the generated file to a descriptive name (`0016_multi_use_invites.sql`) and update its `tag` in `drizzle/meta/_journal.json`, add any backfill `UPDATE`s to the same file, and commit the SQL with the `drizzle/meta` snapshot.
 
 ## Releases
 
