@@ -308,17 +308,24 @@ export function FriendsOnAnime({ malId, total }: { malId: number; total: number 
   )
 }
 
+const TASTE_MATCH_MIN = 3
+
 export function TasteMatchCard({ username }: { username: string }) {
   const { t } = useTranslation()
   const match = useQuery({ queryKey: ['profile', username, 'match'], queryFn: () => api.tasteMatch(username), retry: false })
   if (!match.data) return null
-  const { percent, shared, suggestions } = match.data
+  const { percent, shared, rated, suggestions } = match.data
   return (
     <section className="flex flex-col gap-5 rounded-xl bg-surface p-4 sm:p-5">
-      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <span className="text-3xl font-semibold tabular-nums text-accent">{percent === null ? '—' : `${percent}%`}</span>
-        <span className="text-sm font-medium">{t('social.tasteMatch')}</span>
-        <span className="text-[0.8125rem] text-muted-foreground">{percent === null ? t('social.tasteMatchFew') : t('social.sharedTitles', { count: shared })}</span>
+      <div className="flex items-start gap-4">
+        <span className="min-w-16 text-3xl font-semibold tabular-nums text-accent">{percent === null ? '—' : `${percent}%`}</span>
+        <div className="min-w-0">
+          <div className="text-sm font-semibold">{t('social.tasteMatch')}</div>
+          <p className="mt-0.5 text-[0.8125rem] text-muted-foreground">
+            {percent === null ? t('social.tasteMatchFew', { rated, min: TASTE_MATCH_MIN }) : t('social.tasteMatchBasis', { count: rated })} {t('social.sharedTitles', { count: shared })}
+          </p>
+          <p className="mt-1 text-xs text-subtle-foreground">{t('social.tasteMatchHow')}</p>
+        </div>
       </div>
       {suggestions.length ? (
         <div>

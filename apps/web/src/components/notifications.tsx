@@ -26,7 +26,7 @@ export function useNotificationSound() {
 
 function socialLink(n: SocialNotification) {
   if (n.type === 'friend_request') return '/friends'
-  if (n.type === 'friend_accepted') return `/u/${n.actor.username}`
+  if (n.type === 'friend_accepted' || n.type === 'invite_accepted') return `/u/${n.actor.username}`
   if (n.type === 'recommendation' && n.malId) return `/anime/${n.malId}`
   if (n.type === 'room_invite' && n.text) return `/together/${n.text}`
   return '/feed'

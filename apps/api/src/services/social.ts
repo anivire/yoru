@@ -75,6 +75,7 @@ const NOTIFY_FLAGS = {
   reaction: users.notifyReactions,
   recommendation: users.notifyRecommendations,
   room_invite: users.notifyRooms,
+  invite_accepted: users.notifyFriends,
 } as const
 
 export function notify(input: { userId: number; actorId: number; type: (typeof socialNotifications.$inferInsert)['type']; malId?: number | null; refId?: number | null; text?: string | null }) {

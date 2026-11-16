@@ -16,6 +16,7 @@ import {
 } from '../lib/auth'
 import { hashPassword, verifyPassword } from '../lib/crypto'
 import { parseBody } from '../lib/validate'
+import { notify } from '../services/social'
 
 function findInvite(code: string) {
   return db
@@ -69,6 +70,7 @@ export const authRoutes = new Hono<AppEnv>()
       tx.update(invites).set({ usedAt: now(), usedBy: created.id }).where(eq(invites.id, invite.id)).run()
       return created
     })
+    if (invite.createdBy) notify({ userId: invite.createdBy, actorId: user.id, type: 'invite_accepted' })
     createSession(c, user.id)
     return c.json(toUser(user))
   })
