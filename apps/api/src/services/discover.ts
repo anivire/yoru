@@ -10,7 +10,7 @@ import { currentSeason, shikiSummaries, shikimori } from './shikimori'
 
 const filling = new Set<number>()
 
-function fillMissing(items: AnimeSummary[]): AnimeSummary[] {
+export function fillMissing(items: AnimeSummary[]): AnimeSummary[] {
   for (const item of items.filter((i) => !i.imageUrl).slice(0, 12)) {
     if (filling.has(item.malId)) continue
     filling.add(item.malId)

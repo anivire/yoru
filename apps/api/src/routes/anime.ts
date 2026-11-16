@@ -13,7 +13,8 @@ import { getEntry, toEntry } from '../services/lists'
 import { animeExtras } from '../services/extras'
 import { animeLinks } from '../services/links'
 import { resolveMatch, setManualMatch } from '../services/provider'
-import { shikimori } from '../services/shikimori'
+import { fillMissing } from '../services/discover'
+import { shikiSummaries, shikimori } from '../services/shikimori'
 import { skipTimes } from '../services/aniskip'
 
 const A365_PAGE = 24
@@ -33,6 +34,23 @@ const cacheResponse = createMiddleware<AppEnv>(async (c, next) => {
   if (responses.size > RESPONSE_LIMIT) responses.delete(responses.keys().next().value!)
   c.res.headers.set('Cache-Control', 'private, max-age=300')
 })
+const CYRILLIC = /[а-яё]/i
+const SHIKI_STATUS: Record<string, string> = { airing: 'ongoing', complete: 'released', upcoming: 'anons' }
+
+async function russianSearch(q: string, page: number, type?: string, status?: string): Promise<SearchResult> {
+  try {
+    const query: Record<string, string | number> = { search: q, page, limit: 24 }
+    if (type) query.kind = type
+    if (status && SHIKI_STATUS[status]) query.status = SHIKI_STATUS[status]
+    const rows = await shikimori.animes(query)
+    return { items: fillMissing(shikiSummaries(rows)), pagination: { page, hasNextPage: rows.length === 24, total: null }, source: 'anime365' }
+  } catch (error) {
+    if (!(error instanceof UpstreamError) || page > 1) throw error
+    const items = await searchFallback(q)
+    return { items, pagination: { page: 1, hasNextPage: false, total: items.length }, source: 'anime365' }
+  }
+}
+
 const SEARCH_PARAMS = ['type', 'status', 'genres', 'order_by', 'sort', 'rating', 'min_score', 'start_date', 'end_date'] as const
 
 export const animeRoutes = new Hono<AppEnv>()
@@ -66,6 +84,7 @@ export const animeRoutes = new Hono<AppEnv>()
       }
       return c.json(body)
     }
+    if (CYRILLIC.test(q)) return c.json(await russianSearch(q, page, c.req.query('type'), c.req.query('status')))
     try {
       const res = !q && !filtered ? await jikan.seasonNow(page) : await jikan.search(params)
       const body: SearchResult = {
