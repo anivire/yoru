@@ -5,7 +5,7 @@ import { RiDeleteBin6Line, RiImageAddFill, RiZoomInLine, RiZoomOutLine } from '@
 import { type ChangeEvent, type ReactNode, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
-import { errorMessage, keys, useUser } from '../lib/queries'
+import { errorMessage, keys, optimistic, useUser } from '../lib/queries'
 import { Block } from '../pages/settings'
 import { UserGrid } from '../pages/profile'
 import { UserAvatar } from './user-avatar'
@@ -178,12 +178,17 @@ function AvatarEditor() {
   )
 }
 
+const PRIVACY_KEY = ['my-profile', 'privacy']
+
+type Privacy = Partial<Pick<ProfileSettings, 'profileVisibility' | 'listVisibility' | 'statsVisibility' | 'friendsVisibility' | 'shareActivity'>>
+
 function ProfileForm({ initial }: { initial: ProfileSettings }) {
   const { t } = useTranslation()
   const client = useQueryClient()
   const [displayName, setDisplayName] = useState(initial.displayName ?? '')
   const [bio, setBio] = useState(initial.bio ?? '')
   const save = useMutation({
+    scope: { id: 'my-profile' },
     mutationFn: api.updateProfile,
     onSuccess: (next) => {
       client.setQueryData(['my-profile'], next)
@@ -192,6 +197,22 @@ function ProfileForm({ initial }: { initial: ProfileSettings }) {
       toast.success(t('common.saved'))
     },
     onError: (e) => toast.error(errorMessage(e, t)),
+  })
+  const privacy = useMutation({
+    mutationKey: PRIVACY_KEY,
+    scope: { id: 'my-profile' },
+    meta: optimistic,
+    mutationFn: (body: Privacy) => api.updateProfile(body),
+    onMutate: (body) => {
+      void client.cancelQueries({ queryKey: ['my-profile'], exact: true })
+      client.setQueryData<ProfileSettings>(['my-profile'], (prev) => (prev ? { ...prev, ...body } : prev))
+    },
+    onError: (e) => toast.error(errorMessage(e, t)),
+    onSettled: () => {
+      if (client.isMutating({ mutationKey: PRIVACY_KEY }) > 1) return
+      void client.invalidateQueries({ queryKey: ['my-profile'] })
+      void client.invalidateQueries({ queryKey: ['profile'] })
+    },
   })
   const dirty = displayName.trim() !== (initial.displayName ?? '') || bio.trim() !== (initial.bio ?? '')
   const visibility = (v: Visibility) => ({ value: v, label: t(`profileSettings.visibility.${v}`) })
@@ -223,23 +244,23 @@ function ProfileForm({ initial }: { initial: ProfileSettings }) {
       <Block title={t('profileSettings.privacy')} description={t('profileSettings.privacyHint')}>
         <Card className="py-1">
           <Row label={t('profileSettings.profileVisibility')} hint={t('profileSettings.profileVisibilityHint')}>
-            <Select value={initial.profileVisibility} onValueChange={(v) => save.mutate({ profileVisibility: v as ProfileVisibility })} options={(['everyone', 'friends'] as const).map(visibility)} className="sm:w-56" />
+            <Select value={initial.profileVisibility} onValueChange={(v) => privacy.mutate({ profileVisibility: v as ProfileVisibility })} options={(['everyone', 'friends'] as const).map(visibility)} className="sm:w-56" />
           </Row>
           <Row label={t('profileSettings.listVisibility')}>
-            <Select value={initial.listVisibility} onValueChange={(v) => save.mutate({ listVisibility: v as Visibility })} options={(['everyone', 'friends', 'private'] as const).map(visibility)} className="sm:w-56" />
+            <Select value={initial.listVisibility} onValueChange={(v) => privacy.mutate({ listVisibility: v as Visibility })} options={(['everyone', 'friends', 'private'] as const).map(visibility)} className="sm:w-56" />
           </Row>
           <Row label={t('profileSettings.statsVisibility')}>
-            <Select value={initial.statsVisibility} onValueChange={(v) => save.mutate({ statsVisibility: v as Visibility })} options={(['everyone', 'friends', 'private'] as const).map(visibility)} className="sm:w-56" />
+            <Select value={initial.statsVisibility} onValueChange={(v) => privacy.mutate({ statsVisibility: v as Visibility })} options={(['everyone', 'friends', 'private'] as const).map(visibility)} className="sm:w-56" />
           </Row>
           <Row label={t('profileSettings.friendsVisibility')}>
-            <Select value={initial.friendsVisibility} onValueChange={(v) => save.mutate({ friendsVisibility: v as Visibility })} options={(['everyone', 'friends', 'private'] as const).map(visibility)} className="sm:w-56" />
+            <Select value={initial.friendsVisibility} onValueChange={(v) => privacy.mutate({ friendsVisibility: v as Visibility })} options={(['everyone', 'friends', 'private'] as const).map(visibility)} className="sm:w-56" />
           </Row>
           <label className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4">
             <span className="min-w-0">
               <span className="block text-sm">{t('profileSettings.shareActivity')}</span>
               <span className="block text-[0.8125rem] text-muted-foreground">{t('profileSettings.shareActivityHint')}</span>
             </span>
-            <Switch checked={initial.shareActivity} onCheckedChange={(shareActivity) => save.mutate({ shareActivity })} />
+            <Switch checked={initial.shareActivity} onCheckedChange={(shareActivity) => privacy.mutate({ shareActivity })} />
           </label>
         </Card>
       </Block>

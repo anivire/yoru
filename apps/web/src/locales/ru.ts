@@ -339,6 +339,7 @@ export const ru = {
     scrollNext: 'Прокрутить вперёд',
     save: 'Сохранить',
     saved: 'Сохранено',
+    saving: 'Сохранение…',
     cancel: 'Отмена',
     delete: 'Удалить',
     remove: 'Убрать',

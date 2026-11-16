@@ -341,6 +341,7 @@ export const en: Messages = {
     scrollNext: 'Scroll forward',
     save: 'Save',
     saved: 'Saved',
+    saving: 'Saving…',
     cancel: 'Cancel',
     delete: 'Delete',
     remove: 'Remove',

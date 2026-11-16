@@ -1,6 +1,7 @@
-import { type InfiniteData, QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { type InfiniteData, QueryClient, useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { AnimePage, ListEntry, ListEntryInput, ListResponse, User } from '@yoru/shared'
 import { toast } from '@yoru/ui'
+import { useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ApiError, api } from './api'
 
@@ -63,6 +64,28 @@ interface PendingSave {
 
 const pendingSaves = new Map<number, PendingSave>()
 const inFlight = new Map<number, number>()
+const savingListeners = new Set<() => void>()
+
+function entriesSaving() {
+  return pendingSaves.size > 0 || [...inFlight.values()].some((n) => n > 0)
+}
+
+function emitSaving() {
+  for (const listener of savingListeners) listener()
+}
+
+function subscribeSaving(listener: () => void) {
+  savingListeners.add(listener)
+  return () => savingListeners.delete(listener)
+}
+
+export const optimistic = { optimistic: true }
+
+export function useOptimisticSaving() {
+  const entries = useSyncExternalStore(subscribeSaving, entriesSaving)
+  const mutating = useIsMutating({ predicate: (m) => m.options.meta?.optimistic === true })
+  return entries || mutating > 0
+}
 
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
@@ -100,10 +123,12 @@ function useEntryCache(malId: number) {
     client.setQueryData<AnimePage>(keys.anime(malId), (page) => (page ? { ...page, entry: update(page.entry) } : page))
   const run = async <T,>(request: () => Promise<T>): Promise<T> => {
     inFlight.set(malId, (inFlight.get(malId) ?? 0) + 1)
+    emitSaving()
     try {
       return await request()
     } finally {
       inFlight.set(malId, (inFlight.get(malId) ?? 1) - 1)
+      emitSaving()
       if (!inFlight.get(malId) && !pendingSaves.has(malId)) {
         void client.invalidateQueries({ queryKey: keys.anime(malId) })
         void client.invalidateQueries({ queryKey: ['list'], refetchType: 'none' })
@@ -148,6 +173,7 @@ export function useSaveEntry(malId: number) {
       if (!pending) return
       clearTimeout(pending.timer)
       pendingSaves.delete(malId)
+      emitSaving()
       cache
         .run(() => api.saveEntry(malId, pending.input))
         .then((entry) => {
@@ -159,6 +185,7 @@ export function useSaveEntry(malId: number) {
         })
     }
     pendingSaves.set(malId, { input: merged, previous, timer: setTimeout(flush, SAVE_DELAY_MS), flush })
+    emitSaving()
   }
   return { mutate }
 }
@@ -173,6 +200,7 @@ export function useDeleteEntry(malId: number) {
       if (pending) {
         clearTimeout(pending.timer)
         pendingSaves.delete(malId)
+        emitSaving()
       }
       const previous = pending?.previous ?? cache.snapshot()
       cache.setEntry(() => null)

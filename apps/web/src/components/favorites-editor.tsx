@@ -6,7 +6,7 @@ import { useDeferredValue, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AnimeTitle } from '../lib/anime-title'
 import { api } from '../lib/api'
-import { errorMessage } from '../lib/queries'
+import { errorMessage, optimistic } from '../lib/queries'
 
 const SHOWCASE_SUGGESTIONS = 24
 const SHOWCASE_SKELETONS = 12
@@ -25,6 +25,7 @@ function Editor({ profile }: { profile: ProfileSettings }) {
   const save = useMutation({
     mutationKey: SAVE_KEY,
     scope: { id: 'my-profile' },
+    meta: optimistic,
     mutationFn: (body: ProfileUpdate) => api.updateProfile(body),
     onError: (e) => toast.error(errorMessage(e, t)),
     onSettled: () => {

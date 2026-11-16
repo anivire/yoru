@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
   Logo,
   LogoMark,
+  Spinner,
   Tooltip,
   cn,
   useSlidingIndicator,
@@ -19,7 +20,7 @@ import { matchPath, useLocation, useNavigate } from 'react-router'
 import { api } from '../lib/api'
 import { useAppearance } from '../lib/appearance'
 import { NAV, isBeta } from '../lib/navigation'
-import { keys, useUser } from '../lib/queries'
+import { keys, useOptimisticSaving, useUser } from '../lib/queries'
 import { NotificationsPopover, useNotificationSound } from './notifications'
 import { RailLabel, RailProvider, RailTip, useRailButton, BetaIcon, RailIcon } from './rail'
 import { BetaBadge } from './watch-together'
@@ -475,6 +476,26 @@ export function AppShell({ children }: { children: ReactNode }) {
         <FriendTitlesProvider>{children}</FriendTitlesProvider>
       </main>
       <Footer scope="app" />
+      <SavingIndicator dock={dock} />
+    </div>
+  )
+}
+
+function SavingIndicator({ dock }: { dock: boolean }) {
+  const { t } = useTranslation()
+  const saving = useOptimisticSaving()
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={cn(
+        'pointer-events-none fixed right-4 bottom-4 z-50 flex size-9 items-center justify-center rounded-full bg-raised text-muted-foreground shadow-lg transition-[opacity,scale] duration-200 md:right-[calc(var(--rail-right,0px)+1.5rem)] md:bottom-6',
+        dock && 'md:bottom-24',
+        saving ? 'scale-100 opacity-100' : 'scale-75 opacity-0',
+      )}
+    >
+      <Spinner />
+      <span className="sr-only">{saving ? t('common.saving') : null}</span>
     </div>
   )
 }
