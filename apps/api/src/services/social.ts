@@ -105,15 +105,19 @@ export function personCards(viewerId: number, ids: number[]): PersonCard[] {
   if (!ids.length) return []
   const unique = [...new Set(ids)]
   const rows = new Map(db.select().from(users).where(inArray(users.id, unique)).all().map((row) => [row.id, row]))
-  const titles = new Map(
-    db
-      .select({ userId: listEntries.userId, count: sql<number>`count(*)` })
-      .from(listEntries)
-      .where(inArray(listEntries.userId, unique))
-      .groupBy(listEntries.userId)
-      .all()
-      .map((row) => [row.userId, row.count]),
-  )
+  const counts = new Map<number, { titles: number; watching: number; completed: number }>()
+  for (const row of db
+    .select({ userId: listEntries.userId, status: listEntries.status, count: sql<number>`count(*)` })
+    .from(listEntries)
+    .where(inArray(listEntries.userId, unique))
+    .groupBy(listEntries.userId, listEntries.status)
+    .all()) {
+    const count = counts.get(row.userId) ?? { titles: 0, watching: 0, completed: 0 }
+    count.titles += row.count
+    if (row.status === 'watching' || row.status === 'rewatching') count.watching += row.count
+    if (row.status === 'completed') count.completed += row.count
+    counts.set(row.userId, count)
+  }
   const relations = new Map<number, Relation>(
     db
       .select({ userId: friendships.userId, friendId: friendships.friendId, status: friendships.status })
@@ -134,13 +138,17 @@ export function personCards(viewerId: number, ids: number[]): PersonCard[] {
     const row = rows.get(id)
     if (!row) return []
     const profile = canSee(viewerId, id, row.profileVisibility)
+    const list = profile && canSee(viewerId, id, row.listVisibility)
+    const count = counts.get(id)
     return [
       {
         ...toCard(row),
         relation: id === viewerId ? 'self' : (relations.get(id) ?? 'none'),
         banner: profile && row.bannerMalId ? (banners.get(row.bannerMalId) ?? null) : null,
         bio: profile ? row.bio : null,
-        titles: profile && canSee(viewerId, id, row.listVisibility) ? (titles.get(id) ?? 0) : null,
+        titles: list ? (count?.titles ?? 0) : null,
+        watching: list ? (count?.watching ?? 0) : null,
+        completed: list ? (count?.completed ?? 0) : null,
         friends: profile && canSee(viewerId, id, row.friendsVisibility) ? friendIds(id).length : null,
       },
     ]

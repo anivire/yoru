@@ -779,6 +779,8 @@ export interface PersonCard extends UserCard {
   banner: string | null
   bio: string | null
   titles: number | null
+  watching: number | null
+  completed: number | null
   friends: number | null
 }
 

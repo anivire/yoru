@@ -10,29 +10,37 @@ import {
   EmptyState,
   Segmented,
   Skeleton,
+  Tooltip,
+  cn,
   toast,
+  useSlidingIndicator,
 } from '@yoru/ui'
 import {
   RiBarChart2Fill,
   RiBookShelfFill,
+  RiCheckboxCircleFill,
   RiCheckFill,
   RiCloseFill,
   RiEdit2Fill,
+  RiFileTextFill,
   RiForbidFill,
   RiGroupFill,
+  RiImageFill,
   RiLockFill,
+  RiLockUnlockFill,
   RiMore2Fill,
+  RiPlayCircleFill,
+  RiText,
   RiTimeFill,
   RiUserAddFill,
   RiUserFill,
   RiUserFollowFill,
 } from '@remixicon/react'
-import { type ReactNode, useDeferredValue } from 'react'
+import { type ReactNode, useDeferredValue, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, useSearchParams } from 'react-router'
 import { Page } from '../components/app-shell'
 import { AnimeCard } from '../components/anime-cards'
-import { TasteMatchCard } from '../components/social'
 import { PosterGridSkeleton } from '../components/skeletons'
 import { TLink } from '../components/transition-link'
 import { UserAvatar, nameOf } from '../components/user-avatar'
@@ -127,9 +135,12 @@ function MoreMenu({ profile, actions }: { profile: UserProfile; actions: ReturnT
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-60">
         {profile.blocked ? (
-          <DropdownMenuItem onSelect={() => actions.unblock.mutate()}>{t('profile.unblock')}</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => actions.unblock.mutate()}>
+            <RiLockUnlockFill />
+            {t('profile.unblock')}
+          </DropdownMenuItem>
         ) : (
-          <DropdownMenuItem onSelect={() => actions.block.mutate()} className="text-danger data-[highlighted]:bg-danger-soft">
+          <DropdownMenuItem onSelect={() => actions.block.mutate()} className="text-danger data-[highlighted]:bg-danger-soft [&_svg]:text-danger">
             <RiForbidFill />
             {t('profile.block')}
           </DropdownMenuItem>
@@ -137,9 +148,18 @@ function MoreMenu({ profile, actions }: { profile: UserProfile; actions: ReturnT
         {viewer.role === 'admin' ? (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => actions.moderate.mutate({ avatar: true })}>{t('profile.moderate.avatar')}</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => actions.moderate.mutate({ displayName: true })}>{t('profile.moderate.displayName')}</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => actions.moderate.mutate({ bio: true })}>{t('profile.moderate.bio')}</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => actions.moderate.mutate({ avatar: true })}>
+              <RiImageFill />
+              {t('profile.moderate.avatar')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => actions.moderate.mutate({ displayName: true })}>
+              <RiText />
+              {t('profile.moderate.displayName')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => actions.moderate.mutate({ bio: true })}>
+              <RiFileTextFill />
+              {t('profile.moderate.bio')}
+            </DropdownMenuItem>
           </>
         ) : null}
       </DropdownMenuContent>
@@ -147,29 +167,71 @@ function MoreMenu({ profile, actions }: { profile: UserProfile; actions: ReturnT
   )
 }
 
-function ProfileHeader({ profile }: { profile: UserProfile }) {
-  const { t } = useTranslation()
+type TabOption = { value: Tab; label: string; icon: ReactNode; count?: number; disabled?: boolean; title?: string }
+
+function TabNav({ options, value, onChange }: { options: TabOption[]; value: Tab; onChange: (tab: Tab) => void }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const indicator = useSlidingIndicator(ref, '[aria-selected="true"]', value)
+  return (
+    <div ref={ref} role="tablist" aria-orientation="vertical" className="relative -mx-2 mt-3 hidden flex-col gap-0.5 lg:flex">
+      <span aria-hidden style={indicator} className="pointer-events-none absolute rounded-lg bg-muted duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]" />
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          role="tab"
+          aria-selected={option.value === value}
+          disabled={option.disabled}
+          title={option.title}
+          onClick={() => onChange(option.value)}
+          className={cn(
+            'relative flex h-9 cursor-pointer items-center gap-2.5 rounded-lg px-3 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40 [&_svg]:size-4 [&_svg]:shrink-0',
+            option.value === value ? 'font-medium text-foreground' : 'text-muted-foreground enabled:hover:text-foreground',
+          )}
+        >
+          {option.disabled ? <RiLockFill /> : option.icon}
+          <span className="flex-1 truncate text-left">{option.label}</span>
+          {option.count !== undefined ? <span className="text-xs tabular-nums text-subtle-foreground">{option.count}</span> : null}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function TabHeader({ option }: { option?: TabOption }) {
+  if (!option) return null
+  return (
+    <div className="mb-6 hidden items-center gap-3 lg:flex">
+      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent [&_svg]:size-[1.125rem]">{option.icon}</span>
+      <h2 className="text-xl font-semibold tracking-tight">{option.label}</h2>
+    </div>
+  )
+}
+
+function ProfileCard({ profile, nav }: { profile: UserProfile; nav?: ReactNode }) {
+  const { t, i18n } = useTranslation()
+  const compact = new Intl.NumberFormat(i18n.language, { notation: 'compact', maximumFractionDigits: 1 })
   const actions = useProfileActions(profile)
   const self = profile.relation === 'self'
+  const stats = [
+    profile.statuses ? { label: t('status.watching'), value: profile.statuses.watching + profile.statuses.rewatching, icon: <RiPlayCircleFill className="text-accent" /> } : null,
+    profile.statuses ? { label: t('status.completed'), value: profile.statuses.completed, icon: <RiCheckboxCircleFill className="text-success" /> } : null,
+    profile.canSeeFriends ? { label: t('profile.tabs.friends'), value: profile.friends, icon: <RiGroupFill className="text-info" /> } : null,
+  ].filter((stat) => stat !== null)
   return (
-    <header className="mb-8">
-      <div className="relative h-28 overflow-hidden rounded-2xl bg-linear-to-br from-accent/45 via-accent/15 to-transparent sm:h-44">
-        {profile.banner ? (
-          <>
-            <img src={profile.banner} alt="" className="absolute inset-0 size-full scale-110 object-cover object-[50%_30%] blur-sm" />
-            <div className="absolute inset-0 bg-linear-to-t from-background/80 via-background/20 to-transparent" />
-          </>
-        ) : null}
+    <aside className="shrink-0 overflow-hidden rounded-2xl bg-surface lg:sticky lg:top-[calc(var(--page-top,2.5rem)*2)] lg:w-64 lg:self-start">
+      <div className="relative h-24 overflow-hidden bg-linear-to-br from-accent/45 via-accent/15 to-transparent">
+        {profile.banner ? <img src={profile.banner} alt="" className="absolute inset-0 size-full scale-110 object-cover object-[50%_30%] blur-[2px]" /> : null}
       </div>
-      <div className="relative z-10 -mt-12 flex flex-wrap items-end gap-4 px-2 sm:-mt-14 sm:px-5">
-        <UserAvatar user={profile.user} className="size-24 text-3xl ring-4 ring-background sm:size-28" />
-        <div className="min-w-0 flex-1 pb-1">
-          <h1 className="truncate text-2xl font-semibold tracking-tight">{nameOf(profile.user)}</h1>
-          <p className="text-sm text-muted-foreground">@{profile.user.username}</p>
-        </div>
-        <div className="flex items-center gap-2 pb-1">
+      <div className="flex flex-col px-5 pb-5">
+        <UserAvatar user={profile.user} className="relative -mt-10 size-20 text-2xl ring-4 ring-surface" />
+        <h1 className="mt-3 truncate text-xl font-semibold tracking-tight">{nameOf(profile.user)}</h1>
+        <p className="truncate text-sm text-muted-foreground">@{profile.user.username}</p>
+        <p className="mt-0.5 text-[0.8125rem] text-subtle-foreground">{t('profile.joined', { date: formatDate(profile.createdAt, { day: 'numeric', month: 'long', year: 'numeric' }) })}</p>
+        {profile.bio ? <p className="mt-3 whitespace-pre-line text-sm">{profile.bio}</p> : null}
+        <div className="-mx-2 mt-4 flex gap-2">
           {self ? (
-            <Button asChild variant="secondary">
+            <Button asChild variant="secondary" className="flex-1">
               <TLink to="/settings/profile">
                 <RiEdit2Fill />
                 {t('profile.edit')}
@@ -177,48 +239,129 @@ function ProfileHeader({ profile }: { profile: UserProfile }) {
             </Button>
           ) : (
             <>
-              <FriendButton profile={profile} actions={actions} />
+              <div className="flex min-w-0 flex-1 *:flex-1 [&_button]:flex-1">
+                <FriendButton profile={profile} actions={actions} />
+              </div>
               <MoreMenu profile={profile} actions={actions} />
             </>
           )}
         </div>
+        {stats.length ? (
+          <div className="-mx-2 mt-3 grid grid-cols-3 gap-1.5">
+            {stats.map((stat) => (
+              <Tooltip key={stat.label} content={`${stat.label}: ${stat.value}`}>
+                <span className="flex h-8 min-w-0 items-center justify-center gap-1 rounded-lg bg-foreground/[0.04] px-1.5 text-[0.8125rem] font-semibold tabular-nums [&_svg]:size-3.5 [&_svg]:shrink-0">
+                  {stat.icon}
+                  <span className="truncate">{compact.format(stat.value)}</span>
+                  <span className="sr-only">{stat.label}</span>
+                </span>
+              </Tooltip>
+            ))}
+          </div>
+        ) : null}
+        {nav}
       </div>
-      {profile.bio ? <p className="mt-4 max-w-2xl whitespace-pre-line px-2 text-[0.9375rem] sm:px-5">{profile.bio}</p> : null}
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 px-2 text-[0.8125rem] text-muted-foreground sm:px-5">
-        <span>{t('profile.joined', { date: formatDate(profile.createdAt, { day: 'numeric', month: 'long', year: 'numeric' }) })}</span>
-        {profile.canSeeFriends ? <span>{t('profile.friendsCount', { count: profile.friends })}</span> : null}
-      </div>
-    </header>
+    </aside>
   )
 }
 
-function FriendGrid({ username }: { username: string }) {
+function FriendGrid({ profile }: { profile: UserProfile }) {
   const { t } = useTranslation()
+  const username = profile.user.username
   const friends = useQuery({ queryKey: ['profile', username, 'friends'], queryFn: () => api.profileFriends(username) })
   if (friends.isPending) return <TabSkeleton tab="friends" />
   if (!friends.data?.length) return <EmptyState mood="sleepy" title={t('profile.noFriends')} />
-  return <UserGrid users={friends.data} />
+  const mutual = profile.relation === 'self' ? [] : friends.data.filter((user) => user.relation === 'friend')
+  if (!mutual.length) return <FriendCards users={friends.data} username={username} />
+  const others = friends.data.filter((user) => user.relation !== 'friend')
+  return (
+    <div className="flex flex-col gap-8">
+      <FriendSection title={t('profile.mutualFriends')} users={mutual} username={username} />
+      {others.length ? <FriendSection title={t('profile.otherFriends')} users={others} username={username} /> : null}
+    </div>
+  )
+}
+
+function FriendSection({ title, users, username }: { title: string; users: PersonCard[]; username: string }) {
+  return (
+    <section>
+      <h2 className="mb-3 text-sm font-semibold">
+        {title}
+        <span className="ml-1.5 font-normal tabular-nums text-subtle-foreground">{users.length}</span>
+      </h2>
+      <FriendCards users={users} username={username} />
+    </section>
+  )
+}
+
+function FriendCards({ users, username }: { users: PersonCard[]; username: string }) {
+  return <UserGrid users={users} action={(user) => <FriendCardAction user={user} username={username} />} />
+}
+
+function FriendCardAction({ user, username }: { user: PersonCard; username: string }) {
+  const { t } = useTranslation()
+  const client = useQueryClient()
+  const add = useMutation({
+    mutationFn: () => api.addFriend(user.id),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ['profile', username, 'friends'] })
+      void client.invalidateQueries({ queryKey: ['friends'] })
+    },
+    onError: (e) => toast.error(errorMessage(e, t)),
+  })
+  if (user.relation === 'none') {
+    return (
+      <Button size="sm" variant="secondary" loading={add.isPending} onClick={() => add.mutate()}>
+        <RiUserAddFill />
+        {t('profile.addFriend')}
+      </Button>
+    )
+  }
+  if (user.relation === 'incoming') {
+    return (
+      <Button size="sm" variant="accent" loading={add.isPending} onClick={() => add.mutate()}>
+        <RiCheckFill />
+        {t('profile.accept')}
+      </Button>
+    )
+  }
+  if (user.relation === 'outgoing') return <span className="text-xs text-muted-foreground">{t('profile.requestSent')}</span>
+  return null
 }
 
 export function UserGrid({ users, action }: { users: PersonCard[]; action?: (user: PersonCard) => ReactNode }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const compact = new Intl.NumberFormat(i18n.language, { notation: 'compact', maximumFractionDigits: 1 })
   return (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,22rem),1fr))] gap-3">
       {users.map((user) => {
-        const stats = [user.titles !== null ? t('friends.titlesCount', { count: user.titles }) : null, user.friends !== null ? t('profile.friendsCount', { count: user.friends }) : null].filter(Boolean)
+        const stats = [
+          user.watching !== null ? { label: t('status.watching'), value: user.watching, icon: <RiPlayCircleFill className="text-accent" /> } : null,
+          user.completed !== null ? { label: t('status.completed'), value: user.completed, icon: <RiCheckboxCircleFill className="text-success" /> } : null,
+          user.friends !== null ? { label: t('profile.tabs.friends'), value: user.friends, icon: <RiGroupFill className="text-info" /> } : null,
+        ].filter((stat) => stat !== null)
         return (
           <div key={user.id} className="group relative flex items-center gap-3 overflow-hidden rounded-xl bg-surface p-3 transition-colors hover:bg-muted">
             {user.banner ? <img src={user.banner} alt="" loading="lazy" className="pointer-events-none absolute inset-y-0 right-0 h-full w-1/2 object-cover object-[50%_30%] opacity-25 mask-l-from-40% transition-opacity group-hover:opacity-35" /> : null}
             <TLink to={`/u/${user.username}`} className="relative flex min-w-0 flex-1 items-center gap-3">
               <UserAvatar user={user} className="size-14 text-xl" />
-              <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="flex min-w-0 flex-col gap-1">
                 <span className="flex min-w-0 items-center gap-2">
                   <span className="truncate text-sm font-semibold">{nameOf(user)}</span>
                   {user.relation === 'friend' ? <span className="shrink-0 rounded-full bg-accent-soft px-2 py-0.5 text-[0.6875rem] font-medium text-accent">{t('friends.isFriend')}</span> : null}
+                  {user.relation === 'self' ? <span className="shrink-0 rounded-full bg-accent-soft px-2 py-0.5 text-[0.6875rem] font-medium text-accent">{t('profile.you')}</span> : null}
                 </span>
-                <span className="truncate text-xs text-muted-foreground">
-                  @{user.username}
-                  {stats.length ? <span className="text-subtle-foreground"> · {stats.join(' · ')}</span> : null}
+                <span className="flex min-w-0 items-center gap-2.5">
+                  <span className="truncate text-xs text-muted-foreground">@{user.username}</span>
+                  {stats.map((stat) => (
+                    <Tooltip key={stat.label} content={`${stat.label}: ${stat.value}`}>
+                      <span className="flex shrink-0 items-center gap-1 text-xs font-semibold tabular-nums [&_svg]:size-3.5">
+                        {stat.icon}
+                        {compact.format(stat.value)}
+                        <span className="sr-only">{stat.label}</span>
+                      </span>
+                    </Tooltip>
+                  ))}
                 </span>
                 {user.bio ? <span className="line-clamp-1 text-xs text-muted-foreground">{user.bio}</span> : null}
               </span>
@@ -243,14 +386,18 @@ function ProfileStats({ username }: { username: string }) {
 function Overview({ profile }: { profile: UserProfile }) {
   const { t } = useTranslation()
   const self = profile.relation === 'self'
-  if (!self && !profile.favorites.length && !profile.canSeeActivity && !(profile.relation !== 'self' && profile.canSeeList)) return <EmptyState mood="sleepy" title={t('profile.noOverview')} />
+  if (!self && !profile.favorites.length && !profile.canSeeActivity) return <EmptyState mood="sleepy" title={t('profile.noOverview')} />
   return (
-    <div className="grow-empty flex flex-col gap-10">
+    <div className="grow-empty flex flex-col gap-6">
       {profile.favorites.length || self ? (
         <section className="rounded-xl bg-surface p-4 sm:p-5">
-          <div className="mb-3 flex min-h-8 items-center justify-between gap-3">
+          <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="text-sm font-semibold">{t('profile.favorites')}</h2>
-            {self ? <FavoritesDialog /> : null}
+            {self ? (
+              <div className="-my-1.5">
+                <FavoritesDialog />
+              </div>
+            ) : null}
           </div>
           {profile.favorites.length ? (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-3 gap-y-4">
@@ -263,10 +410,8 @@ function Overview({ profile }: { profile: UserProfile }) {
           )}
         </section>
       ) : null}
-      {profile.relation !== 'self' && profile.canSeeList ? <TasteMatchCard username={profile.user.username} /> : null}
       {profile.canSeeActivity ? (
         <section className="grow-empty">
-          <h2 className="mb-4 text-lg font-semibold tracking-tight">{t('profile.activity')}</h2>
           <ActivityFeed
             queryKey={['profile', profile.user.username, 'feed']}
             fetchPage={(before) => api.profileFeed(profile.user.username, before)}
@@ -291,7 +436,7 @@ function TabSkeleton({ tab }: { tab: Tab }) {
   }
   if (tab === 'friends') return <UserGridSkeleton />
   return (
-    <div className="grow-empty flex flex-col gap-10">
+    <div className="grow-empty flex flex-col gap-6">
       <section className="rounded-xl bg-surface p-4 sm:p-5">
         <Skeleton className="mb-3 h-8 w-28 rounded-md" />
         <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-3 gap-y-4">
@@ -304,7 +449,6 @@ function TabSkeleton({ tab }: { tab: Tab }) {
         </div>
       </section>
       <section className="grow-empty">
-        <Skeleton className="mb-4 h-7 w-32 rounded-md" />
         <FeedSkeleton />
       </section>
     </div>
@@ -327,29 +471,34 @@ export function UserGridSkeleton() {
   )
 }
 
+function ProfileCardSkeleton() {
+  return (
+    <div className="shrink-0 overflow-hidden rounded-2xl bg-surface lg:w-64 lg:self-start">
+      <Skeleton className="h-24 rounded-none" />
+      <div className="flex flex-col gap-2 px-5 pb-5">
+        <Skeleton className="-mt-10 size-20 shrink-0 rounded-full ring-4 ring-surface" />
+        <Skeleton className="mt-1 h-6 w-40 max-w-full rounded-md" />
+        <Skeleton className="h-4 w-24 rounded-md" />
+        <Skeleton className="-mx-2 mt-2 h-9 rounded-lg" />
+        <div className="-mx-2 mt-3 hidden flex-col gap-1.5 lg:flex">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} className="h-8 w-full rounded-lg" />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ProfileSkeleton() {
   return (
-    <div className="grow-empty">
-      <header className="mb-8">
-        <Skeleton className="h-28 rounded-2xl sm:h-44" />
-        <div className="relative z-10 -mt-12 flex flex-wrap items-end gap-4 px-2 sm:-mt-14 sm:px-5">
-          <Skeleton className="size-24 shrink-0 rounded-full ring-4 ring-background sm:size-28" />
-          <div className="flex min-w-0 flex-1 flex-col gap-1.5 pb-1">
-            <Skeleton className="h-7 w-48 max-w-full rounded-md" />
-            <Skeleton className="h-4 w-24 rounded-md" />
-          </div>
-          <div className="flex gap-2 pb-1">
-            <Skeleton className="h-9 w-40 rounded-lg" />
-            <Skeleton className="size-9 rounded-lg" />
-          </div>
-        </div>
-        <div className="mt-3 flex gap-4 px-2 sm:px-5">
-          <Skeleton className="h-4 w-40 rounded-md" />
-          <Skeleton className="h-4 w-16 rounded-md" />
-        </div>
-      </header>
-      <Skeleton className="mb-6 h-10 w-[27rem] max-w-full rounded-xl" />
-      <TabSkeleton tab="overview" />
+    <div className="grow-empty flex flex-col gap-6 lg:flex-row!">
+      <ProfileCardSkeleton />
+      <div className="grow-empty flex min-w-0 flex-1 flex-col">
+        <Skeleton className="mb-6 h-10 w-[27rem] max-w-full rounded-xl lg:hidden" />
+        <Skeleton className="mb-6 hidden h-9 w-44 rounded-xl lg:block" />
+        <TabSkeleton tab="overview" />
+      </div>
     </div>
   )
 }
@@ -367,49 +516,51 @@ export function ProfilePage() {
   const tab = available[requested] ? requested : 'overview'
   const shownTab = useDeferredValue(tab)
   const setTab = (next: Tab) => setParams(next === 'overview' ? {} : { tab: next }, { replace: true })
+  const showTabs = Boolean(data && !data.blocked && !everythingHidden && !data.restricted)
+  const tabs: TabOption[] = data
+    ? [
+        { value: 'overview', label: t('profile.tabs.overview'), icon: <RiUserFill /> },
+        { value: 'list', label: t('profile.tabs.list'), icon: <RiBookShelfFill />, disabled: !data.canSeeList, title: data.canSeeList ? undefined : t('profile.hidden') },
+        { value: 'stats', label: t('profile.tabs.stats'), icon: <RiBarChart2Fill />, disabled: !data.canSeeStats, title: data.canSeeStats ? undefined : t('profile.hidden') },
+        { value: 'friends', label: t('profile.tabs.friends'), icon: <RiGroupFill />, count: data.canSeeFriends ? data.friends : undefined, disabled: !data.canSeeFriends, title: data.canSeeFriends ? undefined : t('profile.hidden') },
+      ]
+    : []
 
   return (
-    <Page>
+    <Page className="sm:pt-[calc(var(--page-top,2rem)*2)]">
       {profile.isPending ? (
         <ProfileSkeleton />
       ) : profile.isError || !data ? (
         <EmptyState mood="error" title={t('profile.notFound')} />
       ) : (
-        <>
-          <ProfileHeader profile={data} />
-          {data.blocked ? (
-            <EmptyState mood="sleepy" title={t('profile.blockedTitle')} description={t('profile.blockedHint')} />
-          ) : everythingHidden ? (
-            <EmptyState mood="sleepy" title={<span className="inline-flex items-center gap-2"><RiLockFill className="size-5" />{t('profile.hiddenTitle')}</span>} description={t('profile.hiddenHint')} />
-          ) : data.restricted ? (
-            <EmptyState mood="sleepy" title={<span className="inline-flex items-center gap-2"><RiLockFill className="size-5" />{t('profile.restrictedTitle')}</span>} description={t('profile.restrictedHint')} />
-          ) : (
-            <>
-              <Segmented
-                className="mb-6"
-                value={tab}
-                onChange={setTab}
-                options={[
-                  { value: 'overview', label: t('profile.tabs.overview'), icon: <RiUserFill /> },
-                  { value: 'list', label: t('profile.tabs.list'), icon: <RiBookShelfFill />, disabled: !data.canSeeList, title: data.canSeeList ? undefined : t('profile.hidden') },
-                  { value: 'stats', label: t('profile.tabs.stats'), icon: <RiBarChart2Fill />, disabled: !data.canSeeStats, title: data.canSeeStats ? undefined : t('profile.hidden') },
-                  { value: 'friends', label: t('profile.tabs.friends'), icon: <RiGroupFill />, count: data.canSeeFriends ? data.friends : undefined, disabled: !data.canSeeFriends, title: data.canSeeFriends ? undefined : t('profile.hidden') },
-                ]}
-              />
-              {shownTab !== tab ? (
-                <TabSkeleton tab={tab} />
-              ) : shownTab === 'overview' ? (
-                <Overview profile={data} />
-              ) : shownTab === 'list' ? (
-                <ListBrowser queryKey={['profile', username, 'list']} fetchPage={(p) => api.profileList(username, p)} />
-              ) : shownTab === 'stats' ? (
-                <ProfileStats username={username} />
-              ) : (
-                <FriendGrid username={username} />
-              )}
-            </>
-          )}
-        </>
+        <div className="grow-empty flex flex-col gap-6 lg:flex-row!">
+          <ProfileCard profile={data} nav={showTabs ? <TabNav options={tabs} value={tab} onChange={setTab} /> : null} />
+          <div className="grow-empty flex min-w-0 flex-1 flex-col">
+            {data.blocked ? (
+              <EmptyState mood="sleepy" title={t('profile.blockedTitle')} description={t('profile.blockedHint')} />
+            ) : everythingHidden ? (
+              <EmptyState mood="sleepy" title={<span className="inline-flex items-center gap-1.5"><RiLockFill className="size-4" />{t('profile.hiddenTitle')}</span>} description={t('profile.hiddenHint')} />
+            ) : data.restricted ? (
+              <EmptyState mood="sleepy" title={<span className="inline-flex items-center gap-1.5"><RiLockFill className="size-4" />{t('profile.restrictedTitle')}</span>} description={t('profile.restrictedHint')} />
+            ) : (
+              <>
+                <Segmented className="mb-6 lg:hidden" value={tab} onChange={setTab} options={tabs} />
+                <TabHeader option={tabs.find((option) => option.value === tab)} />
+                {shownTab !== tab ? (
+                  <TabSkeleton tab={tab} />
+                ) : shownTab === 'overview' ? (
+                  <Overview profile={data} />
+                ) : shownTab === 'list' ? (
+                  <ListBrowser queryKey={['profile', username, 'list']} fetchPage={(p) => api.profileList(username, p)} />
+                ) : shownTab === 'stats' ? (
+                  <ProfileStats username={username} />
+                ) : (
+                  <FriendGrid profile={data} />
+                )}
+              </>
+            )}
+          </div>
+        </div>
       )}
     </Page>
   )
