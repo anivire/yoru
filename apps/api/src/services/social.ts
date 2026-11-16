@@ -114,6 +114,14 @@ export function personCards(viewerId: number, ids: number[]): PersonCard[] {
       .all()
       .map((row) => [row.userId, row.count]),
   )
+  const relations = new Map<number, Relation>(
+    db
+      .select({ userId: friendships.userId, friendId: friendships.friendId, status: friendships.status })
+      .from(friendships)
+      .where(or(and(eq(friendships.userId, viewerId), inArray(friendships.friendId, unique)), and(eq(friendships.friendId, viewerId), inArray(friendships.userId, unique))))
+      .all()
+      .map((row) => (row.userId === viewerId ? [row.friendId, row.status === 'accepted' ? 'friend' : 'outgoing'] : [row.userId, row.status === 'accepted' ? 'friend' : 'incoming'])),
+  )
   const banners = new Map(
     db
       .select({ malId: anime.malId, imageUrl: anime.imageUrl })
@@ -129,6 +137,7 @@ export function personCards(viewerId: number, ids: number[]): PersonCard[] {
     return [
       {
         ...toCard(row),
+        relation: id === viewerId ? 'self' : (relations.get(id) ?? 'none'),
         banner: profile && row.bannerMalId ? (banners.get(row.bannerMalId) ?? null) : null,
         bio: profile ? row.bio : null,
         titles: profile && canSee(viewerId, id, row.listVisibility) ? (titles.get(id) ?? 0) : null,

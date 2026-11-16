@@ -39,7 +39,6 @@ function PeopleSearch() {
         <RiSearchLine className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('friends.searchPlaceholder')} className="h-11 rounded-xl pl-10" autoFocus />
       </div>
-      <span className="text-[0.8125rem] text-muted-foreground">{query ? t('friends.found') : t('friends.recent')}</span>
       {content}
     </div>
   )
@@ -73,7 +72,7 @@ export function FriendsPage() {
         <UserGridSkeleton />
       ) : !data ? null : view === 'friends' ? (
         data.friends.length ? (
-          <UserGrid users={data.friends} />
+          <UserGrid users={data.friends} showFriends={false} />
         ) : (
           <EmptyState mood="sleepy" title={t('friends.empty')} description={t('friends.emptyHint')} action={
               <Button variant="accent" onClick={() => setView('search')}>
@@ -92,10 +91,10 @@ export function FriendsPage() {
                 users={data.incoming}
                 action={(user) => (
                   <>
-                    <Button size="sm" variant="accent" aria-label={t('profile.accept')} title={t('profile.accept')} onClick={() => accept.mutate(user.id)}>
+                    <Button size="icon-sm" variant="accent" aria-label={t('profile.accept')} title={t('profile.accept')} onClick={() => accept.mutate(user.id)}>
                       <RiCheckFill />
                     </Button>
-                    <Button size="sm" variant="secondary" aria-label={t('profile.decline')} title={t('profile.decline')} onClick={() => remove.mutate(user.id)}>
+                    <Button size="icon-sm" variant="secondary" aria-label={t('profile.decline')} title={t('profile.decline')} onClick={() => remove.mutate(user.id)}>
                       <RiCloseFill />
                     </Button>
                   </>

@@ -775,6 +775,7 @@ export const recommendSchema = z.object({
 })
 
 export interface PersonCard extends UserCard {
+  relation: Relation
   banner: string | null
   bio: string | null
   titles: number | null

@@ -215,8 +215,7 @@ export const en: Messages = {
     searchPlaceholder: 'Name or username',
     noResults: 'Nobody found',
     noUsers: 'Nobody else is here yet',
-    recent: 'Recently joined',
-    found: 'Found',
+    isFriend: 'Friend',
   },
   profileSettings: {
     title: 'Profile',

@@ -191,37 +191,38 @@ function ProfileHeader({ profile }: { profile: UserProfile }) {
   )
 }
 
-function FriendGrid({ username }: { username: string }) {
+function FriendGrid({ username, own }: { username: string; own: boolean }) {
   const { t } = useTranslation()
   const friends = useQuery({ queryKey: ['profile', username, 'friends'], queryFn: () => api.profileFriends(username) })
   if (friends.isPending) return <TabSkeleton tab="friends" />
   if (!friends.data?.length) return <EmptyState mood="sleepy" title={t('profile.noFriends')} />
-  return <UserGrid users={friends.data} />
+  return <UserGrid users={friends.data} showFriends={!own} />
 }
 
-export function UserGrid({ users, action }: { users: PersonCard[]; action?: (user: PersonCard) => ReactNode }) {
+export function UserGrid({ users, action, showFriends = true }: { users: PersonCard[]; action?: (user: PersonCard) => ReactNode; showFriends?: boolean }) {
   const { t } = useTranslation()
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(9rem,10.5rem))] gap-3">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,22rem),1fr))] gap-3">
       {users.map((user) => {
         const stats = [user.titles !== null ? t('friends.titlesCount', { count: user.titles }) : null, user.friends !== null ? t('profile.friendsCount', { count: user.friends }) : null].filter(Boolean)
         return (
-          <div key={user.id} className="group flex flex-col overflow-hidden rounded-xl bg-surface transition-colors hover:bg-muted">
-            <TLink to={`/u/${user.username}`} className="flex flex-1 flex-col">
-              <span className="relative block h-16 overflow-hidden bg-linear-to-br from-accent/45 via-accent/15 to-transparent">
-                {user.banner ? <img src={user.banner} alt="" loading="lazy" className="absolute inset-0 size-full scale-110 object-cover object-[50%_30%] blur-[2px] transition-transform duration-300 group-hover:scale-125" /> : null}
-              </span>
-              <span className="-mt-10 flex flex-1 flex-col items-center gap-2.5 px-3 pb-3 text-center">
-                <UserAvatar user={user} className="relative size-20 text-3xl ring-4 ring-surface transition-colors group-hover:ring-muted" />
-                <span className="min-w-0 max-w-full">
-                  <span className="block truncate text-sm font-semibold">{nameOf(user)}</span>
-                  <span className="block truncate text-xs text-muted-foreground">@{user.username}</span>
+          <div key={user.id} className="group relative flex items-center gap-3 overflow-hidden rounded-xl bg-surface p-3 transition-colors hover:bg-muted">
+            {user.banner ? <img src={user.banner} alt="" loading="lazy" className="pointer-events-none absolute inset-y-0 right-0 h-full w-1/2 object-cover object-[50%_30%] opacity-25 mask-l-from-40% transition-opacity group-hover:opacity-35" /> : null}
+            <TLink to={`/u/${user.username}`} className="relative flex min-w-0 flex-1 items-center gap-3">
+              <UserAvatar user={user} className="size-14 text-xl" />
+              <span className="flex min-w-0 flex-col gap-0.5">
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="truncate text-sm font-semibold">{nameOf(user)}</span>
+                  {showFriends && user.relation === 'friend' ? <span className="shrink-0 rounded-full bg-accent-soft px-2 py-0.5 text-[0.6875rem] font-medium text-accent">{t('friends.isFriend')}</span> : null}
                 </span>
-                {user.bio ? <span className="line-clamp-2 text-xs text-muted-foreground">{user.bio}</span> : null}
-                {stats.length ? <span className="mt-auto font-mono text-[0.6875rem] text-subtle-foreground">{stats.join(' · ')}</span> : null}
+                <span className="truncate text-xs text-muted-foreground">
+                  @{user.username}
+                  {stats.length ? <span className="text-subtle-foreground"> · {stats.join(' · ')}</span> : null}
+                </span>
+                {user.bio ? <span className="line-clamp-1 text-xs text-muted-foreground">{user.bio}</span> : null}
               </span>
             </TLink>
-            {action ? <div className="flex gap-1.5 px-3 pb-3 [&>*]:flex-1">{action(user)}</div> : null}
+            {action ? <div className="relative flex shrink-0 gap-1.5">{action(user)}</div> : null}
           </div>
         )
       })}
@@ -301,19 +302,15 @@ function TabSkeleton({ tab }: { tab: Tab }) {
   )
 }
 
-export function UserGridSkeleton({ count = 8 }: { count?: number }) {
+export function UserGridSkeleton({ count = 6 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(9rem,10.5rem))] gap-3">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,22rem),1fr))] gap-3">
       {Array.from({ length: count }, (_, i) => (
-        <div key={i} className="flex flex-col overflow-hidden rounded-xl bg-surface">
-          <Skeleton className="h-16 rounded-none" />
-          <div className="-mt-10 flex flex-col items-center gap-2.5 px-3 pb-3">
-            <Skeleton className="size-20 rounded-full ring-4 ring-surface" />
-            <div className="flex w-full flex-col items-center gap-1.5">
-              <Skeleton className="h-4 w-3/4 rounded-md" />
-              <Skeleton className="h-3 w-1/2 rounded-md" />
-            </div>
-            <Skeleton className="h-3 w-2/3 rounded-md" />
+        <div key={i} className="flex items-center gap-3 rounded-xl bg-surface p-3">
+          <Skeleton className="size-14 shrink-0 rounded-full" />
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <Skeleton className="h-4 w-1/2 rounded-md" />
+            <Skeleton className="h-3 w-3/4 rounded-md" />
           </div>
         </div>
       ))}
@@ -403,7 +400,7 @@ export function ProfilePage() {
               ) : shownTab === 'stats' ? (
                 <ProfileStats username={username} />
               ) : (
-                <FriendGrid username={username} />
+                <FriendGrid username={username} own={data.relation === 'self'} />
               )}
             </>
           )}

@@ -213,8 +213,7 @@ export const ru = {
     searchPlaceholder: 'Имя или логин',
     noResults: 'Никого не нашли',
     noUsers: 'На сервере пока никого нет',
-    recent: 'Недавно зарегистрировались',
-    found: 'Найдено',
+    isFriend: 'Друг',
   },
   profileSettings: {
     title: 'Профиль',
