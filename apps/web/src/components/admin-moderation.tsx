@@ -15,11 +15,11 @@ type View = 'comments' | 'notes' | 'profiles'
 
 function Row({ user, anime, createdAt, children, actions }: { user: UserCard; anime?: AnimeSummary | null; createdAt: string; children: ReactNode; actions: ReactNode }) {
   return (
-    <div className="flex gap-3 px-5 py-3">
+    <div className="flex items-start gap-3 px-5 py-3">
       <TLink to={`/u/${user.username}`} className="shrink-0">
         <UserAvatar user={user} className="size-8 text-xs" />
       </TLink>
-      <div className="min-w-0 flex-1">
+      <div className="flex min-h-8 min-w-0 flex-1 flex-col justify-center">
         <div className="flex flex-wrap items-center gap-x-2 text-[0.8125rem]">
           <TLink to={`/u/${user.username}`} className="font-semibold transition-colors hover:text-accent">
             {nameOf(user)}
@@ -32,11 +32,15 @@ function Row({ user, anime, createdAt, children, actions }: { user: UserCard; an
           ) : null}
           <span className="text-xs text-subtle-foreground">{relativeTime(createdAt)}</span>
         </div>
-        <div className="mt-0.5 whitespace-pre-line break-words text-sm">{children}</div>
+        {children ? <div className="mt-0.5 whitespace-pre-line break-words text-sm">{children}</div> : null}
       </div>
-      <div className="flex shrink-0 items-start gap-1">{actions}</div>
+      <div className="flex min-h-8 shrink-0 items-center gap-1">{actions}</div>
     </div>
   )
+}
+
+function List({ children }: { children: ReactNode }) {
+  return <Card className="flex flex-col divide-y divide-border py-1">{children}</Card>
 }
 
 function useRefresh(view: View) {
@@ -57,13 +61,17 @@ function Comments() {
   const refresh = useRefresh('comments')
   const list = useQuery({ queryKey: ['admin', 'moderation', 'comments'], queryFn: api.moderationComments })
   const remove = useMutation({ mutationFn: api.moderateDeleteComment, onSuccess: refresh, onError: (e) => toast.error(errorMessage(e, t)) })
-  if (list.isPending) return <Skeleton className="m-5 h-24 rounded-xl" />
+  if (list.isPending) return <Skeleton className="h-24 rounded-xl" />
   if (!list.data?.length) return <EmptyState mood="sleepy" title={t('moderation.emptyComments')} />
-  return list.data.map((item) => (
-    <Row key={item.id} user={item.user} anime={item.anime} createdAt={item.createdAt} actions={<DeleteButton label={t('notes.delete')} pending={remove.isPending && remove.variables === item.id} onClick={() => remove.mutate(item.id)} />}>
-      {item.text}
-    </Row>
-  ))
+  return (
+    <List>
+      {list.data.map((item) => (
+        <Row key={item.id} user={item.user} anime={item.anime} createdAt={item.createdAt} actions={<DeleteButton label={t('notes.delete')} pending={remove.isPending && remove.variables === item.id} onClick={() => remove.mutate(item.id)} />}>
+          {item.text}
+        </Row>
+      ))}
+    </List>
+  )
 }
 
 function Notes() {
@@ -71,13 +79,17 @@ function Notes() {
   const refresh = useRefresh('notes')
   const list = useQuery({ queryKey: ['admin', 'moderation', 'notes'], queryFn: api.moderationNotes })
   const remove = useMutation({ mutationFn: api.moderateDeleteNote, onSuccess: refresh, onError: (e) => toast.error(errorMessage(e, t)) })
-  if (list.isPending) return <Skeleton className="m-5 h-24 rounded-xl" />
+  if (list.isPending) return <Skeleton className="h-24 rounded-xl" />
   if (!list.data?.length) return <EmptyState mood="sleepy" title={t('moderation.emptyNotes')} />
-  return list.data.map((item) => (
-    <Row key={item.id} user={item.user} anime={item.anime} createdAt={item.createdAt} actions={<DeleteButton label={t('notes.delete')} pending={remove.isPending && remove.variables === item.id} onClick={() => remove.mutate(item.id)} />}>
-      <span className="line-clamp-4">{item.text}</span>
-    </Row>
-  ))
+  return (
+    <List>
+      {list.data.map((item) => (
+        <Row key={item.id} user={item.user} anime={item.anime} createdAt={item.createdAt} actions={<DeleteButton label={t('notes.delete')} pending={remove.isPending && remove.variables === item.id} onClick={() => remove.mutate(item.id)} />}>
+          <span className="line-clamp-4">{item.text}</span>
+        </Row>
+      ))}
+    </List>
+  )
 }
 
 function Profiles() {
@@ -89,36 +101,40 @@ function Profiles() {
     onSuccess: refresh,
     onError: (e) => toast.error(errorMessage(e, t)),
   })
-  if (list.isPending) return <Skeleton className="m-5 h-24 rounded-xl" />
+  if (list.isPending) return <Skeleton className="h-24 rounded-xl" />
   if (!list.data?.length) return <EmptyState mood="sleepy" title={t('moderation.emptyProfiles')} />
-  return list.data.map((item) => (
-    <Row
-      key={item.user.id}
-      user={item.user}
-      createdAt={item.createdAt}
-      actions={
-        <div className="flex flex-wrap justify-end gap-1">
-          {item.user.avatarUrl ? (
-            <Button size="sm" variant="ghost" onClick={() => reset.mutate({ id: item.user.id, body: { avatar: true } })}>
-              {t('profile.moderate.avatar')}
-            </Button>
-          ) : null}
-          {item.user.displayName ? (
-            <Button size="sm" variant="ghost" onClick={() => reset.mutate({ id: item.user.id, body: { displayName: true } })}>
-              {t('profile.moderate.displayName')}
-            </Button>
-          ) : null}
-          {item.bio ? (
-            <Button size="sm" variant="ghost" onClick={() => reset.mutate({ id: item.user.id, body: { bio: true } })}>
-              {t('profile.moderate.bio')}
-            </Button>
-          ) : null}
-        </div>
-      }
-    >
-      {item.bio ? <span className="text-muted-foreground">{item.bio}</span> : null}
-    </Row>
-  ))
+  return (
+    <List>
+      {list.data.map((item) => (
+        <Row
+          key={item.user.id}
+          user={item.user}
+          createdAt={item.createdAt}
+          actions={
+            <div className="flex flex-wrap justify-end gap-1">
+              {item.user.avatarUrl ? (
+                <Button size="sm" variant="ghost" onClick={() => reset.mutate({ id: item.user.id, body: { avatar: true } })}>
+                  {t('profile.moderate.avatar')}
+                </Button>
+              ) : null}
+              {item.user.displayName ? (
+                <Button size="sm" variant="ghost" onClick={() => reset.mutate({ id: item.user.id, body: { displayName: true } })}>
+                  {t('profile.moderate.displayName')}
+                </Button>
+              ) : null}
+              {item.bio ? (
+                <Button size="sm" variant="ghost" onClick={() => reset.mutate({ id: item.user.id, body: { bio: true } })}>
+                  {t('profile.moderate.bio')}
+                </Button>
+              ) : null}
+            </div>
+          }
+        >
+          {item.bio ? <span className="text-muted-foreground">{item.bio}</span> : null}
+        </Row>
+      ))}
+    </List>
+  )
 }
 
 export function Moderation() {
@@ -136,9 +152,7 @@ export function Moderation() {
         ]}
       />
       <p className="text-sm text-muted-foreground">{t(`moderation.${view}Hint`)}</p>
-      <Card className="flex flex-col divide-y divide-border py-1">
-        {view === 'comments' ? <Comments /> : view === 'notes' ? <Notes /> : <Profiles />}
-      </Card>
+      {view === 'comments' ? <Comments /> : view === 'notes' ? <Notes /> : <Profiles />}
     </div>
   )
 }

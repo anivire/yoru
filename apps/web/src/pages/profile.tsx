@@ -41,7 +41,7 @@ import { errorMessage, useUser } from '../lib/queries'
 import { useDocumentTitle } from '../lib/title'
 import { ActivityFeed } from './feed'
 import { ListBrowser } from './shared-list'
-import { StatsSkeleton, StatsView, StatusStrip } from './stats'
+import { StatsSkeleton, StatsView } from './stats'
 
 const TABS = ['overview', 'list', 'stats', 'friends'] as const
 type Tab = (typeof TABS)[number]
@@ -159,7 +159,7 @@ function ProfileHeader({ profile }: { profile: UserProfile }) {
           </>
         ) : null}
       </div>
-      <div className="-mt-12 flex flex-wrap items-end gap-4 px-2 sm:-mt-14 sm:px-5">
+      <div className="relative z-10 -mt-12 flex flex-wrap items-end gap-4 px-2 sm:-mt-14 sm:px-5">
         <UserAvatar user={profile.user} className="size-24 text-3xl ring-4 ring-background sm:size-28" />
         <div className="min-w-0 flex-1 pb-1">
           <h1 className="truncate text-2xl font-semibold tracking-tight">{nameOf(profile.user)}</h1>
@@ -241,7 +241,6 @@ function Overview({ profile }: { profile: UserProfile }) {
         </section>
       ) : null}
       {profile.relation !== 'self' && profile.canSeeList ? <TasteMatchCard username={profile.user.username} /> : null}
-      {profile.statuses ? <StatusStrip statuses={profile.statuses} /> : null}
       <section>
         <h2 className="mb-4 text-lg font-semibold tracking-tight">{t('profile.activity')}</h2>
         <ActivityFeed
