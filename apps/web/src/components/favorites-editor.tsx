@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { PROFILE_FAVORITES_MAX, type ProfileSettings, type ProfileUpdate } from '@yoru/shared'
+import { type AnimeSummary, PROFILE_FAVORITES_MAX, type ProfileSettings, type ProfileUpdate } from '@yoru/shared'
 import { Button, Dialog, DialogContent, DialogTrigger, Image, Input, Skeleton, Tooltip, cn, toast } from '@yoru/ui'
 import { RiAddFill, RiCheckFill, RiCloseFill, RiEdit2Fill, RiImageFill, RiSearchFill } from '@remixicon/react'
 import { useDeferredValue, useState } from 'react'
@@ -10,6 +10,7 @@ import { errorMessage } from '../lib/queries'
 
 const SHOWCASE_SUGGESTIONS = 24
 const SHOWCASE_SKELETONS = 12
+const SAVE_KEY = ['my-profile', 'save']
 
 function Editor({ profile }: { profile: ProfileSettings }) {
   const { t } = useTranslation()
@@ -21,36 +22,34 @@ function Editor({ profile }: { profile: ProfileSettings }) {
     queryFn: () => api.list({ q: query || undefined, sort: 'score', limit: SHOWCASE_SUGGESTIONS }),
     placeholderData: keepPreviousData,
   })
-  const known = new Map([...profile.favorites, ...(options.data?.items.map((e) => e.anime) ?? [])].map((a) => [a.malId, a]))
   const save = useMutation({
+    mutationKey: SAVE_KEY,
+    scope: { id: 'my-profile' },
     mutationFn: (body: ProfileUpdate) => api.updateProfile(body),
-    onMutate: (body) => {
-      const previous = client.getQueryData<ProfileSettings>(['my-profile'])
-      if (previous) {
-        client.setQueryData<ProfileSettings>(['my-profile'], {
-          ...previous,
-          ...(body.favorites ? { favorites: body.favorites.flatMap((id) => known.get(id) ?? []) } : {}),
-          ...(body.bannerMalId !== undefined ? { bannerMalId: body.bannerMalId } : {}),
-        })
-      }
-      return { previous }
-    },
-    onSuccess: (next) => {
-      client.setQueryData(['my-profile'], next)
+    onError: (e) => toast.error(errorMessage(e, t)),
+    onSettled: () => {
+      if (client.isMutating({ mutationKey: SAVE_KEY }) > 1) return
+      void client.invalidateQueries({ queryKey: ['my-profile'] })
       void client.invalidateQueries({ queryKey: ['profile'] })
     },
-    onError: (e, _body, context) => {
-      if (context?.previous) client.setQueryData(['my-profile'], context.previous)
-      toast.error(errorMessage(e, t))
-    },
   })
+  const apply = (favorites: AnimeSummary[], bannerMalId: number | null) => {
+    void client.cancelQueries({ queryKey: ['my-profile'], exact: true })
+    client.setQueryData<ProfileSettings>(['my-profile'], (prev) => (prev ? { ...prev, favorites, bannerMalId } : prev))
+    save.mutate({ favorites: favorites.map((a) => a.malId), bannerMalId })
+  }
+  const latest = () => client.getQueryData<ProfileSettings>(['my-profile']) ?? profile
   const ids = profile.favorites.map((a) => a.malId)
-  const full = ids.length >= PROFILE_FAVORITES_MAX
-  const remove = (malId: number) => save.mutate({ favorites: ids.filter((id) => id !== malId), ...(profile.bannerMalId === malId ? { bannerMalId: null } : {}) })
-  const toggle = (malId: number) => {
-    if (ids.includes(malId)) remove(malId)
-    else if (full) toast.error(t('profileSettings.showcaseFull', { count: PROFILE_FAVORITES_MAX }))
-    else save.mutate({ favorites: [...ids, malId] })
+  const remove = (malId: number) => {
+    const { favorites, bannerMalId } = latest()
+    apply(favorites.filter((a) => a.malId !== malId), bannerMalId === malId ? null : bannerMalId)
+  }
+  const setBanner = (malId: number | null) => apply(latest().favorites, malId)
+  const toggle = (anime: AnimeSummary) => {
+    const { favorites, bannerMalId } = latest()
+    if (favorites.some((a) => a.malId === anime.malId)) remove(anime.malId)
+    else if (favorites.length >= PROFILE_FAVORITES_MAX) toast.error(t('profileSettings.showcaseFull', { count: PROFILE_FAVORITES_MAX }))
+    else apply([...favorites, anime], bannerMalId)
   }
   return (
     <div className="flex flex-col gap-5">
@@ -64,7 +63,7 @@ function Editor({ profile }: { profile: ProfileSettings }) {
                 {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="size-full object-cover" /> : null}
                 <div className="absolute inset-x-0 bottom-0 flex justify-center gap-1.5 bg-linear-to-t from-black/80 to-transparent px-1 pb-2 pt-6 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
                   <Tooltip content={banner ? t('profileSettings.removeBanner') : t('profileSettings.useAsBanner')}>
-                    <button type="button" aria-pressed={banner} aria-label={banner ? t('profileSettings.removeBanner') : t('profileSettings.useAsBanner')} onClick={() => save.mutate({ bannerMalId: banner ? null : anime.malId })} className={cn('grid size-7 cursor-pointer place-items-center rounded-full text-white [&_svg]:size-4', banner ? 'bg-accent text-accent-foreground' : 'bg-white/20 hover:bg-white/30')}>
+                    <button type="button" aria-pressed={banner} aria-label={banner ? t('profileSettings.removeBanner') : t('profileSettings.useAsBanner')} onClick={() => setBanner(banner ? null : anime.malId)} className={cn('grid size-7 cursor-pointer place-items-center rounded-full text-white [&_svg]:size-4', banner ? 'bg-accent text-accent-foreground' : 'bg-white/20 hover:bg-white/30')}>
                       <RiImageFill />
                     </button>
                   </Tooltip>
@@ -98,7 +97,7 @@ function Editor({ profile }: { profile: ProfileSettings }) {
               {options.data.items.map((entry) => {
                 const pinned = ids.includes(entry.malId)
                 return (
-                  <button key={entry.malId} type="button" aria-pressed={pinned} onClick={() => toggle(entry.malId)} className="group flex cursor-pointer flex-col gap-1.5 pb-4 text-left">
+                  <button key={entry.malId} type="button" aria-pressed={pinned} onClick={() => toggle(entry.anime)} className="group flex cursor-pointer flex-col gap-1.5 pb-4 text-left">
                     <span className={cn('relative block aspect-[2/3] overflow-hidden rounded-xl bg-muted', pinned && 'ring-2 ring-accent ring-offset-2 ring-offset-popover')}>
                       {entry.anime.imageUrl ? <Image src={entry.anime.imageUrl} alt="" className="size-full object-cover transition-[filter] group-hover:brightness-110" /> : null}
                       <span className={cn('absolute right-1.5 top-1.5 grid size-6 place-items-center rounded-full transition-opacity [&_svg]:size-4', pinned ? 'bg-accent text-accent-foreground' : 'bg-black/60 text-white opacity-0 group-hover:opacity-100')}>
