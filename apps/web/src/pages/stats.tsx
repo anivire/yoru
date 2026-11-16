@@ -50,7 +50,7 @@ function StatusStrip({ statuses }: { statuses: UserStats['statuses'] }) {
       </div>
       <div className="grid grid-cols-2 gap-2 @xl:grid-cols-3 @6xl:grid-cols-6">
         {LIST_STATUSES.map((s) => (
-          <div key={s} className={cn('flex min-w-0 items-center gap-2.5 rounded-lg bg-background/40 px-3 py-2', !statuses[s] && 'opacity-50')}>
+          <div key={s} className="flex min-w-0 items-center gap-2.5 rounded-lg bg-raised px-3 py-2">
             <StatusIcon status={s} className="size-4" />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-xs text-muted-foreground">{t(`status.${s}`)}</span>
