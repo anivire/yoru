@@ -132,12 +132,12 @@ function parseCursor(value: string | null) {
   return split > 0 && Number.isInteger(id) && createdAt ? { createdAt, id } : null
 }
 
-export type FeedScope = 'me' | 'friends' | { userId: number }
+export type FeedScope = 'me' | 'friends' | 'all' | { userId: number }
 
 function feedAuthors(viewerId: number, scope: FeedScope): number[] {
   if (scope === 'me') return [viewerId]
   const hidden = hiddenUserIds(viewerId)
-  const candidates = scope === 'friends' ? friendIds(viewerId) : [scope.userId]
+  const candidates = scope === 'friends' ? friendIds(viewerId) : scope === 'all' ? [viewerId, ...friendIds(viewerId)] : [scope.userId]
   if (!candidates.length) return []
   const sharing = new Set(db.select({ id: users.id }).from(users).where(and(inArray(users.id, candidates), eq(users.shareActivity, true))).all().map((r) => r.id))
   return candidates.filter((id) => id === viewerId || (sharing.has(id) && !hidden.has(id)))

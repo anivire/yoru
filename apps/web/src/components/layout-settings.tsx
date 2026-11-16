@@ -5,7 +5,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { RiDraggable, RiImageFill, RiLayoutBottom2Fill, RiLayoutLeft2Fill, RiLayoutRight2Fill, RiLayoutTop2Fill, RiPaletteFill } from '@remixicon/react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { type BackdropShape, type HomeSectionSetting, type NavLabels, type NavPosition, useAppearance } from '../lib/appearance'
+import { type BackdropShape, FEED_SCOPES, type HomeSectionSetting, type NavLabels, type NavPosition, useAppearance } from '../lib/appearance'
 import { HOME_SECTIONS, NAV } from '../lib/navigation'
 
 export const restrictToVertical: Modifier = ({ transform }) => ({ ...transform, x: 0 })
@@ -168,6 +168,12 @@ export function NavigationSettings() {
 }
 
 const BACKDROPS = ['full', 'glow'] as const satisfies BackdropShape[]
+
+export function FeedScopePicker() {
+  const { t } = useTranslation()
+  const { feedScope, setFeedScope } = useAppearance()
+  return <Segmented size="sm" value={feedScope} onChange={setFeedScope} options={FEED_SCOPES.map((value) => ({ value, label: t(`feed.scopes.${value}`) }))} />
+}
 
 export function BackdropPicker() {
   const { t } = useTranslation()

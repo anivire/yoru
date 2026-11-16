@@ -59,6 +59,7 @@ import type {
   Translation,
   User,
   VersionInfo, AnimeExtras, AnilibriaRelease, Screenshot } from '@yoru/shared'
+import type { FeedScope } from './appearance'
 
 export class ApiError extends Error {
   constructor(
@@ -146,7 +147,7 @@ export const api = {
   deleteShare: () => request<ShareInfo>('DELETE', '/me/share'),
   createRoom: (body: { malId: number; media: RoomMedia }) => request<RoomInfo>('POST', '/rooms', body),
   rooms: () => get<RoomListItem[]>('/rooms'),
-  feed: (params: { before?: string; scope?: 'me' | 'friends' }) => get<FeedPage>(`/feed${qs(params)}`),
+  feed: (params: { before?: string; scope?: FeedScope }) => get<FeedPage>(`/feed${qs(params)}`),
   searchUsers: (q: string) => get<PersonCard[]>(`/users${qs({ q })}`),
   profile: (username: string) => get<UserProfile>(`/users/${encodeURIComponent(username)}`),
   profileList: (username: string, params: Record<string, string | number | undefined>) => get<ListResponse>(`/users/${encodeURIComponent(username)}/list${qs(params)}`),

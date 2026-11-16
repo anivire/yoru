@@ -12,6 +12,7 @@ import { CommentThread, ReactionBar } from '../components/social'
 import { UserAvatar, nameOf } from '../components/user-avatar'
 import { useAnimeTitle } from '../lib/anime-title'
 import { api } from '../lib/api'
+import { FEED_SCOPES, useAppearance } from '../lib/appearance'
 import { StatusIcon } from '../lib/list-status'
 import { useDocumentTitle } from '../lib/title'
 
@@ -297,7 +298,8 @@ export function ActivityFeed({ queryKey, fetchPage, showUser = false, empty }: {
 export function FeedPage() {
   const { t } = useTranslation()
   useDocumentTitle(t('feed.title'))
-  const [scope, setScope] = useState<'me' | 'friends'>('me')
+  const { feedScope } = useAppearance()
+  const [scope, setScope] = useState(feedScope)
   return (
     <Page>
       <div className="grow-empty w-full">
@@ -308,10 +310,7 @@ export function FeedPage() {
             <Segmented
               value={scope}
               onChange={setScope}
-              options={[
-                { value: 'me', label: t('feed.scopes.me') },
-                { value: 'friends', label: t('feed.scopes.friends') },
-              ]}
+              options={FEED_SCOPES.map((value) => ({ value, label: t(`feed.scopes.${value}`) }))}
             />
           }
         />
@@ -319,7 +318,7 @@ export function FeedPage() {
           key={scope}
           queryKey={['feed', scope]}
           fetchPage={(before) => api.feed({ before, scope })}
-          showUser={scope === 'friends'}
+          showUser={scope !== 'me'}
           empty={scope === 'friends' ? <EmptyState mood="sleepy" title={t('feed.friendsEmpty')} description={t('feed.friendsEmptyHint')} /> : <EmptyState mood="sleepy" title={t('feed.empty')} description={t('feed.emptyHint')} />}
         />
       </div>

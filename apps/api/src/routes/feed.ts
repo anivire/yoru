@@ -7,6 +7,10 @@ import { ensureAnime, getAnimeRow } from '../services/anime'
 import { animeNotesFor, createNote, deleteNote, feedPage, updateNote } from '../services/feed'
 import { addComment, deleteComment, editComment, listComments, toggleReaction } from '../services/interactions'
 
+function feedScope(value: string | undefined) {
+  return value === 'friends' || value === 'all' ? value : 'me'
+}
+
 export const feedRoutes = new Hono<AppEnv>()
   .use(requireAuth)
   .get('/', (c) =>
@@ -14,7 +18,7 @@ export const feedRoutes = new Hono<AppEnv>()
       feedPage(c.get('user').id, {
         before: c.req.query('before') || null,
         limit: Number(c.req.query('limit')) || 150,
-        scope: c.req.query('scope') === 'friends' ? 'friends' : 'me',
+        scope: feedScope(c.req.query('scope')),
       }),
     ),
   )
