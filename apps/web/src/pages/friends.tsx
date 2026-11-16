@@ -90,14 +90,14 @@ export function FriendsPage() {
               <UserGrid
                 users={data.incoming}
                 action={(user) => (
-                  <div className="flex shrink-0 gap-1">
-                    <Button size="icon-sm" variant="accent" aria-label={t('profile.accept')} title={t('profile.accept')} onClick={() => accept.mutate(user.id)}>
+                  <>
+                    <Button size="sm" variant="accent" aria-label={t('profile.accept')} title={t('profile.accept')} onClick={() => accept.mutate(user.id)}>
                       <RiCheckFill />
                     </Button>
-                    <Button size="icon-sm" variant="ghost" aria-label={t('profile.decline')} title={t('profile.decline')} onClick={() => remove.mutate(user.id)}>
+                    <Button size="sm" variant="secondary" aria-label={t('profile.decline')} title={t('profile.decline')} onClick={() => remove.mutate(user.id)}>
                       <RiCloseFill />
                     </Button>
-                  </div>
+                  </>
                 )}
               />
             </Section>
@@ -107,7 +107,7 @@ export function FriendsPage() {
               <UserGrid
                 users={data.outgoing}
                 action={(user) => (
-                  <Button size="sm" variant="ghost" onClick={() => remove.mutate(user.id)}>
+                  <Button size="sm" variant="secondary" onClick={() => remove.mutate(user.id)}>
                     {t('friends.cancel')}
                   </Button>
                 )}

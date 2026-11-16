@@ -201,17 +201,19 @@ function FriendGrid({ username }: { username: string }) {
 
 export function UserGrid({ users, action }: { users: UserCard[]; action?: (user: UserCard) => ReactNode }) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-2">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
       {users.map((user) => (
-        <div key={user.id} className="flex items-center gap-3 rounded-xl bg-surface p-3">
-          <TLink to={`/u/${user.username}`} className="flex min-w-0 flex-1 items-center gap-3">
-            <UserAvatar user={user} className="size-10" />
-            <span className="min-w-0">
+        <div key={user.id} className="group flex flex-col gap-2.5 rounded-xl bg-surface p-2.5 transition-colors hover:bg-muted">
+          <TLink to={`/u/${user.username}`} className="flex min-w-0 flex-col gap-2.5">
+            <span className="block aspect-square overflow-hidden rounded-lg">
+              <UserAvatar user={user} className="size-full rounded-lg text-5xl transition-transform duration-200 group-hover:scale-[1.03]" />
+            </span>
+            <span className="min-w-0 px-1 text-center">
               <span className="block truncate text-sm font-semibold">{nameOf(user)}</span>
               <span className="block truncate text-xs text-muted-foreground">@{user.username}</span>
             </span>
           </TLink>
-          {action?.(user)}
+          {action ? <div className="flex gap-1.5 [&>*]:flex-1">{action(user)}</div> : null}
         </div>
       ))}
     </div>
@@ -289,13 +291,13 @@ function TabSkeleton({ tab }: { tab: Tab }) {
 
 export function UserGridSkeleton({ count = 8 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-2">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
       {Array.from({ length: count }, (_, i) => (
-        <div key={i} className="flex items-center gap-3 rounded-xl bg-surface p-3">
-          <Skeleton className="size-10 shrink-0 rounded-full" />
-          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-            <Skeleton className="h-4 w-3/5 rounded-md" />
-            <Skeleton className="h-3 w-2/5 rounded-md" />
+        <div key={i} className="flex flex-col gap-2.5 rounded-xl bg-surface p-2.5">
+          <Skeleton className="aspect-square rounded-lg" />
+          <div className="flex flex-col items-center gap-1.5 px-1">
+            <Skeleton className="h-4 w-3/4 rounded-md" />
+            <Skeleton className="h-3 w-1/2 rounded-md" />
           </div>
         </div>
       ))}

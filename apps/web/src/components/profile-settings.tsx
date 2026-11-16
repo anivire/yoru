@@ -272,7 +272,7 @@ function BlockedUsers() {
         <UserGrid
           users={blocked.data}
           action={(user) => (
-            <Button size="sm" variant="ghost" onClick={() => unblock.mutate(user.id)}>
+            <Button size="sm" variant="secondary" onClick={() => unblock.mutate(user.id)}>
               {t('profile.unblock')}
             </Button>
           )}
