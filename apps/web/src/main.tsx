@@ -1,5 +1,5 @@
 import './styles.css'
-import './lib/i18n'
+import { i18nReady } from './lib/i18n'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from '@yoru/ui'
 import { StrictMode } from 'react'
@@ -13,14 +13,16 @@ import { installSounds } from './lib/sounds'
 
 installSounds()
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AppearanceProvider>
-        <RouterProvider router={router} />
-        <Toaster />
-        <UpdateWatcher />
-      </AppearanceProvider>
-    </QueryClientProvider>
-  </StrictMode>,
+void i18nReady.then(() =>
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <AppearanceProvider>
+          <RouterProvider router={router} />
+          <Toaster />
+          <UpdateWatcher />
+        </AppearanceProvider>
+      </QueryClientProvider>
+    </StrictMode>,
+  ),
 )

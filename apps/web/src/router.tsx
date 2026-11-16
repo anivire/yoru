@@ -1,29 +1,15 @@
 import { Button, Mascot } from '@yoru/ui'
-import { useEffect, useState } from 'react'
+import { type ComponentType, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, Outlet, createBrowserRouter, useLocation, useRouteError } from 'react-router'
 import { AppShell } from './components/app-shell'
 import { setLocale } from './lib/i18n'
 import { useMe } from './lib/queries'
-import { AdminPage } from './pages/admin'
-import { AnimePage } from './pages/anime'
-import { DiscoverPage } from './pages/discover'
 import { HomePage } from './pages/home'
-import { InvitePage } from './pages/invite'
-import { ListsPage } from './pages/lists'
 import { LoginPage } from './pages/login'
 import { NotFoundPage } from './pages/not-found'
-import { SchedulePage } from './pages/schedule'
-import { SearchPage } from './pages/search'
-import { SettingsPage } from './pages/settings'
-import { SharedListPage } from './pages/shared-list'
-import { StatsPage } from './pages/stats'
-import { RoomPage } from './pages/room'
-import { TogetherPage } from './pages/together'
-import { ChangelogPage } from './pages/changelog'
-import { FriendsPage } from './pages/friends'
-import { ProfilePage } from './pages/profile'
-import { FeedPage } from './pages/feed'
+
+const page = <K extends string>(load: () => Promise<Record<K, ComponentType>>, name: K) => async () => ({ Component: (await load())[name] })
 
 function Splash() {
   return (
@@ -104,28 +90,29 @@ export const router = createBrowserRouter([
   {
     element: <ScrollTop />,
     errorElement: <RouteError />,
+    hydrateFallbackElement: <Splash />,
     children: [
       { path: '/login', element: <LoginPage /> },
-      { path: '/invite/:code', element: <InvitePage /> },
-      { path: '/share/:token', element: <SharedListPage /> },
+      { path: '/invite/:code', lazy: page(() => import('./pages/invite'), 'InvitePage') },
+      { path: '/share/:token', lazy: page(() => import('./pages/shared-list'), 'SharedListPage') },
       {
         element: <RequireAuth />,
         children: [
           { index: true, element: <HomePage /> },
-          { path: 'discover', element: <DiscoverPage /> },
-          { path: 'schedule', element: <SchedulePage /> },
-          { path: 'search', element: <SearchPage /> },
-          { path: 'lists', element: <ListsPage /> },
-          { path: 'stats', element: <StatsPage /> },
-          { path: 'together/:id', element: <RoomPage /> },
-          { path: 'together', element: <TogetherPage /> },
-          { path: 'feed', element: <FeedPage /> },
-          { path: 'changelog', element: <ChangelogPage /> },
-          { path: 'friends', element: <FriendsPage /> },
-          { path: 'u/:username', element: <ProfilePage /> },
-          { path: 'anime/:id', element: <AnimePage /> },
-          { path: 'settings/:tab?', element: <SettingsPage /> },
-          { element: <RequireAdmin />, children: [{ path: 'admin', element: <AdminPage /> }] },
+          { path: 'discover', lazy: page(() => import('./pages/discover'), 'DiscoverPage') },
+          { path: 'schedule', lazy: page(() => import('./pages/schedule'), 'SchedulePage') },
+          { path: 'search', lazy: page(() => import('./pages/search'), 'SearchPage') },
+          { path: 'lists', lazy: page(() => import('./pages/lists'), 'ListsPage') },
+          { path: 'stats', lazy: page(() => import('./pages/stats'), 'StatsPage') },
+          { path: 'together/:id', lazy: page(() => import('./pages/room'), 'RoomPage') },
+          { path: 'together', lazy: page(() => import('./pages/together'), 'TogetherPage') },
+          { path: 'feed', lazy: page(() => import('./pages/feed'), 'FeedPage') },
+          { path: 'changelog', lazy: page(() => import('./pages/changelog'), 'ChangelogPage') },
+          { path: 'friends', lazy: page(() => import('./pages/friends'), 'FriendsPage') },
+          { path: 'u/:username', lazy: page(() => import('./pages/profile'), 'ProfilePage') },
+          { path: 'anime/:id', lazy: page(() => import('./pages/anime'), 'AnimePage') },
+          { path: 'settings/:tab?', lazy: page(() => import('./pages/settings'), 'SettingsPage') },
+          { element: <RequireAdmin />, children: [{ path: 'admin', lazy: page(() => import('./pages/admin'), 'AdminPage') }] },
           { path: '*', element: <NotFoundPage /> },
         ],
       },
