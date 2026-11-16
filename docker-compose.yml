@@ -14,6 +14,7 @@ services:
       ADMIN_USERNAME: ${ADMIN_USERNAME:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       ANIME365_TOKEN: ${ANIME365_TOKEN:-}
+      KODIK_TOKEN: ${KODIK_TOKEN:-}
       ANILIST_CLIENT_ID: ${ANILIST_CLIENT_ID:-}
       ANILIST_CLIENT_SECRET: ${ANILIST_CLIENT_SECRET:-}
       SHIKIMORI_CLIENT_ID: ${SHIKIMORI_CLIENT_ID:-}
@@ -25,87 +26,14 @@ services:
       GITHUB_BRANCH: ${GITHUB_BRANCH:-master}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       JIKAN_URL: ${JIKAN_URL:-https://api.jikan.moe/v4}
-      HTTPS_PROXY: ${HTTPS_PROXY:-}
+      ANIME365_URL: ${ANIME365_URL:-}
+      SHIKIMORI_URL: ${SHIKIMORI_URL:-}
+      ANILIST_URL: ${ANILIST_URL:-}
+      KITSU_URL: ${KITSU_URL:-}
+      ANILIBRIA_URL: ${ANILIBRIA_URL:-}
+      KODIK_URL: ${KODIK_URL:-}
       RELEASE_POLL_MINUTES: ${RELEASE_POLL_MINUTES:-5}
-
-  jikan:
-    image: docker.io/jikanme/jikan-rest:${JIKAN_VERSION:-latest}
-    profiles: [jikan]
-    restart: unless-stopped
-    user: "10001:10001"
-    environment:
-      APP_ENV: production
-      APP_DEBUG: "false"
-      LOG_LEVEL: warning
-      CACHING: "true"
-      CACHE_DRIVER: redis
-      REDIS_HOST: jikan-redis
-      REDIS_PASSWORD: ${JIKAN_REDIS_PASSWORD:-jikan}
-      DB_CONNECTION: mongodb
-      DB_HOST: jikan-mongo
-      DB_DATABASE: jikan
-      DB_ADMIN: admin
-      DB_USERNAME: jikan
-      DB_PASSWORD: ${JIKAN_DB_PASSWORD:-jikan}
-      SCOUT_DRIVER: typesense
-      SCOUT_QUEUE: "false"
-      TYPESENSE_HOST: jikan-typesense
-      TYPESENSE_PORT: "8108"
-      TYPESENSE_API_KEY: ${JIKAN_TYPESENSE_KEY:-jikan}
-      CORS_MIDDLEWARE: "false"
-      MICROCACHING: "true"
-      MICROCACHING_EXPIRE: "60"
-    healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q 'http://127.0.0.1:2114/health?plugin=http'"]
-      interval: 10s
-      timeout: 3s
-      start_period: 30s
-    depends_on:
-      jikan-mongo: { condition: service_healthy }
-      jikan-redis: { condition: service_healthy }
-      jikan-typesense: { condition: service_started }
-
-  jikan-mongo:
-    image: docker.io/mongo:focal
-    profiles: [jikan]
-    restart: unless-stopped
-    command: --wiredTigerCacheSizeGB ${JIKAN_MONGO_CACHE_GB:-0.25}
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: jikan
-      MONGO_INITDB_ROOT_PASSWORD: ${JIKAN_DB_PASSWORD:-jikan}
-      MONGO_INITDB_DATABASE: jikan
-    volumes:
-      - jikan-mongo:/data/db
-    healthcheck:
-      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.runCommand(\"ping\").ok' || mongo --quiet --eval 'db.runCommand(\"ping\").ok'"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
-  jikan-redis:
-    image: docker.io/redis:7-alpine
-    profiles: [jikan]
-    restart: unless-stopped
-    command: redis-server --requirepass ${JIKAN_REDIS_PASSWORD:-jikan} --maxmemory 64mb --maxmemory-policy allkeys-lru
-    volumes:
-      - jikan-redis:/data
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
-      interval: 5s
-      timeout: 2s
-    environment:
-      REDIS_PASSWORD: ${JIKAN_REDIS_PASSWORD:-jikan}
-
-  jikan-typesense:
-    image: docker.io/typesense/typesense:0.24.1
-    profiles: [jikan]
-    restart: unless-stopped
-    command: --data-dir /data --api-key ${JIKAN_TYPESENSE_KEY:-jikan}
-    volumes:
-      - jikan-typesense:/data
+      SESSION_DAYS: ${SESSION_DAYS:-30}
 
 volumes:
   yoru-data:
-  jikan-mongo:
-  jikan-redis:
-  jikan-typesense:
