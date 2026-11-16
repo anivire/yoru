@@ -1,9 +1,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { and, eq, or, sql } from 'drizzle-orm'
+import { and, desc, eq, or, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { LIST_STATUSES, type ListStatus, type PersonCard, type UserCard, type UserProfile } from '@yoru/shared'
+import { LIST_STATUSES, type ListStatus, type PersonCard, type UserProfile } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { blocks, friendships, listEntries, users } from '../db/schema'
 import { env } from '../env'
@@ -17,6 +17,7 @@ import { userStats } from '../services/stats'
 import { listPage } from './list'
 
 const SEARCH_LIMIT = 20
+const RECENT_LIMIT = 20
 export const MAX_AVATAR_BYTES = 512 * 1024
 const avatarDir = path.join(env.dataDir, 'avatars')
 
@@ -71,8 +72,17 @@ export const userRoutes = new Hono<AppEnv>()
   .get('/', (c) => {
     const viewer = c.get('user')
     const q = (c.req.query('q') ?? '').trim().toLocaleLowerCase()
-    if (!q) return c.json([] satisfies UserCard[])
     const hidden = hiddenUserIds(viewer.id)
+    if (!q) {
+      const recent = db
+        .select({ id: users.id })
+        .from(users)
+        .orderBy(desc(users.createdAt))
+        .all()
+        .filter((row) => row.id !== viewer.id && !hidden.has(row.id))
+        .slice(0, RECENT_LIMIT)
+      return c.json(personCards(viewer.id, recent.map((row) => row.id)) satisfies PersonCard[])
+    }
     const matches = db
       .select(cardColumns)
       .from(users)

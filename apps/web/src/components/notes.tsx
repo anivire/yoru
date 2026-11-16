@@ -81,7 +81,7 @@ function NoteCard({ note, malId }: { note: AnimeNote; malId: number }) {
   const user = useUser()
   const client = useQueryClient()
   const [editing, setEditing] = useState(false)
-  const [thread, setThread] = useState(false)
+  const [thread, setThread] = useState(note.comments > 0)
   const refresh = () => {
     void client.invalidateQueries({ queryKey: ['notes', malId] })
     void client.invalidateQueries({ queryKey: ['feed'] })

@@ -231,7 +231,7 @@ export const reactions = sqliteTable('reactions', {
   eventId: integer('event_id').notNull().references(() => feedEvents.id, { onDelete: 'cascade' }),
   emoji: text('emoji').notNull(),
   createdAt: text('created_at').notNull(),
-}, (t) => [uniqueIndex('reactions_user_event_idx').on(t.userId, t.eventId), index('reactions_event_idx').on(t.eventId)])
+}, (t) => [uniqueIndex('reactions_user_event_emoji_idx').on(t.userId, t.eventId, t.emoji), index('reactions_event_idx').on(t.eventId)])
 
 export const comments = sqliteTable('comments', {
   id: integer('id').primaryKey({ autoIncrement: true }),

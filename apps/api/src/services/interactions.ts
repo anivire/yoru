@@ -46,19 +46,29 @@ function targetOwner(viewerId: number, target: CommentTarget, id: number): { own
 }
 
 export function reactionSummary(viewerId: number, eventIds: number[]) {
-  const summary = new Map<number, { reactions: ReactionCount[]; mine: Reaction | null }>()
+  const summary = new Map<number, ReactionCount[]>()
   if (!eventIds.length) return summary
   const hidden = hiddenUserIds(viewerId)
-  const rows = db.select().from(reactions).where(inArray(reactions.eventId, eventIds)).orderBy(asc(reactions.createdAt)).all()
-  for (const row of rows) {
-    if (hidden.has(row.userId)) continue
-    const entry = summary.get(row.eventId) ?? { reactions: [], mine: null }
-    const emoji = row.emoji as Reaction
-    const count = entry.reactions.find((r) => r.emoji === emoji)
-    if (count) count.count++
-    else entry.reactions.push({ emoji, count: 1 })
-    if (row.userId === viewerId) entry.mine = emoji
-    summary.set(row.eventId, entry)
+  const rows = db
+    .select({ reaction: reactions, username: users.username, displayName: users.displayName })
+    .from(reactions)
+    .innerJoin(users, eq(users.id, reactions.userId))
+    .where(inArray(reactions.eventId, eventIds))
+    .orderBy(asc(reactions.createdAt))
+    .all()
+  for (const { reaction, username, displayName } of rows) {
+    if (hidden.has(reaction.userId)) continue
+    const list = summary.get(reaction.eventId) ?? []
+    const emoji = reaction.emoji as Reaction
+    let count = list.find((r) => r.emoji === emoji)
+    if (!count) {
+      count = { emoji, count: 0, mine: false, users: [] }
+      list.push(count)
+    }
+    count.count++
+    count.users.push(displayName || username)
+    if (reaction.userId === viewerId) count.mine = true
+    summary.set(reaction.eventId, list)
   }
   return summary
 }
@@ -79,16 +89,19 @@ export function commentCounts(targets: { target: CommentTarget; id: number }[]) 
   return counts
 }
 
-export function setReaction(viewerId: number, eventId: number, emoji: Reaction | null) {
+export function toggleReaction(viewerId: number, eventId: number, emoji: Reaction) {
   const event = visibleEvent(viewerId, eventId)
-  const existing = db.select().from(reactions).where(and(eq(reactions.userId, viewerId), eq(reactions.eventId, eventId))).get()
-  if (!emoji) {
-    if (existing) db.delete(reactions).where(eq(reactions.id, existing.id)).run()
+  const existing = db
+    .select({ id: reactions.id })
+    .from(reactions)
+    .where(and(eq(reactions.userId, viewerId), eq(reactions.eventId, eventId), eq(reactions.emoji, emoji)))
+    .get()
+  if (existing) {
+    db.delete(reactions).where(eq(reactions.id, existing.id)).run()
     return
   }
-  if (existing) db.update(reactions).set({ emoji, createdAt: now() }).where(eq(reactions.id, existing.id)).run()
-  else db.insert(reactions).values({ userId: viewerId, eventId, emoji, createdAt: now() }).run()
-  if (!existing) notify({ userId: event.userId, actorId: viewerId, type: 'reaction', malId: event.malId, refId: eventId, text: emoji })
+  db.insert(reactions).values({ userId: viewerId, eventId, emoji, createdAt: now() }).run()
+  notify({ userId: event.userId, actorId: viewerId, type: 'reaction', malId: event.malId, refId: eventId, text: emoji })
 }
 
 function toComment(viewer: Viewer, ownerId: number, row: typeof comments.$inferSelect, user: Parameters<typeof toCard>[0]): Comment {

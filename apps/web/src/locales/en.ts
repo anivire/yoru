@@ -170,6 +170,7 @@ export const en: Messages = {
     react: 'React',
     comment: 'Reply',
     noComments: 'No comments yet',
+    edited: 'edited',
     commentPlaceholder: 'Write a comment',
     send: 'Send',
     recommend: 'Recommend',
@@ -213,6 +214,9 @@ export const en: Messages = {
     searchHint: 'By name or username',
     searchPlaceholder: 'Name or username',
     noResults: 'Nobody found',
+    noUsers: 'Nobody else is here yet',
+    recent: 'Recently joined',
+    found: 'Found',
   },
   profileSettings: {
     title: 'Profile',

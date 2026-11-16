@@ -128,8 +128,8 @@ function GroupEntry({ group, showUser }: { group: Group; showUser: boolean }) {
   const { t, i18n } = useTranslation()
   const heading = useGroupHeading()(group)
   const [open, setOpen] = useState(false)
-  const [thread, setThread] = useState(false)
   const first = group.items[0]!
+  const [thread, setThread] = useState(first.comments > 0)
   const time = new Intl.DateTimeFormat(i18n.language, { hour: '2-digit', minute: '2-digit' }).format(new Date(first.createdAt))
   const shown = open ? group.items : group.items.slice(0, COLLAPSED)
   return (
@@ -168,7 +168,7 @@ function GroupEntry({ group, showUser }: { group: Group; showUser: boolean }) {
           ) : null}
         </>
       )}
-      <ReactionBar eventId={first.id} reactions={first.reactions} mine={first.myReaction} comments={first.comments} commentsOpen={thread} onComments={() => setThread(!thread)} />
+      <ReactionBar eventId={first.id} reactions={first.reactions} comments={first.comments} commentsOpen={thread} onComments={() => setThread(!thread)} />
       {thread ? <CommentThread target={first.type === 'note' ? 'note' : 'event'} id={first.type === 'note' ? first.note.id : first.id} /> : null}
     </li>
   )

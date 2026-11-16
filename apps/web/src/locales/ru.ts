@@ -168,6 +168,7 @@ export const ru = {
     react: 'Реакция',
     comment: 'Ответить',
     noComments: 'Комментариев пока нет',
+    edited: 'изменено',
     commentPlaceholder: 'Написать комментарий',
     send: 'Отправить',
     recommend: 'Посоветовать',
@@ -211,6 +212,9 @@ export const ru = {
     searchHint: 'По имени или логину',
     searchPlaceholder: 'Имя или логин',
     noResults: 'Никого не нашли',
+    noUsers: 'На сервере пока никого нет',
+    recent: 'Недавно зарегистрировались',
+    found: 'Найдено',
   },
   profileSettings: {
     title: 'Профиль',

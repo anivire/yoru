@@ -1,58 +1,84 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { type Comment, type CommentTarget, REACTIONS, type Reaction, type ReactionCount, type UserCard } from '@yoru/shared'
+import { type InfiniteData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { type Comment, type CommentTarget, type FeedPage, REACTIONS, type Reaction, type ReactionCount, type UserCard } from '@yoru/shared'
 import { Button, Dialog, DialogContent, DialogTrigger, Popover, PopoverContent, PopoverTrigger, Skeleton, StarIcon, Textarea, Tooltip, cn, toast } from '@yoru/ui'
-import { RiChat3Line, RiDeleteBin6Line, RiEdit2Line, RiEmotionLine, RiSendPlaneFill, RiShareForwardFill, RiUserAddFill } from '@remixicon/react'
+import { RiChat3Line, RiDeleteBin6Line, RiEdit2Line, RiEmotionFill, RiSendPlaneFill, RiShareForwardFill, RiUserAddFill } from '@remixicon/react'
 import { type FormEvent, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { relativeTime } from '../lib/format'
 import { StatusIcon } from '../lib/list-status'
-import { errorMessage } from '../lib/queries'
+import { errorMessage, useUser } from '../lib/queries'
 import { AnimeCard } from './anime-cards'
 import { TLink } from './transition-link'
 import { UserAvatar, nameOf } from './user-avatar'
 
 const COMMENT_MAX = 1000
 
-export function ReactionBar({ eventId, reactions, mine, comments, onComments, commentsOpen }: { eventId: number; reactions: ReactionCount[]; mine: Reaction | null; comments: number; onComments: () => void; commentsOpen: boolean }) {
+function toggleIn(list: ReactionCount[], emoji: Reaction, name: string): ReactionCount[] {
+  const current = list.find((r) => r.emoji === emoji)
+  if (!current) return [...list, { emoji, count: 1, mine: true, users: [name] }]
+  if (!current.mine) return list.map((r) => (r === current ? { ...r, count: r.count + 1, mine: true, users: [...r.users, name] } : r))
+  if (current.count <= 1) return list.filter((r) => r !== current)
+  return list.map((r) => (r === current ? { ...r, count: r.count - 1, mine: false, users: r.users.filter((u) => u !== name) } : r))
+}
+
+function isFeedPages(data: unknown): data is InfiniteData<FeedPage> {
+  const pages = (data as { pages?: unknown } | undefined)?.pages
+  return Array.isArray(pages) && pages.every((page) => Array.isArray((page as FeedPage).items) && 'nextBefore' in (page as FeedPage))
+}
+
+export function ReactionBar({ eventId, reactions, comments, onComments, commentsOpen }: { eventId: number; reactions: ReactionCount[]; comments: number; onComments: () => void; commentsOpen: boolean }) {
   const { t } = useTranslation()
   const client = useQueryClient()
+  const user = useUser()
   const [open, setOpen] = useState(false)
   const react = useMutation({
-    mutationFn: (emoji: Reaction | null) => api.setReaction(eventId, emoji),
-    onSuccess: () => void client.invalidateQueries({ queryKey: ['feed'] }),
-    onError: (e) => toast.error(errorMessage(e, t)),
+    mutationFn: (emoji: Reaction) => api.toggleReaction(eventId, emoji),
+    onMutate: (emoji) => {
+      client.setQueriesData({ predicate: (query) => isFeedPages(query.state.data) }, (data: unknown) => {
+        if (!isFeedPages(data)) return data
+        return { ...data, pages: data.pages.map((page) => ({ ...page, items: page.items.map((item) => (item.id === eventId ? { ...item, reactions: toggleIn(item.reactions, emoji, nameOf(user)) } : item)) })) }
+      })
+    },
+    onError: (e) => {
+      void client.invalidateQueries({ predicate: (query) => isFeedPages(query.state.data) })
+      toast.error(errorMessage(e, t))
+    },
   })
   const pick = (emoji: Reaction) => {
     setOpen(false)
-    react.mutate(mine === emoji ? null : emoji)
+    react.mutate(emoji)
   }
   return (
     <div className="mt-2 flex flex-wrap items-center gap-1.5">
       {reactions.map((r) => (
-        <button
-          key={r.emoji}
-          type="button"
-          aria-pressed={mine === r.emoji}
-          onClick={() => pick(r.emoji)}
-          className={cn('inline-flex h-7 cursor-pointer items-center gap-1 rounded-full px-2.5 text-sm transition-colors', mine === r.emoji ? 'bg-accent-soft text-accent' : 'bg-field hover:bg-field-hover')}
-        >
-          <span>{r.emoji}</span>
-          <span className="font-mono text-xs tabular-nums">{r.count}</span>
-        </button>
+        <Tooltip key={r.emoji} content={r.users.join(', ')}>
+          <button
+            type="button"
+            aria-pressed={r.mine}
+            onClick={() => react.mutate(r.emoji)}
+            className={cn('inline-flex h-7 cursor-pointer items-center gap-1 rounded-full px-2.5 text-sm transition-colors', r.mine ? 'bg-accent-soft text-accent' : 'bg-field hover:bg-field-hover')}
+          >
+            <span>{r.emoji}</span>
+            <span className="font-mono text-xs tabular-nums">{r.count}</span>
+          </button>
+        </Tooltip>
       ))}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button size="icon-sm" variant="ghost" className="rounded-full" aria-label={t('social.react')} title={t('social.react')}>
-            <RiEmotionLine />
+            <RiEmotionFill />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="flex w-auto gap-1 p-1.5" align="start" side="top">
-          {REACTIONS.map((emoji) => (
-            <button key={emoji} type="button" onClick={() => pick(emoji)} className={cn('grid size-9 cursor-pointer place-items-center rounded-lg text-lg transition-colors hover:bg-muted', mine === emoji && 'bg-accent-soft')}>
-              {emoji}
-            </button>
-          ))}
+        <PopoverContent className="grid w-auto grid-cols-6 gap-1 p-1.5" align="start" side="top">
+          {REACTIONS.map((emoji) => {
+            const mine = reactions.some((r) => r.emoji === emoji && r.mine)
+            return (
+              <button key={emoji} type="button" aria-pressed={mine} onClick={() => pick(emoji)} className={cn('grid size-9 cursor-pointer place-items-center rounded-lg text-lg transition-colors hover:bg-muted', mine && 'bg-accent-soft')}>
+                {emoji}
+              </button>
+            )
+          })}
         </PopoverContent>
       </Popover>
       <Button size="sm" variant="ghost" className={cn('h-7 rounded-full px-2.5', commentsOpen && 'bg-muted')} onClick={onComments}>
@@ -89,6 +115,11 @@ function CommentItem({ comment, onChanged }: { comment: Comment; onChanged: () =
           <Tooltip content={new Date(comment.createdAt).toLocaleString()}>
             <span className="shrink-0 text-xs text-subtle-foreground">{relativeTime(comment.createdAt)}</span>
           </Tooltip>
+          {comment.updatedAt !== comment.createdAt ? (
+            <Tooltip content={new Date(comment.updatedAt).toLocaleString()}>
+              <span className="shrink-0 text-xs text-subtle-foreground">{t('social.edited')}</span>
+            </Tooltip>
+          ) : null}
           {!editing && (comment.canEdit || comment.canDelete) ? (
             <div className="ml-auto flex gap-0.5">
               {comment.canEdit ? (

@@ -796,12 +796,14 @@ export const noteInputSchema = z.object({
 })
 export type NoteInput = z.infer<typeof noteInputSchema>
 
-export const REACTIONS = ['❤️', '🔥', '😂', '😭', '👀'] as const
+export const REACTIONS = ['❤️', '🔥', '😂', '😭', '👀', '👍', '🎉', '😍', '😮', '🤔', '💀', '✨'] as const
 export type Reaction = (typeof REACTIONS)[number]
 
 export interface ReactionCount {
   emoji: Reaction
   count: number
+  mine: boolean
+  users: string[]
 }
 
 export type CommentTarget = 'event' | 'note'
@@ -822,7 +824,7 @@ export const commentInputSchema = z.object({
   text: z.string().trim().min(1).max(1000),
 })
 
-export const reactionInputSchema = z.object({ emoji: z.enum(REACTIONS).nullable() })
+export const reactionInputSchema = z.object({ emoji: z.enum(REACTIONS) })
 
 interface FeedBase {
   id: number
@@ -830,7 +832,6 @@ interface FeedBase {
   user: FeedUser
   anime: AnimeSummary
   reactions: ReactionCount[]
-  myReaction: Reaction | null
   comments: number
 }
 

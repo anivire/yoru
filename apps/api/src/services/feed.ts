@@ -179,14 +179,12 @@ export function feedPage(viewerId: number, options: { before: string | null; lim
   for (const { event, user: userRow, anime: row } of page) {
     const user = toCard(userRow)
     const target = eventTarget(event)
-    const reacted = reactionsByEvent.get(event.id)
     const base = {
       id: event.id,
       createdAt: event.createdAt,
       user,
       anime: toSummary(row),
-      reactions: reacted?.reactions ?? [],
-      myReaction: reacted?.mine ?? null,
+      reactions: reactionsByEvent.get(event.id) ?? [],
       comments: counts.get(`${target.target}:${target.id}`) ?? 0,
     }
     const data = event.data as Record<string, unknown>

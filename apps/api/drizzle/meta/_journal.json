@@ -99,6 +99,13 @@
       "when": 1794837879763,
       "tag": "0013_friends_visibility",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1794838283620,
+      "tag": "0014_multi_reactions",
+      "breakpoints": true
     }
   ]
 }

@@ -28,17 +28,18 @@ function PeopleSearch() {
   const { t } = useTranslation()
   const [q, setQ] = useState('')
   const query = useDeferredValue(q.trim())
-  const results = useQuery({ queryKey: ['users', query], queryFn: () => api.searchUsers(query), enabled: query.length > 0 })
+  const results = useQuery({ queryKey: ['users', query], queryFn: () => api.searchUsers(query) })
   let content: ReactNode = null
-  if (query && results.isPending) content = <UserGridSkeleton />
-  else if (query && !results.data?.length) content = <EmptyState mood="thinking" title={t('friends.noResults')} />
-  else if (results.data?.length) content = <UserGrid users={results.data} />
+  if (results.isPending) content = <UserGridSkeleton />
+  else if (!results.data?.length) content = <EmptyState mood="thinking" title={query ? t('friends.noResults') : t('friends.noUsers')} />
+  else content = <UserGrid users={results.data} />
   return (
     <div className="flex flex-col gap-4">
       <div className="relative">
         <RiSearchLine className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('friends.searchPlaceholder')} className="h-11 rounded-xl pl-10" autoFocus />
       </div>
+      <span className="text-[0.8125rem] text-muted-foreground">{query ? t('friends.found') : t('friends.recent')}</span>
       {content}
     </div>
   )

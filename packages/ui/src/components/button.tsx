@@ -46,7 +46,7 @@ export function Button({ className, variant, size, asChild, loading, disabled, c
   return (
     <button className={cn(buttonVariants({ variant, size }), className)} disabled={disabled || loading} {...props}>
       {loading ? <Spinner /> : null}
-      {children}
+      {loading && (size === 'icon' || size === 'icon-sm') ? null : children}
     </button>
   )
 }

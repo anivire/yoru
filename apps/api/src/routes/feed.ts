@@ -5,7 +5,7 @@ import { type AppEnv, requireAuth } from '../lib/auth'
 import { intParam, parseBody } from '../lib/validate'
 import { ensureAnime, getAnimeRow } from '../services/anime'
 import { animeNotesFor, createNote, deleteNote, feedPage, updateNote } from '../services/feed'
-import { addComment, deleteComment, editComment, listComments, setReaction } from '../services/interactions'
+import { addComment, deleteComment, editComment, listComments, toggleReaction } from '../services/interactions'
 
 export const feedRoutes = new Hono<AppEnv>()
   .use(requireAuth)
@@ -20,7 +20,7 @@ export const feedRoutes = new Hono<AppEnv>()
   )
   .post('/:id/reaction', async (c) => {
     const { emoji } = await parseBody(c, reactionInputSchema)
-    setReaction(c.get('user').id, intParam(c, 'id'), emoji)
+    toggleReaction(c.get('user').id, intParam(c, 'id'), emoji)
     return c.json({ ok: true })
   })
 
