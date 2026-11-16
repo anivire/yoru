@@ -6,11 +6,14 @@ export const SOUND_THEMES = ['soft', 'default', 'mechanical', 'glass'] as const 
 export const SOUND_VOLUMES = ['10', '20', '30', '40', '50', '60', '70', '80', '90', '100'] as const
 export type SoundVolume = (typeof SOUND_VOLUMES)[number]
 export type SoundCategory = 'interface' | 'notifications' | 'feedback'
+export const CLICK_SOUNDS = ['glide', 'tap', 'switch', 'pop', 'thock'] as const satisfies readonly CueName[]
+export type ClickSound = (typeof CLICK_SOUNDS)[number]
 
 export interface SoundSettings {
   enabled: boolean
   volume: SoundVolume
   theme: ThemeName
+  click: ClickSound
   interface: boolean
   notifications: boolean
   feedback: boolean
@@ -19,12 +22,12 @@ export interface SoundSettings {
 const STORAGE_KEY = 'yoru:sounds'
 const GAIN = 2
 const LOUDNESS_WINDOW = 0.1
-const CLICK: CueName = 'glide'
+const CLICK = 'click'
 const AWAKE_MS = 30_000
 const HUM_LEVEL = 1e-4
 const DUCK = 0.35
-const LEVELS: Partial<Record<CueName, number>> = { glide: 0.6, tick: 0.7, hover: 0.5, on: 1, off: 1, rise: 0.8, bubble: 1, chime: 1, ready: 1, success: 1, error: 1, warning: 1 }
-const DEFAULTS: SoundSettings = { enabled: false, volume: '60', theme: 'soft', interface: true, notifications: true, feedback: true }
+const LEVELS: Partial<Record<CueName, number>> = { glide: 0.6, tap: 0.85, switch: 0.85, pop: 0.85, thock: 0.85, tick: 0.7, hover: 0.5, on: 1, off: 1, rise: 0.8, bubble: 1, chime: 1, ready: 1, success: 1, error: 1, warning: 1 }
+const DEFAULTS: SoundSettings = { enabled: false, volume: '60', theme: 'soft', click: 'glide', interface: true, notifications: true, feedback: true }
 
 function load(): SoundSettings {
   try {
@@ -33,6 +36,7 @@ function load(): SoundSettings {
       enabled: raw.enabled === true,
       volume: SOUND_VOLUMES.includes(raw.volume as SoundVolume) ? (raw.volume as SoundVolume) : DEFAULTS.volume,
       theme: SOUND_THEMES.includes(raw.theme as (typeof SOUND_THEMES)[number]) ? (raw.theme as ThemeName) : DEFAULTS.theme,
+      click: CLICK_SOUNDS.includes(raw.click as ClickSound) ? (raw.click as ClickSound) : DEFAULTS.click,
       interface: raw.interface !== false,
       notifications: raw.notifications !== false,
       feedback: raw.feedback !== false,
@@ -215,7 +219,7 @@ export function duckSounds(ducked: boolean) {
 const CLICKABLE = 'button, a[href], summary, [role="tab"], [role="option"], [role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"], [role="switch"], [role="checkbox"], [role="radio"]'
 const TOAST_CUES = { success: 'success', error: 'error', warning: 'warning' } as const
 
-function clickCue(target: Element): CueName | null {
+function clickCue(target: Element): CueName | typeof CLICK | null {
   const scoped = target.closest('[data-sound]')
   const el = target.closest(CLICKABLE)
   if (scoped && (!el || scoped.contains(el))) {
@@ -252,7 +256,7 @@ export function installSounds() {
     (e) => {
       pointer = e.pointerType
       if (!active() || pointer === 'touch' || e.button !== 0 || e.ctrlKey || !(e.target instanceof Element)) return
-      if (clickCue(e.target) === CLICK) play(CLICK)
+      if (clickCue(e.target) === CLICK) play(state.click)
     },
     { capture: true, passive: true },
   )
@@ -263,7 +267,7 @@ export function installSounds() {
       const name = clickCue(e.target)
       if (!name) return
       if (name === CLICK && e.detail > 0 && pointer !== 'touch') return
-      play(name)
+      play(name === CLICK ? state.click : name)
     },
     { capture: true },
   )

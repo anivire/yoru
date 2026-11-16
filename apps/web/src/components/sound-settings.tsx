@@ -3,7 +3,7 @@ import { Button, Card, Segmented, StepSlider, Switch, cn } from '@yoru/ui'
 import { RiCursorFill, RiNotification3Fill, RiPlayFill, RiCheckboxCircleFill, type RemixiconComponentType } from '@remixicon/react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { SOUND_THEMES, SOUND_VOLUMES, type SoundCategory, preview, updateSounds, useSounds } from '../lib/sounds'
+import { CLICK_SOUNDS, SOUND_THEMES, SOUND_VOLUMES, type SoundCategory, preview, updateSounds, useSounds } from '../lib/sounds'
 
 function Block({ title, description, children }: { title: ReactNode; description?: ReactNode; children: ReactNode }) {
   return (
@@ -15,8 +15,8 @@ function Block({ title, description, children }: { title: ReactNode; description
   )
 }
 
-const CATEGORIES: { key: SoundCategory; icon: RemixiconComponentType; sample: CueName }[] = [
-  { key: 'interface', icon: RiCursorFill, sample: 'glide' },
+const CATEGORIES: { key: SoundCategory; icon: RemixiconComponentType; sample: CueName | null }[] = [
+  { key: 'interface', icon: RiCursorFill, sample: null },
   { key: 'notifications', icon: RiNotification3Fill, sample: 'bubble' },
   { key: 'feedback', icon: RiCheckboxCircleFill, sample: 'success' },
 ]
@@ -38,7 +38,7 @@ export function SoundsTab() {
               value={sounds.volume}
               onChange={(volume) => {
                 updateSounds({ volume })
-                preview('glide')
+                preview(sounds.click)
               }}
               label={t('settings.sound.volume')}
               options={SOUND_VOLUMES.map((v, i) => ({ value: v, label: <span className={cn(i % 2 === 0 && i > 0 && 'max-sm:hidden')}>{v}%</span> }))}
@@ -59,6 +59,19 @@ export function SoundsTab() {
           />
         </div>
       </Block>
+      <Block title={t('settings.sound.click')} description={t('settings.sound.clickHint')}>
+        <div data-sound="none" className={cn(!sounds.enabled && 'pointer-events-none opacity-50')}>
+          <Segmented
+            value={sounds.click}
+            onChange={(click) => {
+              updateSounds({ click })
+              preview(click)
+            }}
+            options={CLICK_SOUNDS.map((v) => ({ value: v, label: t(`settings.sound.clicks.${v}`) }))}
+            className="grid w-full grid-cols-3 sm:inline-flex sm:w-auto"
+          />
+        </div>
+      </Block>
       <Block title={t('settings.sound.categories')} description={t('settings.sound.categoriesHint')}>
         <Card className={cn('py-1', !sounds.enabled && 'pointer-events-none opacity-50')}>
           {CATEGORIES.map(({ key, icon: Icon, sample }) => (
@@ -70,7 +83,7 @@ export function SoundsTab() {
                 <span className={cn('block text-sm', !sounds[key] && 'text-muted-foreground')}>{t(`settings.sound.${key}`)}</span>
                 <span className="block text-[0.8125rem] text-muted-foreground">{t(`settings.sound.${key}Hint`)}</span>
               </span>
-              <Button variant="ghost" size="icon-sm" className="rounded-full" data-sound="none" aria-label={t('settings.sound.preview')} title={t('settings.sound.preview')} onClick={() => preview(sample)}>
+              <Button variant="ghost" size="icon-sm" className="rounded-full" data-sound="none" aria-label={t('settings.sound.preview')} title={t('settings.sound.preview')} onClick={() => preview(sample ?? sounds.click)}>
                 <RiPlayFill />
               </Button>
               <Switch checked={sounds[key]} onCheckedChange={(on) => updateSounds({ [key]: on })} />
