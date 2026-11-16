@@ -1,7 +1,7 @@
 import { Slider } from 'radix-ui'
 import { type KeyboardEvent, type ReactNode, useState } from 'react'
 import { cn } from '../lib/cn'
-import { emitStep } from '../lib/step'
+import { emitStep, emitStepEnd } from '../lib/step'
 
 export interface StepOption<T extends string> {
   value: T
@@ -39,6 +39,7 @@ export function StepSlider<T extends string>({
     e.preventDefault()
     setDrag(null)
     select(target)
+    emitStepEnd()
   }
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
@@ -54,6 +55,7 @@ export function StepSlider<T extends string>({
         onValueCommit={([position = 0]) => {
           setDrag(null)
           select(position)
+          emitStepEnd()
         }}
         onKeyDown={onKeyDown}
         className={cn(
@@ -82,7 +84,10 @@ export function StepSlider<T extends string>({
             key={o.value}
             type="button"
             data-sound="none"
-            onClick={() => select(i)}
+            onClick={() => {
+              select(i)
+              emitStepEnd()
+            }}
             className={cn(
               'absolute top-0 cursor-pointer whitespace-nowrap transition-colors hover:text-foreground',
               i === 0 ? 'left-0' : i === last ? 'right-0' : '-translate-x-1/2',

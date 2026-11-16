@@ -1,12 +1,12 @@
 import { type CueName, type PlayOptions, type SoundSet, type Spec, type ThemeName, play as foleyPlay, getAnalyser, getSet, set, unlock as foleyUnlock } from '@foleyjs/core'
-import { onStep, onToast } from '@yoru/ui'
+import { onStep, onStepEnd, onToast } from '@yoru/ui'
 import { useSyncExternalStore } from 'react'
 
 export const SOUND_THEMES = ['soft', 'default', 'mechanical', 'glass'] as const satisfies readonly ThemeName[]
 export const SOUND_VOLUMES = ['10', '20', '30', '40', '50', '60', '70', '80', '90', '100'] as const
 export type SoundVolume = (typeof SOUND_VOLUMES)[number]
 export type SoundCategory = 'interface' | 'notifications' | 'feedback'
-export const CLICK_SOUNDS = ['tick', 'hover', 'glide', 'pop', 'tap', 'switch', 'thock'] as const satisfies readonly CueName[]
+export const CLICK_SOUNDS = ['press', 'tick', 'hover', 'glide', 'pop', 'tap', 'switch', 'thock'] as const satisfies readonly CueName[]
 export type ClickSound = (typeof CLICK_SOUNDS)[number]
 
 export interface SoundSettings {
@@ -20,11 +20,15 @@ export interface SoundSettings {
 }
 
 const STORAGE_KEY = 'yoru:sounds'
-const CLICK = 'click'
+const RELEASE_DELAY_MS = 70
+const THEME_PREVIEW_DELAY_MS = 220
+const SUBMIT_DELAY_MS = 240
+const MAX_POSITION_PITCH = 7
+const SLIDER_PITCH_RANGE = 10
 const AWAKE_MS = 30_000
 const HUM_LEVEL = 1e-4
 const DUCK = 0.35
-const DEFAULTS: SoundSettings = { enabled: false, volume: '40', theme: 'mechanical', click: 'glide', interface: true, notifications: true, feedback: true }
+const DEFAULTS: SoundSettings = { enabled: false, volume: '40', theme: 'mechanical', click: 'press', interface: true, notifications: true, feedback: true }
 
 function load(): SoundSettings {
   try {
@@ -169,27 +173,78 @@ export function preview(name: CueName) {
   if (state.enabled) play(name)
 }
 
+function playClick(name: ClickSound) {
+  if (name !== 'press') {
+    play(name)
+    return
+  }
+  play('press')
+  window.setTimeout(() => play('release'), RELEASE_DELAY_MS)
+}
+
+export function previewClick(name: ClickSound) {
+  if (state.enabled) playClick(name)
+}
+
+export function previewTheme() {
+  if (!state.enabled) return
+  play('thock')
+  window.setTimeout(() => play('chime'), THEME_PREVIEW_DELAY_MS)
+}
+
 export function duckSounds(ducked: boolean) {
   set({ duck: ducked ? DUCK : 1 })
 }
 
 const CLICKABLE = 'button, a[href], summary, [role="tab"], [role="option"], [role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"], [role="switch"], [role="checkbox"], [role="radio"]'
-const TOAST_CUES = { success: 'success', error: 'error', warning: 'warning' } as const
+const SELECT_ROLES = new Set(['tab', 'radio', 'option', 'menuitem', 'menuitemradio', 'menuitemcheckbox'])
+const SELECT_ITEM = '[data-radix-select-viewport] [role="option"]'
+const TYPING = 'textarea, [contenteditable="true"], input:not([type]), input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input[type="number"]'
+const TOAST_CUES = { success: 'success', error: 'error', warning: 'warning', info: 'ping' } as const
 
-function clickCue(target: Element): CueName | typeof CLICK | null {
+type Voice = { kind: 'click'; el: Element } | { kind: 'select'; el: Element } | { kind: 'cue'; name: CueName }
+
+function voiceOf(target: Element): Voice | null {
   const scoped = target.closest('[data-sound]')
   const el = target.closest(CLICKABLE)
   if (scoped && (!el || scoped.contains(el))) {
     const value = scoped.getAttribute('data-sound')
     if (value === 'none') return null
-    if (scoped === el && value) return value as CueName
+    if (scoped === el && value) return { kind: 'cue', name: value as CueName }
   }
   if (!el) return null
   const role = el.getAttribute('role')
-  if (role === 'switch' || role === 'checkbox') return el.getAttribute('aria-checked') === 'true' ? 'off' : 'on'
+  if (role === 'switch' || role === 'checkbox') return { kind: 'cue', name: el.getAttribute('aria-checked') === 'true' ? 'off' : 'on' }
   const pressed = el.getAttribute('aria-pressed')
-  if (pressed === 'true' || pressed === 'false') return pressed === 'true' ? 'off' : 'on'
-  return CLICK
+  if (pressed === 'true' || pressed === 'false') return { kind: 'cue', name: pressed === 'true' ? 'off' : 'on' }
+  if (role && SELECT_ROLES.has(role)) return { kind: 'select', el }
+  return { kind: 'click', el }
+}
+
+function positionPitch(el: Element) {
+  const role = el.getAttribute('role')
+  const siblings = Array.from(el.parentElement?.children ?? []).filter((node) => node.getAttribute('role') === role)
+  return Math.min(Math.max(siblings.indexOf(el), 0), MAX_POSITION_PITCH)
+}
+
+function playSelect(el: Element) {
+  play('switch', { pitch: positionPitch(el) })
+}
+
+function onTyping(e: KeyboardEvent) {
+  if (!state.enabled || !state.interface || e.isComposing || e.ctrlKey || e.metaKey || e.altKey || !(e.target instanceof Element)) return
+  const field = e.target.closest(TYPING)
+  if (!field || field.closest('[data-sound="none"]')) return
+  if (e.key === 'Enter' && field instanceof HTMLInputElement) {
+    if (!field.value.trim()) {
+      play('denied')
+      return
+    }
+    play('swoosh')
+    window.setTimeout(() => play('complete'), SUBMIT_DELAY_MS)
+    return
+  }
+  if (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Enter') play('thock')
 }
 
 export function installSounds() {
@@ -207,13 +262,30 @@ export function installSounds() {
     document.addEventListener(event, wake, { capture: true, passive: true })
   }
   let pointer = ''
+  let pressed = false
   const active = () => state.enabled && state.interface
   document.addEventListener(
     'pointerdown',
     (e) => {
       pointer = e.pointerType
+      pressed = false
       if (!active() || pointer === 'touch' || e.button !== 0 || e.ctrlKey || !(e.target instanceof Element)) return
-      if (clickCue(e.target) === CLICK) play(state.click)
+      if (voiceOf(e.target)?.kind !== 'click') return
+      if (state.click === 'press') {
+        pressed = true
+        play('press')
+      } else play(state.click)
+    },
+    { capture: true, passive: true },
+  )
+  document.addEventListener(
+    'pointerup',
+    (e) => {
+      if (!active() || !(e.target instanceof Element)) return
+      if (pressed) play('release')
+      pressed = false
+      const item = e.target.closest(SELECT_ITEM)
+      if (item && pointer !== 'touch') playSelect(item)
     },
     { capture: true, passive: true },
   )
@@ -221,15 +293,20 @@ export function installSounds() {
     'click',
     (e) => {
       if (!active() || !(e.target instanceof Element)) return
-      const name = clickCue(e.target)
-      if (!name) return
-      if (name === CLICK && e.detail > 0 && pointer !== 'touch') return
-      play(name === CLICK ? state.click : name)
+      const voice = voiceOf(e.target)
+      if (!voice) return
+      if (voice.kind === 'cue') play(voice.name)
+      else if (voice.kind === 'select') playSelect(voice.el)
+      else if (e.detail === 0 || pointer === 'touch') playClick(state.click)
     },
     { capture: true },
   )
+  document.addEventListener('keydown', onTyping, { capture: true, passive: true })
   onStep((position) => {
-    if (active()) play('tick', { pitch: position * 7 - 3.5 })
+    if (active()) play('tick', { pitch: position * SLIDER_PITCH_RANGE })
+  })
+  onStepEnd(() => {
+    if (active()) play('pop')
   })
   onToast((kind) => {
     if (kind in TOAST_CUES) cue('feedback', TOAST_CUES[kind as keyof typeof TOAST_CUES])

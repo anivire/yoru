@@ -568,7 +568,7 @@ export const ru = {
       themes: { soft: 'Мягкое', default: 'Обычное', mechanical: 'Механическое', glass: 'Стеклянное' },
       click: 'Звук нажатий',
       clickHint: 'Как звучат кнопки, вкладки и пункты меню',
-      clicks: { tick: 'Крупинка', hover: 'Дуновение', glide: 'Плавный', tap: 'Короткий', switch: 'Щелчок', pop: 'Пузырёк', thock: 'Клавиша' },
+      clicks: { press: 'Нажатие', tick: 'Крупинка', hover: 'Дуновение', glide: 'Плавный', tap: 'Короткий', switch: 'Щелчок', pop: 'Пузырёк', thock: 'Клавиша' },
       categories: 'Что озвучивать',
       categoriesHint: 'Можно оставить, например, только уведомления',
       interface: 'Интерфейс',

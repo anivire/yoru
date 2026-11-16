@@ -17,7 +17,7 @@ export function useNotificationSound() {
   const unread = data?.unread
   useEffect(() => {
     if (unread === undefined) return
-    if (previous.current !== null && unread > previous.current) cue('notifications', 'bubble')
+    if (previous.current !== null && unread > previous.current) cue('notifications', 'ping')
     previous.current = unread
   }, [unread])
 }
