@@ -18,6 +18,7 @@ import { ANILIBRIA_LOGO, ANIME365_LOGO } from '../lib/logos'
 import { isFavorite, pickFavorite, toggleFavorite } from '../lib/favorite-authors'
 import type { Room } from '../lib/rooms'
 import { RoomDebug } from './watch-together'
+import { readStorage, writeStorage } from '../lib/storage'
 
 function kindKey(malId: number) {
   return `yoru:kind:${malId}`
@@ -84,7 +85,7 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
 
   const providers = useQuery({ queryKey: ['video-providers'], queryFn: api.videoProviders, staleTime: 5 * 60_000 })
   const providerList = providers.data ?? []
-  const chosen = params.get('source') ?? localStorage.getItem(sourceKey(malId))
+  const chosen = params.get('source') ?? readStorage(sourceKey(malId))
   const explicit = providerList.some((p) => p.id === chosen) ? chosen : null
   const sourceQueries = useQueries({
     queries: providerList.map((p) => ({
@@ -124,7 +125,7 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
   const sourceEpisodes = autoSettled ? sourceQuery.data : undefined
   const sourcePending = providers.isPending || (Boolean(source) && (!autoSettled || sourceQuery.isPending))
   const kinds = provider?.kinds ?? STREAM_KINDS
-  const preferredKind = parseKind(params.get('kind')) ?? parseKind(localStorage.getItem(kindKey(malId))) ?? defaultKind
+  const preferredKind = parseKind(params.get('kind')) ?? parseKind(readStorage(kindKey(malId))) ?? defaultKind
   const kind = kinds.includes(preferredKind) ? preferredKind : (kinds[0] ?? preferredKind)
   const singleKind = kinds.length === 1
 
@@ -165,7 +166,7 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
     const shared = roomAuthor ? items.find((x) => x.author === roomAuthor) : undefined
     if (shared) return shared.id
     if (pickedId !== null && items.some((x) => x.id === pickedId)) return pickedId
-    const remembered = localStorage.getItem(authorKey(malId, kind))
+    const remembered = readStorage(authorKey(malId, kind))
     const favorite = pickFavorite(preferredAuthors, kind, items)
     return (items.find((x) => x.author === remembered) ?? favorite ?? items[0]!).id
   }, [translations.data, roomAuthor, pickedId, malId, kind, preferredAuthors])
@@ -362,7 +363,7 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
           disabled={!providerList.length}
           value={source ?? undefined}
           onValueChange={(v) => {
-            localStorage.setItem(sourceKey(malId), v)
+            writeStorage(sourceKey(malId), v)
             setParam({ source: v })
             const next = providerList.find((p) => p.id === v)
             shareMedia({ source: v, kind: next && !next.kinds.includes(kind) ? (next.kinds[0] ?? kind) : kind, author: null })
@@ -379,7 +380,7 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
             return <Icon />
           })()}
           onValueChange={(v) => {
-            localStorage.setItem(kindKey(malId), v)
+            writeStorage(kindKey(malId), v)
             setParam({ kind: v })
             shareMedia({ kind: parseKind(v) ?? kind, author: null })
           }}
@@ -393,7 +394,7 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
             value={translationId ?? undefined}
             onValueChange={(v) => {
               const tr = translations.data?.find((x) => x.id === v)
-              if (tr) localStorage.setItem(authorKey(malId, kind), tr.author)
+              if (tr) writeStorage(authorKey(malId, kind), tr.author)
               setPickedId(v)
               if (tr) shareMedia({ author: tr.author })
             }}
@@ -412,7 +413,7 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
               aria-pressed={favorite}
               onClick={() => {
                 if (!translation) return
-                localStorage.setItem(authorKey(malId, kind), translation.author)
+                writeStorage(authorKey(malId, kind), translation.author)
                 setPreferredAuthors(toggleFavorite(preferredAuthors, kind, translation.author))
               }}
               className={cn('size-10 shrink-0 rounded-xl bg-foreground/[0.05] hover:bg-foreground/[0.08]', favorite && 'text-accent')}

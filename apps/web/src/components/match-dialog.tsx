@@ -2,21 +2,18 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ProviderMatch } from '@yoru/shared'
 import { Badge, Button, Dialog, DialogContent, DialogTrigger, Image, Input, Spinner, cn } from '@yoru/ui'
 import { RiLinksFill, RiSearchFill } from '@remixicon/react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { keys } from '../lib/queries'
+import { useDebounced } from '../lib/use-debounced'
 
 export function MatchDialog({ malId, match, defaultQuery }: { malId: number; match: ProviderMatch | undefined; defaultQuery: string }) {
   const { t } = useTranslation()
   const client = useQueryClient()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState(defaultQuery)
-  const [debounced, setDebounced] = useState(defaultQuery)
-  useEffect(() => {
-    const id = setTimeout(() => setDebounced(query.trim()), 350)
-    return () => clearTimeout(id)
-  }, [query])
+  const debounced = useDebounced(query.trim())
   const results = useQuery({ queryKey: ['match-search', debounced], queryFn: () => api.matchSearch(debounced), enabled: open && debounced.length >= 2 })
   const set = useMutation({
     mutationFn: (providerId: number | null) => api.setMatch(malId, providerId),

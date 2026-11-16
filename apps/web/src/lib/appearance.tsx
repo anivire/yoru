@@ -3,6 +3,7 @@ import { type ColorScheme, DEFAULT_SCHEME, DEFAULT_THEME, THEME_PRESETS, type Th
 import { type ReactNode, createContext, useContext, useEffect, useState, useSyncExternalStore } from 'react'
 import { HOME_SECTIONS, type HomeSectionId, NAV, type NavKey } from './navigation'
 import { type FavoriteAuthors, normalizeFavorites } from './favorite-authors'
+import { readStorage, writeStorage } from './storage'
 
 const STORAGE_KEY = 'yoru:appearance'
 
@@ -107,7 +108,7 @@ const AppearanceContext = createContext<Appearance | null>(null)
 
 function load(): State {
   try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') as {
+    const raw = JSON.parse(readStorage(STORAGE_KEY) ?? '{}') as {
       theme?: string
       scheme?: string
       stretch?: boolean
@@ -230,7 +231,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     applyTheme(state.theme, state.scheme)
     updateFavicon()
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    writeStorage(STORAGE_KEY, JSON.stringify(state))
     if (state.scheme !== 'system') return
     const media = window.matchMedia('(prefers-color-scheme: dark)')
     const onChange = () => {

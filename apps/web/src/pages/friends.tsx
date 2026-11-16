@@ -7,7 +7,7 @@ import { Page, PageHeader, Section } from '../components/app-shell'
 import { api } from '../lib/api'
 import { errorMessage } from '../lib/queries'
 import { useDocumentTitle } from '../lib/title'
-import { UserGrid, UserGridSkeleton } from './profile'
+import { UserGrid, UserGridSkeleton } from '../components/user-grid'
 
 function useFriendMutation(fn: (id: number) => Promise<unknown>) {
   const { t } = useTranslation()

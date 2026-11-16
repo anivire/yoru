@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { AnimeSummary, RoomMedia } from '@yoru/shared'
 import { Card, EmptyState, Image, Input, Skeleton, Tooltip, cn, toast } from '@yoru/ui'
 import { RiGroupFill, RiLinkM, RiPlayCircleFill, RiSearchFill, RiTv2Fill } from '@remixicon/react'
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { Page, PageHeader, Section } from '../components/app-shell'
@@ -13,6 +13,7 @@ import { api } from '../lib/api'
 import { useAppearance } from '../lib/appearance'
 import { errorMessage } from '../lib/queries'
 import { useDocumentTitle } from '../lib/title'
+import { useDebounced } from '../lib/use-debounced'
 
 function Step({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
   return (
@@ -41,15 +42,6 @@ function PickCard({ anime, hint, busy, onPick }: { anime: AnimeSummary; hint?: s
       <RiPlayCircleFill className="size-6 shrink-0 text-accent opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
     </button>
   )
-}
-
-function useDebounced(value: string, ms = 350) {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const timer = window.setTimeout(() => setDebounced(value), ms)
-    return () => window.clearTimeout(timer)
-  }, [value, ms])
-  return debounced
 }
 
 function PickGrid({ children }: { children: ReactNode }) {

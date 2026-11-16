@@ -3,6 +3,7 @@ import { Badge, Image, Skeleton, cn } from '@yoru/ui'
 import { RiCheckFill, RiLayoutGridFill, RiListUnordered } from '@remixicon/react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { readStorage, writeStorage } from '../lib/storage'
 
 export function EpisodeList({
   episodes,
@@ -16,7 +17,7 @@ export function EpisodeList({
   onSelect: (n: number) => void
 }) {
   const { t } = useTranslation()
-  const [view, setView] = useState<'list' | 'grid'>(() => (localStorage.getItem('yoru:episodes-view') === 'grid' ? 'grid' : 'list'))
+  const [view, setView] = useState<'list' | 'grid'>(() => (readStorage('yoru:episodes-view') === 'grid' ? 'grid' : 'list'))
   const activeRef = useRef<HTMLButtonElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -29,7 +30,7 @@ export function EpisodeList({
   }, [current, episodes.length, view])
   const switchView = (v: 'list' | 'grid') => {
     setView(v)
-    localStorage.setItem('yoru:episodes-view', v)
+    writeStorage('yoru:episodes-view', v)
   }
 
   return (

@@ -6,8 +6,8 @@ import { type ChangeEvent, type ReactNode, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { errorMessage, keys, optimistic, useUser } from '../lib/queries'
-import { Block } from '../pages/settings'
-import { UserGrid } from '../pages/profile'
+import { Block } from './settings-block'
+import { UserGrid } from './user-grid'
 import { UserAvatar } from './user-avatar'
 
 const AVATAR_SIZE = 256

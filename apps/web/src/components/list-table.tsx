@@ -8,16 +8,17 @@ import { EpisodeCount, scoreColor } from './anime-cards'
 import { TLink } from './transition-link'
 import { AnimeTitle, animePath } from '../lib/anime-title'
 import { STATUS_META, StatusIcon, TONE_TEXT } from '../lib/list-status'
+import { readStorage, writeStorage } from '../lib/storage'
 
 export type ListView = 'grid' | 'table'
 
 const VIEW_KEY = 'yoru:list-view'
 
 export function useListView() {
-  const [view, setView] = useState<ListView>(() => (localStorage.getItem(VIEW_KEY) === 'table' ? 'table' : 'grid'))
+  const [view, setView] = useState<ListView>(() => (readStorage(VIEW_KEY) === 'table' ? 'table' : 'grid'))
   const change = (v: ListView) => {
     setView(v)
-    localStorage.setItem(VIEW_KEY, v)
+    writeStorage(VIEW_KEY, v)
   }
   return [view, change] as const
 }

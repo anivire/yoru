@@ -11,6 +11,7 @@ import { assToVtt } from './ass-to-vtt'
 import { useAppearance } from '../../lib/appearance'
 import { IS_IOS } from '../../lib/device'
 import { duckSounds } from '../../lib/sounds'
+import { readStorage, writeStorage } from '../../lib/storage'
 
 const RATES = [0.75, 1, 1.25, 1.5, 2]
 const QUALITY_KEY = 'yoru:quality'
@@ -62,7 +63,7 @@ const SEGMENT_TONES: Record<SkipTime['kind'], string> = {
 }
 
 function pickSource(sources: StreamSource[]): StreamSource {
-  const preferred = Number(localStorage.getItem(QUALITY_KEY)) || 1080
+  const preferred = Number(readStorage(QUALITY_KEY)) || 1080
   return sources.find((s) => s.height <= preferred) ?? sources[sources.length - 1] ?? sources[0]!
 }
 
@@ -96,10 +97,10 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   const [time, setTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [buffered, setBuffered] = useState(0)
-  const [volume, setVolume] = useState(() => Number(localStorage.getItem(VOLUME_KEY) ?? 1))
+  const [volume, setVolume] = useState(() => Number(readStorage(VOLUME_KEY) ?? 1))
   const [muted, setMuted] = useState(false)
   const [rate, setRate] = useState(1)
-  const [subsOn, setSubsOn] = useState(() => localStorage.getItem(SUBS_KEY) !== 'off')
+  const [subsOn, setSubsOn] = useState(() => readStorage(SUBS_KEY) !== 'off')
   const [fullscreen, setFullscreen] = useState(false)
   const [countdown, setCountdown] = useState<number | null>(null)
   const [stretched, setStretched] = useState(false)
@@ -305,7 +306,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
     if (!v) return
     v.volume = volume
     v.muted = muted
-    localStorage.setItem(VOLUME_KEY, String(volume))
+    writeStorage(VOLUME_KEY, String(volume))
   }, [volume, muted])
 
   useEffect(() => {
@@ -403,12 +404,12 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
 
   const setSubs = (on: boolean) => {
     setSubsOn(on)
-    localStorage.setItem(SUBS_KEY, on ? 'on' : 'off')
+    writeStorage(SUBS_KEY, on ? 'on' : 'off')
   }
 
   const chooseQuality = (s: StreamSource) => {
     resumeRef.current = videoRef.current?.currentTime ?? 0
-    localStorage.setItem(QUALITY_KEY, String(s.height))
+    writeStorage(QUALITY_KEY, String(s.height))
     setSource(s)
     setMenu(null)
   }

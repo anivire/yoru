@@ -1,69 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { type AdminSettings, type AdminSettingsInput, type DataSourceId, type DataSourceInfo, IMPORT_PROVIDERS, type ImportProvider } from '@yoru/shared'
+import { type AdminSettings, type AdminSettingsInput, type DataSourceInfo, IMPORT_PROVIDERS, type ImportProvider } from '@yoru/shared'
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Code, Field, Input, Skeleton, Spinner, StatusDot, Tooltip, toast } from '@yoru/ui'
-import { RiKey2Fill, RiPlayCircleFill } from '@remixicon/react'
-import { type FormEvent, useId, useState } from 'react'
+import { RiKey2Fill } from '@remixicon/react'
+import { type FormEvent, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { errorMessage } from '../lib/queries'
 import { PROVIDER_NAMES, ProviderIcon } from './providers'
-import { AnilibriaMark, Anime365Mark, KitsuMark } from './source-logo'
-
-export const SOURCE_NAMES: Record<DataSourceId, string> = { anime365: 'Anime365', jikan: 'Jikan', shikimori: 'Shikimori', anilist: 'AniList', kitsu: 'Kitsu', anilibria: 'AniLibria', kodik: 'Kodik', aniskip: 'AniSkip', github: 'GitHub' }
-
-function GithubMark() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden className="size-5">
-      <path d="M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144-.292-.741-.247-2.314.09-2.965.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943" />
-    </svg>
-  )
-}
-
-function AniSkipMark() {
-  const id = useId()
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden className="size-[70%]">
-      <defs>
-        <linearGradient id={id} x1="2" y1="4" x2="22" y2="16" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#ab5ac6" />
-          <stop offset="1" stopColor="#1f98d8" />
-        </linearGradient>
-      </defs>
-      <g fill="none" stroke={`url(#${id})`} strokeWidth="2.1" strokeLinejoin="round" strokeLinecap="round">
-        <path d="M2.4 4.7v14.6L14.6 12Z" />
-        <path d="M9.4 4.7 21.6 12 9.4 19.3" />
-      </g>
-    </svg>
-  )
-}
-
-export function SourceIcon({ id }: { id: DataSourceId }) {
-  if (id === 'anime365') return <Anime365Mark />
-  if (id === 'jikan') return <ProviderIcon provider="mal" />
-  if (id === 'shikimori') return <ProviderIcon provider="shikimori" />
-  if (id === 'anilist') return <ProviderIcon provider="anilist" />
-  if (id === 'kitsu') return <KitsuMark />
-  if (id === 'anilibria') return <AnilibriaMark />
-  if (id === 'kodik') {
-    return (
-      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-field text-muted-foreground [&_svg]:size-[1.125rem]">
-        <RiPlayCircleFill />
-      </span>
-    )
-  }
-  if (id === 'aniskip') {
-    return (
-      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white">
-        <AniSkipMark />
-      </span>
-    )
-  }
-  return (
-    <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-inverse text-inverse-foreground">
-      <GithubMark />
-    </span>
-  )
-}
+import { SecretForm } from './secret-form'
 
 export function useSaveSettings(extraKeys: string[][] = []) {
   const { t } = useTranslation()
@@ -138,84 +82,6 @@ export function UrlField({ info }: { info: DataSourceInfo }) {
           ) : null}
         </div>
       </Field>
-    </form>
-  )
-}
-
-export function SecretForm({
-  placeholder,
-  isSet,
-  fromEnv = false,
-  onSave,
-  onClear,
-  pending,
-}: {
-  placeholder: string
-  isSet: boolean
-  fromEnv?: boolean
-  onSave: (v: string) => void
-  onClear: () => void
-  pending: boolean
-}) {
-  const { t } = useTranslation()
-  const [value, setValue] = useState('')
-  const [editing, setEditing] = useState(false)
-  if (isSet && !editing) {
-    return (
-      <div className="flex gap-2">
-        <div className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg bg-success-soft px-3 text-[0.8125rem] text-success">
-          <RiKey2Fill className="size-3.5 shrink-0" />
-          {fromEnv ? <span className="shrink-0 font-medium">{t('admin.secret.setEnv')}</span> : null}
-          <span className="min-w-0 flex-1 overflow-hidden whitespace-nowrap font-mono text-lg leading-none tracking-[0.15em]" title={t('admin.secret.set')}>
-            {"•".repeat(128)}
-          </span>
-        </div>
-        <Button type="button" size="sm" variant="secondary" onClick={() => setEditing(true)}>
-          {t('admin.secret.replace')}
-        </Button>
-        {fromEnv ? null : (
-          <Button type="button" size="sm" variant="ghost" onClick={onClear} loading={pending}>
-            {t('common.delete')}
-          </Button>
-        )}
-      </div>
-    )
-  }
-  return (
-    <form
-      className="flex gap-2"
-      onSubmit={(e) => {
-        e.preventDefault()
-        onSave(value.trim())
-        setValue('')
-        setEditing(false)
-      }}
-    >
-      <Input
-        type="password"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder={placeholder}
-        autoComplete="new-password"
-        autoFocus={editing}
-        className="h-8 text-[0.8125rem]"
-      />
-      <Button type="submit" size="sm" variant="secondary" disabled={!value.trim()} loading={pending}>
-        {t('common.save')}
-      </Button>
-      {editing ? (
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          onClick={() => {
-            setValue('')
-            setEditing(false)
-          }}
-        >
-          {t('common.cancel')}
-        </Button>
-      ) : null}
     </form>
   )
 }
@@ -339,11 +205,24 @@ function OAuthProviderSkeleton() {
   )
 }
 
+const CHECK_POLL_MS = 2000
+const CHECK_POLL_LIMIT_MS = 60_000
+let checkingSince: number | null = null
+
+function checkPollInterval(settings: AdminSettings | undefined): number | false {
+  if (!settings?.sources.some((s) => s.enabled && s.reachable === null)) {
+    checkingSince = null
+    return false
+  }
+  checkingSince ??= Date.now()
+  return Date.now() - checkingSince < CHECK_POLL_LIMIT_MS ? CHECK_POLL_MS : false
+}
+
 export function useAdminSettings() {
   return useQuery({
     queryKey: ['admin', 'settings'],
     queryFn: api.admin.settings,
-    refetchInterval: (query) => (query.state.data?.sources.some((s) => s.enabled && s.reachable === null) ? 2000 : false),
+    refetchInterval: (query) => checkPollInterval(query.state.data),
   })
 }
 

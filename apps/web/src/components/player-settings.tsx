@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next'
 import { WATCHED_THRESHOLDS, useAppearance } from '../lib/appearance'
 import { IS_IOS } from '../lib/device'
 import { type FavoriteGroup, rememberedAuthors } from '../lib/favorite-authors'
-import { Block } from '../pages/settings'
+import { Block } from './settings-block'
 import { restrictToVertical } from './layout-settings'
 import { KIND_ICONS } from './watch-section'
 
