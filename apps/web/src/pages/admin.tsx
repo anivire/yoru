@@ -258,7 +258,7 @@ export function AdminPage() {
         })}
         className="mb-8 grid w-full grid-cols-2 sm:inline-flex sm:w-auto"
       />
-      <div key={tab} className="animate-fade">
+      <div key={tab} className="grow-empty animate-fade">
         {tab === 'invites' ? <Invites /> : null}
         {tab === 'users' ? <Users /> : null}
         {tab === 'moderation' ? <Moderation /> : null}

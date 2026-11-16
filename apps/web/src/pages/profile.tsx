@@ -230,7 +230,7 @@ function ProfileStats({ username }: { username: string }) {
 function Overview({ profile }: { profile: UserProfile }) {
   const { t } = useTranslation()
   return (
-    <div className="flex flex-col gap-10">
+    <div className="grow-empty flex flex-col gap-10">
       {profile.favorites.length ? (
         <section>
           <h2 className="mb-4 text-lg font-semibold tracking-tight">{t('profile.favorites')}</h2>
@@ -242,7 +242,7 @@ function Overview({ profile }: { profile: UserProfile }) {
         </section>
       ) : null}
       {profile.relation !== 'self' && profile.canSeeList ? <TasteMatchCard username={profile.user.username} /> : null}
-      <section>
+      <section className="grow-empty">
         <h2 className="mb-4 text-lg font-semibold tracking-tight">{t('profile.activity')}</h2>
         <ActivityFeed
           queryKey={['profile', profile.user.username, 'feed']}

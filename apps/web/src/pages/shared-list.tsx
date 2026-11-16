@@ -49,7 +49,7 @@ export function ListBrowser({ queryKey, fetchPage }: { queryKey: readonly unknow
 
   if (isError) return <EmptyState mood="error" title={t('share.notFound')} description={t('share.notFoundHint')} />
   return (
-    <div>
+    <div className="grow-empty">
       <Segmented
         className="[&_button]:h-9"
         value={status}

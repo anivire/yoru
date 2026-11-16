@@ -30,7 +30,7 @@ export function Segmented<T extends string>({
     <div
       ref={ref}
       role="tablist"
-      className={cn('relative inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-xl bg-foreground/[0.05] p-1 scrollbar-none', className)}
+      className={cn('relative inline-flex max-w-full items-center gap-0.5 self-start overflow-x-auto rounded-xl bg-foreground/[0.05] p-1 scrollbar-none', className)}
     >
       <span
         aria-hidden

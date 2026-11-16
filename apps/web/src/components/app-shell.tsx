@@ -471,7 +471,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="flex-1">
+      <main className="flex flex-1 flex-col">
         <FriendTitlesProvider>{children}</FriendTitlesProvider>
       </main>
       <Footer scope="app" />
@@ -480,7 +480,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 export function Page({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn('page-frame w-full px-4 pb-8 pt-4 sm:px-6 sm:pt-(--page-top,2rem)', className)}>{children}</div>
+  return <div className={cn('page-frame w-full flex-1 px-4 pb-8 pt-4 sm:px-6 sm:pt-(--page-top,2rem)', className)}>{children}</div>
 }
 
 export function PageHeader({ title, description, actions }: { title: ReactNode; description?: ReactNode; actions?: ReactNode }) {

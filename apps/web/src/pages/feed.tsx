@@ -300,7 +300,7 @@ export function FeedPage() {
   const [scope, setScope] = useState<'me' | 'friends'>('me')
   return (
     <Page>
-      <div className="w-full">
+      <div className="grow-empty w-full">
         <PageHeader
           title={t('feed.title')}
           description={t('feed.description')}

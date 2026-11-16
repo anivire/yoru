@@ -126,7 +126,7 @@ export function ChangelogPage() {
 
   return (
     <Page>
-      <div className="w-full max-w-3xl">
+      <div className="grow-empty w-full max-w-3xl">
         <PageHeader title={t('changelog.title')} description={t('changelog.description')} />
         {log.isPending ? (
           <ChangelogSkeleton />

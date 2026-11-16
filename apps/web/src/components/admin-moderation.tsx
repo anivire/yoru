@@ -141,7 +141,7 @@ export function Moderation() {
   const { t } = useTranslation()
   const [view, setView] = useState<View>('comments')
   return (
-    <div className="flex flex-col gap-4">
+    <div className="grow-empty flex flex-col gap-4">
       <Segmented
         value={view}
         onChange={setView}

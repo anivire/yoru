@@ -23,6 +23,21 @@ body {
   margin-right: auto;
 }
 
+.empty-state {
+  flex-grow: 1;
+}
+
+.page-frame:has(> .empty-state, > .grow-empty .empty-state) {
+  display: flex;
+  flex-direction: column;
+}
+
+.grow-empty:has(.empty-state) {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
 @utility backdrop-glow {
   mask-image: radial-gradient(circle min(44rem, 90vw) at 50% 0%, #000 0%, rgb(0 0 0 / 0.85) 15%, rgb(0 0 0 / 0.55) 40%, rgb(0 0 0 / 0.25) 65%, rgb(0 0 0 / 0.08) 85%, transparent 100%);
 }
