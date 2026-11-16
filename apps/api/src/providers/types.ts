@@ -1,5 +1,6 @@
-import type { AnimeSummary, Genre, ProviderCategory, SearchFeature } from '@yoru/shared'
+import type { AnimeSummary, Genre, ProviderCategory, SearchFeature, StreamKind, StreamResult, Translation, VideoEpisodes } from '@yoru/shared'
 import type { anime } from '../db/schema'
+import type { UserRow } from '../lib/auth'
 
 export type AnimeData = typeof anime.$inferInsert
 
@@ -36,9 +37,18 @@ export interface SearchProvider extends ProviderBase {
   genres?(): Promise<Genre[]>
 }
 
+export interface VideoProvider extends ProviderBase {
+  kinds: StreamKind[]
+  manualMatch: boolean
+  episodes(malId: number): Promise<VideoEpisodes>
+  translations(malId: number, episode: number, kind: StreamKind): Promise<Translation[]>
+  stream(user: UserRow, malId: number, episode: number, translationId: string, author: string): Promise<StreamResult>
+}
+
 export interface ProviderMap {
   metadata: MetadataProvider
   search: SearchProvider
+  video: VideoProvider
 }
 
 export type ChainCategory = Extract<ProviderCategory, keyof ProviderMap>

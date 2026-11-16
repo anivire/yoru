@@ -57,7 +57,7 @@ import type {
   StreamResult,
   Translation,
   User,
-  VersionInfo, AnimeExtras, AnilibriaRelease, Screenshot } from '@yoru/shared'
+  VersionInfo, AnimeExtras, Screenshot, VideoEpisodes, VideoProviderInfo } from '@yoru/shared'
 import type { FeedScope } from './appearance'
 
 export class ApiError extends Error {
@@ -132,7 +132,6 @@ export const api = {
   match: (malId: number) => get<ProviderMatch>(`/anime/${malId}/match`),
   links: (malId: number) => get<AnimeLink[]>(`/anime/${malId}/links`),
   extras: (malId: number) => get<AnimeExtras>(`/anime/${malId}/extras`),
-  anilibria: (malId: number) => get<AnilibriaRelease>(`/stream/${malId}/anilibria`),
   screenshots: (malId: number) => get<Screenshot[]>(`/anime/${malId}/screenshots`),
   setMatch: (malId: number, providerId: number | null) => request<ProviderMatch>('PUT', `/anime/${malId}/match`, { providerId }),
   matchSearch: (q: string) => get<ProviderCandidate[]>(`/anime/match/search${qs({ q })}`),
@@ -194,9 +193,12 @@ export const api = {
   saveProgress: (malId: number, episode: number, position: number, duration: number, threshold?: number) =>
     request<{ ok: true }>('PUT', `/progress/${malId}/${episode}`, { position, duration, threshold }),
 
-  translations: (malId: number, episode: number, kind: StreamKind) =>
-    get<Translation[]>(`/stream/${malId}/translations${qs({ episode, kind })}`),
-  stream: (translationId: number, author: string) => get<StreamResult>(`/stream/translation/${translationId}${qs({ author })}`),
+  translations: (malId: number, provider: string, episode: number, kind: StreamKind) =>
+    get<Translation[]>(`/stream/${malId}/${provider}/translations${qs({ episode, kind })}`),
+  stream: (malId: number, provider: string, episode: number, translation: string, author: string) =>
+    get<StreamResult>(`/stream/${malId}/${provider}/stream${qs({ episode, translation, author })}`),
+  videoProviders: () => get<VideoProviderInfo[]>('/stream/providers'),
+  videoEpisodes: (malId: number, provider: string) => get<VideoEpisodes>(`/stream/${malId}/${provider}/episodes`),
 
   notifications: () => get<NotificationList>('/notifications'),
   readNotifications: (body: { ids?: number[]; socialIds?: number[] } = {}) => request<{ ok: true }>('POST', '/notifications/read', body),

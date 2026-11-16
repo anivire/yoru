@@ -217,7 +217,7 @@ export interface ProviderCandidate {
 }
 
 export interface Translation {
-  id: number
+  id: string
   kind: StreamKind
   author: string
   priority: number
@@ -243,8 +243,21 @@ export interface AnilibriaRelease {
   episodes: AnilibriaEpisode[]
 }
 
+export interface VideoProviderInfo {
+  id: string
+  name: string
+  kinds: StreamKind[]
+  manualMatch: boolean
+}
+
+export interface VideoEpisodes {
+  matched: boolean
+  title: string | null
+  episodes: number[]
+}
+
 export interface StreamResult {
-  translationId: number
+  translationId: string
   author: string
   sources: StreamSource[]
   subtitlesUrl: string | null
@@ -604,12 +617,10 @@ export const providerMatchSchema = z.object({
   providerId: z.number().int().positive().nullable(),
 })
 
-export const ROOM_SOURCES = ['anime365', 'anilibria'] as const
-export type RoomSource = (typeof ROOM_SOURCES)[number]
 
 export const roomMediaSchema = z.object({
   episode: z.number().int().positive().nullable(),
-  source: z.enum(ROOM_SOURCES),
+  source: z.string().min(1).max(64),
   kind: z.enum(STREAM_KINDS),
   author: z.string().max(300).nullable(),
 })

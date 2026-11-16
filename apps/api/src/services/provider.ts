@@ -69,7 +69,7 @@ export async function listTranslations(malId: number, episode: number, kind: Str
   const ep = await providerEpisode(malId, episode)
   const rows = await anime365.translations(ep.id, kind)
   return rows.map((t) => ({
-    id: t.id,
+    id: String(t.id),
     kind,
     author: t.authorsSummary || t.title || t.type,
     priority: Number(t.priority) || 0,
@@ -89,7 +89,7 @@ export async function streamTranslation(user: UserRow, translationId: number, au
     const embed = await anime365.embed(translationId, token)
     if (!embed.sources.length) badRequest('NO_SOURCES')
     return {
-      translationId,
+      translationId: String(translationId),
       author,
       sources: embed.sources,
       subtitlesUrl: embed.subtitlesUrl ? `/api/stream/subtitles/${translationId}` : null,

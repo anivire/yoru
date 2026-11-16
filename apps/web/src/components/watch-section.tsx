@@ -1,7 +1,7 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { type AnimeDetails, type Episode, type ListEntry, type RoomMedia, STREAM_KINDS, type StreamKind } from '@yoru/shared'
+import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
+import { type AnimeDetails, type Episode, type ListEntry, type RoomMedia, STREAM_KINDS, type StreamKind, type VideoEpisodes } from '@yoru/shared'
 import { Button, Mascot, Select, Spinner, StarIcon, Tooltip, cn } from '@yoru/ui'
-import { RiClosedCaptioningFill, RiMicFill, RiSettings3Fill, RiVolumeUpFill } from '@remixicon/react'
+import { RiClosedCaptioningFill, RiMicFill, RiPlayCircleFill, RiSettings3Fill, RiVolumeUpFill } from '@remixicon/react'
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
@@ -34,18 +34,22 @@ export const KIND_ICONS: Record<StreamKind, typeof RiMicFill> = {
   raw: RiVolumeUpFill,
 }
 
-type StreamProvider = 'anime365' | 'anilibria'
-
 function sourceKey(malId: number) {
   return `yoru:source:${malId}`
 }
 
-function parseSource(value: string | null): StreamProvider | null {
-  return value === 'anime365' || value === 'anilibria' ? value : null
-}
-
 function LibriaMark() {
   return <span className="grid size-4 place-items-center rounded-sm bg-[#b32121] text-[0.5625rem] font-extrabold leading-none text-white">A</span>
+}
+
+function ProviderMark({ id }: { id: string }) {
+  if (id === 'anime365') return <img src={ANIME365_LOGO} alt="" className="size-4 rounded-sm bg-white object-contain" />
+  if (id === 'anilibria') return <LibriaMark />
+  return <RiPlayCircleFill />
+}
+
+function hasEpisodes(data: VideoEpisodes | undefined, episode: number | null): boolean {
+  return Boolean(data?.matched && data.episodes.length && (!episode || data.episodes.includes(episode)))
 }
 
 function authorKey(malId: number, kind: StreamKind) {
@@ -79,21 +83,59 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
   const [params, setParams] = useSearchParams()
   const { defaultKind, preferredAuthors, setPreferredAuthors, pageWidth, autoNext, watchedAt } = useAppearance()
   const side = pageWidth !== '3xl' && pageWidth !== '4xl'
-  const source = parseSource(params.get('source')) ?? parseSource(localStorage.getItem(sourceKey(malId))) ?? 'anime365'
-  const libria = source === 'anilibria'
-  const kind = libria ? 'voice' : (parseKind(params.get('kind')) ?? parseKind(localStorage.getItem(kindKey(malId))) ?? defaultKind)
-
-  const match = useQuery({ queryKey: keys.match(malId), queryFn: () => api.match(malId) })
-  const episodes = useQuery({ queryKey: keys.episodes(malId), queryFn: () => api.episodes(malId) })
-  const libriaRelease = useQuery({ queryKey: ['anilibria', malId], queryFn: () => api.anilibria(malId), enabled: libria, staleTime: 30 * 60_000, retry: 1 })
-  const libriaEpisodes = useMemo(() => new Map((libriaRelease.data?.episodes ?? []).map((e) => [e.number, e])), [libriaRelease.data])
-  const list = useMemo(() => {
-    const base = episodes.data ?? []
-    if (!libria) return base
-    return base.map((e) => ({ ...e, available: libriaEpisodes.has(e.number) }))
-  }, [episodes.data, libria, libriaEpisodes])
   const paramEpisode = Number(params.get('episode')) || null
-  const episode = paramEpisode ?? (episodes.data ? defaultEpisode(list, entry) : null)
+
+  const providers = useQuery({ queryKey: ['video-providers'], queryFn: api.videoProviders, staleTime: 5 * 60_000 })
+  const providerList = providers.data ?? []
+  const chosen = params.get('source') ?? localStorage.getItem(sourceKey(malId))
+  const explicit = providerList.some((p) => p.id === chosen) ? chosen : null
+  const sourceQueries = useQueries({
+    queries: providerList.map((p) => ({
+      queryKey: ['video-episodes', malId, p.id],
+      queryFn: () => api.videoEpisodes(malId, p.id),
+      staleTime: 10 * 60_000,
+      retry: 1,
+      enabled: false,
+    })),
+  })
+  let autoIndex = 0
+  let autoSettled = Boolean(explicit)
+  if (!explicit) {
+    for (let i = 0; i < providerList.length; i++) {
+      const query = sourceQueries[i]!
+      if (!query.isFetched) {
+        autoIndex = i
+        break
+      }
+      if (hasEpisodes(query.data, paramEpisode)) {
+        autoIndex = i
+        autoSettled = true
+        break
+      }
+      if (i === providerList.length - 1) autoSettled = true
+    }
+  }
+  const source = explicit ?? providerList[autoIndex]?.id ?? null
+  const provider = providerList.find((p) => p.id === source)
+  const sourceQuery = useQuery({
+    queryKey: ['video-episodes', malId, source],
+    queryFn: () => api.videoEpisodes(malId, source!),
+    staleTime: 10 * 60_000,
+    retry: 1,
+    enabled: Boolean(source),
+  })
+  const sourceEpisodes = autoSettled ? sourceQuery.data : undefined
+  const sourcePending = providers.isPending || (Boolean(source) && (!autoSettled || sourceQuery.isPending))
+  const kinds = provider?.kinds ?? STREAM_KINDS
+  const preferredKind = parseKind(params.get('kind')) ?? parseKind(localStorage.getItem(kindKey(malId))) ?? defaultKind
+  const kind = kinds.includes(preferredKind) ? preferredKind : (kinds[0] ?? preferredKind)
+  const singleKind = kinds.length === 1
+
+  const match = useQuery({ queryKey: keys.match(malId), queryFn: () => api.match(malId), enabled: Boolean(provider?.manualMatch) })
+  const episodes = useQuery({ queryKey: keys.episodes(malId), queryFn: () => api.episodes(malId) })
+  const sourceSet = useMemo(() => new Set(sourceEpisodes?.episodes ?? []), [sourceEpisodes])
+  const list = useMemo(() => (episodes.data ?? []).map((e) => ({ ...e, available: sourceSet.has(e.number) })), [episodes.data, sourceSet])
+  const episode = paramEpisode ?? (episodes.data && sourceEpisodes ? defaultEpisode(list, entry) : null)
   const current = list.find((e) => e.number === episode)
   const available = Boolean(current?.available)
 
@@ -110,16 +152,16 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
   )
 
   const translations = useQuery({
-    queryKey: ['translations', malId, episode, kind],
-    queryFn: () => api.translations(malId, episode!, kind),
-    enabled: Boolean(!libria && episode && available && match.data?.providerId),
+    queryKey: ['translations', malId, source, episode, kind],
+    queryFn: () => api.translations(malId, source!, episode!, kind),
+    enabled: Boolean(source && episode && available),
   })
 
   const inRoom = Boolean(room)
   const playerColumnRef = useRef<HTMLDivElement>(null)
   const roomAuthor = room?.media?.author ?? null
 
-  const [pickedId, setPickedId] = useState<number | null>(null)
+  const [pickedId, setPickedId] = useState<string | null>(null)
   const translationId = useMemo(() => {
     const items = translations.data
     if (!items?.length) return null
@@ -134,9 +176,9 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
   const translation = translations.data?.find((x) => x.id === translationId)
   const favorite = translation ? isFavorite(preferredAuthors, kind, translation.author) : false
   const stream = useQuery({
-    queryKey: ['stream', translationId],
-    queryFn: () => api.stream(translationId!, translation?.author ?? ''),
-    enabled: Boolean(translationId),
+    queryKey: ['stream', malId, source, episode, translationId],
+    queryFn: () => api.stream(malId, source!, episode!, translationId!, translation?.author ?? ''),
+    enabled: Boolean(source && episode && translationId),
     staleTime: 10 * 60_000,
     retry: false,
   })
@@ -145,6 +187,7 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
   const prevEpisode = useMemo(() => [...list].reverse().find((e) => e.number < (episode ?? 0) && e.available)?.number, [list, episode])
   const shareMedia = (patch: Partial<RoomMedia>) => {
     if (room?.status !== 'open') return
+    if (!source) return
     room.sendMedia({ episode, source, kind, author: translation?.author ?? null, ...patch })
   }
   const goTo = (n: number) => {
@@ -162,7 +205,7 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
     const patch: Record<string, string> = {}
     if (media.episode && media.episode !== episode) patch.episode = String(media.episode)
     if (media.source !== source) patch.source = media.source
-    if (media.kind !== kind && media.source !== 'anilibria') patch.kind = media.kind
+    if (media.kind !== kind) patch.kind = media.kind
     if (Object.keys(patch).length) setParam(patch)
   }, [roomMedia, roomMediaSeq, episode, source, kind, setParam])
 
@@ -189,8 +232,7 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
   const streamError = stream.error instanceof ApiError ? stream.error : null
   const tokenProblem = streamError?.message === 'ANIME365_TOKEN_MISSING' || streamError?.message === 'ANIME365_TOKEN_INVALID'
 
-  const libriaEpisode = episode ? libriaEpisodes.get(episode) : undefined
-  const lengthKey = `${malId}:${episode}:${libria ? 'libria' : translationId}`
+  const lengthKey = `${malId}:${episode}:${source}:${translationId}`
   const [videoLength, setVideoLength] = useState<{ key: string; value: number } | null>(null)
   const length = videoLength?.key === lengthKey ? videoLength.value : 0
   const skips = useQuery({
@@ -218,48 +260,35 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
     onPrev: prevEpisode ? () => goTo(prevEpisode) : undefined,
   }
 
+  const providerName = provider?.name ?? ''
   let body: ReactNode
-  if (libria) {
-    if (libriaRelease.isPending || episodes.isPending) {
-      body = (
-        <PlayerMessage mood="sleepy">
-          <Spinner />
-        </PlayerMessage>
-      )
-    } else if (libriaRelease.isError) {
-      body = (
-        <PlayerMessage
-          mood="error"
-          action={
-            <Button size="sm" variant="secondary" onClick={() => libriaRelease.refetch()}>
-              {t('common.retry')}
-            </Button>
-          }
-        >
-          {errorMessage(libriaRelease.error, t)}
-        </PlayerMessage>
-      )
-    } else if (!libriaRelease.data?.releaseId) {
-      body = <PlayerMessage>{t('player.noLibria')}</PlayerMessage>
-    } else if (!episode) {
-      body = <PlayerMessage mood="sleepy" />
-    } else if (!libriaEpisode) {
-      body = <PlayerMessage mood="sleepy">{t('player.notAvailable')}</PlayerMessage>
-    } else {
-      body = <Player key={`${episode}:libria`} sources={libriaEpisode.sources} subtitlesUrl={null} {...playerProps} />
-    }
-  } else if (match.isPending || episodes.isPending) {
+  if (providers.isSuccess && !providerList.length) {
+    body = <PlayerMessage>{t('player.noVideoProviders')}</PlayerMessage>
+  } else if (sourcePending || episodes.isPending) {
     body = (
       <PlayerMessage mood="sleepy">
         <Spinner />
       </PlayerMessage>
     )
-  } else if (!match.data?.providerId) {
-    body = <PlayerMessage>{t('player.noMatch')}</PlayerMessage>
+  } else if (!sourceEpisodes) {
+    body = (
+      <PlayerMessage
+        mood="error"
+        action={
+          <Button size="sm" variant="secondary" onClick={() => void sourceQuery.refetch()}>
+            {t('common.retry')}
+          </Button>
+        }
+      >
+        {errorMessage(sourceQuery.error, t)}
+      </PlayerMessage>
+    )
+  } else if (!sourceEpisodes.matched) {
+    body = <PlayerMessage>{t('player.noMatch', { provider: providerName })}</PlayerMessage>
   } else if (!episode) {
     body = <PlayerMessage mood="sleepy" />
   } else if (!available) {
-    body = <PlayerMessage mood="sleepy">{t('player.notAvailable')}</PlayerMessage>
+    body = <PlayerMessage mood="sleepy">{t('player.notAvailable', { provider: providerName })}</PlayerMessage>
   } else if (translations.isPending || (translationId && stream.isPending)) {
     body = (
       <PlayerMessage mood="thinking">
@@ -322,21 +351,20 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
       >
         <Select
           className={cn('h-10 w-full min-w-0 rounded-xl px-3.5', side && 'sm:w-40')}
-          value={source}
+          disabled={!providerList.length}
+          value={source ?? undefined}
           onValueChange={(v) => {
             localStorage.setItem(sourceKey(malId), v)
             setParam({ source: v })
-            shareMedia({ source: v === 'anilibria' ? 'anilibria' : 'anime365', kind: v === 'anilibria' ? 'voice' : kind, author: null })
+            const next = providerList.find((p) => p.id === v)
+            shareMedia({ source: v, kind: next && !next.kinds.includes(kind) ? (next.kinds[0] ?? kind) : kind, author: null })
           }}
-          icon={libria ? <LibriaMark /> : <img src={ANIME365_LOGO} alt="" className="size-4 rounded-sm bg-white object-contain" />}
-          options={[
-            { value: 'anime365', label: 'Anime365' },
-            { value: 'anilibria', label: 'AniLibria' },
-          ]}
+          icon={source ? <ProviderMark id={source} /> : undefined}
+          options={providerList.map((p) => ({ value: p.id, label: p.name }))}
         />
         <Select
           className={cn('h-10 w-full min-w-0 rounded-xl px-3.5', side && 'sm:w-56')}
-          disabled={libria}
+          disabled={singleKind}
           value={kind}
           icon={(() => {
             const Icon = KIND_ICONS[kind]
@@ -347,31 +375,22 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
             setParam({ kind: v })
             shareMedia({ kind: parseKind(v) ?? kind, author: null })
           }}
-          options={STREAM_KINDS.map((k) => ({ value: k, label: t(`player.${k}`) }))}
+          options={kinds.map((k) => ({ value: k, label: t(`player.${k}`) }))}
         />
-        {libria ? (
-          <Select
-            className={cn('col-span-full h-10 w-full min-w-0 rounded-xl px-3.5', side ? 'max-sm:order-1 sm:w-72' : 'order-1')}
-            disabled
-            value="anilibria"
-            onValueChange={() => undefined}
-            options={[{ value: 'anilibria', label: 'AniLibria', hint: libriaRelease.data?.title ?? undefined }]}
-          />
-        ) : (
         <div className={cn('col-span-full flex min-w-0 gap-2', side ? 'max-sm:order-1' : 'order-1')}>
           <Select
             className={cn('h-10 w-full min-w-0 flex-1 rounded-xl px-3.5', side && 'sm:w-72 sm:flex-none')}
             disabled={!translations.data?.length}
             placeholder={t('player.author')}
-            value={translationId ? String(translationId) : undefined}
+            value={translationId ?? undefined}
             onValueChange={(v) => {
-              const tr = translations.data?.find((x) => String(x.id) === v)
+              const tr = translations.data?.find((x) => x.id === v)
               if (tr) localStorage.setItem(authorKey(malId, kind), tr.author)
-              setPickedId(Number(v))
+              setPickedId(v)
               if (tr) shareMedia({ author: tr.author })
             }}
             options={(translations.data ?? []).map((x) => ({
-              value: String(x.id),
+              value: x.id,
               label: x.author,
               hint: [x.height ? `${x.height}p` : null, x.qualityType?.toUpperCase()].filter(Boolean).join(' · ') || undefined,
             }))}
@@ -394,9 +413,8 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
             </Button>
           </Tooltip>
         </div>
-        )}
         <div className={cn('flex justify-end gap-2', side && 'sm:ml-auto')}>
-          {libria ? null : <MatchDialog malId={malId} match={match.data} defaultQuery={anime.title} />}
+          {provider?.manualMatch ? <MatchDialog malId={malId} match={match.data} defaultQuery={anime.title} /> : null}
         </div>
       </div>
       <div className={cn('grid gap-5', side && 'desk:grid-cols-[minmax(0,1fr)_22rem]')}>

@@ -1,6 +1,7 @@
 import { env } from '../env'
 import { getSetting, setSetting } from '../lib/settings'
 import { builtinMetadata, builtinSearch } from './builtin'
+import { builtinVideo } from './video'
 import type { ChainCategory, ProviderMap } from './types'
 
 export interface ChainEntry {
@@ -10,20 +11,21 @@ export interface ChainEntry {
 
 type ProviderLists = { [K in ChainCategory]: ProviderMap[K][] }
 
-const external: ProviderLists = { metadata: [], search: [] }
+const external: ProviderLists = { metadata: [], search: [], video: [] }
 
 export function setExternalProviders<K extends ChainCategory>(category: K, providers: ProviderMap[K][]) {
   ;(external as Record<ChainCategory, unknown[]>)[category] = providers
 }
 
 export function knownProviders<K extends ChainCategory>(category: K): ProviderMap[K][] {
-  const builtin: ProviderLists = { metadata: builtinMetadata, search: builtinSearch }
+  const builtin: ProviderLists = { metadata: builtinMetadata, search: builtinSearch, video: builtinVideo }
   return [...builtin[category], ...external[category]] as ProviderMap[K][]
 }
 
 function defaultOrder(category: ChainCategory): string[] {
   const legacyAnime365 = (getSetting('metadata_source') ?? env.metadataSource) === 'anime365'
   if (category === 'metadata') return legacyAnime365 ? ['anime365', 'jikan'] : ['jikan', 'anime365']
+  if (category === 'video') return ['anime365', 'anilibria']
   return ['jikan', 'shikimori', 'anime365']
 }
 
