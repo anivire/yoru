@@ -86,6 +86,8 @@ function DayBlock({ day }: { day: Day }) {
   )
 }
 
+const LINE_WIDTHS = ['w-full', 'w-11/12', 'w-5/6']
+
 function ChangelogSkeleton() {
   return (
     <div className="relative">
@@ -94,13 +96,13 @@ function ChangelogSkeleton() {
         <section key={i} className="relative pb-10 pl-8 last:pb-0 sm:grid sm:grid-cols-[9rem_1fr] sm:gap-8 sm:pl-0">
           <span aria-hidden className="absolute left-0 top-1.5 size-3 rounded-full bg-muted ring-4 ring-background sm:left-[9.5rem]" />
           <div className="mb-3 flex flex-col gap-1.5 sm:mb-0 sm:items-end">
-            <Skeleton className="h-5 w-24 rounded-md" />
-            <Skeleton className="h-4 w-16 rounded-md" />
+            <Skeleton className="h-5 w-36 max-w-full rounded-md" />
+            <Skeleton className="h-4 w-32 max-w-full rounded-md" />
           </div>
           <div className="flex flex-col gap-2 sm:pl-6">
-            <Skeleton className="h-5 w-16 rounded-md" />
+            <Skeleton className="h-5 w-32 rounded-md" />
             {Array.from({ length: count }, (_, j) => (
-              <Skeleton key={j} className="h-5 w-3/4 rounded-md" />
+              <Skeleton key={j} className={cn('h-5 rounded-md', LINE_WIDTHS[j % LINE_WIDTHS.length])} />
             ))}
           </div>
         </section>
