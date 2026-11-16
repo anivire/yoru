@@ -27,12 +27,20 @@ body {
   flex-grow: 1;
 }
 
-.page-frame:has(> .empty-state, > .grow-empty .empty-state) {
+.skeleton-fill {
+  flex: 1 1 0;
+  min-height: 20rem;
+  max-height: 100dvh;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, black calc(100% - 6rem), transparent);
+}
+
+.page-frame:has(> .empty-state, > .grow-empty .empty-state, > .skeleton-fill, > .grow-empty .skeleton-fill) {
   display: flex;
   flex-direction: column;
 }
 
-.grow-empty:has(.empty-state) {
+.grow-empty:has(.empty-state, .skeleton-fill) {
   display: flex;
   flex-direction: column;
   flex-grow: 1;

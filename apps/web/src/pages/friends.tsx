@@ -34,7 +34,7 @@ function PeopleSearch() {
   else if (!results.data?.length) content = <EmptyState mood="thinking" title={query ? t('friends.noResults') : t('friends.noUsers')} />
   else content = <UserGrid users={results.data} />
   return (
-    <div className="flex flex-col gap-4">
+    <div className="grow-empty flex flex-col gap-4">
       <div className="relative">
         <RiSearchLine className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('friends.searchPlaceholder')} className="h-11 rounded-xl pl-10" autoFocus />

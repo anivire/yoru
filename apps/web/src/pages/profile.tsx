@@ -273,7 +273,7 @@ function TabSkeleton({ tab }: { tab: Tab }) {
   if (tab === 'stats') return <StatsSkeleton />
   if (tab === 'list') {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="grow-empty flex flex-col gap-4">
         <Skeleton className="h-11 w-full max-w-3xl rounded-xl" />
         <Skeleton className="h-11 w-full rounded-xl" />
         <PosterGridSkeleton />
@@ -282,7 +282,7 @@ function TabSkeleton({ tab }: { tab: Tab }) {
   }
   if (tab === 'friends') return <UserGridSkeleton />
   return (
-    <div className="flex flex-col gap-10">
+    <div className="grow-empty flex flex-col gap-10">
       <section className="rounded-xl bg-surface p-4 sm:p-5">
         <Skeleton className="mb-3 h-5 w-28 rounded-md" />
         <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-3 gap-y-4">
@@ -294,7 +294,7 @@ function TabSkeleton({ tab }: { tab: Tab }) {
           ))}
         </div>
       </section>
-      <section>
+      <section className="grow-empty">
         <Skeleton className="mb-4 h-7 w-32 rounded-md" />
         <FeedSkeleton />
       </section>
@@ -302,10 +302,10 @@ function TabSkeleton({ tab }: { tab: Tab }) {
   )
 }
 
-export function UserGridSkeleton({ count = 6 }: { count?: number }) {
+export function UserGridSkeleton() {
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,22rem),1fr))] gap-3">
-      {Array.from({ length: count }, (_, i) => (
+    <div className="skeleton-fill grid auto-rows-min grid-cols-[repeat(auto-fill,minmax(min(100%,22rem),1fr))] gap-3">
+      {Array.from({ length: 40 }, (_, i) => (
         <div key={i} className="flex items-center gap-3 rounded-xl bg-surface p-3">
           <Skeleton className="size-14 shrink-0 rounded-full" />
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -320,7 +320,7 @@ export function UserGridSkeleton({ count = 6 }: { count?: number }) {
 
 function ProfileSkeleton() {
   return (
-    <div>
+    <div className="grow-empty">
       <header className="mb-8">
         <Skeleton className="h-28 rounded-2xl sm:h-44" />
         <div className="relative z-10 -mt-12 flex flex-wrap items-end gap-4 px-2 sm:-mt-14 sm:px-5">

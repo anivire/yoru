@@ -222,9 +222,9 @@ function DaySection({ day, showUser }: { day: Day; showUser: boolean }) {
 
 export function FeedSkeleton() {
   return (
-    <div className="relative">
+    <div className="skeleton-fill relative">
       <span aria-hidden className="absolute bottom-0 left-4 top-4 w-px -translate-x-1/2 bg-border" />
-      {[[3, 1], [2]].map((groups, i) => (
+      {[[3, 1], [2], [4, 2], [1, 3], [2, 2]].map((groups, i) => (
         <section key={i} className="relative mb-12 last:mb-0">
           <div className="relative mb-5 flex items-center gap-3">
             <span className="grid size-8 shrink-0 place-items-center">

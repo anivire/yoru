@@ -21,14 +21,15 @@ export function AnimeCardSkeleton() {
   )
 }
 
-export function PosterGridSkeleton({ count = 12 }: { count?: number }) {
-  return (
+export function PosterGridSkeleton({ count }: { count?: number }) {
+  const grid = (
     <PosterGrid fullRows>
-      {Array.from({ length: count }, (_, i) => (
+      {Array.from({ length: count ?? 48 }, (_, i) => (
         <AnimeCardSkeleton key={i} />
       ))}
     </PosterGrid>
   )
+  return count ? grid : <div className="skeleton-fill">{grid}</div>
 }
 
 export function PosterRailSkeleton({ count = 8 }: { count?: number }) {
@@ -254,13 +255,13 @@ export function ScheduleSkeleton() {
   )
 }
 
-export function ListTableSkeleton({ rows = 10 }: { rows?: number }) {
+export function ListTableSkeleton({ rows }: { rows?: number }) {
   return (
-    <div className="rounded-2xl bg-surface p-1.5">
+    <div className={cn('rounded-2xl bg-surface p-1.5', !rows && 'skeleton-fill')}>
       <div className="px-3 pb-1.5 pt-2">
         <TextLine className="text-xs" bar="w-24" />
       </div>
-      {Array.from({ length: rows }, (_, i) => (
+      {Array.from({ length: rows ?? 30 }, (_, i) => (
         <div key={i} className="flex items-center gap-3 px-3 py-2">
           <Skeleton className="h-14 w-10 shrink-0 rounded-md" />
           <div className="min-w-0 flex-1">
