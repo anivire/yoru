@@ -17,7 +17,7 @@ import { StatsSkeleton, StatsView } from './stats'
 
 const PAGE_SIZE = 48
 
-export function ListBrowser({ queryKey, fetchPage }: { queryKey: readonly unknown[]; fetchPage: (params: Record<string, string | number | undefined>) => Promise<ListResponse> }) {
+export function ListBrowser({ queryKey, fetchPage, external = false }: { queryKey: readonly unknown[]; fetchPage: (params: Record<string, string | number | undefined>) => Promise<ListResponse>; external?: boolean }) {
   const { t } = useTranslation()
   const { status, filters, set } = useListParams()
   const [view, setView] = useListView()
@@ -71,7 +71,7 @@ export function ListBrowser({ queryKey, fetchPage }: { queryKey: readonly unknow
       ) : !items.length ? (
         <EmptyState mood="sleepy" title={t('lists.empty')} />
       ) : view === 'table' ? (
-        <ListTable items={items} external />
+        <ListTable items={items} external={external} />
       ) : (
         <PosterGrid fullRows={hasNextPage}>
           {items.map((e) => (
@@ -83,7 +83,7 @@ export function ListBrowser({ queryKey, fetchPage }: { queryKey: readonly unknow
               rewatches={e.rewatches}
               userScore={e.score}
               coloredScore
-              href={`https://myanimelist.net/anime/${e.malId}`}
+              href={external ? `https://myanimelist.net/anime/${e.malId}` : undefined}
             />
           ))}
         </PosterGrid>
@@ -143,7 +143,7 @@ export function SharedListPage() {
               />
             ) : null}
           </div>
-          {!info ? <PosterGridSkeleton /> : tab === 'stats' ? <SharedStats token={token} /> : <ListBrowser queryKey={['public-list', token]} fetchPage={(params) => api.publicList(token, params)} />}
+          {!info ? <PosterGridSkeleton /> : tab === 'stats' ? <SharedStats token={token} /> : <ListBrowser queryKey={['public-list', token]} fetchPage={(params) => api.publicList(token, params)} external />}
         </>
       )}
     </PublicShell>
