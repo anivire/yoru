@@ -191,15 +191,15 @@ function ProfileHeader({ profile }: { profile: UserProfile }) {
   )
 }
 
-function FriendGrid({ username, own }: { username: string; own: boolean }) {
+function FriendGrid({ username }: { username: string }) {
   const { t } = useTranslation()
   const friends = useQuery({ queryKey: ['profile', username, 'friends'], queryFn: () => api.profileFriends(username) })
   if (friends.isPending) return <TabSkeleton tab="friends" />
   if (!friends.data?.length) return <EmptyState mood="sleepy" title={t('profile.noFriends')} />
-  return <UserGrid users={friends.data} showFriends={!own} />
+  return <UserGrid users={friends.data} />
 }
 
-export function UserGrid({ users, action, showFriends = true }: { users: PersonCard[]; action?: (user: PersonCard) => ReactNode; showFriends?: boolean }) {
+export function UserGrid({ users, action }: { users: PersonCard[]; action?: (user: PersonCard) => ReactNode }) {
   const { t } = useTranslation()
   return (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,22rem),1fr))] gap-3">
@@ -213,7 +213,7 @@ export function UserGrid({ users, action, showFriends = true }: { users: PersonC
               <span className="flex min-w-0 flex-col gap-0.5">
                 <span className="flex min-w-0 items-center gap-2">
                   <span className="truncate text-sm font-semibold">{nameOf(user)}</span>
-                  {showFriends && user.relation === 'friend' ? <span className="shrink-0 rounded-full bg-accent-soft px-2 py-0.5 text-[0.6875rem] font-medium text-accent">{t('friends.isFriend')}</span> : null}
+                  {user.relation === 'friend' ? <span className="shrink-0 rounded-full bg-accent-soft px-2 py-0.5 text-[0.6875rem] font-medium text-accent">{t('friends.isFriend')}</span> : null}
                 </span>
                 <span className="truncate text-xs text-muted-foreground">
                   @{user.username}
@@ -400,7 +400,7 @@ export function ProfilePage() {
               ) : shownTab === 'stats' ? (
                 <ProfileStats username={username} />
               ) : (
-                <FriendGrid username={username} own={data.relation === 'self'} />
+                <FriendGrid username={username} />
               )}
             </>
           )}

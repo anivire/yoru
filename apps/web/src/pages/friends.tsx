@@ -72,7 +72,7 @@ export function FriendsPage() {
         <UserGridSkeleton />
       ) : !data ? null : view === 'friends' ? (
         data.friends.length ? (
-          <UserGrid users={data.friends} showFriends={false} />
+          <UserGrid users={data.friends} />
         ) : (
           <EmptyState mood="sleepy" title={t('friends.empty')} description={t('friends.emptyHint')} action={
               <Button variant="accent" onClick={() => setView('search')}>
