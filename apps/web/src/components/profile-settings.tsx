@@ -1,13 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { ProfileSettings, ProfileVisibility, User, Visibility } from '@yoru/shared'
-import { Button, Card, Input, Select, Skeleton, Switch, Textarea, toast } from '@yoru/ui'
-import { RiDeleteBin6Line, RiImageAddFill } from '@remixicon/react'
-import { type ChangeEvent, type ReactNode, useRef, useState } from 'react'
+import { PROFILE_FAVORITES_MAX, type ProfileSettings, type ProfileVisibility, type User, type Visibility } from '@yoru/shared'
+import { Button, Card, Image, Input, Select, Skeleton, Switch, Textarea, cn, toast } from '@yoru/ui'
+import { RiAddFill, RiCheckFill, RiCloseFill, RiDeleteBin6Line, RiImageAddFill, RiImageFill, RiSearchLine } from '@remixicon/react'
+import { type ChangeEvent, type ReactNode, useDeferredValue, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { errorMessage, keys, useUser } from '../lib/queries'
 import { Block } from '../pages/settings'
 import { UserGrid } from '../pages/profile'
+import { AnimeTitle } from '../lib/anime-title'
 import { UserAvatar } from './user-avatar'
 
 const AVATAR_SIZE = 256
@@ -139,6 +140,83 @@ function ProfileForm({ initial }: { initial: ProfileSettings }) {
   )
 }
 
+function ShowcaseEditor({ profile }: { profile: ProfileSettings }) {
+  const { t } = useTranslation()
+  const client = useQueryClient()
+  const [q, setQ] = useState('')
+  const query = useDeferredValue(q.trim())
+  const results = useQuery({ queryKey: ['list', 'showcase', query], queryFn: () => api.list({ q: query, limit: 8 }), enabled: query.length > 0 })
+  const save = useMutation({
+    mutationFn: api.updateProfile,
+    onSuccess: (next) => {
+      client.setQueryData(['my-profile'], next)
+      void client.invalidateQueries({ queryKey: ['profile'] })
+    },
+    onError: (e) => toast.error(errorMessage(e, t)),
+  })
+  const ids = profile.favorites.map((a) => a.malId)
+  const full = ids.length >= PROFILE_FAVORITES_MAX
+  return (
+    <Block title={t('profileSettings.showcase')} description={t('profileSettings.showcaseHint', { count: PROFILE_FAVORITES_MAX })}>
+      <Card className="flex flex-col gap-4 p-5">
+        {profile.favorites.length ? (
+          <div className="flex flex-wrap gap-3">
+            {profile.favorites.map((anime) => {
+              const banner = profile.bannerMalId === anime.malId
+              return (
+                <div key={anime.malId} className="group relative w-20">
+                  <div className={cn('aspect-[2/3] overflow-hidden rounded-lg bg-muted', banner && 'ring-2 ring-accent ring-offset-2 ring-offset-surface')}>
+                    {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="size-full object-cover" /> : null}
+                  </div>
+                  <div className="absolute inset-x-1 top-1 flex justify-between">
+                    <button type="button" aria-pressed={banner} title={t('profileSettings.useAsBanner')} aria-label={t('profileSettings.useAsBanner')} onClick={() => save.mutate({ bannerMalId: banner ? null : anime.malId })} className={cn('grid size-6 cursor-pointer place-items-center rounded-full bg-black/60 text-white [&_svg]:size-3.5', banner && 'bg-accent text-accent-foreground')}>
+                      <RiImageFill />
+                    </button>
+                    <button type="button" title={t('profileSettings.unpin')} aria-label={t('profileSettings.unpin')} onClick={() => save.mutate({ favorites: ids.filter((id) => id !== anime.malId), ...(banner ? { bannerMalId: null } : {}) })} className="grid size-6 cursor-pointer place-items-center rounded-full bg-black/60 text-white [&_svg]:size-3.5">
+                      <RiCloseFill />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">{t('profileSettings.showcaseEmpty')}</p>
+        )}
+        <div className="relative max-w-md">
+          <RiSearchLine className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('profileSettings.showcaseSearch')} className="pl-9" disabled={full} />
+        </div>
+        {query && results.data?.items.length ? (
+          <div className="flex flex-col gap-1">
+            {results.data.items.map((entry) => {
+              const pinned = ids.includes(entry.malId)
+              return (
+                <button
+                  key={entry.malId}
+                  type="button"
+                  disabled={pinned || full}
+                  onClick={() => {
+                    save.mutate({ favorites: [...ids, entry.malId] })
+                    setQ('')
+                  }}
+                  className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted disabled:cursor-default disabled:opacity-50"
+                >
+                  {entry.anime.imageUrl ? <Image src={entry.anime.imageUrl} alt="" className="h-10 w-7 shrink-0 rounded object-cover" /> : null}
+                  <span className="min-w-0 flex-1 truncate text-sm">
+                    <AnimeTitle anime={entry.anime} />
+                  </span>
+                  {pinned ? <RiCheckFill className="size-4 text-accent" /> : <RiAddFill className="size-4 text-muted-foreground" />}
+                </button>
+              )
+            })}
+          </div>
+        ) : null}
+      </Card>
+    </Block>
+  )
+}
+
 function BlockedUsers() {
   const { t } = useTranslation()
   const client = useQueryClient()
@@ -176,6 +254,7 @@ export function ProfileTab() {
   return (
     <>
       {profile.data ? <ProfileForm key={`${profile.data.displayName}|${profile.data.bio}`} initial={profile.data} /> : <Skeleton className="h-64 rounded-xl" />}
+      {profile.data ? <ShowcaseEditor profile={profile.data} /> : null}
       <BlockedUsers />
     </>
   )

@@ -329,7 +329,7 @@ export interface Notification {
   readAt: string | null
 }
 
-export type SocialNotificationType = 'friend_request' | 'friend_accepted' | 'recommendation' | 'comment' | 'reaction'
+export type SocialNotificationType = 'friend_request' | 'friend_accepted' | 'recommendation' | 'comment' | 'reaction' | 'room_invite'
 
 export interface SocialNotification {
   id: number
@@ -391,9 +391,13 @@ export interface Changelog {
 export interface AdminUser {
   id: number
   username: string
+  displayName: string | null
+  avatarUrl: string | null
   role: UserRole
   createdAt: string
   entries: number
+  friends: number
+  comments: number
 }
 
 export type SkipKind = 'op' | 'ed' | 'recap'
@@ -655,9 +659,15 @@ export interface ProfileSettings {
   listVisibility: Visibility
   statsVisibility: Visibility
   shareActivity: boolean
+  bannerMalId: number | null
+  favorites: AnimeSummary[]
 }
 
+export const PROFILE_FAVORITES_MAX = 5
+
 export const profileUpdateSchema = z.object({
+  bannerMalId: z.number().int().positive().nullable().optional(),
+  favorites: z.array(z.number().int().positive()).max(PROFILE_FAVORITES_MAX).optional(),
   displayName: z.string().trim().max(40).nullable().optional(),
   bio: z.string().trim().max(300).nullable().optional(),
   profileVisibility: z.enum(['everyone', 'friends']).optional(),
@@ -665,6 +675,8 @@ export const profileUpdateSchema = z.object({
   statsVisibility: z.enum(VISIBILITIES).optional(),
   shareActivity: z.boolean().optional(),
 })
+
+export type ProfileUpdate = z.infer<typeof profileUpdateSchema>
 
 export interface UserProfile {
   user: UserCard
@@ -677,6 +689,45 @@ export interface UserProfile {
   canSeeStats: boolean
   friends: number
   statuses: Record<ListStatus, number> | null
+  banner: string | null
+  favorites: AnimeSummary[]
+}
+
+export type FriendTitles = Record<number, UserCard[]>
+
+export interface FriendWatching {
+  user: UserCard
+  anime: AnimeSummary
+  status: ListStatus
+  progress: number
+  updatedAt: string
+}
+
+export const roomInviteSchema = z.object({
+  roomId: z.string().min(1).max(64),
+  friendIds: z.array(z.number().int().positive()).min(1).max(50),
+})
+
+export interface ModerationComment {
+  id: number
+  user: UserCard
+  text: string
+  createdAt: string
+  anime: AnimeSummary | null
+}
+
+export interface ModerationNote {
+  id: number
+  user: UserCard
+  text: string
+  createdAt: string
+  anime: AnimeSummary | null
+}
+
+export interface ModerationProfile {
+  user: UserCard
+  bio: string | null
+  createdAt: string
 }
 
 export interface TasteMatch {

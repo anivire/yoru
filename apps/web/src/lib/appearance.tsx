@@ -56,6 +56,7 @@ interface State {
   watchedAt: number
   titleLanguage: TitleLanguage
   appearanceButton: boolean
+  friendAvatars: boolean
 }
 
 const DEFAULT_SECTIONS: HomeSectionSetting[] = HOME_SECTIONS.map((s) => ({ id: s.id, visible: true }))
@@ -94,6 +95,7 @@ interface Appearance extends State {
   setWatchedAt: (ratio: number) => void
   setTitleLanguage: (language: TitleLanguage) => void
   setAppearanceButton: (show: boolean) => void
+  setFriendAvatars: (show: boolean) => void
 }
 
 const AppearanceContext = createContext<Appearance | null>(null)
@@ -119,6 +121,7 @@ function load(): State {
       watchedAt?: number
       titleLanguage?: string
       appearanceButton?: boolean
+      friendAvatars?: boolean
     }
     const theme = THEME_PRESETS.some((t) => t.id === raw.theme) ? (raw.theme as ThemePreset) : DEFAULT_THEME
     const scheme = raw.scheme === 'light' || raw.scheme === 'dark' || raw.scheme === 'system' ? raw.scheme : DEFAULT_SCHEME
@@ -143,9 +146,10 @@ function load(): State {
       watchedAt: (WATCHED_THRESHOLDS as readonly number[]).includes(raw.watchedAt as number) ? (raw.watchedAt as number) : 0.85,
       titleLanguage: TITLE_LANGUAGES.includes(raw.titleLanguage as TitleLanguage) ? (raw.titleLanguage as TitleLanguage) : 'romaji',
       appearanceButton: raw.appearanceButton !== false,
+      friendAvatars: raw.friendAvatars !== false,
     }
   } catch {
-    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], defaultKind: 'sub', preferredAuthors: {}, navPosition: 'left', navLabels: 'always', backdrop: 'full', iosFullscreen: 'native', autoNext: true, watchedAt: 0.85, titleLanguage: 'romaji', appearanceButton: true }
+    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], defaultKind: 'sub', preferredAuthors: {}, navPosition: 'left', navLabels: 'always', backdrop: 'full', iosFullscreen: 'native', autoNext: true, watchedAt: 0.85, titleLanguage: 'romaji', appearanceButton: true, friendAvatars: true }
   }
 }
 
@@ -261,6 +265,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
         setWatchedAt: (watchedAt) => setState((s) => ({ ...s, watchedAt })),
         setTitleLanguage: (titleLanguage) => setState((s) => ({ ...s, titleLanguage })),
         setAppearanceButton: (appearanceButton) => setState((s) => ({ ...s, appearanceButton })),
+        setFriendAvatars: (friendAvatars) => setState((s) => ({ ...s, friendAvatars })),
       }}
     >
       {children}

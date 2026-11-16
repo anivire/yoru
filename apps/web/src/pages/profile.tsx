@@ -31,6 +31,7 @@ import { type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, useSearchParams } from 'react-router'
 import { Page } from '../components/app-shell'
+import { AnimeCard } from '../components/anime-cards'
 import { TasteMatchCard } from '../components/social'
 import { TLink } from '../components/transition-link'
 import { UserAvatar, nameOf } from '../components/user-avatar'
@@ -150,7 +151,14 @@ function ProfileHeader({ profile }: { profile: UserProfile }) {
   const self = profile.relation === 'self'
   return (
     <header className="mb-8">
-      <div className="h-28 rounded-2xl bg-linear-to-br from-accent/45 via-accent/15 to-transparent sm:h-36" />
+      <div className="relative h-28 overflow-hidden rounded-2xl bg-linear-to-br from-accent/45 via-accent/15 to-transparent sm:h-44">
+        {profile.banner ? (
+          <>
+            <img src={profile.banner} alt="" className="absolute inset-0 size-full scale-110 object-cover object-[50%_30%] blur-sm" />
+            <div className="absolute inset-0 bg-linear-to-t from-background/80 via-background/20 to-transparent" />
+          </>
+        ) : null}
+      </div>
       <div className="-mt-12 flex flex-wrap items-end gap-4 px-2 sm:-mt-14 sm:px-5">
         <UserAvatar user={profile.user} className="size-24 text-3xl ring-4 ring-background sm:size-28" />
         <div className="min-w-0 flex-1 pb-1">
@@ -222,6 +230,16 @@ function Overview({ profile }: { profile: UserProfile }) {
   const { t } = useTranslation()
   return (
     <div className="flex flex-col gap-10">
+      {profile.favorites.length ? (
+        <section>
+          <h2 className="mb-4 text-lg font-semibold tracking-tight">{t('profile.favorites')}</h2>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-3 gap-y-4">
+            {profile.favorites.map((anime) => (
+              <AnimeCard key={anime.malId} anime={anime} />
+            ))}
+          </div>
+        </section>
+      ) : null}
       {profile.relation !== 'self' && profile.canSeeList ? <TasteMatchCard username={profile.user.username} /> : null}
       {profile.statuses ? <StatusStrip statuses={profile.statuses} /> : null}
       <section>

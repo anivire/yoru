@@ -1,7 +1,8 @@
 import { and, eq, inArray, or } from 'drizzle-orm'
-import type { Relation, UserCard, Visibility } from '@yoru/shared'
+import type { AnimeSummary, Relation, UserCard, Visibility } from '@yoru/shared'
 import { db, now } from '../db/client'
-import { blocks, friendships, socialNotifications, users } from '../db/schema'
+import { anime, blocks, friendships, socialNotifications, users } from '../db/schema'
+import { toSummary } from './anime'
 
 type CardRow = { id: number; username: string; displayName: string | null; avatarVersion: number | null }
 
@@ -72,4 +73,18 @@ export function notify(input: { userId: number; actorId: number; type: (typeof s
   db.insert(socialNotifications)
     .values({ userId: input.userId, actorId: input.actorId, type: input.type, malId: input.malId ?? null, refId: input.refId ?? null, text: input.text ?? null, createdAt: now() })
     .run()
+}
+
+export function summariesFor(ids: number[]): AnimeSummary[] {
+  if (!ids.length) return []
+  const rows = new Map(db.select().from(anime).where(inArray(anime.malId, ids)).all().map((row) => [row.malId, row]))
+  return ids.flatMap((id) => {
+    const row = rows.get(id)
+    return row ? [toSummary(row)] : []
+  })
+}
+
+export function bannerUrl(malId: number | null) {
+  if (!malId) return null
+  return db.select({ imageUrl: anime.imageUrl }).from(anime).where(eq(anime.malId, malId)).get()?.imageUrl ?? null
 }

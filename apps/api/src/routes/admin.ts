@@ -24,6 +24,8 @@ import { clearDiscoverCache } from '../services/discover'
 import { oauthConfigured, providerEnabled, redirectUri } from '../services/importers'
 import { resetSourceStatus, sourceInfos } from '../services/sources'
 import { removeAvatar } from './users'
+import { moderationRoutes } from './moderation'
+import { avatarUrl } from '../services/social'
 
 const usedByUser = alias(users, 'used_by_user')
 
@@ -47,6 +49,7 @@ function listInvites(): Invite[] {
 
 export const adminRoutes = new Hono<AppEnv>()
   .use(requireAuth, requireAdmin)
+  .route('/moderation', moderationRoutes)
   .get('/invites', (c) => c.json(listInvites()))
   .post('/invites', async (c) => {
     const input = await parseBody(c, inviteInputSchema)
@@ -65,13 +68,18 @@ export const adminRoutes = new Hono<AppEnv>()
       .select({
         id: users.id,
         username: users.username,
+        displayName: users.displayName,
+        avatarVersion: users.avatarVersion,
         role: users.role,
         createdAt: users.createdAt,
         entries: sql<number>`(select count(*) from "list_entries" as "le" where "le"."user_id" = "users"."id")`,
+        friends: sql<number>`(select count(*) from "friendships" as "f" where "f"."status" = 'accepted' and ("f"."user_id" = "users"."id" or "f"."friend_id" = "users"."id"))`,
+        comments: sql<number>`(select count(*) from "comments" as "cm" where "cm"."user_id" = "users"."id")`,
       })
       .from(users)
       .orderBy(users.createdAt)
       .all()
+      .map(({ avatarVersion, ...row }) => ({ ...row, avatarUrl: avatarUrl(row.id, avatarVersion) }))
     return c.json(rows)
   })
   .delete('/users/:id', (c) => {

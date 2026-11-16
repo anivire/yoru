@@ -19,11 +19,14 @@ import {
   StatusDot,
   toast,
 } from '@yoru/ui'
-import { RiAddFill, RiDatabase2Fill, RiDeleteBin6Fill, RiFileCopyFill, RiGroupFill, RiKey2Fill, RiTicket2Fill } from '@remixicon/react'
+import { RiAddFill, RiDatabase2Fill, RiDeleteBin6Fill, RiFileCopyFill, RiGroupFill, RiKey2Fill, RiShieldUserFill, RiTicket2Fill } from '@remixicon/react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 import { DataSources, OAuthSettings } from '../components/admin-sources'
+import { Moderation } from '../components/admin-moderation'
+import { TLink } from '../components/transition-link'
+import { UserAvatar, nameOf } from '../components/user-avatar'
 import { Page, PageHeader } from '../components/app-shell'
 import { api } from '../lib/api'
 import { formatDate } from '../lib/format'
@@ -205,10 +208,15 @@ function Users() {
           : null}
         {users.data?.map((u) => (
           <div key={u.id} className="flex items-center gap-3 px-5 py-3">
-            <span className="grid size-8 place-items-center rounded-full bg-field text-[0.8125rem] font-semibold uppercase">{u.username.slice(0, 1)}</span>
+            <TLink to={`/u/${u.username}`} className="shrink-0">
+              <UserAvatar user={u} className="size-8 text-[0.8125rem]" />
+            </TLink>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 text-sm font-medium">
-                {u.username}
+                <TLink to={`/u/${u.username}`} className="truncate transition-colors hover:text-accent">
+                  {nameOf(u)}
+                </TLink>
+                {u.displayName ? <span className="truncate text-xs font-normal text-subtle-foreground">@{u.username}</span> : null}
                 {u.role === 'admin' ? (
                   <Badge size="sm" variant="accent">
                     admin
@@ -216,7 +224,7 @@ function Users() {
                 ) : null}
               </div>
               <div className="text-xs text-muted-foreground">
-                {formatDate(u.createdAt)} · {u.entries} {t('admin.entries')}
+                {formatDate(u.createdAt)} · {u.entries} {t('admin.entries')} · {t('profile.friendsCount', { count: u.friends })} · {t('admin.commentsCount', { count: u.comments })}
               </div>
             </div>
             {u.id !== me.id ? <ConfirmDelete label={t('admin.deleteUser', { name: u.username })} onConfirm={() => remove.mutate(u.id)} /> : null}
@@ -227,10 +235,10 @@ function Users() {
   )
 }
 
-const TABS = ['invites', 'users', 'sources', 'oauth'] as const
+const TABS = ['invites', 'users', 'moderation', 'sources', 'oauth'] as const
 type Tab = (typeof TABS)[number]
-const TAB_ICONS = { invites: RiTicket2Fill, users: RiGroupFill, sources: RiDatabase2Fill, oauth: RiKey2Fill } satisfies Record<Tab, unknown>
-const TAB_LABELS = { invites: 'admin.invites', users: 'admin.users', sources: 'admin.tabs.sources', oauth: 'admin.tabs.oauth' } as const satisfies Record<Tab, string>
+const TAB_ICONS = { invites: RiTicket2Fill, users: RiGroupFill, moderation: RiShieldUserFill, sources: RiDatabase2Fill, oauth: RiKey2Fill } satisfies Record<Tab, unknown>
+const TAB_LABELS = { invites: 'admin.invites', users: 'admin.users', moderation: 'admin.tabs.moderation', sources: 'admin.tabs.sources', oauth: 'admin.tabs.oauth' } as const satisfies Record<Tab, string>
 
 export function AdminPage() {
   const { t } = useTranslation()
@@ -253,6 +261,7 @@ export function AdminPage() {
       <div key={tab} className="animate-fade">
         {tab === 'invites' ? <Invites /> : null}
         {tab === 'users' ? <Users /> : null}
+        {tab === 'moderation' ? <Moderation /> : null}
         {tab === 'sources' ? <DataSources /> : null}
         {tab === 'oauth' ? <OAuthSettings /> : null}
       </div>

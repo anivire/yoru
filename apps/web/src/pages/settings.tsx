@@ -58,7 +58,7 @@ export function Block({ title, description, children, className }: { title: Reac
 
 function AppearanceTab() {
   const { t } = useTranslation()
-  const { pageWidth, setPageWidth, pageWidthOptions, expandSynopsis, setExpandSynopsis } = useAppearance()
+  const { pageWidth, setPageWidth, pageWidthOptions, expandSynopsis, setExpandSynopsis, friendAvatars, setFriendAvatars } = useAppearance()
   const user = useUser()
   const changeLanguage = useChangeLanguage()
   return (
@@ -93,6 +93,13 @@ function AppearanceTab() {
               <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.expandSynopsisHint')}</span>
             </span>
             <Switch checked={expandSynopsis} onCheckedChange={setExpandSynopsis} />
+          </label>
+          <label className="flex cursor-pointer items-center justify-between gap-4 px-5 py-3">
+            <span>
+              <span className="block text-sm">{t('settings.friendAvatars')}</span>
+              <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.friendAvatarsHint')}</span>
+            </span>
+            <Switch checked={friendAvatars} onCheckedChange={setFriendAvatars} />
           </label>
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 py-3">
             <span>

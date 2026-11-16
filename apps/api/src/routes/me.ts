@@ -8,7 +8,7 @@ import { activity, animeNotes, blocks, feedEvents, imports, invites, listEntries
 import { type AppEnv, currentSessionId, destroySession, requireAuth, toUser } from '../lib/auth'
 import { randomToken, verifyPassword } from '../lib/crypto'
 import { parseBody } from '../lib/validate'
-import { cardColumns, toCard } from '../services/social'
+import { cardColumns, summariesFor, toCard } from '../services/social'
 import { MAX_AVATAR_BYTES, imageType, removeAvatar, saveAvatar } from './users'
 
 const inviter = alias(users, 'inviter')
@@ -43,11 +43,13 @@ function readProfile(userId: number): ProfileSettings {
       listVisibility: users.listVisibility,
       statsVisibility: users.statsVisibility,
       shareActivity: users.shareActivity,
+      bannerMalId: users.bannerMalId,
+      favorites: users.favorites,
     })
     .from(users)
     .where(eq(users.id, userId))
     .get()!
-  return row
+  return { ...row, favorites: summariesFor(row.favorites) }
 }
 
 export const meRoutes = new Hono<AppEnv>()
@@ -55,10 +57,14 @@ export const meRoutes = new Hono<AppEnv>()
   .get('/profile', (c) => c.json(readProfile(c.get('user').id)))
   .patch('/profile', async (c) => {
     const input = await parseBody(c, profileUpdateSchema)
+    const known = (ids: number[]) => new Set(summariesFor(ids).map((a) => a.malId))
+    const favorites = input.favorites ? [...new Set(input.favorites)].filter((id) => known(input.favorites!).has(id)) : undefined
     const patch = {
       ...input,
       ...(input.displayName !== undefined ? { displayName: input.displayName || null } : {}),
       ...(input.bio !== undefined ? { bio: input.bio || null } : {}),
+      ...(favorites !== undefined ? { favorites } : {}),
+      ...(input.bannerMalId ? { bannerMalId: known([input.bannerMalId]).has(input.bannerMalId) ? input.bannerMalId : null } : {}),
     }
     if (Object.keys(patch).length) db.update(users).set(patch).where(eq(users.id, c.get('user').id)).run()
     return c.json(readProfile(c.get('user').id))

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AnimeSummary, HomeData } from '@yoru/shared'
 import { Button, EmptyState, Image } from '@yoru/ui'
+import { RiGroupFill } from '@remixicon/react'
 import { RiCalendarScheduleFill, RiDownload2Fill, RiPlayCircleFill, RiPlayLargeFill, RiSearchFill, RiTv2Fill } from '@remixicon/react'
 import { Fragment, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -17,6 +18,7 @@ import { HeroBackdrop } from '../components/hero-backdrop'
 import { TLink } from '../components/transition-link'
 import { useDocumentTitle } from '../lib/title'
 import { AnimeTitle } from '../lib/anime-title'
+import { nameOf } from '../components/user-avatar'
 
 function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number | null; label: string }) {
   const { t } = useTranslation()
@@ -85,6 +87,21 @@ function HomeHero({ data }: { data: HomeData }) {
   return null
 }
 
+function FriendsWatching() {
+  const { t } = useTranslation()
+  const watching = useQuery({ queryKey: ['friends-watching'], queryFn: api.friendsWatching })
+  if (!watching.data?.length) return null
+  return (
+    <Section title={t('home.friends')} icon={<RiGroupFill />} hint={t('home.friendsHint')}>
+      <Rail>
+        {watching.data.map((item) => (
+          <AnimeCard key={`${item.user.id}-${item.anime.malId}`} anime={item.anime} subtitle={`${nameOf(item.user)} · ${t('feed.episodeShort', { episode: item.progress || 1 })}`} />
+        ))}
+      </Rail>
+    </Section>
+  )
+}
+
 export function HomePage() {
   const { t } = useTranslation()
   const { data, isPending } = useQuery({ queryKey: keys.home, queryFn: api.home })
@@ -127,6 +144,7 @@ export function HomePage() {
         </UpcomingGrid>
       </Section>
     ) : null,
+    friends: <FriendsWatching />,
     activity: !empty ? <ActivityHeatmap /> : null,
     watching: data?.watching.length ? (
       <Section

@@ -10,7 +10,7 @@ import { env } from '../env'
 import { type AppEnv, requireAuth } from '../lib/auth'
 import { notFound } from '../lib/http'
 import { intParam, parseBody } from '../lib/validate'
-import { blockedBetween, canSee, cardColumns, friendIds, hiddenUserIds, relation, toCard } from '../services/social'
+import { bannerUrl, blockedBetween, canSee, cardColumns, friendIds, hiddenUserIds, relation, summariesFor, toCard } from '../services/social'
 import { feedPage } from '../services/feed'
 import { tasteMatch } from '../services/interactions'
 import { userStats } from '../services/stats'
@@ -136,6 +136,8 @@ export const userRoutes = new Hono<AppEnv>()
       canSeeStats,
       friends: hidden ? 0 : friendIds(owner.id).length,
       statuses: canSeeList || canSeeStats ? statusCounts(owner.id) : null,
+      banner: hidden ? null : bannerUrl(owner.bannerMalId),
+      favorites: hidden ? [] : summariesFor(owner.favorites),
     }
     return c.json(body)
   })

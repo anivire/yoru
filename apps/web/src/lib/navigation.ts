@@ -17,6 +17,7 @@ export const HOME_SECTIONS = [
   { id: 'continue', label: 'home.continue', icon: RiPlayCircleFill },
   { id: 'upcoming', label: 'home.upcoming', icon: RiCalendarScheduleFill },
   { id: 'watching', label: 'home.watching', icon: RiTv2Fill },
+  { id: 'friends', label: 'home.friends', icon: RiGroupFill },
   { id: 'activity', label: 'home.activity', icon: RiPulseFill },
 ] as const
 

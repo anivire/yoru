@@ -1,13 +1,14 @@
 import { and, eq, or } from 'drizzle-orm'
 import { Hono } from 'hono'
-import { type FriendsOverview, type Relation, recommendSchema } from '@yoru/shared'
+import { type FriendsOverview, type Relation, recommendSchema, roomInviteSchema } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { friendships, users } from '../db/schema'
 import { type AppEnv, requireAuth } from '../lib/auth'
 import { notFound } from '../lib/http'
 import { intParam, parseBody } from '../lib/validate'
 import { ensureAnime, getAnimeRow } from '../services/anime'
-import { friendEntries, recommend } from '../services/interactions'
+import { friendEntries, friendTitles, friendsWatching, inviteToRoom, recommend } from '../services/interactions'
+import { roomInfo } from '../services/rooms'
 import { blockedBetween, cardsFor, hiddenUserIds, notify, relation } from '../services/social'
 
 function pair(a: number, b: number) {
@@ -40,6 +41,14 @@ export const friendRoutes = new Hono<AppEnv>()
     return c.json(body)
   })
   .get('/anime/:malId', (c) => c.json(friendEntries(c.get('user').id, intParam(c, 'malId'))))
+  .get('/titles', (c) => c.json(friendTitles(c.get('user').id)))
+  .get('/watching', (c) => c.json(friendsWatching(c.get('user').id)))
+  .post('/invite', async (c) => {
+    const input = await parseBody(c, roomInviteSchema)
+    const room = roomInfo(input.roomId)
+    if (!room) notFound('ROOM_NOT_FOUND')
+    return c.json({ sent: inviteToRoom(c.get('user').id, room.id, room.malId, input.friendIds) })
+  })
   .post('/recommend', async (c) => {
     const input = await parseBody(c, recommendSchema)
     if (!getAnimeRow(input.malId)) await ensureAnime(input.malId)

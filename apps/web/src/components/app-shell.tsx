@@ -26,6 +26,7 @@ import { BetaBadge } from './watch-together'
 import { Footer } from './footer'
 import { TLink, TNavLink, useTransitionNavigate } from './transition-link'
 import { AppearancePopover } from './appearance-panel'
+import { FriendTitlesProvider } from './friend-titles'
 import { UserAvatar, nameOf } from './user-avatar'
 
 const NAV_ITEM = 'relative inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-medium transition-colors [&_svg]:size-4 [&_svg]:shrink-0'
@@ -470,7 +471,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="flex-1">{children}</main>
+      <main className="flex-1">
+        <FriendTitlesProvider>{children}</FriendTitlesProvider>
+      </main>
       <Footer scope="app" />
     </div>
   )

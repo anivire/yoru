@@ -28,6 +28,7 @@ function socialLink(n: SocialNotification) {
   if (n.type === 'friend_request') return '/friends'
   if (n.type === 'friend_accepted') return `/u/${n.actor.username}`
   if (n.type === 'recommendation' && n.malId) return `/anime/${n.malId}`
+  if (n.type === 'room_invite' && n.text) return `/together/${n.text}`
   return '/feed'
 }
 
@@ -47,7 +48,7 @@ function SocialItem({ n, onOpen }: { n: SocialNotification; onOpen: () => void }
             <AnimeTitle anime={n.titles} />
           </div>
         ) : null}
-        {n.type !== 'reaction' && n.text ? <p className="mt-1 line-clamp-2 text-[0.8125rem] text-muted-foreground">{n.text}</p> : null}
+        {n.type !== 'reaction' && n.type !== 'room_invite' && n.text ? <p className="mt-1 line-clamp-2 text-[0.8125rem] text-muted-foreground">{n.text}</p> : null}
         <div className="mt-1 font-mono text-[0.6875rem] text-subtle-foreground">{relativeTime(n.createdAt)}</div>
       </div>
       {n.imageUrl ? <Image src={n.imageUrl} alt="" className="h-14 w-10 shrink-0 rounded-md object-cover" loading="lazy" /> : null}

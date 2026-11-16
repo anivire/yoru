@@ -1,5 +1,5 @@
-import { and, asc, eq, inArray, sql } from 'drizzle-orm'
-import type { Comment, CommentTarget, FriendEntry, Reaction, ReactionCount, TasteMatch } from '@yoru/shared'
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm'
+import type { Comment, CommentTarget, FriendEntry, FriendTitles, FriendWatching, Reaction, ReactionCount, TasteMatch } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { anime, animeNotes, comments, feedEvents, listEntries, reactions, recommendations, users } from '../db/schema'
 import { notFound } from '../lib/http'
@@ -189,6 +189,54 @@ export function friendEntries(viewerId: number, malId: number): FriendEntry[] {
     .all()
     .filter((row) => row.visibility !== 'private')
     .map((row) => ({ user: toCard(row.user), status: row.entry.status, progress: row.entry.progress, score: row.entry.score }))
+}
+
+function visibleFriendIds(viewerId: number) {
+  const ids = friendIds(viewerId).filter((id) => !blockedBetween(viewerId, id))
+  if (!ids.length) return []
+  return db.select({ id: users.id }).from(users).where(and(inArray(users.id, ids), sql`${users.listVisibility} != 'private'`)).all().map((r) => r.id)
+}
+
+export function friendTitles(viewerId: number): FriendTitles {
+  const ids = visibleFriendIds(viewerId)
+  if (!ids.length) return {}
+  const rows = db
+    .select({ malId: listEntries.malId, user: cardColumns })
+    .from(listEntries)
+    .innerJoin(users, eq(users.id, listEntries.userId))
+    .where(and(inArray(listEntries.userId, ids), sql`${listEntries.status} != 'planning'`))
+    .all()
+  const titles: FriendTitles = {}
+  for (const row of rows) (titles[row.malId] ??= []).push(toCard(row.user))
+  return titles
+}
+
+const WATCHING_LIMIT = 20
+
+export function friendsWatching(viewerId: number): FriendWatching[] {
+  const ids = visibleFriendIds(viewerId)
+  if (!ids.length) return []
+  return db
+    .select({ entry: listEntries, user: cardColumns, anime })
+    .from(listEntries)
+    .innerJoin(users, eq(users.id, listEntries.userId))
+    .innerJoin(anime, eq(anime.malId, listEntries.malId))
+    .where(and(inArray(listEntries.userId, ids), inArray(listEntries.status, ['watching', 'rewatching'])))
+    .orderBy(desc(listEntries.updatedAt))
+    .limit(WATCHING_LIMIT)
+    .all()
+    .map((row) => ({ user: toCard(row.user), anime: toSummary(row.anime), status: row.entry.status, progress: row.entry.progress, updatedAt: row.entry.updatedAt }))
+}
+
+export function inviteToRoom(viewerId: number, roomId: string, malId: number, ids: number[]) {
+  const friends = new Set(friendIds(viewerId))
+  let sent = 0
+  for (const id of new Set(ids)) {
+    if (!friends.has(id) || blockedBetween(viewerId, id)) continue
+    notify({ userId: id, actorId: viewerId, type: 'room_invite', malId, text: roomId })
+    sent++
+  }
+  return sent
 }
 
 export function recommend(viewerId: number, malId: number, ids: number[], message: string | null) {

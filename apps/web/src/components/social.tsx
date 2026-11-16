@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { type Comment, type CommentTarget, REACTIONS, type Reaction, type ReactionCount, type UserCard } from '@yoru/shared'
 import { Button, Dialog, DialogContent, DialogTrigger, Popover, PopoverContent, PopoverTrigger, Skeleton, StarIcon, Textarea, Tooltip, cn, toast } from '@yoru/ui'
-import { RiChat3Line, RiDeleteBin6Line, RiEdit2Line, RiEmotionLine, RiSendPlaneFill, RiShareForwardFill } from '@remixicon/react'
+import { RiChat3Line, RiDeleteBin6Line, RiEdit2Line, RiEmotionLine, RiSendPlaneFill, RiShareForwardFill, RiUserAddFill } from '@remixicon/react'
 import { type FormEvent, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
@@ -179,12 +179,71 @@ export function CommentThread({ target, id }: { target: CommentTarget; id: numbe
   )
 }
 
+function FriendPicker({ selected, onChange }: { selected: number[]; onChange: (ids: number[]) => void }) {
+  const { t } = useTranslation()
+  const friends = useQuery({ queryKey: ['friends'], queryFn: api.friends })
+  const toggle = (user: UserCard) => onChange(selected.includes(user.id) ? selected.filter((id) => id !== user.id) : [...selected, user.id])
+  if (friends.isPending) return <Skeleton className="h-24 rounded-xl" />
+  if (!friends.data?.friends.length) return <p className="text-sm text-muted-foreground">{t('social.noFriendsToRecommend')}</p>
+  return (
+    <div role="group" className="flex max-h-64 flex-col gap-1 overflow-y-auto">
+      {friends.data.friends.map((user) => (
+        <button
+          key={user.id}
+          type="button"
+          role="checkbox"
+          aria-checked={selected.includes(user.id)}
+          onClick={() => toggle(user)}
+          className={cn('flex cursor-pointer items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors', selected.includes(user.id) ? 'bg-accent-soft' : 'hover:bg-muted')}
+        >
+          <UserAvatar user={user} className="size-8" />
+          <span className="min-w-0 flex-1 truncate text-sm font-medium">{nameOf(user)}</span>
+          <span className={cn('size-4 rounded-full border-2', selected.includes(user.id) ? 'border-accent bg-accent' : 'border-border')} />
+        </button>
+      ))}
+    </div>
+  )
+}
+
+export function InviteFriendsButton({ roomId, className }: { roomId: string; className?: string }) {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const [selected, setSelected] = useState<number[]>([])
+  const send = useMutation({
+    mutationFn: () => api.inviteToRoom(roomId, selected),
+    onSuccess: () => {
+      toast.success(t('social.invited'))
+      setOpen(false)
+      setSelected([])
+    },
+    onError: (e) => toast.error(errorMessage(e, t)),
+  })
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="secondary" className={className}>
+          <RiUserAddFill />
+          {t('social.inviteFriends')}
+        </Button>
+      </DialogTrigger>
+      <DialogContent title={t('social.inviteFriends')} description={t('social.inviteHint')}>
+        <div className="flex flex-col gap-4 px-6 pb-6 pt-2">
+          <FriendPicker selected={selected} onChange={setSelected} />
+          <Button variant="accent" className="self-end" disabled={!selected.length} loading={send.isPending} onClick={() => send.mutate()}>
+            <RiSendPlaneFill />
+            {t('social.send')}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export function RecommendButton({ malId, className }: { malId: number; className?: string }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [selected, setSelected] = useState<number[]>([])
   const [message, setMessage] = useState('')
-  const friends = useQuery({ queryKey: ['friends'], queryFn: api.friends, enabled: open })
   const send = useMutation({
     mutationFn: () => api.recommend({ malId, friendIds: selected, message: message.trim() || null }),
     onSuccess: () => {
@@ -195,7 +254,6 @@ export function RecommendButton({ malId, className }: { malId: number; className
     },
     onError: (e) => toast.error(errorMessage(e, t)),
   })
-  const toggle = (user: UserCard) => setSelected((ids) => (ids.includes(user.id) ? ids.filter((id) => id !== user.id) : [...ids, user.id]))
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -206,28 +264,7 @@ export function RecommendButton({ malId, className }: { malId: number; className
       </DialogTrigger>
       <DialogContent title={t('social.recommend')} description={t('social.recommendHint')}>
         <div className="flex flex-col gap-4 px-6 pb-6 pt-2">
-          {friends.isPending ? (
-            <Skeleton className="h-24 rounded-xl" />
-          ) : friends.data?.friends.length ? (
-            <div role="group" className="flex max-h-64 flex-col gap-1 overflow-y-auto">
-              {friends.data.friends.map((user) => (
-                <button
-                  key={user.id}
-                  type="button"
-                  role="checkbox"
-                  aria-checked={selected.includes(user.id)}
-                  onClick={() => toggle(user)}
-                  className={cn('flex cursor-pointer items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors', selected.includes(user.id) ? 'bg-accent-soft' : 'hover:bg-muted')}
-                >
-                  <UserAvatar user={user} className="size-8" />
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium">{nameOf(user)}</span>
-                  <span className={cn('size-4 rounded-full border-2', selected.includes(user.id) ? 'border-accent bg-accent' : 'border-border')} />
-                </button>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">{t('social.noFriendsToRecommend')}</p>
-          )}
+          <FriendPicker selected={selected} onChange={setSelected} />
           <Textarea value={message} onChange={(e) => setMessage(e.target.value)} maxLength={300} placeholder={t('social.recommendMessage')} />
           <Button variant="accent" className="self-end" disabled={!selected.length} loading={send.isPending} onClick={() => send.mutate()}>
             <RiSendPlaneFill />

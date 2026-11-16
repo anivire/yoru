@@ -14,6 +14,7 @@ import { keys } from '../lib/queries'
 import { type Room, useRoom } from '../lib/rooms'
 import { cue } from '../lib/sounds'
 import { useDocumentTitle } from '../lib/title'
+import { InviteFriendsButton } from '../components/social'
 
 function useRoomArrivals(room: Room) {
   const { t } = useTranslation()
@@ -91,6 +92,7 @@ export function RoomPage() {
             </TLink>
           ) : null}
         </div>
+        <InviteFriendsButton roomId={id} className="shrink-0" />
       </div>
       <div className="mb-5">
         <RoomPanel room={room} roomId={id} onLeave={() => navigate(malId ? `/anime/${malId}` : '/')} />
