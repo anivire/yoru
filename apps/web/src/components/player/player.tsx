@@ -489,6 +489,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
     <div
       ref={rootRef}
       data-sound="none"
+      data-player-stretched={stretched ? '' : undefined}
       className={cn(
         'group/player overflow-hidden bg-black text-white',
         stretched ? 'fixed inset-0 z-[100] h-dvh w-screen' : 'relative aspect-video w-full',

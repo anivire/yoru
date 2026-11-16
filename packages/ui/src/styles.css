@@ -227,6 +227,11 @@
     overflow: hidden;
   }
 
+  html:has(:fullscreen, [data-player-stretched]) {
+    overflow: hidden;
+    scrollbar-gutter: auto;
+  }
+
   ::selection {
     background: var(--accent-soft);
   }
