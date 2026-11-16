@@ -232,8 +232,8 @@ function Overview({ profile }: { profile: UserProfile }) {
   return (
     <div className="grow-empty flex flex-col gap-10">
       {profile.favorites.length ? (
-        <section>
-          <h2 className="mb-4 text-lg font-semibold tracking-tight">{t('profile.favorites')}</h2>
+        <section className="rounded-xl bg-surface p-4 sm:p-5">
+          <h2 className="mb-3 text-sm font-semibold">{t('profile.favorites')}</h2>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-3 gap-y-4">
             {profile.favorites.map((anime) => (
               <AnimeCard key={anime.malId} anime={anime} />
@@ -268,8 +268,8 @@ function TabSkeleton({ tab }: { tab: Tab }) {
   if (tab === 'friends') return <UserGridSkeleton />
   return (
     <div className="flex flex-col gap-10">
-      <section>
-        <Skeleton className="mb-4 h-6 w-32 rounded-md" />
+      <section className="rounded-xl bg-surface p-4 sm:p-5">
+        <Skeleton className="mb-3 h-5 w-28 rounded-md" />
         <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-3 gap-y-4">
           {Array.from({ length: 5 }, (_, i) => (
             <div key={i} className="flex flex-col gap-2">
