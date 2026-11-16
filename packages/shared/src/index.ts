@@ -353,6 +353,23 @@ export interface VersionInfo {
   compareUrl: string | null
 }
 
+export type ChangeType = 'feat' | 'fix' | 'perf' | 'style' | 'refactor' | 'docs' | 'chore' | 'build' | 'revert' | 'other'
+
+export interface ChangelogEntry {
+  sha: string
+  type: ChangeType
+  scope: string | null
+  subject: string
+  date: string | null
+  url: string
+}
+
+export interface Changelog {
+  entries: ChangelogEntry[]
+  current: string | null
+  nextPage: number | null
+}
+
 export interface AdminUser {
   id: number
   username: string

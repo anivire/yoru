@@ -123,6 +123,13 @@ export const ru = {
       media: '{{name}}: другая серия или перевод',
     },
   },
+  changelog: {
+    title: 'История изменений',
+    description: 'Что менялось в yoru, по коммитам на GitHub',
+    current: 'Ваша версия',
+    empty: 'Изменений пока нет',
+    sections: { feat: 'Новое', improve: 'Улучшения', fix: 'Исправления' },
+  },
   feed: {
     title: 'Лента',
     description: 'Ваша история: списки, серии, оценки и заметки',

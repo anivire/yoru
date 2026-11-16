@@ -1,12 +1,14 @@
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
-import type { VersionInfo } from '@yoru/shared'
+import type { ChangeType, Changelog, ChangelogEntry, VersionInfo } from '@yoru/shared'
 import { env } from '../env'
 import { cached } from '../lib/http'
 import { githubConfig, sourceEnabled, sourceUrl } from '../lib/sources'
 
 const LATEST_TTL = 30 * 60_000
+const CHANGELOG_PAGE = 40
+const CHANGE_TYPES = new Set<ChangeType>(['feat', 'fix', 'perf', 'style', 'refactor', 'docs', 'chore', 'build', 'revert'])
 
 function readFile(name: string): string | null {
   for (let dir = process.cwd(), i = 0; i < 4; i++, dir = path.dirname(dir)) {
@@ -95,6 +97,29 @@ async function latestInfo(commit: string | null) {
       behindBy: commit === head.sha ? 0 : behindBy,
     }
   })
+}
+
+function toEntry(commit: GithubCommit): ChangelogEntry {
+  const subject = commit.commit.message.split('\n')[0]?.trim() ?? ''
+  const match = /^(\w+)(?:\(([^)]+)\))?!?:\s*(.+)$/.exec(subject)
+  const type = match?.[1]?.toLowerCase() as ChangeType | undefined
+  return {
+    sha: commit.sha,
+    type: type && CHANGE_TYPES.has(type) ? type : 'other',
+    scope: match?.[2] ?? null,
+    subject: match?.[3] ?? subject,
+    date: commit.commit.committer?.date ?? null,
+    url: commit.html_url,
+  }
+}
+
+export async function changelog(page: number): Promise<Changelog> {
+  const { repo, branch } = githubConfig()
+  if (!sourceEnabled('github')) throw new Error('GitHub is disabled')
+  const commits = await cached(`github:changelog:${repo}:${branch}:${page}`, LATEST_TTL, () =>
+    github<GithubCommit[]>(`/commits?sha=${encodeURIComponent(branch)}&per_page=${CHANGELOG_PAGE}&page=${page}`),
+  )
+  return { entries: commits.map(toEntry), current: current.commit, nextPage: commits.length === CHANGELOG_PAGE ? page + 1 : null }
 }
 
 export function buildInfo() {

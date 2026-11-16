@@ -125,6 +125,13 @@ export const en: Messages = {
       media: '{{name}}: changed the episode or translation',
     },
   },
+  changelog: {
+    title: 'Changelog',
+    description: 'What changed in yoru, from the commits on GitHub',
+    current: 'Your version',
+    empty: 'No changes yet',
+    sections: { feat: 'New', improve: 'Improved', fix: 'Fixed' },
+  },
   feed: {
     title: 'Feed',
     description: 'Your history: lists, episodes, scores and notes',

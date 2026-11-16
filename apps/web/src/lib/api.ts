@@ -1,4 +1,5 @@
 import type {
+  Changelog,
   SkipTime,
   AccountInfo,
   ActivityData,
@@ -99,6 +100,7 @@ export const api = {
   activity: (tz: string) => get<ActivityData>(`/home/activity${qs({ tz })}`),
   stats: (tz: string) => get<UserStats>(`/stats${qs({ tz })}`),
   version: () => get<VersionInfo>('/version'),
+  changelog: (page: number) => get<Changelog>(`/version/changelog${qs({ page })}`),
   discoverCollection: (name: 'hero' | 'top' | 'anons') => get<AnimeSummary[]>(`/discover/${name}`),
   discoverRecent: () => get<RecentItem[]>('/discover/recent'),
   trending: (genre: number | null) => get<AnimeSummary[]>(`/discover/trending${qs({ genre: genre ?? undefined })}`),

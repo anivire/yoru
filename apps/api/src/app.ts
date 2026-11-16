@@ -8,7 +8,7 @@ import { secureHeaders } from 'hono/secure-headers'
 import { env } from './env'
 import type { AppEnv } from './lib/auth'
 import { UpstreamError } from './lib/http'
-import { sessionUser } from './lib/auth'
+import { requireAuth, sessionUser } from './lib/auth'
 import { adminRoutes } from './routes/admin'
 import { animeRoutes } from './routes/anime'
 import { authRoutes } from './routes/auth'
@@ -22,7 +22,7 @@ import { feedRoutes, noteRoutes } from './routes/feed'
 import { roomRoutes } from './routes/rooms'
 import { statsRoutes } from './routes/stats'
 import { streamRoutes } from './routes/stream'
-import { buildInfo, versionInfo } from './services/version'
+import { buildInfo, changelog, versionInfo } from './services/version'
 
 export const app = new Hono<AppEnv>()
 
@@ -35,6 +35,15 @@ app.get('/api/build', (c) => {
   return c.json(buildInfo())
 })
 app.get('/api/version', async (c) => c.json(await versionInfo(Boolean(sessionUser(c)))))
+app.get('/api/version/changelog', requireAuth, async (c) => {
+  const page = Number(c.req.query('page') ?? 1)
+  if (!Number.isInteger(page) || page < 1 || page > 100) throw new HTTPException(400, { message: 'Invalid page' })
+  try {
+    return c.json(await changelog(page))
+  } catch (e) {
+    throw new HTTPException(502, { message: e instanceof Error ? e.message : 'GitHub is unavailable' })
+  }
+})
 app.route('/api/auth', authRoutes)
 app.route('/api/me', meRoutes)
 app.route('/api/admin', adminRoutes)

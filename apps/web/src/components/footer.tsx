@@ -157,7 +157,7 @@ export function Footer({ scope, compact, className }: { scope: 'app' | 'public';
                 {repoUrl ? (
                   <>
                     <External href={repoUrl}>GitHub</External>
-                    <External href={`${repoUrl}/commits`}>{t('footer.changelog')}</External>
+                    {scope === 'app' ? <Internal to="/changelog">{t('footer.changelog')}</Internal> : <External href={`${repoUrl}/commits`}>{t('footer.changelog')}</External>}
                     <External href={`${repoUrl}/issues`}>{t('footer.issues')}</External>
                   </>
                 ) : null}
