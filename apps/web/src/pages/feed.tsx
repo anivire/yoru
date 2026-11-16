@@ -10,7 +10,7 @@ import { NoteBody } from '../components/notes'
 import { TLink } from '../components/transition-link'
 import { CommentThread, ReactionBar } from '../components/social'
 import { UserAvatar, nameOf } from '../components/user-avatar'
-import { useAnimeTitle } from '../lib/anime-title'
+import { useAnimeTitle, animePath } from '../lib/anime-title'
 import { api } from '../lib/api'
 import { FEED_SCOPES, useAppearance } from '../lib/appearance'
 import { StatusIcon } from '../lib/list-status'
@@ -115,7 +115,7 @@ function NoteEntry({ item }: { item: Extract<FeedItem, { type: 'note' }> }) {
   const title = useAnimeTitle()
   return (
     <div className="flex flex-col gap-2.5 rounded-xl bg-surface p-3">
-      <TLink to={`/anime/${item.anime.malId}`} className="w-fit text-sm font-medium transition-colors hover:text-accent">
+      <TLink to={animePath(item.anime.malId, item.anime.title)} className="w-fit text-sm font-medium transition-colors hover:text-accent">
         {title(item.anime)}
       </TLink>
       <div className="rounded-lg bg-field px-3 py-2.5">

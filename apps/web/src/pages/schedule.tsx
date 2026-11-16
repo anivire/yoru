@@ -12,7 +12,7 @@ import { api } from '../lib/api'
 import { i18n } from '../lib/i18n'
 import { TLink } from '../components/transition-link'
 import { useDocumentTitle } from '../lib/title'
-import { AnimeTitle } from '../lib/anime-title'
+import { AnimeTitle, animePath } from '../lib/anime-title'
 
 const DAY = 86_400_000
 const COLUMNS = 7
@@ -98,7 +98,7 @@ function EntryRow({ item }: { item: ScheduleItem }) {
   return (
     <AnimeHoverCard anime={item.anime} footer={footer}>
       <TLink
-        to={`/anime/${item.anime.malId}${item.available ? `?episode=${item.episode}` : ''}`}
+        to={`${animePath(item.anime.malId, item.anime.title)}${item.available ? `?episode=${item.episode}` : ''}`}
         className={cn('group flex items-stretch gap-2 rounded-lg p-1 pl-1 transition-colors', tone.row)}
       >
         <span className={cn('w-1 shrink-0 rounded-full', tone.bar)} />

@@ -9,7 +9,7 @@ import { keys } from '../lib/queries'
 import { cue } from '../lib/sounds'
 import { useEffect, useRef } from 'react'
 import { TLink } from './transition-link'
-import { AnimeTitle } from '../lib/anime-title'
+import { AnimeTitle, animePath } from '../lib/anime-title'
 import { RailLabel, RailTip, useRailButton } from './rail'
 import { UserAvatar, nameOf } from './user-avatar'
 
@@ -27,7 +27,7 @@ export function useNotificationSound() {
 function socialLink(n: SocialNotification) {
   if (n.type === 'friend_request') return '/friends'
   if (n.type === 'friend_accepted' || n.type === 'invite_accepted') return `/u/${n.actor.username}`
-  if (n.type === 'recommendation' && n.malId) return `/anime/${n.malId}`
+  if (n.type === 'recommendation' && n.malId) return animePath(n.malId)
   if (n.type === 'room_invite' && n.text) return `/together/${n.text}`
   return '/feed'
 }
@@ -126,7 +126,7 @@ export function NotificationsPopover({ side = 'bottom', rail = false }: { side?:
               return (
               <TLink
                 key={n.id}
-                to={`/anime/${n.malId}?episode=${n.episode}&kind=${n.kind}`}
+                to={`${animePath(n.malId)}?episode=${n.episode}&kind=${n.kind}`}
                 onClick={() => !n.readAt && readOne.mutate(n.id)}
                 className={cn('flex gap-3 rounded-lg px-2.5 py-2.5 transition-colors hover:bg-muted', n.readAt && 'opacity-60')}
               >

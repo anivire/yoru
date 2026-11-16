@@ -8,7 +8,7 @@ import { Page } from '../components/app-shell'
 import { TLink } from '../components/transition-link'
 import { WatchSection } from '../components/watch-section'
 import { BetaBadge, RoomPanel } from '../components/watch-together'
-import { useAnimeTitle } from '../lib/anime-title'
+import { useAnimeTitle, animePath } from '../lib/anime-title'
 import { api } from '../lib/api'
 import { keys } from '../lib/queries'
 import { type Room, useRoom } from '../lib/rooms'
@@ -70,7 +70,7 @@ export function RoomPage() {
     <Page>
       <div className="mb-5 flex items-center gap-4 sm:mt-(--page-top,2rem)">
         {anime?.imageUrl ? (
-          <TLink to={`/anime/${malId}`} className="hidden h-20 w-14 shrink-0 overflow-hidden rounded-lg bg-muted sm:block">
+          <TLink to={animePath(malId, anime?.title)} className="hidden h-20 w-14 shrink-0 overflow-hidden rounded-lg bg-muted sm:block">
             <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" />
           </TLink>
         ) : null}
@@ -86,7 +86,7 @@ export function RoomPage() {
             <Skeleton className="mt-1.5 h-7 w-64 rounded-md" />
           )}
           {anime ? (
-            <TLink to={`/anime/${malId}`} className="mt-0.5 inline-flex items-center text-[0.8125rem] text-muted-foreground hover:text-foreground">
+            <TLink to={animePath(malId, anime?.title)} className="mt-0.5 inline-flex items-center text-[0.8125rem] text-muted-foreground hover:text-foreground">
               <RiArrowLeftSLine className="size-4" />
               {t('room.toAnime')}
             </TLink>
@@ -95,7 +95,7 @@ export function RoomPage() {
         <InviteFriendsButton roomId={id} className="shrink-0" />
       </div>
       <div className="mb-5">
-        <RoomPanel room={room} roomId={id} onLeave={() => navigate(malId ? `/anime/${malId}` : '/')} />
+        <RoomPanel room={room} roomId={id} onLeave={() => navigate(malId ? animePath(malId, anime?.title) : '/')} />
       </div>
       {details.data ? <WatchSection anime={details.data.anime} entry={details.data.entry} room={room} /> : <Skeleton className="aspect-video w-full rounded-xl" />}
     </Page>

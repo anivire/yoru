@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { formatDate, typeLabel } from '../lib/format'
 import { EpisodeCount, scoreColor } from './anime-cards'
 import { TLink } from './transition-link'
-import { AnimeTitle } from '../lib/anime-title'
+import { AnimeTitle, animePath } from '../lib/anime-title'
 import { STATUS_META, StatusIcon, TONE_TEXT } from '../lib/list-status'
 
 export type ListView = 'grid' | 'table'
@@ -37,7 +37,7 @@ export function ViewToggle({ view, onChange }: { view: ListView; onChange: (v: L
   )
 }
 
-function RowLink({ malId, external, className, children }: { malId: number; external?: boolean; className: string; children: ReactNode }) {
+function RowLink({ malId, title, external, className, children }: { malId: number; title: string; external?: boolean; className: string; children: ReactNode }) {
   if (external) {
     return (
       <a href={`https://myanimelist.net/anime/${malId}`} target="_blank" rel="noreferrer" className={className}>
@@ -46,7 +46,7 @@ function RowLink({ malId, external, className, children }: { malId: number; exte
     )
   }
   return (
-    <TLink to={`/anime/${malId}`} className={className}>
+    <TLink to={animePath(malId, title)} className={className}>
       {children}
     </TLink>
   )
@@ -68,7 +68,7 @@ export function ListTable({ items, external }: { items: ListEntryWithAnime[]; ex
       </div>
       <div className="flex flex-col">
         {items.map((e) => (
-          <RowLink key={e.malId} malId={e.malId} external={external} className={cn(TABLE_COLS, 'group rounded-xl px-3 py-2 transition-colors [contain-intrinsic-size:auto_4.5rem] [content-visibility:auto] hover:bg-field-hover')}>
+          <RowLink key={e.malId} malId={e.malId} title={e.anime.title} external={external} className={cn(TABLE_COLS, 'group rounded-xl px-3 py-2 transition-colors [contain-intrinsic-size:auto_4.5rem] [content-visibility:auto] hover:bg-field-hover')}>
             <div className="flex min-w-0 items-center gap-3">
               <div className="h-14 w-10 shrink-0 overflow-hidden rounded-md bg-muted">
                 {e.anime.imageUrl ? <Image src={e.anime.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" /> : null}

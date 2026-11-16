@@ -5,7 +5,7 @@ import { RiChat3Fill, RiDeleteBin6Line, RiIdCardFill, RiStickyNoteFill } from '@
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
-import { AnimeTitle } from '../lib/anime-title'
+import { AnimeTitle, animePath } from '../lib/anime-title'
 import { relativeTime } from '../lib/format'
 import { errorMessage } from '../lib/queries'
 import { TLink } from './transition-link'
@@ -26,7 +26,7 @@ function Row({ user, anime, createdAt, children, actions }: { user: UserCard; an
           </TLink>
           <span className="text-subtle-foreground">@{user.username}</span>
           {anime ? (
-            <TLink to={`/anime/${anime.malId}`} className="min-w-0 truncate text-muted-foreground transition-colors hover:text-foreground">
+            <TLink to={animePath(anime.malId, anime.title)} className="min-w-0 truncate text-muted-foreground transition-colors hover:text-foreground">
               <AnimeTitle anime={anime} />
             </TLink>
           ) : null}

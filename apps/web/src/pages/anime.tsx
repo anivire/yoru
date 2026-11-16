@@ -6,7 +6,7 @@ import { EpisodeCount, GLASS_CHIP, Score } from '../components/anime-cards'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StatusBadge } from '../lib/list-status'
-import { useParams } from 'react-router'
+import { Navigate, useLocation, useParams } from 'react-router'
 import { Page } from '../components/app-shell'
 import { ListEditor } from '../components/list-editor'
 import { airedLimit } from '../components/quick-edit'
@@ -20,7 +20,7 @@ import { useAppearance } from '../lib/appearance'
 import { formatDate, formatDateTime, relativeTime, seasonLabel, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
 import { useDocumentTitle } from '../lib/title'
-import { useAnimeTitle } from '../lib/anime-title'
+import { animePath, useAnimeTitle } from '../lib/anime-title'
 import { TLink } from '../components/transition-link'
 import { AnimeExtrasSections, ScreenshotsSection } from '../components/anime-extras'
 
@@ -257,7 +257,9 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
 
 export function AnimePage() {
   const { t } = useTranslation()
-  const malId = Number(useParams().id)
+  const param = useParams().id ?? ''
+  const location = useLocation()
+  const malId = Number.parseInt(param, 10)
   const { backdrop } = useAppearance()
   const { data, isPending, isError, error } = useQuery({ queryKey: keys.anime(malId), queryFn: () => api.anime(malId), enabled: malId > 0 })
   const title = useAnimeTitle()
@@ -272,8 +274,10 @@ export function AnimePage() {
     )
   }
 
+  const path = animePath(data.anime.malId, data.anime.title)
   return (
     <div className="relative isolate -mt-(--header-h) pt-(--header-h)">
+      {location.pathname !== path ? <Navigate to={{ pathname: path, search: location.search, hash: location.hash }} state={location.state} replace /> : null}
       <div className={cn('pointer-events-none absolute inset-x-0 top-0 -z-10 h-[52rem] overflow-hidden', backdrop === 'glow' ? 'backdrop-glow' : '[mask-image:linear-gradient(to_bottom,black_30%,transparent)]')}>
         {data.anime.imageUrl ? <img src={data.anime.imageUrl} alt="" className="h-full w-full scale-110 object-cover object-[50%_25%] opacity-50 blur-xl" /> : null}
         <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-background/50 to-background/20" />

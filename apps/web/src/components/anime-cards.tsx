@@ -8,7 +8,7 @@ import { formatTime, relativeTime, seasonLabel, typeLabel } from '../lib/format'
 import { useAppearance } from '../lib/appearance'
 import { QuickEdit } from './quick-edit'
 import { TLink } from './transition-link'
-import { AnimeTitle } from '../lib/anime-title'
+import { AnimeTitle, animePath } from '../lib/anime-title'
 import { StatusText } from '../lib/list-status'
 import { FriendStack, useFriendsOn } from './friend-titles'
 
@@ -133,7 +133,7 @@ export function AnimeCard({
         if (el) setClamped(el.scrollHeight > el.clientHeight + 1)
       }}
     >
-      <CardLink href={href} to={`/anime/${anime.malId}`}>
+      <CardLink href={href} to={animePath(anime.malId, anime.title)}>
       <div className="relative isolate aspect-[2/3] overflow-hidden rounded-xl bg-muted shadow-sm transition-shadow duration-150 group-hover:shadow-xl group-hover:shadow-black/40">
         {anime.imageUrl ? (
           <Image
@@ -310,7 +310,7 @@ export function ContinueCard({ item }: { item: ContinueItem }) {
   const { t } = useTranslation()
   const image = item.episodeImageUrl ?? item.anime.imageUrl
   return (
-    <TLink to={item.pending ? `/anime/${item.anime.malId}` : `/anime/${item.anime.malId}?episode=${item.episode}`} className="group flex flex-col gap-2">
+    <TLink to={item.pending ? animePath(item.anime.malId, item.anime.title) : `${animePath(item.anime.malId, item.anime.title)}?episode=${item.episode}`} className="group flex flex-col gap-2">
       <div className="relative isolate aspect-video overflow-hidden rounded-xl bg-muted">
         {image ? (
           <Image
@@ -379,7 +379,7 @@ export function UpcomingCard({ item }: { item: UpcomingItem }) {
   const { t } = useTranslation()
   const image = item.bannerUrl ?? item.anime.imageUrl
   return (
-    <TLink to={`/anime/${item.anime.malId}`} className="group flex min-w-0 flex-col gap-2.5">
+    <TLink to={animePath(item.anime.malId, item.anime.title)} className="group flex min-w-0 flex-col gap-2.5">
       <div className="relative isolate aspect-video overflow-hidden rounded-xl bg-muted transform-gpu">
         {image ? (
           <Image

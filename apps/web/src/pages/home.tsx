@@ -17,7 +17,7 @@ import { seasonLabel, typeLabel } from '../lib/format'
 import { HeroBackdrop } from '../components/hero-backdrop'
 import { TLink } from '../components/transition-link'
 import { useDocumentTitle } from '../lib/title'
-import { AnimeTitle } from '../lib/anime-title'
+import { AnimeTitle, animePath } from '../lib/anime-title'
 import { nameOf } from '../components/user-avatar'
 
 function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number | null; label: string }) {
@@ -32,7 +32,7 @@ function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number 
       <div className="page-frame px-4 pb-12 pt-6 sm:px-6">
         <div className="mb-6 flex h-1 items-center text-[0.9375rem] font-medium text-muted-foreground">{label}</div>
         <div className="flex items-end gap-6">
-          <TLink to={`/anime/${anime.malId}`} className="hidden shrink-0 sm:block">
+          <TLink to={animePath(anime.malId, anime.title)} className="hidden shrink-0 sm:block">
             <div className="aspect-[2/3] w-44 overflow-hidden rounded-xl bg-muted shadow-2xl">
               {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" /> : null}
             </div>
@@ -65,7 +65,7 @@ function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number 
             ) : null}
             <div className="mt-1">
               <Button asChild variant="accent" size="lg">
-                <TLink to={`/anime/${anime.malId}${episode ? `?episode=${episode}` : ''}`}>
+                <TLink to={`${animePath(anime.malId, anime.title)}${episode ? `?episode=${episode}` : ''}`}>
                   <RiPlayLargeFill />
                   {episode ? `${t('common.episode')} ${episode}` : t('common.open')}
                 </TLink>

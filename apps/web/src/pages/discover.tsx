@@ -14,7 +14,7 @@ import { relativeTime, seasonLabel, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
 import { TLink } from '../components/transition-link'
 import { useDocumentTitle } from '../lib/title'
-import { AnimeTitle } from '../lib/anime-title'
+import { AnimeTitle, animePath } from '../lib/anime-title'
 
 const SLIDE_MS = 8000
 
@@ -75,7 +75,7 @@ function Hero({ items }: { items: AnimeSummary[] }) {
           ))}
         </div>
         <div key={current.malId} className="flex animate-fade items-end gap-6">
-          <TLink to={`/anime/${anime.malId}`} className="hidden shrink-0 sm:block">
+          <TLink to={animePath(anime.malId, anime.title)} className="hidden shrink-0 sm:block">
             <div className="aspect-[2/3] w-44 overflow-hidden rounded-xl bg-muted shadow-2xl">
               {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" /> : null}
             </div>
@@ -106,7 +106,7 @@ function Hero({ items }: { items: AnimeSummary[] }) {
             ) : null}
             <div className="mt-1">
               <Button asChild variant="accent" size="lg">
-                <TLink to={`/anime/${anime.malId}`}>
+                <TLink to={animePath(anime.malId, anime.title)}>
                   <RiPlayLargeFill />
                   {t('discover.open')}
                 </TLink>
@@ -255,7 +255,7 @@ function RecentRow({ item }: { item: RecentItem }) {
   const Icon = item.kind === 'voice' || item.kind === 'voiceEn' ? RiMicFill : RiClosedCaptioningFill
   return (
     <TLink
-      to={`/anime/${item.anime.malId}?episode=${item.episode}&kind=${item.kind}`}
+      to={`${animePath(item.anime.malId, item.anime.title)}?episode=${item.episode}&kind=${item.kind}`}
       className="group flex min-w-0 items-center gap-3 rounded-xl p-2 transition-colors hover:bg-muted"
     >
       <div className="aspect-[2/3] w-12 shrink-0 overflow-hidden rounded-lg bg-muted">

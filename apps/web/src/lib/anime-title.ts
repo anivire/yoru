@@ -17,3 +17,19 @@ export function useAnimeTitle(): (anime: AnimeTitles) => string {
 export function AnimeTitle({ anime }: { anime: AnimeTitles }) {
   return useAnimeTitle()(anime)
 }
+
+export function animeSlug(title: string): string {
+  return title
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80)
+    .replace(/-+$/, '')
+}
+
+export function animePath(malId: number, title?: string | null): string {
+  const slug = title ? animeSlug(title) : ''
+  return slug ? `/anime/${malId}-${slug}` : `/anime/${malId}`
+}
