@@ -120,6 +120,13 @@
       "when": 1794844976713,
       "tag": "0016_multi_use_invites",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1794847114657,
+      "tag": "0017_extensions",
+      "breakpoints": true
     }
   ]
 }

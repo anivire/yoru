@@ -57,7 +57,7 @@ import type {
   StreamResult,
   Translation,
   User,
-  VersionInfo, AnimeExtras, Screenshot, VideoEpisodes, VideoProviderInfo, ProviderCategory, ProvidersSettings } from '@yoru/shared'
+  VersionInfo, AnimeExtras, Screenshot, VideoEpisodes, VideoProviderInfo, ProviderGroup, ProvidersSettings, ExtensionInfo, ExtensionUpdateResult, DataSourceId, DataSourceInfo } from '@yoru/shared'
 import type { FeedScope } from './appearance'
 
 export class ApiError extends Error {
@@ -224,8 +224,14 @@ export const api = {
     users: () => get<AdminUser[]>('/admin/users'),
     deleteUser: (id: number) => request<{ ok: true }>('DELETE', `/admin/users/${id}`),
     settings: () => get<AdminSettings>('/admin/settings'),
+    checkSource: (id: DataSourceId) => request<DataSourceInfo[]>('POST', `/admin/sources/${id}/check`),
     saveSettings: (patch: AdminSettingsInput) => request<{ ok: true }>('PUT', '/admin/settings', patch),
     providers: () => get<ProvidersSettings>('/admin/providers'),
-    saveProviders: (category: ProviderCategory, entries: { id: string; enabled: boolean }[]) => request<{ ok: true }>('PUT', `/admin/providers/${category}`, { entries }),
+    saveProviders: (group: ProviderGroup, entries: { id: string; enabled: boolean }[]) => request<{ ok: true }>('PUT', `/admin/providers/${group}`, { entries }),
+    extensions: () => get<ExtensionInfo[]>('/admin/extensions'),
+    installExtension: (body: { url?: string; manifest?: string }) => request<{ id: string }>('POST', '/admin/extensions', body),
+    updateExtension: (id: string) => request<ExtensionUpdateResult>('POST', `/admin/extensions/${encodeURIComponent(id)}/update`),
+    patchExtension: (id: string, patch: { enabled?: boolean; settings?: Record<string, string | null> }) => request<{ ok: true }>('PATCH', `/admin/extensions/${encodeURIComponent(id)}`, patch),
+    deleteExtension: (id: string) => request<{ ok: true }>('DELETE', `/admin/extensions/${encodeURIComponent(id)}`),
   },
 }

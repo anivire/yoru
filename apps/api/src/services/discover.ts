@@ -1,6 +1,7 @@
 import type { ListStatus, RecentItem, ScheduleItem } from '@yoru/shared'
 import { and, eq, inArray } from 'drizzle-orm'
 import { db } from '../db/client'
+import { featureEnabled } from '../lib/features'
 import { cached } from '../lib/http'
 import { anime, listEntries } from '../db/schema'
 import type { AnimeSummary } from '@yoru/shared'
@@ -37,7 +38,7 @@ export async function schedule(userId: number, fromIso?: string, toIso?: string)
   let to = Date.parse(toIso ?? '') || now + 28 * DAY
   if (to < from) [from, to] = [to, from]
   if (to - from > MAX_RANGE) to = from + MAX_RANGE
-  const entries = await shikimori.calendar()
+  const entries = featureEnabled('discover') ? await shikimori.calendar() : []
   const statuses = new Map(
     db
       .select({ malId: listEntries.malId, status: listEntries.status })
@@ -140,6 +141,7 @@ export function clearDiscoverCache() {
 }
 
 export function collection(name: Collection): Promise<AnimeSummary[]> {
+  if (!featureEnabled('discover')) return Promise.resolve([])
   return memoized(`collection:${name}`, async () => {
     const { season, ...params } = { season: undefined, ...COLLECTIONS[name] }
     const rows = await shikimori.animes({ ...params, ...(season ? { season: currentSeason() } : {}) })
@@ -148,6 +150,7 @@ export function collection(name: Collection): Promise<AnimeSummary[]> {
 }
 
 export function trending(genre: number | null): Promise<AnimeSummary[]> {
+  if (!featureEnabled('discover')) return Promise.resolve([])
   return memoized(`trending:${genre ?? 'all'}`, async () => {
     const rows = await shikimori.animes({ season: currentSeason(), order: 'popularity', ...(genre ? { genre } : {}) })
     return fillMissing(shikiSummaries(rows))

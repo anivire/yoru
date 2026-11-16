@@ -2,6 +2,7 @@ import { and, desc, eq, inArray, max } from 'drizzle-orm'
 import type { ContinueItem, HomeData, UpcomingItem } from '@yoru/shared'
 import { db } from '../db/client'
 import { activity, anime, listEntries, providerReleases, watchProgress } from '../db/schema'
+import { featureEnabled } from '../lib/features'
 import { cacheGet } from '../lib/http'
 import { ensureAnime, nextAiringAt, toSummary } from './anime'
 import type { JikanEpisodeVideo, JikanList } from './jikan'
@@ -29,7 +30,7 @@ function cachedEpisodeImage(malId: number, episode: number): string | null {
 }
 
 export async function homeData(userId: number): Promise<HomeData> {
-  const calendar = new Map((await shikimori.calendar().catch(() => [])).map((e) => [e.anime.id, e]))
+  const calendar = new Map((featureEnabled('discover') ? await shikimori.calendar().catch(() => []) : []).map((e) => [e.anime.id, e]))
   const entries = allEntries(userId)
   const byMal = new Map(entries.map((e) => [e.malId, e]))
   const available = new Map(

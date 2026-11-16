@@ -8,6 +8,9 @@ const DEFAULT_URLS: Record<UrlSource, string> = {
   anime365: env.anime365Url,
   jikan: env.jikanUrl,
   shikimori: env.shikimoriUrl,
+  anilibria: env.anilibriaUrl,
+  kitsu: env.kitsuUrl,
+  kodik: env.kodikUrl,
   anilist: env.anilistUrl,
   aniskip: env.aniskipUrl,
 }
@@ -44,6 +47,10 @@ export function sourceEnabled(id: DataSourceId): boolean {
 export function setSourceEnabled(id: DataSourceId, enabled: boolean) {
   if (id === 'anime365') return
   setSetting(`source.${id}.enabled`, enabled ? (id === 'jikan' ? 'true' : null) : 'false')
+}
+
+export function kodikToken(): string | null {
+  return getSetting('kodik_token') || env.kodikToken || null
 }
 
 export function githubConfig() {

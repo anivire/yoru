@@ -4,7 +4,8 @@ import path from 'node:path'
 import type { ChangeType, Changelog, ChangelogEntry, VersionInfo } from '@yoru/shared'
 import { env } from '../env'
 import { cached } from '../lib/http'
-import { githubConfig, sourceEnabled, sourceUrl } from '../lib/sources'
+import { featureEnabled } from '../lib/features'
+import { githubConfig, sourceUrl } from '../lib/sources'
 
 const LATEST_TTL = 30 * 60_000
 const CHANGELOG_PAGE = 40
@@ -77,7 +78,7 @@ async function versionAt(sha: string): Promise<string | null> {
 
 async function latestInfo(commit: string | null) {
   const { repo, branch } = githubConfig()
-  if (!sourceEnabled('github')) throw new Error('GitHub is disabled')
+  if (!featureEnabled('updates')) throw new Error('GitHub is disabled')
   return cached(`github:latest:${repo}:${branch}:${commit ?? ''}`, LATEST_TTL, async () => {
     const head = await github<GithubCommit>(`/commits/${branch}`)
     let behindBy: number | null = null
@@ -115,7 +116,7 @@ function toEntry(commit: GithubCommit): ChangelogEntry {
 
 export async function changelog(page: number): Promise<Changelog> {
   const { repo, branch } = githubConfig()
-  if (!sourceEnabled('github')) throw new Error('GitHub is disabled')
+  if (!featureEnabled('updates')) throw new Error('GitHub is disabled')
   const commits = await cached(`github:changelog:${repo}:${branch}:${page}`, LATEST_TTL, () =>
     github<GithubCommit[]>(`/commits?sha=${encodeURIComponent(branch)}&per_page=${CHANGELOG_PAGE}&page=${page}`),
   )

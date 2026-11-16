@@ -114,6 +114,7 @@ Counts shown as coloured icons follow the same mapping: watching `RiPlayCircleFi
 ## Dividers and depth
 
 - Avoid `border-t` / `divide-y` lines between blocks; the owner finds them heavy. Separate with spacing, a background step (`surface` on `background`), or a soft fill.
+- Rows of a list sit directly in their card, like the home sections in `components/layout-settings.tsx`. Do not wrap them in an extra tinted well inside the card; a card inside a card reads as noise.
 - Borders are fine for dashed placeholders (`border-2 border-dashed border-border`) and inputs that need an edge.
 - Shadows only on overlays (the `panel` shadow) and on hovered poster cards (`group-hover:shadow-xl`).
 

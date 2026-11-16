@@ -9,11 +9,12 @@ import { ApiError, api } from '../lib/api'
 import { errorMessage, keys } from '../lib/queries'
 import { EpisodeList } from './episode-list'
 import { MatchDialog } from './match-dialog'
+import { EmbedPlayer } from './player/embed-player'
 import { Player } from './player/player'
 import { TLink } from './transition-link'
 import { useAppearance } from '../lib/appearance'
 import { useAnimeTitle } from '../lib/anime-title'
-import { ANIME365_LOGO } from '../lib/logos'
+import { ANILIBRIA_LOGO, ANIME365_LOGO } from '../lib/logos'
 import { isFavorite, pickFavorite, toggleFavorite } from '../lib/favorite-authors'
 import type { Room } from '../lib/rooms'
 import { RoomDebug } from './watch-together'
@@ -38,13 +39,9 @@ function sourceKey(malId: number) {
   return `yoru:source:${malId}`
 }
 
-function LibriaMark() {
-  return <span className="grid size-4 place-items-center rounded-sm bg-[#b32121] text-[0.5625rem] font-extrabold leading-none text-white">A</span>
-}
-
 function ProviderMark({ id }: { id: string }) {
   if (id === 'anime365') return <img src={ANIME365_LOGO} alt="" className="size-4 rounded-sm bg-white object-contain" />
-  if (id === 'anilibria') return <LibriaMark />
+  if (id === 'anilibria') return <img src={ANILIBRIA_LOGO} alt="" className="size-4 rounded-sm bg-white object-contain p-px" />
   return <RiPlayCircleFill />
 }
 
@@ -320,6 +317,17 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
       >
         {errorMessage(stream.error, t)}
       </PlayerMessage>
+    )
+  } else if (stream.data?.embedUrl) {
+    body = (
+      <EmbedPlayer
+        key={`${episode}:${stream.data.translationId}`}
+        url={stream.data.embedUrl}
+        startAt={playerProps.startAt}
+        onProgress={onProgress}
+        onEnded={playerProps.onEnded}
+        onDuration={playerProps.onDuration}
+      />
     )
   } else if (stream.data) {
     body = (

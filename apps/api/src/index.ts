@@ -1,7 +1,6 @@
 import { serve } from '@hono/node-server'
 import { WebSocketServer } from 'ws'
 import { eq } from 'drizzle-orm'
-import { EnvHttpProxyAgent, setGlobalDispatcher } from 'undici'
 import { app } from './app'
 import { db, now, runMigrations } from './db/client'
 import { invites, users } from './db/schema'
@@ -10,12 +9,8 @@ import { startAnimeBackfill } from './jobs/anime-backfill'
 import { startRussianTitles } from './jobs/russian-titles'
 import { startReleaseWatcher } from './jobs/release-watcher'
 import { backfillAllFeeds } from './services/feed'
+import { loadExtensions } from './extensions/manager'
 import { hashPassword, randomToken } from './lib/crypto'
-
-if (process.env.HTTPS_PROXY || process.env.HTTP_PROXY || process.env.https_proxy || process.env.http_proxy) {
-  setGlobalDispatcher(new EnvHttpProxyAgent())
-  console.log('[yoru] outbound requests go through HTTP(S)_PROXY')
-}
 
 async function bootstrapAdmin() {
   const admin = db.select({ id: users.id }).from(users).where(eq(users.role, 'admin')).get()
@@ -34,6 +29,7 @@ async function bootstrapAdmin() {
 }
 
 runMigrations()
+loadExtensions()
 await bootstrapAdmin()
 startReleaseWatcher()
 startAnimeBackfill()

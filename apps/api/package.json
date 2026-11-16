@@ -1,7 +1,7 @@
 {
   "name": "api",
   "private": true,
-  "version": "0.63.0",
+  "version": "0.64.0",
   "type": "module",
   "scripts": {
     "dev": "node --watch --watch-preserve-output --env-file-if-exists=../../.env --import tsx src/index.ts",
@@ -12,11 +12,12 @@
   },
   "dependencies": {
     "@hono/node-server": "^2.1.8",
+    "@jitl/quickjs-singlefile-mjs-release-sync": "^0.32.0",
     "@yoru/shared": "*",
     "better-sqlite3": "^12.11.1",
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.18",
-    "undici": "^7.16.0",
+    "quickjs-emscripten-core": "^0.32.0",
     "ws": "^8.23.0",
     "zod": "^4.6.7"
   },

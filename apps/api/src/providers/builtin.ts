@@ -1,11 +1,14 @@
 import { UpstreamError } from '../lib/http'
 import { sourceEnabled } from '../lib/sources'
-import { fetchFromA365, fromJikan, upsertA365Summaries, upsertJikanSummaries } from '../services/anime'
+import { now } from '../db/client'
+import { fetchFromA365, fromJikan, getAnimeRow, toSummary, upsertA365Summaries, upsertAnime, upsertJikanSummaries } from '../services/anime'
+import { type AniListFullMedia, anilist } from '../services/anilist'
+import { type KitsuEntry, kitsu } from '../services/kitsu'
 import { anime365 } from '../services/anime365'
 import { fillMissing } from '../services/discover'
 import { jikan } from '../services/jikan'
 import { shikiSummaries, shikimori } from '../services/shikimori'
-import type { MetadataProvider, SearchProvider, SearchQuery } from './types'
+import type { AnimeData, MetadataProvider, SearchProvider, SearchQuery } from './types'
 
 const PAGE_SIZE = 24
 const CYRILLIC = /[а-яё]/i
@@ -16,6 +19,97 @@ function notFoundAsNull<T>(promise: Promise<T>): Promise<T | null> {
     if (error instanceof UpstreamError && error.status === 404) return null
     throw error
   })
+}
+
+const ANILIST_FORMATS: Record<string, string[]> = { tv: ['TV', 'TV_SHORT'], movie: ['MOVIE'], ova: ['OVA'], ona: ['ONA'], special: ['SPECIAL'], music: ['MUSIC'] }
+const ANILIST_TYPE: Record<string, string> = { TV: 'tv', TV_SHORT: 'tv', MOVIE: 'movie', OVA: 'ova', ONA: 'ona', SPECIAL: 'special', MUSIC: 'music' }
+const ANILIST_STATUS: Record<string, string> = { RELEASING: 'airing', HIATUS: 'airing', FINISHED: 'finished', CANCELLED: 'finished', NOT_YET_RELEASED: 'upcoming' }
+const ANILIST_FILTER_STATUS: Record<string, string> = { airing: 'RELEASING', complete: 'FINISHED', upcoming: 'NOT_YET_RELEASED' }
+const KITSU_TYPE: Record<string, string> = { TV: 'tv', movie: 'movie', OVA: 'ova', ONA: 'ona', special: 'special', music: 'music' }
+const KITSU_FILTER_TYPE: Record<string, string> = { tv: 'TV', movie: 'movie', ova: 'OVA', ona: 'ONA', special: 'special', music: 'music' }
+const KITSU_STATUS: Record<string, string> = { current: 'airing', finished: 'finished', upcoming: 'upcoming', unreleased: 'upcoming', tba: 'upcoming' }
+const KITSU_FILTER_STATUS: Record<string, string> = { airing: 'current', complete: 'finished', upcoming: 'upcoming' }
+const SEASON_OF_MONTH = ['winter', 'winter', 'spring', 'spring', 'spring', 'summer', 'summer', 'summer', 'fall', 'fall', 'fall', 'winter']
+
+type KeyedAnime = AnimeData & { malId: number }
+
+function isoDate(date: { year: number | null; month: number | null; day: number | null } | null): string | null {
+  if (!date?.year) return null
+  return `${date.year}-${String(date.month ?? 1).padStart(2, '0')}-${String(date.day ?? 1).padStart(2, '0')}`
+}
+
+function fromAniList(m: AniListFullMedia): KeyedAnime | null {
+  if (!m.idMal) return null
+  const title = m.title.romaji || m.title.english || m.title.native
+  if (!title) return null
+  const status = (m.status && ANILIST_STATUS[m.status]) || null
+  return {
+    malId: m.idMal,
+    title,
+    titleEnglish: m.title.english,
+    titleJapanese: m.title.native,
+    synonyms: m.synonyms ?? [],
+    imageUrl: m.coverImage?.extraLarge ?? m.coverImage?.large ?? null,
+    type: (m.format && ANILIST_TYPE[m.format]) || null,
+    episodes: m.episodes,
+    status,
+    airing: status === 'airing',
+    year: m.seasonYear ?? m.startDate?.year ?? null,
+    season: m.season ? m.season.toLowerCase() : null,
+    score: m.averageScore ? m.averageScore / 10 : null,
+    genres: m.genres ?? [],
+    studios: m.studios?.nodes.map((n) => n.name) ?? [],
+    synopsis: m.description ? m.description.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim() : null,
+    duration: m.duration ? `${m.duration} min` : null,
+    airedFrom: isoDate(m.startDate),
+    airedTo: isoDate(m.endDate),
+    trailerUrl: m.trailer?.site === 'youtube' && m.trailer.id ? `https://www.youtube.com/watch?v=${m.trailer.id}` : null,
+    updatedAt: now(),
+  }
+}
+
+function fromKitsu(entry: KitsuEntry): KeyedAnime | null {
+  if (!entry.malId) return null
+  const a = entry.anime.attributes
+  const title = a.titles?.en_jp || a.canonicalTitle || a.titles?.en
+  if (!title) return null
+  const status = (a.status && KITSU_STATUS[a.status]) || null
+  const start = a.startDate ? new Date(a.startDate) : null
+  const score = Number.parseFloat(a.averageRating ?? '')
+  return {
+    malId: entry.malId,
+    title,
+    titleEnglish: a.titles?.en ?? null,
+    titleJapanese: a.titles?.ja_jp ?? null,
+    synonyms: a.abbreviatedTitles ?? [],
+    imageUrl: a.posterImage?.original ?? a.posterImage?.large ?? null,
+    type: (a.subtype && KITSU_TYPE[a.subtype]) || null,
+    episodes: a.episodeCount,
+    status,
+    airing: status === 'airing',
+    year: start ? start.getUTCFullYear() : null,
+    season: start ? SEASON_OF_MONTH[start.getUTCMonth()]! : null,
+    score: score > 0 ? Math.round(score) / 10 : null,
+    genres: entry.genres,
+    studios: [],
+    synopsis: a.synopsis,
+    duration: a.episodeLength ? `${a.episodeLength} min` : null,
+    rating: a.ageRating,
+    airedFrom: a.startDate,
+    airedTo: a.endDate,
+    trailerUrl: a.youtubeVideoId ? `https://www.youtube.com/watch?v=${a.youtubeVideoId}` : null,
+    updatedAt: now(),
+  }
+}
+
+function storeSummaries(items: (KeyedAnime | null)[]) {
+  const seen = new Set<number>()
+  return items
+    .filter((item): item is KeyedAnime => item !== null && !seen.has(item.malId) && Boolean(seen.add(item.malId)))
+    .map((item) => {
+      upsertAnime(item, { onlyIfMissing: true })
+      return toSummary(getAnimeRow(item.malId)!)
+    })
 }
 
 function hasFilters(query: SearchQuery): boolean {
@@ -36,6 +130,64 @@ const anime365Metadata: MetadataProvider = {
   builtin: true,
   available: () => sourceEnabled('anime365'),
   anime: (malId) => notFoundAsNull(fetchFromA365(malId)),
+}
+
+const anilistMetadata: MetadataProvider = {
+  id: 'anilist',
+  name: 'AniList',
+  builtin: true,
+  available: () => sourceEnabled('anilist'),
+  anime: async (malId) => {
+    const media = await anilist.anime(malId)
+    return media ? fromAniList(media) : null
+  },
+}
+
+const kitsuMetadata: MetadataProvider = {
+  id: 'kitsu',
+  name: 'Kitsu',
+  builtin: true,
+  available: () => sourceEnabled('kitsu'),
+  anime: async (malId) => {
+    const entry = await kitsu.anime(malId)
+    return entry ? fromKitsu(entry) : null
+  },
+}
+
+const anilistSearch: SearchProvider = {
+  id: 'anilist',
+  name: 'AniList',
+  builtin: true,
+  features: ['upcoming'],
+  available: () => sourceEnabled('anilist'),
+  accepts: (query) => !CYRILLIC.test(query.q),
+  async search(query) {
+    const res = await anilist.search({
+      q: query.q,
+      page: query.page,
+      format: query.type ? (ANILIST_FORMATS[query.type] ?? null) : null,
+      status: query.status ? (ANILIST_FILTER_STATUS[query.status] ?? null) : null,
+    })
+    return { items: storeSummaries(res.media.map(fromAniList)), hasNextPage: res.hasNextPage, total: null }
+  },
+}
+
+const kitsuSearch: SearchProvider = {
+  id: 'kitsu',
+  name: 'Kitsu',
+  builtin: true,
+  features: ['upcoming'],
+  available: () => sourceEnabled('kitsu'),
+  accepts: (query) => !CYRILLIC.test(query.q),
+  async search(query) {
+    const res = await kitsu.search({
+      q: query.q,
+      page: query.page,
+      subtype: query.type ? (KITSU_FILTER_TYPE[query.type] ?? null) : null,
+      status: query.status ? (KITSU_FILTER_STATUS[query.status] ?? null) : null,
+    })
+    return { items: storeSummaries(res.entries.map(fromKitsu)), hasNextPage: res.hasNextPage, total: null }
+  },
 }
 
 const jikanSearch: SearchProvider = {
@@ -104,5 +256,5 @@ const shikimoriSearch: SearchProvider = {
   },
 }
 
-export const builtinMetadata: MetadataProvider[] = [jikanMetadata, anime365Metadata]
-export const builtinSearch: SearchProvider[] = [jikanSearch, shikimoriSearch, anime365Search]
+export const builtinMetadata: MetadataProvider[] = [jikanMetadata, anilistMetadata, kitsuMetadata, anime365Metadata]
+export const builtinSearch: SearchProvider[] = [jikanSearch, anilistSearch, shikimoriSearch, kitsuSearch, anime365Search]

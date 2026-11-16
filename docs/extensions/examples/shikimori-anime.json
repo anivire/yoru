@@ -1,0 +1,11 @@
+{
+  "id": "shikimori-anime",
+  "name": "Shikimori anime data",
+  "version": "1.0.0",
+  "type": "metadata-provider",
+  "author": "yoru",
+  "description": "Synopsis, poster and Russian title from Shikimori.",
+  "manifestURI": "https://raw.githubusercontent.com/anivire/yoru/master/docs/extensions/examples/shikimori-anime.json",
+  "payloadURI": "shikimori-anime.js",
+  "settings": [{ "key": "baseUrl", "label": "Shikimori address", "type": "text" }]
+}

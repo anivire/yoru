@@ -1,5 +1,5 @@
 import { cacheGet } from '../lib/http'
-import { sourceEnabled } from '../lib/sources'
+import { featureEnabled } from '../lib/features'
 
 interface CalendarEntry {
   next_episode: number
@@ -13,7 +13,7 @@ let memo: { at: number; map: Map<number, number> } | null = null
 function calendarAired(): Map<number, number> {
   if (memo && Date.now() - memo.at < TTL) return memo.map
   const map = new Map<number, number>()
-  if (sourceEnabled('shikimori')) {
+  if (featureEnabled('discover')) {
     for (const e of cacheGet<CalendarEntry[]>('shiki:calendar') ?? []) {
       const byNext = Date.parse(e.next_episode_at) > Date.now() ? e.next_episode - 1 : e.next_episode
       const aired = Math.max(e.anime.episodes_aired ?? 0, byNext)

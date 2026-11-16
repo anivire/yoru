@@ -1,6 +1,6 @@
 import { DATA_SOURCES, type DataSourceId, type DataSourceInfo } from '@yoru/shared'
 import { env } from '../env'
-import { customSourceUrl, defaultSourceUrl, githubConfig, sourceEnabled, sourceUrl } from '../lib/sources'
+import { customSourceUrl, defaultSourceUrl, githubConfig, kodikToken, sourceEnabled, sourceUrl } from '../lib/sources'
 
 const STATUS_TTL = 5 * 60_000
 const statuses = new Map<DataSourceId, { value: boolean; at: number; url: string }>()
@@ -14,8 +14,14 @@ function probeTarget(id: DataSourceId, url: string): string {
       return `${url}/anime/1`
     case 'shikimori':
       return `${url}/api/animes?limit=1`
+    case 'anilibria':
+      return `${url}/anime/releases/latest?limit=1`
     case 'anilist':
       return url
+    case 'kitsu':
+      return `${url}/anime?page[limit]=1`
+    case 'kodik':
+      return `${url}/translations/v2?token=${encodeURIComponent(kodikToken() ?? '')}`
     case 'aniskip':
       return `${url}/v2/skip-times/21/1?types[]=op&episodeLength=0`
     case 'github':

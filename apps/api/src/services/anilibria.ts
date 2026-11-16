@@ -3,6 +3,7 @@ import type { AnilibriaRelease, StreamSource } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { providerMappings } from '../db/schema'
 import { env } from '../env'
+import { sourceEnabled, sourceUrl } from '../lib/sources'
 import { UpstreamError, cached } from '../lib/http'
 import { getAnimeRow } from './anime'
 
@@ -28,9 +29,10 @@ interface LibriaEpisode {
 }
 
 async function request<T>(path: string): Promise<T> {
+  if (!sourceEnabled('anilibria')) throw new UpstreamError('anilibria', 503, 'AniLibria is disabled')
   let res: Response
   try {
-    res = await fetch(`${env.anilibriaUrl}${path}`, {
+    res = await fetch(`${sourceUrl('anilibria')}${path}`, {
       headers: { Accept: 'application/json', 'User-Agent': env.userAgent },
       signal: AbortSignal.timeout(20_000),
     })

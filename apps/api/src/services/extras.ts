@@ -1,6 +1,7 @@
 import type { AnimeCharacter, AnimeExtras, AnimeSummary, RelatedAnime } from '@yoru/shared'
 import { inArray } from 'drizzle-orm'
 import { db, now } from '../db/client'
+import { featureEnabled } from '../lib/features'
 import { anime } from '../db/schema'
 import { type AniListMedia, anilist } from './anilist'
 import { type AnimeRow, toSummary, upsertAnime } from './anime'
@@ -47,7 +48,7 @@ function summaries(items: AniListMedia[]): Map<number, AnimeSummary> {
 }
 
 export async function animeExtras(malId: number): Promise<AnimeExtras> {
-  const media = await anilist.extras(malId).catch(() => null)
+  const media = featureEnabled('related') ? await anilist.extras(malId).catch(() => null) : null
   if (!media) return { relations: [], characters: [], recommendations: [] }
 
   const relationEdges = media.relations.edges.filter((e) => e.node.type === 'ANIME' && e.node.idMal && e.node.idMal !== malId)

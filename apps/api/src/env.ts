@@ -31,6 +31,9 @@ export const env = {
   anilistUrl: str('ANILIST_URL', 'https://graphql.anilist.co').replace(/\/+$/, ''),
   aniskipUrl: str('ANISKIP_URL', 'https://api.aniskip.com').replace(/\/+$/, ''),
   anilibriaUrl: str('ANILIBRIA_URL', 'https://api.anilibria.app/api/v1').replace(/\/+$/, ''),
+  kitsuUrl: str('KITSU_URL', 'https://kitsu.app/api/edge').replace(/\/+$/, ''),
+  kodikUrl: str('KODIK_URL', 'https://kodikapi.com').replace(/\/+$/, ''),
+  kodikToken: str('KODIK_TOKEN'),
   releasePollMinutes: int('RELEASE_POLL_MINUTES', 5),
   oauth: {
     anilist: { clientId: str('ANILIST_CLIENT_ID'), clientSecret: str('ANILIST_CLIENT_SECRET') },

@@ -4,6 +4,7 @@ import { type AppEnv, requireAuth } from '../lib/auth'
 import { badRequest, notFound } from '../lib/http'
 import { intParam } from '../lib/validate'
 import { activeProviders } from '../providers/chain'
+import { proxyResponse } from '../extensions/proxy'
 import { subtitlesFor } from '../services/provider'
 
 function videoProvider(id: string) {
@@ -23,6 +24,7 @@ export const streamRoutes = new Hono<AppEnv>()
     return c.json(body)
   })
   .get('/subtitles/:id', (c) => subtitlesFor(c.get('user'), intParam(c, 'id')))
+  .get('/proxy/:token', (c) => proxyResponse(c.req.param('token'), c.req.header('range')))
   .get('/:malId/:provider/episodes', async (c) => c.json(await videoProvider(c.req.param('provider')).episodes(intParam(c, 'malId'))))
   .get('/:malId/:provider/translations', async (c) => {
     const kind = c.req.query('kind') as StreamKind

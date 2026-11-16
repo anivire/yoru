@@ -17,25 +17,92 @@ export const EXPORT_FORMATS = ['yoru', 'json', 'csv', 'mal-xml'] as const
 export type ExportFormat = (typeof EXPORT_FORMATS)[number]
 
 export const METADATA_SOURCES = ['jikan', 'anime365'] as const
-export const DATA_SOURCES = ['anime365', 'jikan', 'shikimori', 'anilist', 'aniskip', 'github'] as const
+export const DATA_SOURCES = ['anime365', 'jikan', 'shikimori', 'anilist', 'kitsu', 'anilibria', 'kodik', 'aniskip', 'github'] as const
 export type DataSourceId = (typeof DATA_SOURCES)[number]
 export type MetadataSource = (typeof METADATA_SOURCES)[number]
+
+export const FEATURES = ['discover', 'screenshots', 'russianTitles', 'related', 'skip', 'updates'] as const
+export type FeatureId = (typeof FEATURES)[number]
+
+export const FEATURE_SOURCES: Record<FeatureId, DataSourceId> = {
+  discover: 'shikimori',
+  screenshots: 'shikimori',
+  russianTitles: 'shikimori',
+  related: 'anilist',
+  skip: 'aniskip',
+  updates: 'github',
+}
 
 export const PROVIDER_CATEGORIES = ['metadata', 'search', 'video'] as const
 export type ProviderCategory = (typeof PROVIDER_CATEGORIES)[number]
 
+export const PROVIDER_GROUPS = ['primary', 'video'] as const
+export type ProviderGroup = (typeof PROVIDER_GROUPS)[number]
+
 export interface ProviderEntryInfo {
   id: string
   name: string
-  builtin: boolean
+  roles: ProviderCategory[]
+  source: DataSourceId | null
+  extension: string | null
   enabled: boolean
   available: boolean
 }
 
-export type ProvidersSettings = Record<ProviderCategory, ProviderEntryInfo[]>
+export type ProvidersSettings = Record<ProviderGroup, ProviderEntryInfo[]>
 
 export const providerOrderSchema = z.object({
   entries: z.array(z.object({ id: z.string().min(1).max(64), enabled: z.boolean() })).max(50),
+})
+
+export const EXTENSION_TYPES = ['metadata-provider', 'search-provider', 'video-provider'] as const
+export type ExtensionType = (typeof EXTENSION_TYPES)[number]
+
+export interface ExtensionSettingField {
+  key: string
+  label: string
+  type: 'text' | 'password'
+}
+
+export interface ExtensionLog {
+  at: string
+  level: 'log' | 'warn' | 'error'
+  line: string
+}
+
+export interface ExtensionInfo {
+  id: string
+  name: string
+  version: string
+  type: ExtensionType
+  author: string | null
+  description: string | null
+  manifestUrl: string | null
+  enabled: boolean
+  settings: { field: ExtensionSettingField; value: string | null; set: boolean }[]
+  lastError: string | null
+  lastErrorAt: string | null
+  installedAt: string
+  updatedAt: string
+  logs: ExtensionLog[]
+}
+
+export interface ExtensionUpdateResult {
+  id: string
+  version: string
+  updated: boolean
+}
+
+export const extensionInstallSchema = z
+  .object({
+    url: z.string().trim().url().max(2000).optional(),
+    manifest: z.string().max(2_000_000).optional(),
+  })
+  .refine((v) => Boolean(v.url || v.manifest), { message: 'EXTENSION_SOURCE_MISSING' })
+
+export const extensionPatchSchema = z.object({
+  enabled: z.boolean().optional(),
+  settings: z.record(z.string(), z.string().max(4000).nullable()).optional(),
 })
 
 export const SEARCH_FEATURES = ['sort', 'upcoming', 'genres'] as const
@@ -275,6 +342,7 @@ export interface StreamResult {
   author: string
   sources: StreamSource[]
   subtitlesUrl: string | null
+  embedUrl: string | null
 }
 
 export interface ContinueItem {
@@ -470,6 +538,8 @@ export interface OAuthProviderInfo {
 
 export interface AdminSettings {
   hasAnime365Token: boolean
+  hasKodikToken: boolean
+  features: Record<FeatureId, boolean>
   importProviders: Record<ImportProvider, boolean>
   metadataSource: MetadataSource
   sources: DataSourceInfo[]
@@ -605,9 +675,11 @@ const oauthPatchSchema = z.object({
 
 export const adminSettingsSchema = z.object({
   anime365Token: z.string().trim().max(512).nullable().optional(),
+  kodikToken: z.string().trim().max(512).nullable().optional(),
+  features: z.partialRecord(z.enum(FEATURES), z.boolean()).optional(),
   metadataSource: z.enum(METADATA_SOURCES).optional(),
   sources: z
-    .object({ anime365: sourcePatchSchema, jikan: sourcePatchSchema, shikimori: sourcePatchSchema, anilist: sourcePatchSchema, github: sourcePatchSchema })
+    .object({ anime365: sourcePatchSchema, jikan: sourcePatchSchema, shikimori: sourcePatchSchema, anilist: sourcePatchSchema, kitsu: sourcePatchSchema, anilibria: sourcePatchSchema, kodik: sourcePatchSchema, aniskip: sourcePatchSchema, github: sourcePatchSchema })
     .partial()
     .optional(),
   github: z

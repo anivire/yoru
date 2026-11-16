@@ -1,7 +1,8 @@
 import type { SkipKind, SkipTime } from '@yoru/shared'
 import { env } from '../env'
 import { UpstreamError, cached } from '../lib/http'
-import { sourceEnabled, sourceUrl } from '../lib/sources'
+import { featureEnabled } from '../lib/features'
+import { sourceUrl } from '../lib/sources'
 
 const HOUR = 60 * 60_000
 const MAX_LENGTH_DIFF = 60
@@ -47,7 +48,7 @@ function pick(results: AniSkipResult[], length: number): SkipTime[] {
 }
 
 export function skipTimes(malId: number, episode: number, length: number): Promise<SkipTime[]> {
-  if (!sourceEnabled('aniskip')) return Promise.resolve([])
+  if (!featureEnabled('skip')) return Promise.resolve([])
   const rounded = Math.round(length)
   return cached(`aniskip:${malId}:${episode}:${rounded}`, 12 * HOUR, async () => pick(await request(malId, episode, rounded), rounded))
 }

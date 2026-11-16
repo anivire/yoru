@@ -93,6 +93,7 @@ export async function streamTranslation(user: UserRow, translationId: number, au
       author,
       sources: embed.sources,
       subtitlesUrl: embed.subtitlesUrl ? `/api/stream/subtitles/${translationId}` : null,
+      embedUrl: null,
     }
   } catch (error) {
     if (error instanceof UpstreamError && (error.status === 401 || error.status === 403)) badRequest('ANIME365_TOKEN_INVALID')

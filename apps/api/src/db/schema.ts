@@ -267,3 +267,21 @@ export const socialNotifications = sqliteTable('social_notifications', {
   createdAt: text('created_at').notNull(),
   readAt: text('read_at'),
 }, (t) => [index('social_notifications_user_idx').on(t.userId, t.createdAt)])
+
+export const extensions = sqliteTable('extensions', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  version: text('version').notNull(),
+  type: text('type', { enum: ['metadata-provider', 'search-provider', 'video-provider'] }).notNull(),
+  author: text('author'),
+  description: text('description'),
+  manifestUrl: text('manifest_url'),
+  manifest: text('manifest', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
+  code: text('code').notNull(),
+  enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
+  settings: text('settings', { mode: 'json' }).$type<Record<string, string>>().notNull().default({}),
+  lastError: text('last_error'),
+  lastErrorAt: text('last_error_at'),
+  installedAt: text('installed_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})

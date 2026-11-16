@@ -2,7 +2,7 @@ import { eq, isNull } from 'drizzle-orm'
 import { db } from '../db/client'
 import { anime } from '../db/schema'
 import { sleep } from '../lib/http'
-import { sourceEnabled } from '../lib/sources'
+import { featureEnabled } from '../lib/features'
 import { shikimori } from '../services/shikimori'
 
 const BATCH = 50
@@ -22,7 +22,7 @@ function pending(): number[] {
 }
 
 async function run() {
-  if (running || !sourceEnabled('shikimori')) return
+  if (running || !featureEnabled('russianTitles')) return
   running = true
   try {
     for (let ids = pending(); ids.length; ids = pending()) {

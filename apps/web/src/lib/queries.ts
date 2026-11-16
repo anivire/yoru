@@ -234,6 +234,18 @@ export function errorMessage(error: unknown, t: (key: string) => string): string
     AVATAR_TOO_LARGE: 'profileSettings.avatarTooLarge',
     AVATAR_INVALID: 'profileSettings.avatarInvalid',
     USER_NOT_FOUND: 'profile.notFound',
+    EXTENSION_DOWNLOAD_FAILED: 'admin.extensions.errors.download',
+    EXTENSION_TOO_LARGE: 'admin.extensions.errors.tooLarge',
+    EXTENSION_MANIFEST_INVALID: 'admin.extensions.errors.manifest',
+    EXTENSION_PAYLOAD_URL_INVALID: 'admin.extensions.errors.payloadUrl',
+    EXTENSION_TYPE_CHANGED: 'admin.extensions.errors.typeChanged',
+    EXTENSION_ID_CHANGED: 'admin.extensions.errors.idChanged',
+    EXTENSION_NO_UPDATE_URL: 'admin.extensions.noUpdateUrl',
+    EXTENSION_NOT_FOUND: 'admin.extensions.errors.notFound',
+    PROVIDER_UNAVAILABLE: 'player.providerUnavailable',
   }
-  return map[error.message] ? t(map[error.message]!) : error.message
+  const [code, ...details] = error.message.split(': ')
+  const key = map[error.message] ?? (code ? map[code] : undefined)
+  if (!key) return error.message
+  return details.length && !map[error.message] ? `${t(key)}: ${details.join(': ')}` : t(key)
 }

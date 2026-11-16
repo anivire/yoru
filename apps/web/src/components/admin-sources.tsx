@@ -1,15 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { type AdminSettings, type AdminSettingsInput, DATA_SOURCES, type DataSourceId, type DataSourceInfo, IMPORT_PROVIDERS, type ImportProvider } from '@yoru/shared'
-import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Code, Field, Input, Skeleton, Spinner, StatusDot, Switch, toast } from '@yoru/ui'
-import { RiKey2Fill } from '@remixicon/react'
-import { type FormEvent, type ReactNode, useId, useState } from 'react'
+import { type AdminSettings, type AdminSettingsInput, type DataSourceId, type DataSourceInfo, IMPORT_PROVIDERS, type ImportProvider } from '@yoru/shared'
+import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Code, Field, Input, Skeleton, Spinner, StatusDot, Tooltip, toast } from '@yoru/ui'
+import { RiKey2Fill, RiPlayCircleFill } from '@remixicon/react'
+import { type FormEvent, useId, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { errorMessage } from '../lib/queries'
 import { PROVIDER_NAMES, ProviderIcon } from './providers'
-import { Anime365Mark } from './source-logo'
+import { AnilibriaMark, Anime365Mark, KitsuMark } from './source-logo'
 
-const SOURCE_NAMES: Record<DataSourceId, string> = { anime365: 'Anime365', jikan: 'Jikan', shikimori: 'Shikimori', anilist: 'AniList', aniskip: 'AniSkip', github: 'GitHub' }
+export const SOURCE_NAMES: Record<DataSourceId, string> = { anime365: 'Anime365', jikan: 'Jikan', shikimori: 'Shikimori', anilist: 'AniList', kitsu: 'Kitsu', anilibria: 'AniLibria', kodik: 'Kodik', aniskip: 'AniSkip', github: 'GitHub' }
 
 function GithubMark() {
   return (
@@ -42,6 +42,15 @@ export function SourceIcon({ id }: { id: DataSourceId }) {
   if (id === 'jikan') return <ProviderIcon provider="mal" />
   if (id === 'shikimori') return <ProviderIcon provider="shikimori" />
   if (id === 'anilist') return <ProviderIcon provider="anilist" />
+  if (id === 'kitsu') return <KitsuMark />
+  if (id === 'anilibria') return <AnilibriaMark />
+  if (id === 'kodik') {
+    return (
+      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-field text-muted-foreground [&_svg]:size-[1.125rem]">
+        <RiPlayCircleFill />
+      </span>
+    )
+  }
   if (id === 'aniskip') {
     return (
       <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white">
@@ -56,7 +65,7 @@ export function SourceIcon({ id }: { id: DataSourceId }) {
   )
 }
 
-function useSaveSettings(extraKeys: string[][] = []) {
+export function useSaveSettings(extraKeys: string[][] = []) {
   const { t } = useTranslation()
   const client = useQueryClient()
   return useMutation({
@@ -70,8 +79,19 @@ function useSaveSettings(extraKeys: string[][] = []) {
   })
 }
 
-function SourceStatus({ info }: { info: DataSourceInfo }) {
+export function SourceStatus({ info }: { info: DataSourceInfo }) {
   const { t } = useTranslation()
+  const client = useQueryClient()
+  const check = useMutation({
+    mutationFn: () => api.admin.checkSource(info.id),
+    onMutate: () => {
+      client.setQueryData<AdminSettings>(['admin', 'settings'], (prev) =>
+        prev ? { ...prev, sources: prev.sources.map((s) => (s.id === info.id ? { ...s, reachable: null } : s)) } : prev,
+      )
+    },
+    onSuccess: (sources) => client.setQueryData<AdminSettings>(['admin', 'settings'], (prev) => (prev ? { ...prev, sources } : prev)),
+    onError: (e) => toast.error(errorMessage(e, t)),
+  })
   if (!info.enabled) return <Badge variant="neutral">{t('admin.sources.off')}</Badge>
   if (info.reachable === null) {
     return (
@@ -82,14 +102,18 @@ function SourceStatus({ info }: { info: DataSourceInfo }) {
     )
   }
   return (
-    <Badge variant={info.reachable ? 'success' : 'danger'}>
-      <StatusDot tone={info.reachable ? 'success' : 'danger'} pulse={!info.reachable} />
-      {info.reachable ? t('admin.reachable') : t('admin.unreachable')}
-    </Badge>
+    <Tooltip content={t('admin.sources.recheck')}>
+      <button type="button" className="cursor-pointer rounded-full" onClick={() => check.mutate()}>
+        <Badge variant={info.reachable ? 'success' : 'danger'}>
+          <StatusDot tone={info.reachable ? 'success' : 'danger'} pulse={!info.reachable} />
+          {info.reachable ? t('admin.reachable') : t('admin.unreachable')}
+        </Badge>
+      </button>
+    </Tooltip>
   )
 }
 
-function UrlField({ info }: { info: DataSourceInfo }) {
+export function UrlField({ info }: { info: DataSourceInfo }) {
   const { t } = useTranslation()
   const save = useSaveSettings([['me']])
   const [value, setValue] = useState(info.customUrl ? info.url : '')
@@ -196,7 +220,7 @@ export function SecretForm({
   )
 }
 
-function Anime365Extras({ settings }: { settings: AdminSettings }) {
+export function Anime365Extras({ settings }: { settings: AdminSettings }) {
   const { t } = useTranslation()
   const save = useSaveSettings([['me']])
   return (
@@ -216,7 +240,24 @@ function Anime365Extras({ settings }: { settings: AdminSettings }) {
   )
 }
 
-function GithubExtras({ settings }: { settings: AdminSettings }) {
+export function KodikExtras({ settings }: { settings: AdminSettings }) {
+  const { t } = useTranslation()
+  const save = useSaveSettings([['admin', 'providers'], ['video-providers']])
+  return (
+    <Field label={t('admin.kodikToken')} hint={<Trans i18nKey="admin.kodikTokenHint" components={{ code: <Code /> }} />}>
+      <SecretForm
+        placeholder="token"
+        isSet={settings.hasKodikToken}
+        pending={save.isPending}
+        onSave={(v) => save.mutate({ kodikToken: v })}
+        onClear={() => save.mutate({ kodikToken: null })}
+      />
+      {settings.hasKodikToken ? null : <p className="text-xs text-danger">{t('admin.kodikTokenMissing')}</p>}
+    </Field>
+  )
+}
+
+export function GithubExtras({ settings }: { settings: AdminSettings }) {
   const { t } = useTranslation()
   const save = useSaveSettings([['version']])
   const [repo, setRepo] = useState(settings.github.repo)
@@ -262,47 +303,6 @@ function GithubExtras({ settings }: { settings: AdminSettings }) {
   )
 }
 
-function SourceCard({ info, settings }: { info: DataSourceInfo; settings: AdminSettings }) {
-  const { t } = useTranslation()
-  const save = useSaveSettings([['search'], ['genres'], ['discover'], ['schedule'], ['home'], ['version']])
-  const uses = t(`admin.sources.${info.id}`, { returnObjects: true }) as unknown as string[]
-  let extras: ReactNode = null
-  if (info.id === 'anime365') extras = <Anime365Extras settings={settings} />
-  if (info.id === 'github') extras = <GithubExtras key={`${settings.github.repo}|${settings.github.branch}`} settings={settings} />
-  return (
-    <div className="flex min-w-0 flex-col gap-4 rounded-xl bg-field/50 p-3 sm:p-4">
-      <div className="flex items-center gap-3">
-        <SourceIcon id={info.id} />
-        <div className="min-w-0 flex-1">
-          <div className="font-medium">{SOURCE_NAMES[info.id]}</div>
-          <div className="mt-0.5">
-            <SourceStatus info={info} />
-          </div>
-        </div>
-        {info.id === 'anime365' ? (
-          <Badge variant="accent">{t('admin.sources.core')}</Badge>
-        ) : (
-          <Switch checked={info.enabled} disabled={save.isPending} onCheckedChange={(enabled) => save.mutate({ sources: { [info.id]: { enabled } } })} />
-        )}
-      </div>
-      <div>
-        <div className="mb-1 text-xs font-medium text-subtle-foreground">{t('admin.sources.usedFor')}</div>
-        <ul className="flex flex-col gap-0.5 text-[0.8125rem] text-muted-foreground">
-          {uses.map((u) => (
-            <li key={u} className="flex gap-2">
-              <span className="mt-[0.55em] size-1 shrink-0 rounded-full bg-subtle-foreground" />
-              {u}
-            </li>
-          ))}
-        </ul>
-        {info.id === 'jikan' && !info.enabled ? <p className="mt-2 text-[0.8125rem] text-warning">{t('admin.sources.jikanOff')}</p> : null}
-      </div>
-      <UrlField key={`${info.url}|${info.customUrl}`} info={info} />
-      {extras}
-    </div>
-  )
-}
-
 function CardSkeletonHeader({ control }: { control: string }) {
   return (
     <div className="flex items-center gap-3">
@@ -325,21 +325,6 @@ function FieldSkeleton() {
   )
 }
 
-function SourceCardSkeleton() {
-  return (
-    <div className="flex min-w-0 flex-col gap-4 rounded-xl bg-field/50 p-3 sm:p-4">
-      <CardSkeletonHeader control="h-5 w-9 shrink-0 rounded-full" />
-      <div className="flex flex-col gap-2">
-        <Skeleton className="h-3 w-20 rounded-md" />
-        <Skeleton className="h-3.5 w-4/5 rounded-md" />
-        <Skeleton className="h-3.5 w-3/5 rounded-md" />
-        <Skeleton className="h-3.5 w-2/3 rounded-md" />
-      </div>
-      <FieldSkeleton />
-    </div>
-  )
-}
-
 function OAuthProviderSkeleton() {
   return (
     <div className="flex min-w-0 flex-col gap-3 rounded-xl bg-field/50 p-3 sm:p-4">
@@ -354,34 +339,12 @@ function OAuthProviderSkeleton() {
   )
 }
 
-function useAdminSettings() {
+export function useAdminSettings() {
   return useQuery({
     queryKey: ['admin', 'settings'],
     queryFn: api.admin.settings,
     refetchInterval: (query) => (query.state.data?.sources.some((s) => s.enabled && s.reachable === null) ? 2000 : false),
   })
-}
-
-export function DataSources() {
-  const { t } = useTranslation()
-  const { data } = useAdminSettings()
-  return (
-    <Card>
-      <CardHeader>
-        <div>
-          <CardTitle>{t('admin.sources.title')}</CardTitle>
-          <CardDescription>
-            <Trans i18nKey="admin.sources.hint" components={{ code: <Code /> }} />
-          </CardDescription>
-        </div>
-      </CardHeader>
-      <CardContent className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,22rem),1fr))] gap-3 [&>*]:min-w-0">
-        {data
-          ? data.sources.map((info) => <SourceCard key={info.id} info={info} settings={data} />)
-          : DATA_SOURCES.map((id) => <SourceCardSkeleton key={id} />)}
-      </CardContent>
-    </Card>
-  )
 }
 
 function OAuthProvider({ provider, settings }: { provider: ImportProvider; settings: AdminSettings }) {

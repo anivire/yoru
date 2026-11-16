@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { createMiddleware } from 'hono/factory'
 import { type AnimePage, type ProviderCandidate, type Screenshot, type SkipTime, providerMatchSchema } from '@yoru/shared'
 import { type AppEnv, requireAuth } from '../lib/auth'
+import { featureEnabled } from '../lib/features'
 import { chainSignature } from '../providers/chain'
 import { searchAnime, searchGenres } from '../providers/search'
 import { intParam, parseBody } from '../lib/validate'
@@ -80,11 +81,11 @@ export const animeRoutes = new Hono<AppEnv>()
     return c.json(await episodeList(c.get('user').id, row))
   })
   .get('/:id/banner', async (c) => {
-    const shots = await shikimori.screenshots(intParam(c, 'id')).catch(() => [] as string[])
+    const shots = featureEnabled('screenshots') ? await shikimori.screenshots(intParam(c, 'id')).catch(() => [] as string[]) : []
     return c.json({ url: shots[0] ?? null })
   })
   .get('/:id/extras', async (c) => c.json(await animeExtras(intParam(c, 'id'))))
-  .get('/:id/screenshots', async (c) => c.json(await shikimori.gallery(intParam(c, 'id')).catch(() => [] as Screenshot[])))
+  .get('/:id/screenshots', async (c) => c.json(featureEnabled('screenshots') ? await shikimori.gallery(intParam(c, 'id')).catch(() => [] as Screenshot[]) : []))
   .get('/:id/match', async (c) => c.json(await resolveMatch(intParam(c, 'id'))))
   .get('/:id/links', async (c) => c.json(await animeLinks(intParam(c, 'id'))))
   .get('/:id/skip/:episode', async (c) => {

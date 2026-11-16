@@ -1,6 +1,8 @@
 import { anilibriaRelease } from '../services/anilibria'
+import { kodik, kodikAvailable, kodikEmbed, kodikEpisodes } from '../services/kodik'
 import { listTranslations, providerEpisodes, resolveMatch, streamTranslation } from '../services/provider'
 import { badRequest } from '../lib/http'
+import { sourceEnabled } from '../lib/sources'
 import type { VideoProvider } from './types'
 
 const anime365Video: VideoProvider = {
@@ -26,7 +28,7 @@ const anilibriaVideo: VideoProvider = {
   builtin: true,
   kinds: ['voice'],
   manualMatch: false,
-  available: () => true,
+  available: () => sourceEnabled('anilibria'),
   async episodes(malId) {
     const release = await anilibriaRelease(malId)
     return { matched: release.releaseId !== null, title: release.title, episodes: release.episodes.map((e) => e.number) }
@@ -40,8 +42,45 @@ const anilibriaVideo: VideoProvider = {
   async stream(_user, malId, episode) {
     const found = (await anilibriaRelease(malId)).episodes.find((e) => e.number === episode)
     if (!found) badRequest('NO_SOURCES')
-    return { translationId: String(episode), author: 'AniLibria', sources: found.sources, subtitlesUrl: null }
+    return { translationId: String(episode), author: 'AniLibria', sources: found.sources, subtitlesUrl: null, embedUrl: null }
   },
 }
 
-export const builtinVideo: VideoProvider[] = [anime365Video, anilibriaVideo]
+const KODIK_KIND: Record<string, 'voice' | 'subtitles'> = { voice: 'voice', sub: 'subtitles' }
+
+const kodikVideo: VideoProvider = {
+  id: 'kodik',
+  name: 'Kodik',
+  builtin: true,
+  kinds: ['voice', 'sub'],
+  manualMatch: false,
+  available: kodikAvailable,
+  async episodes(malId) {
+    const results = await kodik.byMal(malId)
+    if (!results.length) return { matched: false, title: null, episodes: [] }
+    const episodes = [...new Set(results.flatMap(kodikEpisodes))].sort((a, b) => a - b)
+    return { matched: true, title: results[0]!.title, episodes }
+  },
+  async translations(malId, episode, kind) {
+    const type = KODIK_KIND[kind]
+    if (!type) return []
+    return (await kodik.byMal(malId))
+      .filter((r) => r.translation.type === type && kodikEmbed(r, episode))
+      .map((r) => ({
+        id: r.id,
+        kind,
+        author: r.translation.title,
+        priority: 0,
+        qualityType: r.quality,
+        height: Number(/(\d{3,4})p/.exec(r.quality ?? '')?.[1]) || null,
+      }))
+  },
+  async stream(_user, malId, episode, translationId, author) {
+    const result = (await kodik.byMal(malId)).find((r) => r.id === translationId)
+    const embedUrl = result ? kodikEmbed(result, episode) : null
+    if (!embedUrl) badRequest('NO_SOURCES')
+    return { translationId, author, sources: [], subtitlesUrl: null, embedUrl }
+  },
+}
+
+export const builtinVideo: VideoProvider[] = [anime365Video, anilibriaVideo, kodikVideo]

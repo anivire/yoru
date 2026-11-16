@@ -40,7 +40,7 @@ export function DialogContent({
   description,
   children,
   ...props
-}: ComponentProps<typeof D.Content> & { title: ReactNode; description?: ReactNode }) {
+}: Omit<ComponentProps<typeof D.Content>, 'title'> & { title: ReactNode; description?: ReactNode }) {
   return (
     <D.Portal>
       <D.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[0.125rem] animate-fade" />

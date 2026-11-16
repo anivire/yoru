@@ -1,0 +1,11 @@
+{
+  "id": "anilibria-video",
+  "name": "AniLibria video",
+  "version": "1.0.0",
+  "type": "video-provider",
+  "author": "yoru",
+  "description": "Example video provider: AniLibria voice-overs through their public API.",
+  "manifestURI": "https://raw.githubusercontent.com/anivire/yoru/master/docs/extensions/examples/anilibria-video.json",
+  "payloadURI": "anilibria-video.js",
+  "kinds": ["voice"]
+}

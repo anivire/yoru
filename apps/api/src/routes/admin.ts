@@ -6,14 +6,21 @@ import {
   type AdminSettings,
   type AdminUser,
   type DataSourceId,
+  type FeatureId,
+  type ExtensionUpdateResult,
   type ImportProvider,
   type Invite,
   type ProviderCategory,
+  type ProviderGroup,
   type ProviderEntryInfo,
   type ProvidersSettings,
   IMPORT_PROVIDERS,
-  PROVIDER_CATEGORIES,
+  DATA_SOURCES,
+  FEATURES,
+  PROVIDER_GROUPS,
   adminSettingsSchema,
+  extensionInstallSchema,
+  extensionPatchSchema,
   inviteInputSchema,
   providerOrderSchema,
 } from '@yoru/shared'
@@ -22,10 +29,12 @@ import { invites, users } from '../db/schema'
 import { env } from '../env'
 import { type AppEnv, requireAdmin, requireAuth } from '../lib/auth'
 import { randomToken } from '../lib/crypto'
+import { featureEnabled, setFeatureEnabled } from '../lib/features'
 import { badRequest } from '../lib/http'
 import { getSetting, setSetting } from '../lib/settings'
-import { chainEntries, knownProviders, primaryProvider, setChainEntries } from '../providers/chain'
-import { githubConfig, oauthConfig, setSourceEnabled, setSourceUrl } from '../lib/sources'
+import { groupEntries, knownProviders, primaryProvider, setGroupEntries } from '../providers/chain'
+import { installExtension, listExtensions, patchExtension, removeExtension, updateExtension } from '../extensions/manager'
+import { githubConfig, kodikToken, oauthConfig, setSourceEnabled, setSourceUrl } from '../lib/sources'
 import { intParam, parseBody } from '../lib/validate'
 import { clearDiscoverCache } from '../services/discover'
 import { oauthConfigured, providerEnabled, redirectUri } from '../services/importers'
@@ -35,6 +44,7 @@ import { moderationRoutes } from './moderation'
 import { avatarUrl } from '../services/social'
 
 const usedByUser = alias(users, 'used_by_user')
+const SINGLE_USE_SOURCES = ['jikan', 'kitsu', 'anilibria', 'kodik']
 
 function listInvites(): Invite[] {
   return db
@@ -99,33 +109,73 @@ export const adminRoutes = new Hono<AppEnv>()
     db.delete(users).where(eq(users.id, id)).run()
     return c.json({ ok: true })
   })
+  .get('/extensions', (c) => c.json(listExtensions()))
+  .post('/extensions', async (c) => {
+    const id = await installExtension(await parseBody(c, extensionInstallSchema))
+    return c.json({ id })
+  })
+  .post('/extensions/:id/update', async (c) => {
+    const id = c.req.param('id')
+    const body: ExtensionUpdateResult = { id, ...(await updateExtension(id)) }
+    return c.json(body)
+  })
+  .patch('/extensions/:id', async (c) => {
+    patchExtension(c.req.param('id'), await parseBody(c, extensionPatchSchema))
+    return c.json({ ok: true })
+  })
+  .delete('/extensions/:id', (c) => {
+    removeExtension(c.req.param('id'))
+    return c.json({ ok: true })
+  })
   .get('/providers', (c) => {
     const body = Object.fromEntries(
-      PROVIDER_CATEGORIES.map((category) => {
-        const providers = new Map(knownProviders(category).map((p) => [p.id, p]))
+      PROVIDER_GROUPS.map((group) => {
+        const categories: ProviderCategory[] = group === 'video' ? ['video'] : ['metadata', 'search']
         return [
-          category,
-          chainEntries(category).map((entry): ProviderEntryInfo => {
-            const provider = providers.get(entry.id)!
-            return { id: entry.id, name: provider.name, builtin: provider.builtin, enabled: entry.enabled, available: provider.available() }
+          group,
+          groupEntries(group).map((entry): ProviderEntryInfo => {
+            const providers = categories.flatMap((category) => knownProviders(category).filter((p) => p.id === entry.id).map((p) => ({ category, p })))
+            const first = providers[0]!.p
+            const extension = entry.id.startsWith('ext:') ? entry.id.slice(4) : null
+            return {
+              id: entry.id,
+              name: first.name,
+              roles: providers.map(({ category }) => category),
+              source: !extension && DATA_SOURCES.includes(entry.id as DataSourceId) ? (entry.id as DataSourceId) : null,
+              extension,
+              enabled: entry.enabled,
+              available: providers.some(({ p }) => p.available()),
+            }
           }),
         ]
       }),
     ) as ProvidersSettings
     return c.json(body)
   })
-  .put('/providers/:category', async (c) => {
-    const category = c.req.param('category') as ProviderCategory
-    if (!PROVIDER_CATEGORIES.includes(category)) badRequest('Invalid category')
+  .put('/providers/:group', async (c) => {
+    const group = c.req.param('group') as ProviderGroup
+    if (!PROVIDER_GROUPS.includes(group)) badRequest('Invalid group')
     const { entries } = await parseBody(c, providerOrderSchema)
-    const known = new Set(knownProviders(category).map((p) => p.id))
-    setChainEntries(category, entries.filter((e) => known.has(e.id)))
+    setGroupEntries(group, entries)
+    for (const entry of entries) {
+      if (!DATA_SOURCES.includes(entry.id as DataSourceId)) continue
+      if (entry.enabled) setSourceEnabled(entry.id as DataSourceId, true)
+      else if (SINGLE_USE_SOURCES.includes(entry.id)) setSourceEnabled(entry.id as DataSourceId, false)
+    }
     return c.json({ ok: true })
+  })
+  .post('/sources/:id/check', (c) => {
+    const id = c.req.param('id') as DataSourceId
+    if (!DATA_SOURCES.includes(id)) badRequest('Invalid source')
+    resetSourceStatus(id)
+    return c.json(sourceInfos())
   })
   .get('/settings', (c) => {
     const github = githubConfig()
     const body: AdminSettings = {
       hasAnime365Token: Boolean(getSetting('anime365_token') || env.anime365Token),
+      hasKodikToken: Boolean(kodikToken()),
+      features: Object.fromEntries(FEATURES.map((id) => [id, featureEnabled(id)])) as AdminSettings['features'],
       importProviders: Object.fromEntries(IMPORT_PROVIDERS.map((p) => [p, providerEnabled(p)])) as AdminSettings['importProviders'],
       metadataSource: primaryProvider('metadata') === 'anime365' ? 'anime365' : 'jikan',
       sources: sourceInfos(),
@@ -151,6 +201,14 @@ export const adminRoutes = new Hono<AppEnv>()
   .put('/settings', async (c) => {
     const input = await parseBody(c, adminSettingsSchema)
     if (input.anime365Token !== undefined) setSetting('anime365_token', input.anime365Token || null)
+    for (const [id, enabled] of Object.entries(input.features ?? {}) as [FeatureId, boolean | undefined][]) {
+      if (enabled !== undefined) setFeatureEnabled(id, enabled)
+    }
+    if (input.features?.discover !== undefined) clearDiscoverCache()
+    if (input.kodikToken !== undefined) {
+      setSetting('kodik_token', input.kodikToken || null)
+      resetSourceStatus('kodik')
+    }
     if (input.metadataSource) setSetting('metadata_source', input.metadataSource)
     for (const [id, patch] of Object.entries(input.sources ?? {}) as [DataSourceId, { enabled?: boolean; url?: string | null } | undefined][]) {
       if (!patch) continue

@@ -1,0 +1,10 @@
+{
+  "id": "shikimori-search",
+  "name": "Shikimori search",
+  "version": "1.0.0",
+  "type": "search-provider",
+  "author": "yoru",
+  "description": "Search by title in any language through Shikimori.",
+  "manifestURI": "https://raw.githubusercontent.com/anivire/yoru/master/docs/extensions/examples/shikimori-search.json",
+  "payloadURI": "shikimori-search.js"
+}

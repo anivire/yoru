@@ -22,16 +22,26 @@ export function knownProviders<K extends ChainCategory>(category: K): ProviderMa
   return [...builtin[category], ...external[category]] as ProviderMap[K][]
 }
 
-function defaultOrder(category: ChainCategory): string[] {
-  const legacyAnime365 = (getSetting('metadata_source') ?? env.metadataSource) === 'anime365'
-  if (category === 'metadata') return legacyAnime365 ? ['anime365', 'jikan'] : ['jikan', 'anime365']
-  if (category === 'video') return ['anime365', 'anilibria']
-  return ['jikan', 'shikimori', 'anime365']
+export type ChainGroup = 'primary' | 'video'
+
+export function groupOf(category: ChainCategory): ChainGroup {
+  return category === 'video' ? 'video' : 'primary'
 }
 
-function storedEntries(category: ChainCategory): ChainEntry[] {
+export function groupProviderIds(group: ChainGroup): string[] {
+  const ids = group === 'video' ? knownProviders('video').map((p) => p.id) : [...knownProviders('metadata'), ...knownProviders('search')].map((p) => p.id)
+  return [...new Set(ids)]
+}
+
+function defaultOrder(group: ChainGroup): string[] {
+  if (group === 'video') return ['anime365', 'anilibria', 'kodik']
+  const legacyAnime365 = (getSetting('metadata_source') ?? env.metadataSource) === 'anime365'
+  return legacyAnime365 ? ['anime365', 'jikan', 'anilist', 'shikimori', 'kitsu'] : ['jikan', 'anilist', 'shikimori', 'kitsu', 'anime365']
+}
+
+function storedEntries(group: ChainGroup): ChainEntry[] {
   try {
-    const parsed: unknown = JSON.parse(getSetting(`providers.${category}`) ?? '[]')
+    const parsed: unknown = JSON.parse(getSetting(`providers.${group}`) ?? '[]')
     if (!Array.isArray(parsed)) return []
     return parsed.filter((e): e is ChainEntry => typeof e?.id === 'string' && typeof e?.enabled === 'boolean')
   } catch {
@@ -39,16 +49,23 @@ function storedEntries(category: ChainCategory): ChainEntry[] {
   }
 }
 
-export function chainEntries(category: ChainCategory): ChainEntry[] {
-  const ids = new Set(knownProviders(category).map((p) => p.id))
-  const stored = storedEntries(category)
-  const entries = (stored.length ? stored : defaultOrder(category).map((id) => ({ id, enabled: true }))).filter((e) => ids.has(e.id))
-  for (const id of ids) if (!entries.some((e) => e.id === id)) entries.push({ id, enabled: true })
+export function groupEntries(group: ChainGroup): ChainEntry[] {
+  const ids = groupProviderIds(group)
+  const stored = storedEntries(group)
+  const defaults = defaultOrder(group).map((id, index) => ({ id, enabled: group === 'video' || index === 0 }))
+  const entries = (stored.length ? stored : defaults).filter((e) => ids.includes(e.id))
+  for (const id of ids) if (!entries.some((e) => e.id === id)) entries.push({ id, enabled: group === 'video' })
   return entries
 }
 
-export function setChainEntries(category: ChainCategory, entries: ChainEntry[]) {
-  setSetting(`providers.${category}`, JSON.stringify(entries))
+export function setGroupEntries(group: ChainGroup, entries: ChainEntry[]) {
+  const ids = groupProviderIds(group)
+  setSetting(`providers.${group}`, JSON.stringify(entries.filter((e) => ids.includes(e.id))))
+}
+
+export function chainEntries(category: ChainCategory): ChainEntry[] {
+  const ids = new Set(knownProviders(category).map((p) => p.id))
+  return groupEntries(groupOf(category)).filter((e) => ids.has(e.id))
 }
 
 export function activeProviders<K extends ChainCategory>(category: K): ProviderMap[K][] {
