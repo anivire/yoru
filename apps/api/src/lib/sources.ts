@@ -36,14 +36,14 @@ export function setSourceUrl(id: DataSourceId, url: string | null) {
 
 export function sourceEnabled(id: DataSourceId): boolean {
   if (id === 'anime365') return true
-  if (id === 'jikan') return (getSetting('metadata_source') ?? env.metadataSource) !== 'anime365'
-  return getSetting(`source.${id}.enabled`) !== 'false'
+  const value = getSetting(`source.${id}.enabled`)
+  if (id === 'jikan' && value === null) return (getSetting('metadata_source') ?? env.metadataSource) !== 'anime365'
+  return value !== 'false'
 }
 
 export function setSourceEnabled(id: DataSourceId, enabled: boolean) {
   if (id === 'anime365') return
-  if (id === 'jikan') setSetting('metadata_source', enabled ? 'jikan' : 'anime365')
-  else setSetting(`source.${id}.enabled`, enabled ? null : 'false')
+  setSetting(`source.${id}.enabled`, enabled ? (id === 'jikan' ? 'true' : null) : 'false')
 }
 
 export function githubConfig() {

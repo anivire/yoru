@@ -17,7 +17,8 @@ import { invites, users } from '../db/schema'
 import { env } from '../env'
 import { type AppEnv, requireAdmin, requireAuth } from '../lib/auth'
 import { randomToken } from '../lib/crypto'
-import { getSetting, metadataSource, setSetting } from '../lib/settings'
+import { getSetting, setSetting } from '../lib/settings'
+import { primaryProvider } from '../providers/chain'
 import { githubConfig, oauthConfig, setSourceEnabled, setSourceUrl } from '../lib/sources'
 import { intParam, parseBody } from '../lib/validate'
 import { clearDiscoverCache } from '../services/discover'
@@ -97,7 +98,7 @@ export const adminRoutes = new Hono<AppEnv>()
     const body: AdminSettings = {
       hasAnime365Token: Boolean(getSetting('anime365_token') || env.anime365Token),
       importProviders: Object.fromEntries(IMPORT_PROVIDERS.map((p) => [p, providerEnabled(p)])) as AdminSettings['importProviders'],
-      metadataSource: metadataSource(),
+      metadataSource: primaryProvider('metadata') === 'anime365' ? 'anime365' : 'jikan',
       sources: sourceInfos(),
       github: { repo: github.repo, branch: github.branch, defaultRepo: env.githubRepo, defaultBranch: env.githubBranch, hasToken: Boolean(github.token) },
       oauth: Object.fromEntries(

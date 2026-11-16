@@ -21,6 +21,12 @@ export const DATA_SOURCES = ['anime365', 'jikan', 'shikimori', 'anilist', 'anisk
 export type DataSourceId = (typeof DATA_SOURCES)[number]
 export type MetadataSource = (typeof METADATA_SOURCES)[number]
 
+export const PROVIDER_CATEGORIES = ['metadata', 'search', 'video'] as const
+export type ProviderCategory = (typeof PROVIDER_CATEGORIES)[number]
+
+export const SEARCH_FEATURES = ['sort', 'upcoming', 'genres'] as const
+export type SearchFeature = (typeof SEARCH_FEATURES)[number]
+
 export const LOCALES = ['ru', 'en'] as const
 export type Locale = (typeof LOCALES)[number]
 
@@ -151,7 +157,8 @@ export interface Pagination {
 export interface SearchResult {
   items: AnimeSummary[]
   pagination: Pagination
-  source: MetadataSource
+  provider: string
+  features: SearchFeature[]
 }
 
 export interface RelatedAnime {

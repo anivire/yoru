@@ -10,6 +10,7 @@ import { env, secureCookies } from '../env'
 import { randomToken, sha256 } from './crypto'
 import { getSetting } from './settings'
 import { sourceEnabled } from './sources'
+import { primaryProvider } from '../providers/chain'
 
 export const SESSION_COOKIE = 'yoru_session'
 
@@ -40,7 +41,7 @@ export function toUser(row: UserRow): User {
     notifyRooms: row.notifyRooms,
     hasOwnAnime365Token: Boolean(row.anime365Token),
     hasSharedAnime365Token: Boolean(getSetting('anime365_token') || env.anime365Token),
-    russianTitles: sourceEnabled('shikimori') || !sourceEnabled('jikan'),
+    russianTitles: sourceEnabled('shikimori') || primaryProvider('metadata') !== 'jikan',
     createdAt: row.createdAt,
   }
 }

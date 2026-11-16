@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { ANIME_TYPES } from '@yoru/shared'
+import { ANIME_TYPES, SEARCH_FEATURES, type SearchFeature } from '@yoru/shared'
 import { Button, EmptyState, Input, Select, cn } from '@yoru/ui'
 import { RiBroadcastFill, RiCloseFill, RiSearchFill as SearchIcon, RiSortDesc, RiTvFill } from '@remixicon/react'
 import { useEffect, useRef, useState } from 'react'
@@ -75,7 +75,7 @@ export function SearchPage() {
 
   const items = [...new Map((results.data?.pages.flatMap((p) => p.items) ?? []).map((a) => [a.malId, a])).values()]
   const filtered = Object.values(filters).some(Boolean)
-  const basic = results.data?.pages[0]?.source === 'anime365'
+  const features: readonly SearchFeature[] = results.data?.pages[0]?.features ?? SEARCH_FEATURES
   const [allTags, setAllTags] = useState(false)
   const selectedGenres = (filters.genres ?? '').split(',').filter(Boolean)
   const tags = genres.data ?? []
@@ -113,9 +113,9 @@ export function SearchPage() {
             icon={<RiBroadcastFill />}
             value={filters.status ?? ANY}
             onValueChange={(v) => setFilter('status', v)}
-            options={[{ value: ANY, label: `${t('search.status')}: ${t('common.any')}` }, ...STATUSES.filter((v) => !basic || v !== 'upcoming').map((v) => ({ value: v, label: t(`airing.${v}`) }))]}
+            options={[{ value: ANY, label: `${t('search.status')}: ${t('common.any')}` }, ...STATUSES.filter((v) => features.includes('upcoming') || v !== 'upcoming').map((v) => ({ value: v, label: t(`airing.${v}`) }))]}
           />
-          {basic ? null : (
+          {!features.includes('sort') ? null : (
             <Select
               className="h-11 w-60 rounded-xl px-3.5"
               icon={<RiSortDesc />}

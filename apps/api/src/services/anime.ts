@@ -3,11 +3,11 @@ import type { AnimeDetails, AnimeSummary } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { anime } from '../db/schema'
 import { UpstreamError } from '../lib/http'
-import { metadataSource } from '../lib/settings'
+import { activeProviders } from '../providers/chain'
 import { nextBroadcast } from '../lib/time'
 import { airedEpisode } from './aired'
 import { type A365Series, absoluteA365Url, anime365 } from './anime365'
-import { type JikanAnime, jikan, jikanImage, normalizeStatus, normalizeType } from './jikan'
+import { type JikanAnime, jikanImage, normalizeStatus, normalizeType } from './jikan'
 
 export type AnimeRow = typeof anime.$inferSelect
 type AnimeInsert = typeof anime.$inferInsert
@@ -56,7 +56,7 @@ export function toDetails(row: AnimeRow): AnimeDetails {
   }
 }
 
-function fromJikan(j: JikanAnime): AnimeInsert {
+export function fromJikan(j: JikanAnime): AnimeInsert {
   return {
     malId: j.mal_id,
     title: j.title,
@@ -162,40 +162,29 @@ export async function ensureAnime(malId: number, opts: { force?: boolean } = {})
   const row = getAnimeRow(malId)
   const fresh = row?.detailsFetchedAt && Date.now() - Date.parse(row.detailsFetchedAt) < maxAge(row)
   if (row && fresh && !opts.force) return row
-  if (metadataSource() === 'anime365') {
+  let lastError: unknown = null
+  for (const [index, provider] of activeProviders('metadata').entries()) {
+    let data: AnimeInsert | null
     try {
-      upsertAnime(await fetchFromA365(malId), { details: true })
+      data = await provider.anime(malId)
     } catch (error) {
-      if (row) return row
-      throw error
+      lastError = error
+      if (row?.detailsFetchedAt) return row
+      continue
     }
+    if (!data) continue
+    upsertAnime({ ...data, malId }, { details: index === 0 })
     return getAnimeRow(malId)!
   }
-  try {
-    const data = await jikan.anime(malId)
-    upsertAnime(fromJikan(data), { details: true })
-  } catch (error) {
-    if (error instanceof UpstreamError && error.status === 404 && !row) throw error
-    if (row?.imageUrl) return row
-    const data = await fetchFromA365(malId).catch(() => null)
-    if (!data) {
-      if (row) return row
-      throw error
-    }
-    upsertAnime(data)
-  }
-  return getAnimeRow(malId)!
+  if (row) return row
+  throw lastError ?? new UpstreamError('metadata', 404, 'Anime not found')
 }
 
-async function fetchFromA365(malId: number): Promise<AnimeInsert> {
+export async function fetchFromA365(malId: number): Promise<AnimeInsert> {
   const series = await anime365.seriesByMal(malId)
   if (!series) throw new UpstreamError('anime365', 404, 'Not found on Anime365')
   const full = await anime365.series(series.id).catch(() => series)
   return fromA365(full, malId)
-}
-
-export function searchFallback(query: string): Promise<AnimeSummary[]> {
-  return anime365.search(query).then(upsertA365Summaries)
 }
 
 export function upsertA365Summaries(rows: A365Series[]): AnimeSummary[] {

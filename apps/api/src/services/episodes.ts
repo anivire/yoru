@@ -2,7 +2,7 @@ import { and, eq } from 'drizzle-orm'
 import type { Episode } from '@yoru/shared'
 import { db } from '../db/client'
 import { watchProgress } from '../db/schema'
-import { metadataSource } from '../lib/settings'
+import { isActive } from '../providers/chain'
 import type { AnimeRow } from './anime'
 import { type JikanEpisode, type JikanEpisodeVideo, jikan } from './jikan'
 import { getEntry } from './lists'
@@ -37,7 +37,7 @@ async function jikanThumbs(row: AnimeRow): Promise<Map<number, string>> {
 }
 
 export async function episodeList(userId: number, row: AnimeRow): Promise<Episode[]> {
-  const useJikan = metadataSource() === 'jikan'
+  const useJikan = isActive('metadata', 'jikan')
   const [meta, thumbs, provider] = await Promise.all([
     useJikan ? jikanEpisodes(row).catch(() => [] as JikanEpisode[]) : [],
     useJikan ? jikanThumbs(row).catch(() => new Map<number, string>()) : new Map<number, string>(),

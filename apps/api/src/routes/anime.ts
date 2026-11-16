@@ -1,29 +1,26 @@
 import { Hono } from 'hono'
 import { createMiddleware } from 'hono/factory'
-import { type AnimePage, type Genre, type ProviderCandidate, type Screenshot, type SearchResult, type SkipTime, providerMatchSchema } from '@yoru/shared'
+import { type AnimePage, type ProviderCandidate, type Screenshot, type SkipTime, providerMatchSchema } from '@yoru/shared'
 import { type AppEnv, requireAuth } from '../lib/auth'
-import { UpstreamError } from '../lib/http'
-import { metadataSource } from '../lib/settings'
+import { chainSignature } from '../providers/chain'
+import { searchAnime, searchGenres } from '../providers/search'
 import { intParam, parseBody } from '../lib/validate'
-import { ensureAnime, searchFallback, toDetails, upsertA365Summaries, upsertJikanSummaries } from '../services/anime'
+import { ensureAnime, toDetails } from '../services/anime'
 import { anime365, seriesTitle } from '../services/anime365'
 import { episodeList } from '../services/episodes'
-import { jikan } from '../services/jikan'
 import { getEntry, toEntry } from '../services/lists'
 import { animeExtras } from '../services/extras'
 import { animeLinks } from '../services/links'
 import { resolveMatch, setManualMatch } from '../services/provider'
-import { fillMissing } from '../services/discover'
-import { shikiSummaries, shikimori } from '../services/shikimori'
+import { shikimori } from '../services/shikimori'
 import { skipTimes } from '../services/aniskip'
 
-const A365_PAGE = 24
 const RESPONSE_TTL = 10 * 60_000
 const RESPONSE_LIMIT = 500
 const responses = new Map<string, { at: number; body: string }>()
 
 const cacheResponse = createMiddleware<AppEnv>(async (c, next) => {
-  const key = `${metadataSource()}:${c.req.path}?${new URL(c.req.url).searchParams.toString()}`
+  const key = `${chainSignature('search')}:${c.req.path}?${new URL(c.req.url).searchParams.toString()}`
   const hit = responses.get(key)
   if (hit && Date.now() - hit.at < RESPONSE_TTL) {
     return c.body(hit.body, 200, { 'Content-Type': 'application/json', 'Cache-Control': 'private, max-age=300' })
@@ -34,78 +31,28 @@ const cacheResponse = createMiddleware<AppEnv>(async (c, next) => {
   if (responses.size > RESPONSE_LIMIT) responses.delete(responses.keys().next().value!)
   c.res.headers.set('Cache-Control', 'private, max-age=300')
 })
-const CYRILLIC = /[а-яё]/i
-const SHIKI_STATUS: Record<string, string> = { airing: 'ongoing', complete: 'released', upcoming: 'anons' }
-
-async function russianSearch(q: string, page: number, type?: string, status?: string): Promise<SearchResult> {
-  try {
-    const query: Record<string, string | number> = { search: q, page, limit: 24 }
-    if (type) query.kind = type
-    if (status && SHIKI_STATUS[status]) query.status = SHIKI_STATUS[status]
-    const rows = await shikimori.animes(query)
-    return { items: fillMissing(shikiSummaries(rows)), pagination: { page, hasNextPage: rows.length === 24, total: null }, source: 'anime365' }
-  } catch (error) {
-    if (!(error instanceof UpstreamError) || page > 1) throw error
-    const items = await searchFallback(q)
-    return { items, pagination: { page: 1, hasNextPage: false, total: items.length }, source: 'anime365' }
-  }
-}
-
-const SEARCH_PARAMS = ['type', 'status', 'genres', 'order_by', 'sort', 'rating', 'min_score', 'start_date', 'end_date'] as const
+const SEARCH_PARAMS = ['order_by', 'sort', 'rating', 'min_score', 'start_date', 'end_date'] as const
 
 export const animeRoutes = new Hono<AppEnv>()
   .use(requireAuth)
   .get('/search', cacheResponse, async (c) => {
-    const q = c.req.query('q')?.trim() ?? ''
-    const page = Math.max(1, Number(c.req.query('page')) || 1)
-    const params = new URLSearchParams({ page: String(page), limit: '24', sfw: 'true' })
-    if (q) params.set('q', q)
+    const params: Record<string, string> = {}
     for (const key of SEARCH_PARAMS) {
       const value = c.req.query(key)
-      if (value) params.set(key, value)
+      if (value) params[key] = value
     }
-    const filtered = SEARCH_PARAMS.some((k) => c.req.query(k))
-    if (metadataSource() === 'anime365') {
-      const query: Record<string, string | number> = { limit: A365_PAGE, offset: (page - 1) * A365_PAGE }
-      const type = c.req.query('type')
-      const status = c.req.query('status')
-      const genres = (c.req.query('genres') ?? '').split(',').map(Number).filter((n) => Number.isInteger(n) && n > 0)
-      if (q) query.query = q
-      else if (genres.length) query.chips = `genre@=${genres.join(',')}`
-      if (type) query.type = type
-      if (status === 'airing' || (!q && !filtered)) query.isAiring = 1
-      if (status === 'complete') query.isAiring = 0
-      const rows = status === 'upcoming' ? [] : await anime365.list(query)
-      const matching = q && genres.length ? rows.filter((s) => genres.every((g) => s.genres?.some((x) => x.id === g))) : rows
-      const body: SearchResult = {
-        items: upsertA365Summaries(matching),
-        pagination: { page, hasNextPage: rows.length === A365_PAGE, total: null },
-        source: 'anime365',
-      }
-      return c.json(body)
-    }
-    if (CYRILLIC.test(q)) return c.json(await russianSearch(q, page, c.req.query('type'), c.req.query('status')))
-    try {
-      const res = !q && !filtered ? await jikan.seasonNow(page) : await jikan.search(params)
-      const body: SearchResult = {
-        items: upsertJikanSummaries(res.data),
-        pagination: { page, hasNextPage: res.pagination.has_next_page, total: res.pagination.items?.total ?? null },
-        source: 'jikan',
-      }
-      return c.json(body)
-    } catch (error) {
-      if (!(error instanceof UpstreamError) || !q) throw error
-      const items = await searchFallback(q)
-      const body: SearchResult = { items, pagination: { page: 1, hasNextPage: false, total: items.length }, source: 'anime365' }
-      return c.json(body)
-    }
+    return c.json(
+      await searchAnime({
+        q: c.req.query('q')?.trim() ?? '',
+        page: Math.max(1, Number(c.req.query('page')) || 1),
+        type: c.req.query('type') || undefined,
+        status: c.req.query('status') || undefined,
+        genres: (c.req.query('genres') ?? '').split(',').map(Number).filter((n) => Number.isInteger(n) && n > 0),
+        params,
+      }),
+    )
   })
-  .get('/genres', cacheResponse, async (c) => {
-    if (metadataSource() === 'anime365') return c.json(await anime365.genres().catch(() => [] as Genre[]))
-    const genres = await jikan.genres().catch(() => [])
-    const body: Genre[] = genres.map((g) => ({ id: g.mal_id, name: g.name, count: g.count }))
-    return c.json(body)
-  })
+  .get('/genres', cacheResponse, async (c) => c.json(await searchGenres()))
   .get('/match/search', async (c) => {
     const q = c.req.query('q')?.trim() ?? ''
     if (q.length < 2) return c.json([] as ProviderCandidate[])
