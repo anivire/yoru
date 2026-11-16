@@ -1,6 +1,6 @@
 import { TITLE_LANGUAGES, type TitleLanguage } from '@yoru/shared'
-import { Button, Popover, PopoverContent, PopoverTrigger, Segmented, StepSlider, Switch, cn } from '@yoru/ui'
-import { RiArrowRightSLine, RiLockFill, RiPaletteFill } from '@remixicon/react'
+import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, Popover, PopoverContent, PopoverTrigger, Segmented, StepSlider, Switch, cn } from '@yoru/ui'
+import { RiArrowRightSLine, RiCheckLine, RiLockFill, RiPaletteFill } from '@remixicon/react'
 import { type ReactNode, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppearance } from '../lib/appearance'
@@ -41,6 +41,33 @@ export function TitleLanguagePicker({ compact }: { compact?: boolean }) {
         <p className={cn('text-muted-foreground', compact ? 'mt-2 text-xs' : 'mt-3 text-[0.8125rem]')}>{t('settings.titleLanguage.russianNote')}</p>
       ) : null}
     </>
+  )
+}
+
+export function TitleLanguageMenu({ className }: { className?: string }) {
+  const { t } = useTranslation()
+  const { titleLanguage, setTitleLanguage } = useAppearance()
+  const locked = useMe().data?.russianTitles === false
+  const current = titleLanguage === 'russian' && locked ? 'romaji' : titleLanguage
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="secondary" className={cn('rounded-full px-3', className)} aria-label={t('settings.titleLanguage.title')} title={t('settings.titleLanguage.title')}>
+          <Flag locale={TITLE_FLAGS[current]} />
+          <span className="hidden sm:inline">{t(`settings.titleLanguage.${current}`)}</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-48">
+        <DropdownMenuLabel>{t('settings.titleLanguage.title')}</DropdownMenuLabel>
+        {TITLE_LANGUAGES.map((v) => (
+          <DropdownMenuItem key={v} disabled={v === 'russian' && locked} onSelect={() => setTitleLanguage(v)}>
+            <Flag locale={TITLE_FLAGS[v]} />
+            {t(`settings.titleLanguage.${v}`)}
+            {v === current ? <RiCheckLine className="ml-auto" /> : null}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
