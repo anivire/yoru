@@ -33,6 +33,7 @@ import {
   RiText,
   RiTimeFill,
   RiUserAddFill,
+  RiUserUnfollowFill,
   RiUserFill,
   RiUserFollowFill,
 } from '@remixicon/react'
@@ -298,6 +299,63 @@ function FriendCards({ users, username }: { users: PersonCard[]; username: strin
   return <UserGrid users={users} action={(user) => <FriendCardAction user={user} username={username} />} />
 }
 
+function PersonMenu({ user }: { user: PersonCard }) {
+  const { t } = useTranslation()
+  const client = useQueryClient()
+  const options = {
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ['friends'] })
+      void client.invalidateQueries({ queryKey: ['profile'] })
+      void client.invalidateQueries({ queryKey: ['users'] })
+    },
+    onError: (e: Error) => toast.error(errorMessage(e, t)),
+  }
+  const add = useMutation({ mutationFn: () => api.addFriend(user.id), ...options })
+  const remove = useMutation({ mutationFn: () => api.removeFriend(user.id), ...options })
+  if (user.relation === 'self') return null
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon-sm" aria-label={t('profile.more')} loading={add.isPending || remove.isPending}>
+          <RiMore2Fill />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        {user.relation === 'friend' ? (
+          <DropdownMenuItem onSelect={() => remove.mutate()} className="text-danger data-[highlighted]:bg-danger-soft [&_svg]:text-danger">
+            <RiUserUnfollowFill />
+            {t('profile.removeFriend')}
+          </DropdownMenuItem>
+        ) : null}
+        {user.relation === 'none' ? (
+          <DropdownMenuItem onSelect={() => add.mutate()}>
+            <RiUserAddFill />
+            {t('profile.addFriend')}
+          </DropdownMenuItem>
+        ) : null}
+        {user.relation === 'incoming' ? (
+          <>
+            <DropdownMenuItem onSelect={() => add.mutate()}>
+              <RiCheckFill />
+              {t('profile.accept')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => remove.mutate()}>
+              <RiCloseFill />
+              {t('profile.decline')}
+            </DropdownMenuItem>
+          </>
+        ) : null}
+        {user.relation === 'outgoing' ? (
+          <DropdownMenuItem onSelect={() => remove.mutate()}>
+            <RiCloseFill />
+            {t('profile.cancelRequest')}
+          </DropdownMenuItem>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 function FriendCardAction({ user, username }: { user: PersonCard; username: string }) {
   const { t } = useTranslation()
   const client = useQueryClient()
@@ -329,7 +387,7 @@ function FriendCardAction({ user, username }: { user: PersonCard; username: stri
   return null
 }
 
-export function UserGrid({ users, action }: { users: PersonCard[]; action?: (user: PersonCard) => ReactNode }) {
+export function UserGrid({ users, action, menu = true }: { users: PersonCard[]; action?: (user: PersonCard) => ReactNode; menu?: boolean }) {
   const { t, i18n } = useTranslation()
   const compact = new Intl.NumberFormat(i18n.language, { notation: 'compact', maximumFractionDigits: 1 })
   return (
@@ -366,7 +424,12 @@ export function UserGrid({ users, action }: { users: PersonCard[]; action?: (use
                 {user.bio ? <span className="line-clamp-1 text-xs text-muted-foreground">{user.bio}</span> : null}
               </span>
             </TLink>
-            {action ? <div className="relative flex shrink-0 gap-1.5">{action(user)}</div> : null}
+            {action || (menu && user.relation !== 'self') ? (
+              <div className="relative flex shrink-0 items-center gap-1.5">
+                {action?.(user)}
+                {menu ? <PersonMenu user={user} /> : null}
+              </div>
+            ) : null}
           </div>
         )
       })}

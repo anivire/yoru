@@ -89,6 +89,7 @@ export function FriendsPage() {
             <Section title={t('friends.incoming')}>
               <UserGrid
                 users={data.incoming}
+                menu={false}
                 action={(user) => (
                   <>
                     <Button size="icon-sm" variant="accent" aria-label={t('profile.accept')} title={t('profile.accept')} onClick={() => accept.mutate(user.id)}>
@@ -106,6 +107,7 @@ export function FriendsPage() {
             <Section title={t('friends.outgoing')}>
               <UserGrid
                 users={data.outgoing}
+                menu={false}
                 action={(user) => (
                   <Button size="sm" variant="secondary" onClick={() => remove.mutate(user.id)}>
                     {t('friends.cancel')}

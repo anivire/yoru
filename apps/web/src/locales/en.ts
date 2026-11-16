@@ -142,6 +142,7 @@ export const en: Messages = {
     accept: 'Accept',
     decline: 'Decline',
     friends: 'Friends',
+    cancelRequest: 'Cancel request',
     removeFriend: 'Remove friend',
     more: 'More',
     block: 'Block',

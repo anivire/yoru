@@ -141,6 +141,7 @@ export const ru = {
     decline: 'Отклонить',
     friends: 'В друзьях',
     removeFriend: 'Удалить из друзей',
+    cancelRequest: 'Отменить заявку',
     more: 'Ещё',
     block: 'Заблокировать',
     unblock: 'Разблокировать',
