@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { UserCard, UserProfile } from '@yoru/shared'
+import type { PersonCard, UserProfile } from '@yoru/shared'
 import {
   Button,
   DropdownMenu,
@@ -199,23 +199,32 @@ function FriendGrid({ username }: { username: string }) {
   return <UserGrid users={friends.data} />
 }
 
-export function UserGrid({ users, action }: { users: UserCard[]; action?: (user: UserCard) => ReactNode }) {
+export function UserGrid({ users, action }: { users: PersonCard[]; action?: (user: PersonCard) => ReactNode }) {
+  const { t } = useTranslation()
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
-      {users.map((user) => (
-        <div key={user.id} className="group flex flex-col gap-2.5 rounded-xl bg-surface p-2.5 transition-colors hover:bg-muted">
-          <TLink to={`/u/${user.username}`} className="flex min-w-0 flex-col gap-2.5">
-            <span className="block aspect-square overflow-hidden rounded-lg">
-              <UserAvatar user={user} className="size-full rounded-lg text-5xl transition-transform duration-200 group-hover:scale-[1.03]" />
-            </span>
-            <span className="min-w-0 px-1 text-center">
-              <span className="block truncate text-sm font-semibold">{nameOf(user)}</span>
-              <span className="block truncate text-xs text-muted-foreground">@{user.username}</span>
-            </span>
-          </TLink>
-          {action ? <div className="flex gap-1.5 [&>*]:flex-1">{action(user)}</div> : null}
-        </div>
-      ))}
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-3">
+      {users.map((user) => {
+        const stats = [user.titles !== null ? t('friends.titlesCount', { count: user.titles }) : null, user.friends !== null ? t('profile.friendsCount', { count: user.friends }) : null].filter(Boolean)
+        return (
+          <div key={user.id} className="group flex flex-col overflow-hidden rounded-xl bg-surface transition-colors hover:bg-muted">
+            <TLink to={`/u/${user.username}`} className="flex flex-1 flex-col">
+              <span className="relative block h-16 overflow-hidden bg-linear-to-br from-accent/45 via-accent/15 to-transparent">
+                {user.banner ? <img src={user.banner} alt="" loading="lazy" className="absolute inset-0 size-full scale-110 object-cover object-[50%_30%] blur-[2px] transition-transform duration-300 group-hover:scale-125" /> : null}
+              </span>
+              <span className="-mt-10 flex flex-1 flex-col items-center gap-2.5 px-3 pb-3 text-center">
+                <UserAvatar user={user} className="relative size-20 text-3xl ring-4 ring-surface transition-colors group-hover:ring-muted" />
+                <span className="min-w-0 max-w-full">
+                  <span className="block truncate text-sm font-semibold">{nameOf(user)}</span>
+                  <span className="block truncate text-xs text-muted-foreground">@{user.username}</span>
+                </span>
+                {user.bio ? <span className="line-clamp-2 text-xs text-muted-foreground">{user.bio}</span> : null}
+                {stats.length ? <span className="mt-auto font-mono text-[0.6875rem] text-subtle-foreground">{stats.join(' · ')}</span> : null}
+              </span>
+            </TLink>
+            {action ? <div className="flex gap-1.5 px-3 pb-3 [&>*]:flex-1">{action(user)}</div> : null}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -291,13 +300,17 @@ function TabSkeleton({ tab }: { tab: Tab }) {
 
 export function UserGridSkeleton({ count = 8 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-3">
       {Array.from({ length: count }, (_, i) => (
-        <div key={i} className="flex flex-col gap-2.5 rounded-xl bg-surface p-2.5">
-          <Skeleton className="aspect-square rounded-lg" />
-          <div className="flex flex-col items-center gap-1.5 px-1">
-            <Skeleton className="h-4 w-3/4 rounded-md" />
-            <Skeleton className="h-3 w-1/2 rounded-md" />
+        <div key={i} className="flex flex-col overflow-hidden rounded-xl bg-surface">
+          <Skeleton className="h-16 rounded-none" />
+          <div className="-mt-10 flex flex-col items-center gap-2.5 px-3 pb-3">
+            <Skeleton className="size-20 rounded-full ring-4 ring-surface" />
+            <div className="flex w-full flex-col items-center gap-1.5">
+              <Skeleton className="h-4 w-3/4 rounded-md" />
+              <Skeleton className="h-3 w-1/2 rounded-md" />
+            </div>
+            <Skeleton className="h-3 w-2/3 rounded-md" />
           </div>
         </div>
       ))}

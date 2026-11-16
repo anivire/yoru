@@ -1,7 +1,7 @@
-import { and, eq, inArray, or } from 'drizzle-orm'
-import type { AnimeSummary, Relation, UserCard, Visibility } from '@yoru/shared'
+import { and, eq, inArray, or, sql } from 'drizzle-orm'
+import type { AnimeSummary, PersonCard, Relation, UserCard, Visibility } from '@yoru/shared'
 import { db, now } from '../db/client'
-import { anime, blocks, friendships, socialNotifications, users } from '../db/schema'
+import { anime, blocks, friendships, listEntries, socialNotifications, users } from '../db/schema'
 import { toSummary } from './anime'
 
 type CardRow = { id: number; username: string; displayName: string | null; avatarVersion: number | null }
@@ -99,4 +99,41 @@ export function summariesFor(ids: number[]): AnimeSummary[] {
 export function bannerUrl(malId: number | null) {
   if (!malId) return null
   return db.select({ imageUrl: anime.imageUrl }).from(anime).where(eq(anime.malId, malId)).get()?.imageUrl ?? null
+}
+
+export function personCards(viewerId: number, ids: number[]): PersonCard[] {
+  if (!ids.length) return []
+  const unique = [...new Set(ids)]
+  const rows = new Map(db.select().from(users).where(inArray(users.id, unique)).all().map((row) => [row.id, row]))
+  const titles = new Map(
+    db
+      .select({ userId: listEntries.userId, count: sql<number>`count(*)` })
+      .from(listEntries)
+      .where(inArray(listEntries.userId, unique))
+      .groupBy(listEntries.userId)
+      .all()
+      .map((row) => [row.userId, row.count]),
+  )
+  const banners = new Map(
+    db
+      .select({ malId: anime.malId, imageUrl: anime.imageUrl })
+      .from(anime)
+      .where(inArray(anime.malId, [...rows.values()].map((row) => row.bannerMalId).filter((id): id is number => id !== null)))
+      .all()
+      .map((row) => [row.malId, row.imageUrl]),
+  )
+  return ids.flatMap((id) => {
+    const row = rows.get(id)
+    if (!row) return []
+    const profile = canSee(viewerId, id, row.profileVisibility)
+    return [
+      {
+        ...toCard(row),
+        banner: profile && row.bannerMalId ? (banners.get(row.bannerMalId) ?? null) : null,
+        bio: profile ? row.bio : null,
+        titles: profile && canSee(viewerId, id, row.listVisibility) ? (titles.get(id) ?? 0) : null,
+        friends: profile ? friendIds(id).length : null,
+      },
+    ]
+  })
 }

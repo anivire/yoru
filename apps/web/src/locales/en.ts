@@ -192,6 +192,10 @@ export const en: Messages = {
     suggestions: 'Rated highly, not in your list yet',
   },
   friends: {
+    titlesCount_one: '{{count}} title',
+    titlesCount_few: '{{count}} titles',
+    titlesCount_many: '{{count}} titles',
+    titlesCount_other: '{{count}} titles',
     title: 'Friends',
     description: 'Requests, friends and people on this server',
     incoming: 'Friend requests',

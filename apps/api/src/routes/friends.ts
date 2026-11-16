@@ -9,7 +9,7 @@ import { intParam, parseBody } from '../lib/validate'
 import { ensureAnime, getAnimeRow } from '../services/anime'
 import { friendEntries, friendTitles, friendsWatching, inviteToRoom, recommend } from '../services/interactions'
 import { roomInfo } from '../services/rooms'
-import { blockedBetween, cardsFor, hiddenUserIds, notify, relation } from '../services/social'
+import { blockedBetween, hiddenUserIds, notify, personCards, relation } from '../services/social'
 
 function pair(a: number, b: number) {
   return or(and(eq(friendships.userId, a), eq(friendships.friendId, b)), and(eq(friendships.userId, b), eq(friendships.friendId, a)))
@@ -30,7 +30,7 @@ export const friendRoutes = new Hono<AppEnv>()
       .where(or(eq(friendships.userId, viewerId), eq(friendships.friendId, viewerId)))
       .all()
       .filter((row) => !hidden.has(row.userId === viewerId ? row.friendId : row.userId))
-    const cards = cardsFor(rows.map((row) => (row.userId === viewerId ? row.friendId : row.userId)))
+    const cards = new Map(personCards(viewerId, rows.map((row) => (row.userId === viewerId ? row.friendId : row.userId))).map((card) => [card.id, card]))
     const card = (id: number) => cards.get(id)!
     const byName = (a: { username: string; displayName: string | null }, b: { username: string; displayName: string | null }) => (a.displayName ?? a.username).localeCompare(b.displayName ?? b.username)
     const body: FriendsOverview = {

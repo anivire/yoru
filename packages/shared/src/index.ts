@@ -760,10 +760,17 @@ export const recommendSchema = z.object({
   message: z.string().trim().max(300).nullable().optional(),
 })
 
+export interface PersonCard extends UserCard {
+  banner: string | null
+  bio: string | null
+  titles: number | null
+  friends: number | null
+}
+
 export interface FriendsOverview {
-  friends: UserCard[]
-  incoming: UserCard[]
-  outgoing: UserCard[]
+  friends: PersonCard[]
+  incoming: PersonCard[]
+  outgoing: PersonCard[]
 }
 
 export interface AnimeNote {

@@ -190,6 +190,10 @@ export const ru = {
     suggestions: 'Высоко оценено, у вас ещё нет',
   },
   friends: {
+    titlesCount_one: '{{count}} тайтл',
+    titlesCount_few: '{{count}} тайтла',
+    titlesCount_many: '{{count}} тайтлов',
+    titlesCount_other: '{{count}} тайтла',
     title: 'Друзья',
     description: 'Заявки, друзья и поиск людей на этом сервере',
     incoming: 'Заявки в друзья',

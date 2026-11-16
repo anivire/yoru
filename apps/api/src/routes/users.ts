@@ -3,14 +3,14 @@ import path from 'node:path'
 import { and, eq, or, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { LIST_STATUSES, type ListStatus, type UserCard, type UserProfile } from '@yoru/shared'
+import { LIST_STATUSES, type ListStatus, type PersonCard, type UserCard, type UserProfile } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { blocks, friendships, listEntries, users } from '../db/schema'
 import { env } from '../env'
 import { type AppEnv, requireAuth } from '../lib/auth'
 import { notFound } from '../lib/http'
 import { intParam, parseBody } from '../lib/validate'
-import { bannerUrl, blockedBetween, canSee, cardColumns, friendIds, hiddenUserIds, relation, summariesFor, toCard } from '../services/social'
+import { bannerUrl, blockedBetween, canSee, cardColumns, friendIds, hiddenUserIds, personCards, relation, summariesFor, toCard } from '../services/social'
 import { feedPage } from '../services/feed'
 import { tasteMatch } from '../services/interactions'
 import { userStats } from '../services/stats'
@@ -79,8 +79,7 @@ export const userRoutes = new Hono<AppEnv>()
       .all()
       .filter((row) => row.id !== viewer.id && !hidden.has(row.id) && (row.username.toLocaleLowerCase().includes(q) || row.displayName?.toLocaleLowerCase().includes(q)))
       .slice(0, SEARCH_LIMIT)
-      .map(toCard)
-    return c.json(matches satisfies UserCard[])
+    return c.json(personCards(viewer.id, matches.map((row) => row.id)) satisfies PersonCard[])
   })
   .get('/:id{[0-9]+}/avatar', (c) => {
     const file = avatarPath(intParam(c, 'id'))
@@ -172,6 +171,5 @@ export const userRoutes = new Hono<AppEnv>()
     if (restricted(viewer.id, owner)) return c.json([] satisfies UserCard[])
     const hidden = hiddenUserIds(viewer.id)
     const ids = friendIds(owner.id).filter((id) => !hidden.has(id))
-    const rows = ids.length ? db.select(cardColumns).from(users).all().filter((row) => ids.includes(row.id)) : []
-    return c.json(rows.map(toCard) satisfies UserCard[])
+    return c.json(personCards(viewer.id, ids) satisfies PersonCard[])
   })

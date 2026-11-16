@@ -2,13 +2,13 @@ import { and, count, desc, eq, gt, ne } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
-import { type AccountInfo, type ProfileSettings, type SessionInfo, type ShareInfo, type UserCard, confirmPasswordSchema, profileUpdateSchema, shareUpdateSchema, userSettingsSchema } from '@yoru/shared'
+import { type AccountInfo, type ProfileSettings, type PersonCard, type SessionInfo, type ShareInfo, confirmPasswordSchema, profileUpdateSchema, shareUpdateSchema, userSettingsSchema } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { activity, animeNotes, blocks, feedEvents, imports, invites, listEntries, notifications, sessions, users, watchProgress } from '../db/schema'
 import { type AppEnv, currentSessionId, destroySession, requireAuth, toUser } from '../lib/auth'
 import { randomToken, verifyPassword } from '../lib/crypto'
 import { parseBody } from '../lib/validate'
-import { cardColumns, summariesFor, toCard } from '../services/social'
+import { personCards, summariesFor } from '../services/social'
 import { MAX_AVATAR_BYTES, imageType, removeAvatar, saveAvatar } from './users'
 
 const inviter = alias(users, 'inviter')
@@ -81,8 +81,8 @@ export const meRoutes = new Hono<AppEnv>()
     return c.json(toUser(db.select().from(users).where(eq(users.id, c.get('user').id)).get()!))
   })
   .get('/blocks', (c) => {
-    const rows = db.select(cardColumns).from(blocks).innerJoin(users, eq(users.id, blocks.blockedId)).where(eq(blocks.userId, c.get('user').id)).orderBy(desc(blocks.createdAt)).all()
-    return c.json(rows.map(toCard) satisfies UserCard[])
+    const rows = db.select({ id: blocks.blockedId }).from(blocks).where(eq(blocks.userId, c.get('user').id)).orderBy(desc(blocks.createdAt)).all()
+    return c.json(personCards(c.get('user').id, rows.map((row) => row.id)) satisfies PersonCard[])
   })
   .get('/share', (c) => c.json(readShare(c.get('user').id)))
   .post('/share', async (c) => {
