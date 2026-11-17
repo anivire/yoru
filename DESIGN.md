@@ -98,6 +98,8 @@ Counts shown as coloured icons follow the same mapping: watching `RiPlayCircleFi
 
 - **Pages** use `Page` (`page-frame` + `px-4 sm:px-6 pb-8`, top padding from `--page-top`). Never set your own `max-w-*` + `mx-auto`.
 - **Page header**: `PageHeader` with `mb-8`.
+- **Pages without a title at the top** (anime and voice actor headers, the home and discover heroes, the profile) get twice the top padding: `page-top-double` (`pt-8`, `sm:` twice `--page-top`) on the first `page-frame`, or `sm:pt-[calc(var(--page-top,2rem)*2)]` on `Page`. Their skeletons use the same padding so nothing jumps when the page loads.
+- **Breadcrumbs**: detail pages (anime, voice actor) start with `Breadcrumbs` (`components/breadcrumbs.tsx`) and `mb-6` above the header: Home, then the section or the page the visitor came from (passed as `state.from` on the link), then the current page. Skeletons reserve a `TextLine` for them.
 - **Sections** on a page: `Section` (icon chip, title, optional hint and action) with `mt-10` between sections and `mb-4` under the header. Denser pages (statistics, profile tabs) use `gap-6` / `mt-6` between sections.
 - **Cards**: padding `p-4 sm:p-5`; rows `p-3`; tiles `px-3 py-2`.
 - **Grids**: `gap-3` for cards and people, `gap-2` for compact lists, `gap-x-3 gap-y-4` for poster grids.
@@ -135,7 +137,7 @@ Use what exists before writing something new.
 
 ### App components (`apps/web`)
 
-- Layout: `Page`, `PageHeader`, `Section` (`components/app-shell.tsx`).
+- Layout: `Page`, `PageHeader`, `Section` (`components/app-shell.tsx`), `Breadcrumbs` (`components/breadcrumbs.tsx`).
 - Links: `TLink` / `TNavLink` / `useTransitionNavigate` for in-app navigation with view transitions. Anime pages are linked with `animePath(malId, title)` from `lib/anime-title.ts`.
 - Anime: `AnimeCard`, `PosterGrid`, `Rail` (`size="poster"` for poster cards, `wide` for wide cards), skeletons in `components/skeletons.tsx`, titles via `AnimeTitle` / `useAnimeTitle` (respects the title language setting).
 - People: `UserAvatar`, `nameOf` (`components/user-avatar.tsx`), `UserGrid` and `UserGridSkeleton` (`pages/profile.tsx`) for every list of people.
