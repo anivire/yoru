@@ -44,7 +44,8 @@ export function WatchOrderSection({ malId, className }: { malId: number; classNa
   const [open, setOpen] = useState(false)
   if (isPending) return <WatchOrderSkeleton />
   if (!data) return null
-  if (data.length < 2) return <RelatedSection malId={malId} className={className} />
+  if (!data.length) return <RelatedSection malId={malId} className={className} />
+  if (data.length < 2) return null
   const numbers = new Map<number, number>()
   for (const e of data) if (!e.side) numbers.set(e.anime.malId, numbers.size + 1)
   const current = Math.max(0, data.findIndex((e) => e.anime.malId === malId))

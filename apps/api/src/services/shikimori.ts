@@ -206,7 +206,7 @@ export const shikimori = {
 
   franchise(id: number): Promise<ShikiFranchiseEntry[]> {
     if (!sourceEnabled('shikimori')) return disabled()
-    return cached(`shiki:franchise:v2:${id}`, 7 * 24 * HOUR, async () => {
+    return cached(`shiki:franchise:v3:${id}`, 7 * 24 * HOUR, async () => {
       const { nodes, links } = await enqueue<ShikiFranchise>(`/animes/${id}/franchise`)
       if (nodes.length < 2) return []
       const order = new Map(nodes.map((n) => [n.id, n.date ?? Number.MAX_SAFE_INTEGER]))
@@ -214,7 +214,7 @@ export const shikimori = {
       const items: ShikiAnime[] = []
       for (let i = 0; i < ids.length; i += 50) items.push(...(await shikimori.byIds(ids.slice(i, i + 50))))
       const shown = items.filter((a) => !HIDDEN_KINDS.has(a.kind ?? '')).sort((a, b) => order.get(a.id)! - order.get(b.id)!)
-      return shown.length < 2 ? [] : franchiseOrder(shown, links)
+      return shown.length < 2 ? shown.map((anime) => ({ anime, side: false, relation: null })) : franchiseOrder(shown, links)
     })
   },
 
