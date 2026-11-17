@@ -8,7 +8,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   EmptyState,
-  Segmented,
   Skeleton,
   Tooltip,
   cn,
@@ -174,7 +173,7 @@ function TabNav({ options, value, onChange }: { options: TabOption[]; value: Tab
   const ref = useRef<HTMLDivElement>(null)
   const indicator = useSlidingIndicator(ref, '[aria-selected="true"]', value)
   return (
-    <div ref={ref} role="tablist" aria-orientation="vertical" className="relative -mx-2 mt-3 hidden flex-col gap-0.5 lg:flex">
+    <div ref={ref} role="tablist" aria-orientation="vertical" className="relative -mx-2 mt-3 flex flex-col gap-0.5">
       <span aria-hidden style={indicator} className="pointer-events-none absolute rounded-lg bg-muted duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]" />
       {options.map((option) => (
         <button
@@ -202,7 +201,7 @@ function TabNav({ options, value, onChange }: { options: TabOption[]; value: Tab
 function TabHeader({ option }: { option?: TabOption }) {
   if (!option) return null
   return (
-    <div className="mb-6 hidden items-center gap-3 lg:flex">
+    <div className="mb-6 flex items-center gap-3">
       <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent [&_svg]:size-[1.125rem]">{option.icon}</span>
       <h2 className="text-xl font-semibold tracking-tight">{option.label}</h2>
     </div>
@@ -420,7 +419,7 @@ function ProfileCardSkeleton() {
         <Skeleton className="mt-1 h-6 w-40 max-w-full rounded-md" />
         <Skeleton className="h-4 w-24 rounded-md" />
         <Skeleton className="-mx-2 mt-2 h-9 rounded-lg" />
-        <div className="-mx-2 mt-3 hidden flex-col gap-1.5 lg:flex">
+        <div className="-mx-2 mt-3 flex flex-col gap-1.5">
           {Array.from({ length: 4 }, (_, i) => (
             <Skeleton key={i} className="h-8 w-full rounded-lg" />
           ))}
@@ -435,8 +434,7 @@ function ProfileSkeleton() {
     <div className="grow-empty flex flex-col gap-6 lg:flex-row!">
       <ProfileCardSkeleton />
       <div className="grow-empty flex min-w-0 flex-1 flex-col">
-        <Skeleton className="mb-6 h-10 w-[27rem] max-w-full rounded-xl lg:hidden" />
-        <Skeleton className="mb-6 hidden h-9 w-44 rounded-xl lg:block" />
+        <Skeleton className="mb-6 h-9 w-44 rounded-xl" />
         <TabSkeleton tab="overview" />
       </div>
     </div>
@@ -484,7 +482,6 @@ export function ProfilePage() {
               <EmptyState mood="sleepy" title={<span className="inline-flex items-center gap-1.5"><RiLockFill className="size-4" />{t('profile.restrictedTitle')}</span>} description={t('profile.restrictedHint')} />
             ) : (
               <>
-                <Segmented className="mb-6 lg:hidden" value={tab} onChange={setTab} options={tabs} />
                 <TabHeader option={tabs.find((option) => option.value === tab)} />
                 {shownTab !== tab ? (
                   <TabSkeleton tab={tab} />
