@@ -1,32 +1,25 @@
 <div align="center">
 
-<img src="apps/web/public/favicon.svg" width="88" alt="yoru logo">
+<img src="docs/hero.webp" alt="yoru">
 
-# yoru
+<br>
 
-**A self-hosted anime tracker and player for you and the people you invite.**
-
-Lists, a player with subtitles or dubs, a release calendar, friends and a shared feed.<br>
-Titles and video come from the providers you pick and put in order, and extensions add your own.
-
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue?style=flat-square)](LICENSE)
 [![Version](https://img.shields.io/github/package-json/v/anivire/yoru?style=flat-square&color=5b54d6&label=version)](https://github.com/anivire/yoru/commits/master)
-[![Docker](https://img.shields.io/badge/runs_on-Docker-2496ED?style=flat-square&logo=docker&logoColor=white)](#getting-started)
+[![Container](https://img.shields.io/badge/ghcr.io-anivire%2Fyoru-2496ED?style=flat-square&logo=docker&logoColor=white)](https://github.com/anivire/yoru/pkgs/container/yoru)
 [![Interface](https://img.shields.io/badge/interface-English_%C2%B7_Russian-8b5cf6?style=flat-square)](#features)
 
 [Features](#features) · [Getting started](#getting-started) · [Dokploy](docs/deploy/dokploy.md) · [Coolify](docs/deploy/coolify.md) · [Sources](#sources) · [Extensions](docs/extensions/README.md)
 
 </div>
 
-![Home page](docs/home.webp)
-
-![My lists](docs/lists.webp)
-
-![Discover page](docs/discover.webp)
 
 ## Features
 
+Lists, a player with subtitles or dubs, a release calendar, friends and a shared feed. Titles and video come from the providers you pick and put in order, and extensions add your own.
+
 **Watch**
-- Player with video from Anime365, AniLibria, Kodik or your own extensions. If the first source has no episode, the next one is used.
+- Player with video from Anime365, Kodik or your own extensions. If the first source has no episode, the next one is used.
 - Subtitles or voice-over, a favourite translation author for each, and playback that resumes where you stopped.
 - Skip buttons for openings and endings.
 - Watch together (beta): a room where pause, seeking, speed, the episode and the translation stay in sync for everyone.
@@ -57,55 +50,67 @@ Titles and video come from the providers you pick and put in order, and extensio
 - Interface in Russian and English.
 - Interface sounds with several themes (off by default).
 
+## Screenshots
+
+![Home page](docs/home.webp)
+
+![My lists](docs/lists.webp)
+
+![Discover page](docs/discover.webp)
+
 ## Getting started
 
-You need a server with [Docker](https://docs.docker.com/engine/install/). On **Dokploy** or **Coolify**, follow the step-by-step guide instead: [Dokploy](docs/deploy/dokploy.md), [Coolify](docs/deploy/coolify.md).
+### Docker (recommended)
 
-**1. Download yoru**
-
-```bash
-git clone https://github.com/anivire/yoru.git
-cd yoru
-cp .env.example .env
-```
-
-**2. Set the address and the admin account**
-
-Open `.env` and set three values:
-
-```env
-APP_URL=https://yoru.example.com   # the address you will open yoru at
-ADMIN_USERNAME=admin               # your login
-ADMIN_PASSWORD=a-long-password     # 8 characters or more
-```
-
-**3. Start it**
+A multi-arch image (`amd64`, `arm64`) is published to GHCR on every push to `master`. Everything yoru stores lives on one `/data` volume, and database migrations run on start.
 
 ```bash
-docker compose up -d --build
+curl -fsSL https://raw.githubusercontent.com/anivire/yoru/master/docs/deploy/docker-compose.yml -o docker-compose.yml
+docker compose up -d
+docker compose logs yoru
 ```
 
-The first build takes a few minutes. yoru listens on port `3000` inside the container; put it behind your reverse proxy (Caddy, Traefik, nginx), or change `"3000"` to `"3000:3000"` in `docker-compose.yml` to open it at `http://<server>:3000` directly.
+Open the link from the log (`[yoru] no admin yet, create one at …/invite/<code>`) to create the admin account. There is no open registration: invite people under **Management → Invites**.
 
-**4. Log in and invite people**
-
-Open `APP_URL` and log in with the admin you set. There is no open registration: create invite links under **Management → Invites** and send them to your friends.
-
-That's it. AniLibria video works right away; for Anime365 and Kodik add their tokens under **Management → Sources** (see [Video tokens](#video-tokens)).
+Before you share yoru, set `APP_URL` in `docker-compose.yml` to the address people will open it at and put it behind a reverse proxy (Caddy, Traefik, nginx) for HTTPS. Invite links and link previews are built from `APP_URL`, and login cookies are marked secure when it starts with `https://`. Behind nginx, forward WebSockets so watch together rooms work: `proxy_http_version 1.1`, `proxy_set_header Upgrade $http_upgrade` and `proxy_set_header Connection "upgrade"`.
 
 ### Updating
 
+When a new version is out, the footer in yoru says so and links to its [release notes](https://github.com/anivire/yoru/releases). To update:
+
 ```bash
-git pull
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 ```
 
 Your data stays in the `yoru-data` volume, and database migrations run on start.
 
-### Good to know
+The image tag in `docker-compose.yml` decides what you get:
 
-- **No admin in `.env`?** Leave `ADMIN_USERNAME` and `ADMIN_PASSWORD` empty and open the link yoru prints to its log on the first start (`docker compose logs yoru`): `[yoru] no admin yet, create one at …/invite/<code>`.
-- **Behind nginx**, forward WebSockets so watch together rooms work: `proxy_http_version 1.1`, `proxy_set_header Upgrade $http_upgrade` and `proxy_set_header Connection "upgrade"`. Caddy and Traefik do it by default.
+| Tag | What you get |
+|---|---|
+| `latest` | The newest release. Recommended |
+| `0.68` | Only fixes for 0.68, no new features |
+| `0.68.0` | Exactly this release, it never changes |
+| `edge` | Every change as soon as it lands in `master`, before a release. Can break |
+
+### Dokploy and Coolify
+
+Step-by-step guides: [Dokploy](docs/deploy/dokploy.md), [Coolify](docs/deploy/coolify.md). Both build the image on your server from the repository, so they follow `master` like the `edge` tag.
+
+<details>
+<summary>Building from source</summary>
+
+```bash
+git clone https://github.com/anivire/yoru.git
+cd yoru
+cp .env.example .env    # set APP_URL, and ADMIN_USERNAME and ADMIN_PASSWORD if you want
+docker compose up -d --build
+```
+
+The `docker-compose.yml` in the repository builds the image itself and reads settings from `.env`; the first build takes a few minutes. To update, run `git pull` and the same `docker compose up -d --build`.
+
+</details>
 
 ### Video tokens
 
@@ -154,3 +159,7 @@ npm run db:generate  # new Drizzle migration after schema changes
 ```
 
 The API reads `.env` from the repository root and keeps its database in `apps/api/data`. The repository is an Nx workspace: `apps/api` (Hono, Drizzle, SQLite), `apps/web` (React, TanStack Query, Tailwind CSS), `packages/ui` (shared components) and `packages/shared` (types). See [AGENTS.md](AGENTS.md) for code conventions and [DESIGN.md](DESIGN.md) for the design system.
+
+## License
+
+yoru is licensed under the [GNU Affero General Public License v3.0](LICENSE).

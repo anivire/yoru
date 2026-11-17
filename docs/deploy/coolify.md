@@ -55,7 +55,7 @@ docker run --rm -v <volume-name>:/data -v /root/backups:/backup alpine \
 
 ## Updates
 
-With the GitHub App, turn on automatic deployment to rebuild on every push. For a public repository, press **Redeploy** by hand or add the deploy webhook from the **Webhooks** tab to your fork. Migrations run on start. The footer in yoru shows the running version and commit and tells you when the branch is ahead.
+With the GitHub App, turn on automatic deployment to rebuild on every push. For a public repository, press **Redeploy** by hand or add the deploy webhook from the **Webhooks** tab to your fork. Migrations run on start. The footer in yoru shows the running version and commit and tells you when the branch is ahead. Deploying from `master` gives you every change before it is released, the same as the `edge` image tag.
 
 ## Troubleshooting
 

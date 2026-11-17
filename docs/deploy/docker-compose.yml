@@ -1,0 +1,20 @@
+services:
+  yoru:
+    image: ghcr.io/anivire/yoru:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - yoru-data:/data
+    environment:
+      # The address you open yoru at, e.g. https://yoru.example.com
+      APP_URL: http://localhost:3000
+      # First admin. Leave empty to get a sign-up link in the log instead
+      ADMIN_USERNAME: ""
+      ADMIN_PASSWORD: ""
+      # Optional video tokens, can also be set later in Management → Sources
+      ANIME365_TOKEN: ""
+      KODIK_TOKEN: ""
+
+volumes:
+  yoru-data:

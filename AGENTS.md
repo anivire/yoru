@@ -77,12 +77,22 @@ There is no test suite. Before finishing a change, run the typecheck for every p
 
 ## Releases
 
-The owner tests the deployed site's update checker, which compares the running commit and version with GitHub `master`. Unless told otherwise, finish each batch of changes like this:
+There are two channels. Every push to `master` is **edge**: the Docker image `ghcr.io/anivire/yoru:edge` (and `sha-<commit>`), and the owner's Dokploy site, which builds from the repository and is what they test. A **stable** release is a `vX.Y.Z` tag: it publishes the image as `latest`, `X.Y.Z` and `X.Y` and a GitHub Release. The image knows its channel (`RELEASE_CHANNEL`, set by `.github/workflows/docker.yml`): stable instances compare their version with the latest GitHub Release, edge instances compare their commit with `master`. The in-app changelog groups commits by `chore: release X.Y.Z` commits and shows the commits after the last one as the next version on edge only.
+
+Unless told otherwise, finish each batch of changes like this:
 
 1. Typecheck and build.
-2. Bump the version in every workspace: `npm version X.Y.Z --no-git-tag-version --workspaces --include-workspace-root`. Patch for fixes and small tweaks, minor for features or new dependencies, major only on request.
-3. Commit with a Conventional Commits subject: `type: summary`, lowercase, imperative, no trailing period and no version number (e.g. `feat: add a bottom navigation bar option`). Types: `feat` for new behaviour, `fix` for bug fixes, `perf` for speedups, `refactor` for code changes without behaviour change, `style` for visual tweaks to existing UI, `docs` for documentation, `chore` for version bumps, dependencies and tooling, `build` for Docker and build setup. An optional scope is fine (`fix(import): …`). Keep unrelated changes in separate commits.
+2. Commit with a Conventional Commits subject: `type: summary`, lowercase, imperative, no trailing period and no version number (e.g. `feat: add a bottom navigation bar option`). Types: `feat` for new behaviour, `fix` for bug fixes, `perf` for speedups, `refactor` for code changes without behaviour change, `style` for visual tweaks to existing UI, `docs` for documentation, `chore` for version bumps, dependencies and tooling, `build` for Docker and build setup. An optional scope is fine (`fix(import): …`). Keep unrelated changes in separate commits.
    The subjects of `feat`, `fix`, `perf` and `style` commits are shown to users on the in-app changelog page (`/changelog`), so write them for people using the app: say what changed for them in plain, general words. Name the feature or screen, not the code. No library, package, component, file or function names, no internal jargon, no references to where an idea came from. Bad: `feat: voice controls like the foley demo`, `fix: wrap StepSlider labels in a span`. Good: `feat: add sounds to buttons, tabs and text fields`, `fix: keep volume labels from overlapping on phones`. Technical detail belongs in the commit body.
-4. Push to `origin master`.
+3. Push to `origin master`. Do not bump the version.
+
+When the owner asks for a release:
+
+1. Pick the version from the commits since the last `v*` tag: patch for fixes and small tweaks, minor for features or new dependencies, major only on request.
+2. Bump every workspace: `npm version X.Y.Z --no-git-tag-version --workspaces --include-workspace-root`, and commit it as `chore: release X.Y.Z`.
+3. Create an annotated tag whose message is two or three sentences about the highlights, written for people using the app: `git tag -a vX.Y.Z -m "…"`. `.github/workflows/release.yml` puts it on top of the release notes and lists the `feat`, `perf`, `style` and `fix` commits under it (`.github/scripts/release-notes.mjs`).
+4. Push both: `git push origin master vX.Y.Z`.
+
+The repository `docker-compose.yml` builds from source because the Dokploy and Coolify guides deploy from the repository; the README quick start downloads `docs/deploy/docker-compose.yml`, which uses the published `latest` image.
 
 When the owner says not to push yet, leave the changes uncommitted until they confirm.
