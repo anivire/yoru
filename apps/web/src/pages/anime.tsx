@@ -256,7 +256,7 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
                 ))}
               </div>
             ) : null}
-            {anime.synopsis ? <Synopsis text={anime.synopsis} open={open} onToggle={() => setOpen(!open)} /> : null}
+            {anime.synopsis ? <Synopsis text={anime.synopsis.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim()} open={open} onToggle={() => setOpen(!open)} /> : null}
           </div>
         </div>
       </div>

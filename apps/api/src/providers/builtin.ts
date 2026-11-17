@@ -37,6 +37,10 @@ function isoDate(date: { year: number | null; month: number | null; day: number 
   return `${date.year}-${String(date.month ?? 1).padStart(2, '0')}-${String(date.day ?? 1).padStart(2, '0')}`
 }
 
+function tidyText(text: string): string {
+  return text.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim()
+}
+
 function fromAniList(m: AniListFullMedia): KeyedAnime | null {
   if (!m.idMal) return null
   const title = m.title.romaji || m.title.english || m.title.native
@@ -58,7 +62,7 @@ function fromAniList(m: AniListFullMedia): KeyedAnime | null {
     score: m.averageScore ? m.averageScore / 10 : null,
     genres: m.genres ?? [],
     studios: m.studios?.nodes.map((n) => n.name) ?? [],
-    synopsis: m.description ? m.description.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim() : null,
+    synopsis: m.description ? tidyText(m.description.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '')) : null,
     duration: m.duration ? `${m.duration} min` : null,
     airedFrom: isoDate(m.startDate),
     airedTo: isoDate(m.endDate),
