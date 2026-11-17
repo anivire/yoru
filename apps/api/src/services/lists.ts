@@ -145,7 +145,23 @@ export interface ListFilters {
   type?: string
   genre?: string
   year?: number
-  sort?: 'updated' | 'title' | 'score' | 'progress' | 'year' | 'added'
+  sort?: ListSort
+  order?: 'asc' | 'desc'
+}
+
+type ListSort = 'updated' | 'title' | 'score' | 'progress' | 'year' | 'added'
+
+const SORT_KEYS: Record<ListSort, (e: ListEntryWithAnime) => string | number | null> = {
+  updated: (e) => e.updatedAt,
+  added: (e) => e.startedAt,
+  title: (e) => e.anime.title,
+  score: (e) => e.score,
+  progress: (e) => e.progress,
+  year: (e) => e.anime.year,
+}
+
+export function naturalOrder(sort: ListSort): 'asc' | 'desc' {
+  return sort === 'title' ? 'asc' : 'desc'
 }
 
 export function filterEntries(items: ListEntryWithAnime[], f: ListFilters): ListEntryWithAnime[] {
@@ -162,13 +178,13 @@ export function filterEntries(items: ListEntryWithAnime[], f: ListFilters): List
     return true
   })
   const by = f.sort ?? 'score'
-  const cmp: Record<NonNullable<ListFilters['sort']>, (a: ListEntryWithAnime, b: ListEntryWithAnime) => number> = {
-    updated: (a, b) => b.updatedAt.localeCompare(a.updatedAt),
-    added: (a, b) => (b.startedAt ?? '').localeCompare(a.startedAt ?? ''),
-    title: (a, b) => a.anime.title.localeCompare(b.anime.title),
-    score: (a, b) => (b.score ?? -1) - (a.score ?? -1) || b.updatedAt.localeCompare(a.updatedAt),
-    progress: (a, b) => b.progress - a.progress,
-    year: (a, b) => (b.anime.year ?? 0) - (a.anime.year ?? 0),
-  }
-  return result.sort(cmp[by])
+  const key = SORT_KEYS[by]
+  const dir = (f.order ?? naturalOrder(by)) === 'asc' ? 1 : -1
+  return result.sort((a, b) => {
+    const x = key(a)
+    const y = key(b)
+    if (x === null || y === null) return x === y ? b.updatedAt.localeCompare(a.updatedAt) : x === null ? 1 : -1
+    const diff = typeof x === 'string' ? x.localeCompare(y as string) : x - (y as number)
+    return diff * dir || b.updatedAt.localeCompare(a.updatedAt)
+  })
 }

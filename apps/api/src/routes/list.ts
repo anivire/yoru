@@ -34,6 +34,7 @@ export function listPage(userId: number, query: (key: string) => string | undefi
     genre: query('genre') || undefined,
     year: Number(query('year')) || undefined,
     sort: sort && SORTS.includes(sort) ? sort : 'score',
+    order: query('order') === 'asc' ? 'asc' : query('order') === 'desc' ? 'desc' : undefined,
   }
   const filtered = filterEntries(allEntries(userId, filters.status), filters)
   const offset = Math.max(0, Number(query('offset')) || 0)

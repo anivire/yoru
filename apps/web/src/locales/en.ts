@@ -533,6 +533,8 @@ export const en: Messages = {
     name: 'Title',
     title: 'My lists',
     sortBy: 'Sort by',
+    ascending: 'Ascending',
+    descending: 'Descending',
     filter: 'Filter by title…',
     empty: 'This list is empty',
     export: 'Export',

@@ -531,6 +531,8 @@ export const ru = {
     name: 'Название',
     title: 'Мои списки',
     sortBy: 'Сортировать по',
+    ascending: 'По возрастанию',
+    descending: 'По убыванию',
     filter: 'Фильтр по названию…',
     empty: 'В этом списке пусто',
     export: 'Экспорт',

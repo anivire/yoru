@@ -1,5 +1,5 @@
-import { Input, Select } from '@yoru/ui'
-import { RiCalendar2Fill, RiCloseFill, RiSearchFill, RiSortDesc, RiTvFill } from '@remixicon/react'
+import { Button, Input, Select, Tooltip } from '@yoru/ui'
+import { RiCalendar2Fill, RiCloseFill, RiSearchFill, RiSortAsc, RiSortDesc, RiTvFill } from '@remixicon/react'
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
@@ -17,11 +17,13 @@ export function useListParams() {
     type: params.get('type') ?? undefined,
     year: params.get('year') ?? undefined,
     sort: params.get('sort') ?? 'score',
+    order: params.get('order') ?? undefined,
   }
-  const set = (key: string, value: string | undefined) => {
+  const set = (key: string, value: string | undefined, reset: string[] = []) => {
     const next = new URLSearchParams(params)
     if (!value || value === ANY || value === 'all') next.delete(key)
     else next.set(key, value)
+    for (const k of reset) next.delete(k)
     setParams(next, { replace: true })
   }
   return { status, filters, set }
@@ -44,6 +46,9 @@ export function ListFilterBar({
 }) {
   const { t } = useTranslation()
   const [resetKey, setResetKey] = useState(0)
+  const natural = filters.sort === 'title' ? 'asc' : 'desc'
+  const order = filters.order ?? natural
+  const SortIcon = order === 'asc' ? RiSortAsc : RiSortDesc
   return (
     <>
       <div className="relative mt-3">
@@ -79,12 +84,26 @@ export function ListFilterBar({
         />
         <Select
           className="h-11 min-w-48 max-w-72 flex-1 basis-0 rounded-xl px-3.5"
-          icon={<RiSortDesc />}
+          icon={<SortIcon />}
           value={filters.sort}
-          onValueChange={(v) => set('sort', v === 'score' ? undefined : v)}
+          onValueChange={(v) => set('sort', v === 'score' ? undefined : v, ['order'])}
           prefix={t('lists.sortBy')}
           options={SORTS.map((s) => ({ value: s, label: t(`order.${s}`) }))}
         />
+        <Tooltip content={t(order === 'asc' ? 'lists.ascending' : 'lists.descending')}>
+          <Button
+            variant="secondary"
+            size="icon"
+            aria-label={t(order === 'asc' ? 'lists.ascending' : 'lists.descending')}
+            className="-ml-1 size-11 rounded-xl [&_svg]:size-4.5"
+            onClick={() => {
+              const next = order === 'asc' ? 'desc' : 'asc'
+              set('order', next === natural ? undefined : next)
+            }}
+          >
+            <SortIcon />
+          </Button>
+        </Tooltip>
         {children}
       </div>
     </>
