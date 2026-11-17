@@ -58,7 +58,7 @@ export function ShareButton({ kind }: { kind: ShareKind }) {
           {t('share.manage.button')}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[min(92vw,24rem)] p-4" onOpenAutoFocus={(e) => e.preventDefault()}>
+      <PopoverContent align="end" collisionPadding={16} className="w-[min(24rem,calc(100vw-2rem))] p-4" onOpenAutoFocus={(e) => e.preventDefault()}>
         <div className="text-sm font-semibold">{t('share.manage.title')}</div>
         <p className="mt-1 text-[0.8125rem] text-muted-foreground">{t('share.manage.hint')}</p>
         {share.isPending ? (
