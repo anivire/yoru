@@ -27,9 +27,9 @@ export function FriendStack({ users, className }: { users: UserCard[]; className
   return (
     <span className={cn('flex items-center', className)} title={users.map(nameOf).join(', ')}>
       {shown.map((user) => (
-        <UserAvatar key={user.id} user={user} className="-ml-1.5 size-6 text-[0.625rem] ring-2 ring-black/50 first:ml-0" />
+        <UserAvatar key={user.id} user={user} className="-ml-1.5 size-6 text-[0.625rem] ring-4 ring-background first:ml-0" />
       ))}
-      {users.length > STACK_LIMIT ? <span className="-ml-1.5 grid h-6 min-w-6 place-items-center rounded-full bg-black/70 px-1 text-[0.625rem] font-semibold text-white ring-2 ring-black/50">+{users.length - STACK_LIMIT}</span> : null}
+      {users.length > STACK_LIMIT ? <span className="-ml-1.5 grid h-6 min-w-6 place-items-center rounded-full bg-black/70 px-1 text-[0.625rem] font-semibold text-white ring-4 ring-background">+{users.length - STACK_LIMIT}</span> : null}
     </span>
   )
 }
