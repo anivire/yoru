@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { AnimeSummary, UserCard } from '@yoru/shared'
-import { Button, Card, EmptyState, Segmented, Skeleton, toast } from '@yoru/ui'
-import { RiChat3Fill, RiDeleteBin6Line, RiIdCardFill, RiStickyNoteFill } from '@remixicon/react'
+import { Button, Card, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, EmptyState, Segmented, Skeleton, toast } from '@yoru/ui'
+import { RiChat3Fill, RiDeleteBin6Line, RiIdCardFill, RiMore2Fill, RiStickyNoteFill } from '@remixicon/react'
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
@@ -111,23 +111,22 @@ function Profiles() {
           user={item.user}
           createdAt={item.createdAt}
           actions={
-            <div className="flex flex-wrap justify-end gap-1">
-              {item.user.avatarUrl ? (
-                <Button size="sm" variant="ghost" onClick={() => reset.mutate({ id: item.user.id, body: { avatar: true } })}>
-                  {t('profile.moderate.avatar')}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="icon-sm" variant="ghost" aria-label={t('profile.more')} loading={reset.isPending && reset.variables?.id === item.user.id}>
+                  <RiMore2Fill />
                 </Button>
-              ) : null}
-              {item.user.displayName ? (
-                <Button size="sm" variant="ghost" onClick={() => reset.mutate({ id: item.user.id, body: { displayName: true } })}>
-                  {t('profile.moderate.displayName')}
-                </Button>
-              ) : null}
-              {item.bio ? (
-                <Button size="sm" variant="ghost" onClick={() => reset.mutate({ id: item.user.id, body: { bio: true } })}>
-                  {t('profile.moderate.bio')}
-                </Button>
-              ) : null}
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                {item.user.avatarUrl ? <DropdownMenuItem onSelect={() => reset.mutate({ id: item.user.id, body: { avatar: true } })}>{t('profile.moderate.avatar')}</DropdownMenuItem> : null}
+                {item.user.displayName ? <DropdownMenuItem onSelect={() => reset.mutate({ id: item.user.id, body: { displayName: true } })}>{t('profile.moderate.displayName')}</DropdownMenuItem> : null}
+                {item.bio ? (
+                  <DropdownMenuItem onSelect={() => reset.mutate({ id: item.user.id, body: { bio: true } })} className="text-danger data-[highlighted]:bg-danger-soft">
+                    {t('profile.moderate.bio')}
+                  </DropdownMenuItem>
+                ) : null}
+              </DropdownMenuContent>
+            </DropdownMenu>
           }
         >
           {item.bio ? <span className="text-muted-foreground">{item.bio}</span> : null}

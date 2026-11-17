@@ -33,7 +33,7 @@ function EntryIcon({ entry }: { entry: ProviderEntryInfo }) {
   return <ExtensionMark />
 }
 
-function SettingsButton({ title, icon, status, children }: { title: string; icon: ReactNode; status?: ReactNode; children: ReactNode }) {
+function SettingsButton({ title, icon, status, detail, children }: { title: string; icon: ReactNode; status?: ReactNode; detail?: string; children: ReactNode }) {
   const { t } = useTranslation()
   return (
     <Dialog>
@@ -50,7 +50,10 @@ function SettingsButton({ title, icon, status, children }: { title: string; icon
             {icon}
             <span className="flex min-w-0 flex-col items-start gap-1">
               {title}
-              {status}
+              <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                {status}
+                {detail ? <span className="text-xs font-normal text-subtle-foreground">{detail}</span> : null}
+              </span>
             </span>
           </span>
         }
@@ -162,14 +165,14 @@ function ChainRow({
       <EntryIcon entry={entry} />
       <span className="min-w-0 flex-1">
         <span className={cn('block truncate text-sm font-medium', !entry.enabled && 'text-muted-foreground')}>{entry.name}</span>
-        <span className="mt-0.5 flex h-5 min-w-0 items-center gap-2 overflow-hidden">
+        <span className={cn('mt-0.5 h-5 min-w-0 items-center gap-2 overflow-hidden', entry.extension ? 'flex' : 'hidden sm:flex')}>
           {entry.extension ? <ExtensionBadge extension={extension} active={entry.enabled} /> : null}
           {!entry.enabled ? <OffBadge /> : info && !entry.extension ? <SourceStatus info={info} /> : null}
           {roles.length ? <span className="min-w-0 truncate text-xs text-subtle-foreground">{roles.join(' · ')}</span> : null}
         </span>
       </span>
       {info && settings ? (
-        <SettingsButton title={SOURCE_NAMES[info.id]} icon={<SourceIcon id={info.id} />} status={<SourceStatus info={info} />}>
+        <SettingsButton title={SOURCE_NAMES[info.id]} icon={<SourceIcon id={info.id} />} status={entry.enabled ? <SourceStatus info={info} /> : <OffBadge />} detail={roles.join(' · ')}>
           <SourceSettings info={info} settings={settings} />
         </SettingsButton>
       ) : extension ? (
@@ -250,14 +253,14 @@ function FeatureRow({ id, info, settings }: { id: FeatureId; info: DataSourceInf
       <SourceIcon id={info.id} />
       <span className="min-w-0 flex-1">
         <span className={cn('block truncate text-sm font-medium', !enabled && 'text-muted-foreground')}>{t(`admin.features.${id}.title`)}</span>
-        <span className="mt-0.5 flex h-5 min-w-0 items-center gap-2 overflow-hidden">
+        <span className="mt-0.5 hidden h-5 min-w-0 items-center gap-2 overflow-hidden sm:flex">
           {enabled ? <SourceStatus info={info} /> : <OffBadge />}
           <span className="min-w-0 truncate text-xs text-subtle-foreground">
             {SOURCE_NAMES[info.id]} · {t(`admin.features.${id}.hint`)}
           </span>
         </span>
       </span>
-      <SettingsButton title={SOURCE_NAMES[info.id]} icon={<SourceIcon id={info.id} />} status={<SourceStatus info={info} />}>
+      <SettingsButton title={t(`admin.features.${id}.title`)} icon={<SourceIcon id={info.id} />} status={enabled ? <SourceStatus info={info} /> : <OffBadge />} detail={`${SOURCE_NAMES[info.id]} · ${t(`admin.features.${id}.hint`)}`}>
         <SourceSettings info={info} settings={settings} />
       </SettingsButton>
       <Switch checked={enabled} disabled={save.isPending} onCheckedChange={(next) => save.mutate({ features: { [id]: next } })} />
