@@ -59,10 +59,7 @@ type Tab = (typeof TABS)[number]
 function useProfileActions(profile: UserProfile) {
   const { t } = useTranslation()
   const client = useQueryClient()
-  const refresh = () => {
-    void client.invalidateQueries({ queryKey: ['profile', profile.user.username] })
-    void client.invalidateQueries({ queryKey: ['friends'] })
-  }
+  const refresh = () => Promise.all([client.invalidateQueries({ queryKey: ['profile', profile.user.username] }), client.invalidateQueries({ queryKey: ['friends'] })])
   const options = { onSuccess: refresh, onError: (e: Error) => toast.error(errorMessage(e, t)) }
   return {
     add: useMutation({ mutationFn: () => api.addFriend(profile.user.id), ...options }),
@@ -303,10 +300,7 @@ function FriendCardAction({ user, username }: { user: PersonCard; username: stri
   const client = useQueryClient()
   const add = useMutation({
     mutationFn: () => api.addFriend(user.id),
-    onSuccess: () => {
-      void client.invalidateQueries({ queryKey: ['profile', username, 'friends'] })
-      void client.invalidateQueries({ queryKey: ['friends'] })
-    },
+    onSuccess: () => Promise.all([client.invalidateQueries({ queryKey: ['profile', username, 'friends'] }), client.invalidateQueries({ queryKey: ['friends'] })]),
     onError: (e) => toast.error(errorMessage(e, t)),
   })
   if (user.relation === 'none') {

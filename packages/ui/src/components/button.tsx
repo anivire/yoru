@@ -44,7 +44,7 @@ export function Button({ className, variant, size, asChild, loading, disabled, c
     )
   }
   return (
-    <button className={cn(buttonVariants({ variant, size }), className)} disabled={disabled || loading} {...props}>
+    <button className={cn(buttonVariants({ variant, size }), loading && '[&>svg:nth-child(2)]:hidden', className)} disabled={disabled || loading} {...props}>
       {loading ? <Spinner /> : null}
       {loading && (size === 'icon' || size === 'icon-sm') ? null : children}
     </button>
