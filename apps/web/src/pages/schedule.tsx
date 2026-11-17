@@ -201,6 +201,22 @@ export function SchedulePage() {
         </Button>
       </div>
 
+      <div className="mb-4 flex flex-wrap items-center gap-2 text-xs font-medium">
+        <span className="inline-flex h-7 items-center gap-2 rounded-full bg-field px-3 font-semibold text-accent">{t('schedule.inListHint')}</span>
+        <span className="inline-flex h-7 items-center gap-2 rounded-full bg-success-soft pl-1.5 pr-3 text-success">
+          <span className="h-4 w-1 rounded-full bg-success" />
+          {t('schedule.availableHint')}
+        </span>
+        <span className="inline-flex h-7 items-center gap-2 rounded-full bg-warning-soft pl-1.5 pr-3 text-warning">
+          <span className="h-4 w-1 rounded-full bg-warning" />
+          {t('schedule.awaitingHint')}
+        </span>
+        <span className="inline-flex h-7 items-center gap-2 rounded-full bg-field px-3 text-muted-foreground">
+          <span className="font-mono text-foreground">~</span>
+          {t('schedule.estimatedHint')}
+        </span>
+      </div>
+
       {isPending || switching ? (
         <ScheduleSkeleton />
       ) : isError ? (
@@ -251,21 +267,6 @@ export function SchedulePage() {
             )}
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-medium">
-            <span className="inline-flex h-7 items-center gap-2 rounded-full bg-field px-3 font-semibold text-accent">{t('schedule.inListHint')}</span>
-            <span className="inline-flex h-7 items-center gap-2 rounded-full bg-success-soft pl-1.5 pr-3 text-success">
-              <span className="h-4 w-1 rounded-full bg-success" />
-              {t('schedule.availableHint')}
-            </span>
-            <span className="inline-flex h-7 items-center gap-2 rounded-full bg-warning-soft pl-1.5 pr-3 text-warning">
-              <span className="h-4 w-1 rounded-full bg-warning" />
-              {t('schedule.awaitingHint')}
-            </span>
-            <span className="inline-flex h-7 items-center gap-2 rounded-full bg-field px-3 text-muted-foreground">
-              <span className="font-mono text-foreground">~</span>
-              {t('schedule.estimatedHint')}
-            </span>
-          </div>
         </>
       )}
     </Page>
