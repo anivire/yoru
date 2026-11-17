@@ -256,7 +256,27 @@ export interface AnimeCharacter {
   name: string
   imageUrl: string | null
   role: 'main' | 'supporting' | 'background'
-  voiceActor: { name: string; imageUrl: string | null } | null
+  voiceActor: { id: number; name: string; imageUrl: string | null } | null
+}
+
+export interface PersonRole {
+  anime: AnimeSummary
+  characters: { id: number; name: string; imageUrl: string | null; role: AnimeCharacter['role'] }[]
+}
+
+export interface PersonPage {
+  id: number
+  name: string
+  nativeName: string | null
+  imageUrl: string | null
+  description: string | null
+  birthday: { year: number | null; month: number | null; day: number | null } | null
+  homeTown: string | null
+  yearsActive: number[]
+  url: string | null
+  links: { label: string; url: string }[]
+  roles: PersonRole[]
+  hasNextPage: boolean
 }
 
 export interface AnimeExtras {

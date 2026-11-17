@@ -7,6 +7,8 @@ import { api } from '../lib/api'
 import { seasonLabel, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
 import { AnimeCard, Rail } from './anime-cards'
+import { TLink } from './transition-link'
+import { seiyuuPath } from '../lib/anime-title'
 
 function useListStatuses() {
   return useQuery({ queryKey: keys.listStatuses, queryFn: api.listStatuses, staleTime: 60_000 }).data
@@ -60,7 +62,13 @@ function CharacterCard({ character }: { character: AnimeCharacter }) {
     <div className="overflow-hidden rounded-xl bg-foreground/[0.04]">
       <div className="grid grid-cols-2">
         <Portrait src={character.imageUrl} />
-        <Portrait src={va?.imageUrl ?? null} />
+        {va ? (
+          <TLink to={seiyuuPath(va.id, va.name)} aria-label={va.name} className="transition-[filter] duration-100 hover:brightness-110">
+            <Portrait src={va.imageUrl} />
+          </TLink>
+        ) : (
+          <Portrait src={null} />
+        )}
       </div>
       <div className="grid grid-cols-2 gap-3 px-3 py-2.5">
         <div className="min-w-0">
@@ -68,10 +76,10 @@ function CharacterCard({ character }: { character: AnimeCharacter }) {
           <div className="mt-0.5 truncate text-xs text-muted-foreground">{t(`anime.role.${character.role}`)}</div>
         </div>
         {va ? (
-          <div className="min-w-0 text-right">
-            <div className="line-clamp-2 text-sm leading-snug">{va.name}</div>
+          <TLink to={seiyuuPath(va.id, va.name)} className="group/va min-w-0 text-right">
+            <div className="line-clamp-2 text-sm leading-snug transition-colors group-hover/va:text-accent">{va.name}</div>
             <div className="mt-0.5 truncate text-xs text-muted-foreground">{t('anime.seiyu')}</div>
-          </div>
+          </TLink>
         ) : null}
       </div>
     </div>

@@ -111,6 +111,7 @@ export const router = createBrowserRouter([
           { path: 'friends', lazy: page(() => import('./pages/friends'), 'FriendsPage') },
           { path: 'u/:username', lazy: page(() => import('./pages/profile'), 'ProfilePage') },
           { path: 'anime/:id', lazy: page(() => import('./pages/anime'), 'AnimePage') },
+          { path: 'seiyuu/:id', lazy: page(() => import('./pages/person'), 'PersonPage') },
           { path: 'settings/:tab?', lazy: page(() => import('./pages/settings'), 'SettingsPage') },
           { element: <RequireAdmin />, children: [{ path: 'admin', lazy: page(() => import('./pages/admin'), 'AdminPage') }] },
           { path: '*', element: <NotFoundPage /> },

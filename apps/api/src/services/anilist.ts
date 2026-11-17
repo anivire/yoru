@@ -22,7 +22,7 @@ export interface AniListExtras {
     edges: {
       role: string
       node: { id: number; name: { full: string | null }; image: { large: string | null } | null }
-      voiceActors: { name: { full: string | null }; image: { large: string | null } | null }[]
+      voiceActors: { id: number; name: { full: string | null }; image: { large: string | null } | null }[]
     }[]
   }
   recommendations: { nodes: { mediaRecommendation: AniListMedia | null }[] }
@@ -34,9 +34,34 @@ const QUERY = `query ($idMal: Int) {
   Media(idMal: $idMal, type: ANIME) {
     relations { edges { relationType node { ${MEDIA} } } }
     characters(sort: [ROLE, RELEVANCE, ID], perPage: 18) {
-      edges { role node { id name { full } image { large } } voiceActors(language: JAPANESE, sort: [RELEVANCE, ID]) { name { full } image { large } } }
+      edges { role node { id name { full } image { large } } voiceActors(language: JAPANESE, sort: [RELEVANCE, ID]) { id name { full } image { large } } }
     }
     recommendations(sort: [RATING_DESC, ID], perPage: 18) { nodes { mediaRecommendation { ${MEDIA} } } }
+  }
+}`
+
+export interface AniListStaff {
+  id: number
+  name: { full: string | null; native: string | null }
+  image: { large: string | null } | null
+  description: string | null
+  dateOfBirth: { year: number | null; month: number | null; day: number | null } | null
+  homeTown: string | null
+  yearsActive: number[] | null
+  siteUrl: string | null
+  characterMedia: {
+    pageInfo: { hasNextPage: boolean }
+    edges: { characterRole: string | null; characters: ({ id: number; name: { full: string | null }; image: { large: string | null } | null } | null)[]; node: AniListMedia }[]
+  }
+}
+
+const STAFF_QUERY = `query ($id: Int, $page: Int) {
+  Staff(id: $id) {
+    id name { full native } image { large } description(asHtml: false) dateOfBirth { year month day } homeTown yearsActive siteUrl
+    characterMedia(page: $page, perPage: 50, sort: [POPULARITY_DESC]) {
+      pageInfo { hasNextPage }
+      edges { characterRole characters { id name { full } image { large } } node { ${MEDIA} } }
+    }
   }
 }`
 
@@ -95,7 +120,10 @@ export interface AniListSearch {
 export const anilist = {
   extras(malId: number): Promise<AniListExtras | null> {
     if (!sourceEnabled('anilist')) return Promise.resolve(null)
-    return cached(`anilist:extras:${malId}`, 3 * DAY, async () => ({ media: await request(malId) })).then((r) => r.media)
+    return cached(`anilist:extras:v2:${malId}`, 3 * DAY, async () => ({ media: await request(malId) })).then((r) => r.media)
+  },
+  staff(id: number, page: number): Promise<AniListStaff | null> {
+    return cached(`anilist:staff:${id}:${page}`, 3 * DAY, async () => ({ staff: (await graphql<{ Staff: AniListStaff | null }>(STAFF_QUERY, { id, page }))?.Staff ?? null })).then((r) => r.staff)
   },
   anime(malId: number): Promise<AniListFullMedia | null> {
     return cached(`anilist:anime:${malId}`, DAY / 4, async () => ({ media: (await graphql<{ Media: AniListFullMedia | null }>(ANIME_QUERY, { idMal: malId }))?.Media ?? null })).then((r) => r.media)

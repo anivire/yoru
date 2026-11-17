@@ -10,7 +10,7 @@ import { ensureAnime, toDetails } from '../services/anime'
 import { anime365, seriesTitle } from '../services/anime365'
 import { episodeList } from '../services/episodes'
 import { getEntry, toEntry } from '../services/lists'
-import { animeExtras } from '../services/extras'
+import { animeExtras, personPage } from '../services/extras'
 import { animeLinks } from '../services/links'
 import { resolveMatch, setManualMatch } from '../services/provider'
 import { shikimori } from '../services/shikimori'
@@ -54,6 +54,7 @@ export const animeRoutes = new Hono<AppEnv>()
     )
   })
   .get('/genres', cacheResponse, async (c) => c.json(await searchGenres()))
+  .get('/seiyuu/:id', async (c) => c.json(await personPage(intParam(c, 'id'), Math.max(1, Number(c.req.query('page')) || 1))))
   .get('/match/search', async (c) => {
     const q = c.req.query('q')?.trim() ?? ''
     if (q.length < 2) return c.json([] as ProviderCandidate[])

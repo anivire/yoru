@@ -33,3 +33,8 @@ export function animePath(malId: number, title?: string | null): string {
   const slug = title ? animeSlug(title) : ''
   return slug ? `/anime/${malId}-${slug}` : `/anime/${malId}`
 }
+
+export function seiyuuPath(id: number, name?: string | null): string {
+  const slug = name ? animeSlug(name) : ''
+  return slug ? `/seiyuu/${id}-${slug}` : `/seiyuu/${id}`
+}

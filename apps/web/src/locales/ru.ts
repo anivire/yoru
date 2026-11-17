@@ -245,6 +245,15 @@ export const ru = {
     removeBanner: 'Убрать с фона',
     unpin: 'Убрать',
   },
+  person: {
+    birthday: 'День рождения',
+    homeTown: 'Родной город',
+    active: 'Годы работы',
+    now: 'н. в.',
+    roles: 'Роли',
+    noRoles: 'Ролей в аниме пока нет',
+    notFound: 'Не удалось загрузить страницу сэйю',
+  },
   feed: {
     title: 'Лента',
     focus: 'Из уведомления',

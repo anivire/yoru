@@ -26,7 +26,7 @@ export function LinkLogo({ color, children }: { color: string; children: ReactNo
   )
 }
 
-function ServiceLogo({ service }: { service: AnimeService }) {
+export function ServiceLogo({ service }: { service: AnimeService }) {
   const s = SERVICES[service]
   return (
     <LinkLogo color={s.color}>

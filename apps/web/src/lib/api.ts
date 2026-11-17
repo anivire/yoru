@@ -1,6 +1,7 @@
 import type {
   AvatarCrop,
   NotificationSources,
+  PersonPage,
   UserSettingsInput,
   ReleaseStatus,
   Changelog,
@@ -136,6 +137,7 @@ export const api = {
   match: (malId: number) => get<ProviderMatch>(`/anime/${malId}/match`),
   links: (malId: number) => get<AnimeLink[]>(`/anime/${malId}/links`),
   extras: (malId: number) => get<AnimeExtras>(`/anime/${malId}/extras`),
+  person: (id: number, page: number) => get<PersonPage>(`/anime/seiyuu/${id}${qs({ page })}`),
   screenshots: (malId: number) => get<Screenshot[]>(`/anime/${malId}/screenshots`),
   setMatch: (malId: number, providerId: number | null) => request<ProviderMatch>('PUT', `/anime/${malId}/match`, { providerId }),
   matchSearch: (q: string) => get<ProviderCandidate[]>(`/anime/match/search${qs({ q })}`),

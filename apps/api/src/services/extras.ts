@@ -1,7 +1,8 @@
-import type { AnimeCharacter, AnimeExtras, AnimeSummary, RelatedAnime } from '@yoru/shared'
+import type { AnimeCharacter, AnimeExtras, AnimeSummary, PersonPage, PersonRole, RelatedAnime } from '@yoru/shared'
 import { inArray } from 'drizzle-orm'
 import { db, now } from '../db/client'
 import { featureEnabled } from '../lib/features'
+import { notFound } from '../lib/http'
 import { anime } from '../db/schema'
 import { type AniListMedia, anilist } from './anilist'
 import { type AnimeRow, toSummary, upsertAnime } from './anime'
@@ -73,7 +74,7 @@ export async function animeExtras(malId: number): Promise<AnimeExtras> {
         name: e.node.name.full!,
         imageUrl: e.node.image?.large ?? null,
         role: ROLES[e.role] ?? 'supporting',
-        voiceActor: va?.name.full ? { name: va.name.full, imageUrl: va.image?.large ?? null } : null,
+        voiceActor: va?.name.full ? { id: va.id, name: va.name.full, imageUrl: va.image?.large ?? null } : null,
       }
     })
 
@@ -81,4 +82,61 @@ export async function animeExtras(malId: number): Promise<AnimeExtras> {
   const recommendations = recNodes.map((m) => cards.get(m.idMal!)).filter((a): a is AnimeSummary => Boolean(a) && !relatedIds.has(a!.malId))
 
   return { relations, characters, recommendations }
+}
+
+const MD_LINK = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g
+
+function splitDescription(raw: string | null) {
+  const links: PersonPage['links'] = []
+  if (!raw) return { description: null, links }
+  const kept: string[] = []
+  for (const line of raw.replace(/~!.*?!~/gs, '').split('\n')) {
+    const prefix = /^\s*([^:[\]]{1,30}):/.exec(line)?.[1]?.replace(/[_*]/g, '').trim()
+    const found = [...line.matchAll(MD_LINK)].filter(([, , url]) => !/^https?:\/\/(www\.)?anilist\.co\//.test(url!))
+    for (const [, label, url] of found) {
+      if (!links.some((l) => l.url === url)) links.push({ label: prefix && found.length === 1 ? `${prefix} ${label!.trim()}` : label!.trim(), url: url! })
+    }
+    const rest = line.replace(MD_LINK, '').replace(/^\s*[^:[\]]{1,30}:/, '')
+    if (found.length && /^[\s,|·•:\-–—()_*]*$/.test(rest)) continue
+    kept.push(line.replace(MD_LINK, '$1'))
+  }
+  const heading = (line: string) => /^\s*(#{1,6}\s+.+|(__|\*\*)?[^:]{1,40}:(__|\*\*)?)\s*$/.test(line)
+  const filled = kept.filter((line, i) => {
+    if (!heading(line)) return true
+    const next = kept.slice(i + 1).find((l) => l.trim())
+    return next !== undefined && !heading(next)
+  })
+  const description = filled.join('\n').replace(/\n{3,}/g, '\n\n').trim()
+  return { description: description || null, links }
+}
+
+export async function personPage(id: number, page: number): Promise<PersonPage> {
+  const staff = featureEnabled('related') ? await anilist.staff(id, page) : null
+  if (!staff?.name.full) throw notFound('PERSON_NOT_FOUND')
+  const edges = staff.characterMedia.edges.filter((e) => e.node.type === 'ANIME' && e.node.idMal)
+  const cards = summaries(edges.map((e) => e.node))
+  const byAnime = new Map<number, PersonRole>()
+  for (const e of edges) {
+    const anime = cards.get(e.node.idMal!)
+    if (!anime) continue
+    const role = byAnime.get(anime.malId) ?? { anime, characters: [] }
+    byAnime.set(anime.malId, role)
+    for (const c of e.characters) {
+      if (c?.name.full && !role.characters.some((x) => x.id === c.id)) role.characters.push({ id: c.id, name: c.name.full, imageUrl: c.image?.large ?? null, role: ROLES[e.characterRole ?? ''] ?? 'supporting' })
+    }
+  }
+  const roles = [...byAnime.values()]
+  return {
+    id: staff.id,
+    name: staff.name.full,
+    nativeName: staff.name.native,
+    imageUrl: staff.image?.large ?? null,
+    ...splitDescription(staff.description),
+    birthday: staff.dateOfBirth?.year || staff.dateOfBirth?.month ? staff.dateOfBirth : null,
+    homeTown: staff.homeTown,
+    yearsActive: staff.yearsActive ?? [],
+    url: staff.siteUrl,
+    roles,
+    hasNextPage: staff.characterMedia.pageInfo.hasNextPage,
+  }
 }

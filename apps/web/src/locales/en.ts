@@ -247,6 +247,15 @@ export const en: Messages = {
     removeBanner: 'Stop using as banner',
     unpin: 'Remove',
   },
+  person: {
+    birthday: 'Birthday',
+    homeTown: 'Home town',
+    active: 'Years active',
+    now: 'present',
+    roles: 'Roles',
+    noRoles: 'No anime roles yet',
+    notFound: 'Could not load this voice actor',
+  },
   feed: {
     title: 'Feed',
     focus: 'From a notification',
