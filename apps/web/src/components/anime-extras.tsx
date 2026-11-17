@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AnimeCharacter, ListStatus, WatchOrderEntry } from '@yoru/shared'
-import { Button, Image, Input, Lightbox, Segmented, Skeleton, cn } from '@yoru/ui'
+import { Button, Image, Input, Lightbox, Mascot, Segmented, Skeleton, cn } from '@yoru/ui'
 import { RiCornerDownRightLine, RiSearchLine } from '@remixicon/react'
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -100,7 +100,13 @@ function WatchOrderRow({ entry, number, current, status }: { entry: WatchOrderEn
         <span className={cn('grid size-7 shrink-0 place-items-center rounded-full font-mono text-xs font-semibold tabular-nums', current ? 'bg-accent text-accent-foreground' : 'bg-foreground/[0.06] text-muted-foreground')}>{number}</span>
       )}
       <div className={cn('shrink-0 overflow-hidden rounded-md bg-muted', side ? 'h-11 w-8' : 'h-14 w-10')}>
-        {anime.imageUrl ? <Image src={anime.imageUrl} alt="" loading="lazy" fallback className="h-full w-full object-cover" /> : null}
+        {anime.imageUrl ? (
+          <Image src={anime.imageUrl} alt="" fallback className="h-full w-full object-cover" />
+        ) : (
+          <span className="grid h-full w-full place-items-center">
+            <Mascot mood="sleepy" animated={false} className="h-auto w-1/2 opacity-50" />
+          </span>
+        )}
       </div>
       <div className="min-w-0 flex-1">
         <div className={cn('truncate font-medium transition-colors', side ? 'text-[0.8125rem]' : 'text-sm', current ? 'text-accent' : 'group-hover:text-accent')}>{title(anime)}</div>
