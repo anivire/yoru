@@ -247,6 +247,9 @@ export const ru = {
   },
   feed: {
     title: 'Лента',
+    focus: 'Из уведомления',
+    focusClose: 'Скрыть',
+    focusMissing: 'Запись удалена или больше вам недоступна',
     description: 'Ваша история: списки, серии, оценки и заметки',
     today: 'Сегодня',
     yesterday: 'Вчера',

@@ -8,6 +8,7 @@ import { api } from '../lib/api'
 import { relativeTime } from '../lib/format'
 import { StatusIcon } from '../lib/list-status'
 import { errorMessage, optimistic, useUser } from '../lib/queries'
+import { scrollToTarget } from '../lib/scroll-target'
 import { TLink } from './transition-link'
 import { UserAvatar, nameOf } from './user-avatar'
 
@@ -89,7 +90,7 @@ export function ReactionBar({ eventId, reactions, comments, onComments, comments
   )
 }
 
-function CommentItem({ comment, onChanged }: { comment: Comment; onChanged: () => void }) {
+function CommentItem({ comment, focused, onChanged }: { comment: Comment; focused: boolean; onChanged: () => void }) {
   const { t } = useTranslation()
   const [editing, setEditing] = useState(false)
   const [text, setText] = useState(comment.text)
@@ -103,7 +104,7 @@ function CommentItem({ comment, onChanged }: { comment: Comment; onChanged: () =
   })
   const remove = useMutation({ mutationFn: () => api.deleteComment(comment.id), onSuccess: onChanged, onError: (e) => toast.error(errorMessage(e, t)) })
   return (
-    <li className="flex gap-2.5">
+    <li ref={focused ? scrollToTarget : undefined} className={cn('flex gap-2.5', focused && '-m-1.5 rounded-lg bg-accent-soft p-1.5')}>
       <TLink to={`/u/${comment.user.username}`} className="shrink-0">
         <UserAvatar user={comment.user} className="size-7 text-xs" />
       </TLink>
@@ -164,7 +165,7 @@ function CommentItem({ comment, onChanged }: { comment: Comment; onChanged: () =
   )
 }
 
-export function CommentThread({ target, id }: { target: CommentTarget; id: number }) {
+export function CommentThread({ target, id, focus = null }: { target: CommentTarget; id: number; focus?: number | null }) {
   const { t } = useTranslation()
   const client = useQueryClient()
   const [text, setText] = useState('')
@@ -193,7 +194,7 @@ export function CommentThread({ target, id }: { target: CommentTarget; id: numbe
       ) : thread.data?.length ? (
         <ul className="flex flex-col gap-3">
           {thread.data.map((comment) => (
-            <CommentItem key={comment.id} comment={comment} onChanged={refresh} />
+            <CommentItem key={comment.id} comment={comment} focused={comment.id === focus} onChanged={refresh} />
           ))}
         </ul>
       ) : (

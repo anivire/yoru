@@ -4,9 +4,11 @@ import { Button, Input, Skeleton, Switch, Tooltip, cn, toast } from '@yoru/ui'
 import { RiChat3Line, RiDeleteBin6Line, RiEdit2Line, RiLockFill, RiStickyNoteFill } from '@remixicon/react'
 import { type FormEvent, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router'
 import { api } from '../lib/api'
 import { relativeTime } from '../lib/format'
 import { errorMessage, useUser } from '../lib/queries'
+import { scrollToTarget } from '../lib/scroll-target'
 import { Section } from './app-shell'
 import { Markdown, MarkdownEditor } from './markdown'
 import { TLink } from './transition-link'
@@ -76,12 +78,12 @@ export function NoteBody({ note }: { note: AnimeNote }) {
   )
 }
 
-function NoteCard({ note, malId }: { note: AnimeNote; malId: number }) {
+function NoteCard({ note, malId, focus }: { note: AnimeNote; malId: number; focus?: { comment: number | null } }) {
   const { t } = useTranslation()
   const user = useUser()
   const client = useQueryClient()
   const [editing, setEditing] = useState(false)
-  const [thread, setThread] = useState(note.comments > 0)
+  const [thread, setThread] = useState(note.comments > 0 || Boolean(focus?.comment))
   const refresh = () => {
     void client.invalidateQueries({ queryKey: ['notes', malId] })
     void client.invalidateQueries({ queryKey: ['feed'] })
@@ -97,7 +99,7 @@ function NoteCard({ note, malId }: { note: AnimeNote; malId: number }) {
   const remove = useMutation({ mutationFn: () => api.deleteNote(note.id), onSuccess: refresh, onError: (e) => toast.error(errorMessage(e, t)) })
   const own = note.user.id === user.id
   return (
-    <article className="flex gap-3 rounded-xl bg-surface p-4">
+    <article ref={focus && !focus.comment ? scrollToTarget : undefined} className={cn('flex gap-3 rounded-xl bg-surface p-4', focus && 'ring-1 ring-accent/40')}>
       <TLink to={`/u/${note.user.username}`} className="shrink-0">
         <UserAvatar user={note.user} />
       </TLink>
@@ -129,7 +131,7 @@ function NoteCard({ note, malId }: { note: AnimeNote; malId: number }) {
               <RiChat3Line />
               {note.comments ? <span className="font-mono text-xs tabular-nums">{note.comments}</span> : t('social.comment')}
             </Button>
-            {thread ? <CommentThread target="note" id={note.id} /> : null}
+            {thread ? <CommentThread target="note" id={note.id} focus={focus?.comment} /> : null}
           </>
         ) : null}
       </div>
@@ -141,6 +143,9 @@ export function NotesSection({ malId }: { malId: number }) {
   const { t } = useTranslation()
   const client = useQueryClient()
   const notes = useQuery({ queryKey: ['notes', malId], queryFn: () => api.notes(malId) })
+  const [params] = useSearchParams()
+  const focusNote = Number(params.get('note')) || null
+  const focusComment = Number(params.get('comment')) || null
   const create = useMutation({
     mutationFn: (input: NoteInput) => api.createNote(malId, input),
     onSuccess: () => {
@@ -158,7 +163,13 @@ export function NotesSection({ malId }: { malId: number }) {
         {notes.isPending ? (
           <Skeleton className="h-24 rounded-xl" />
         ) : notes.data?.length ? (
-          notes.data.map((note) => <NoteCard key={note.id} note={note} malId={malId} />)
+          notes.data.map((note) =>
+            note.id === focusNote ? (
+              <NoteCard key={`${note.id}:focus:${focusComment}`} note={note} malId={malId} focus={{ comment: focusComment }} />
+            ) : (
+              <NoteCard key={note.id} note={note} malId={malId} />
+            ),
+          )
         ) : (
           <p className="px-1 text-sm text-muted-foreground">{t('notes.empty')}</p>
         )}

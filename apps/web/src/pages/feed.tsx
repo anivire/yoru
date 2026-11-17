@@ -1,9 +1,10 @@
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import type { FeedItem, FeedPage as FeedPageData } from '@yoru/shared'
 import { Button, EmptyState, Segmented, Skeleton, StarIcon, cn } from '@yoru/ui'
-import { RiAddCircleFill, RiArrowDownSLine, RiPlayCircleFill, RiStickyNoteFill } from '@remixicon/react'
+import { RiAddCircleFill, RiArrowDownSLine, RiCloseLine, RiNotification3Fill, RiPlayCircleFill, RiStickyNoteFill } from '@remixicon/react'
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router'
 import { AnimeCard } from '../components/anime-cards'
 import { Page, PageHeader } from '../components/app-shell'
 import { NoteBody } from '../components/notes'
@@ -125,13 +126,13 @@ function NoteEntry({ item }: { item: Extract<FeedItem, { type: 'note' }> }) {
   )
 }
 
-function GroupEntry({ group, showUser }: { group: Group; showUser: boolean }) {
+function GroupEntry({ group, showUser, focus }: { group: Group; showUser: boolean; focus?: { comment: number | null } }) {
   const { t, i18n } = useTranslation()
   const heading = useGroupHeading()(group)
   const [open, setOpen] = useState(false)
   const first = group.items[0]!
-  const [thread, setThread] = useState(first.comments > 0)
-  const time = new Intl.DateTimeFormat(i18n.language, { hour: '2-digit', minute: '2-digit' }).format(new Date(first.createdAt))
+  const [thread, setThread] = useState(first.comments > 0 || Boolean(focus?.comment))
+  const time = new Intl.DateTimeFormat(i18n.language, { ...(focus ? { day: 'numeric', month: 'long' } : {}), hour: '2-digit', minute: '2-digit' }).format(new Date(first.createdAt))
   const shown = open ? group.items : group.items.slice(0, COLLAPSED)
   return (
     <li className="relative pb-7 pl-11 last:pb-0">
@@ -170,7 +171,7 @@ function GroupEntry({ group, showUser }: { group: Group; showUser: boolean }) {
         </>
       )}
       <ReactionBar eventId={first.id} reactions={first.reactions} comments={first.comments} commentsOpen={thread} onComments={() => setThread(!thread)} />
-      {thread ? <CommentThread target={first.type === 'note' ? 'note' : 'event'} id={first.type === 'note' ? first.note.id : first.id} /> : null}
+      {thread ? <CommentThread target={first.type === 'note' ? 'note' : 'event'} id={first.type === 'note' ? first.note.id : first.id} focus={focus?.comment} /> : null}
     </li>
   )
 }
@@ -216,6 +217,32 @@ function DaySection({ day, showUser }: { day: Day; showUser: boolean }) {
           ))}
         </ol>
       ) : null}
+    </section>
+  )
+}
+
+function FocusedEvent({ id, comment, onClose }: { id: number; comment: number | null; onClose: () => void }) {
+  const { t } = useTranslation()
+  const event = useQuery({ queryKey: ['feed', 'event', id], queryFn: () => api.feedEvent(id), retry: false })
+  return (
+    <section className="mb-10 rounded-2xl bg-surface p-4 ring-1 ring-accent/30 sm:p-5">
+      <div className="mb-4 flex items-center gap-2">
+        <RiNotification3Fill className="size-4 text-accent" />
+        <span className="text-sm font-semibold">{t('feed.focus')}</span>
+        <Button size="sm" variant="ghost" className="ml-auto" onClick={onClose}>
+          <RiCloseLine />
+          {t('feed.focusClose')}
+        </Button>
+      </div>
+      {event.isPending ? (
+        <Skeleton className="h-48 rounded-xl" />
+      ) : event.data ? (
+        <ol>
+          <GroupEntry group={{ key: 'focus', items: [event.data] }} showUser focus={{ comment }} />
+        </ol>
+      ) : (
+        <p className="text-sm text-muted-foreground">{t('feed.focusMissing')}</p>
+      )}
     </section>
   )
 }
@@ -304,6 +331,9 @@ export function FeedPage() {
   useDocumentTitle(t('feed.title'))
   const { feedScope } = useAppearance()
   const [scope, setScope] = useState(feedScope)
+  const [params, setParams] = useSearchParams()
+  const focusEvent = Number(params.get('event')) || null
+  const focusComment = Number(params.get('comment')) || null
   return (
     <Page>
       <div className="grow-empty w-full">
@@ -318,6 +348,7 @@ export function FeedPage() {
             />
           }
         />
+        {focusEvent ? <FocusedEvent key={`${focusEvent}:${focusComment}`} id={focusEvent} comment={focusComment} onClose={() => setParams({}, { replace: true })} /> : null}
         <ActivityFeed
           key={scope}
           queryKey={['feed', scope]}

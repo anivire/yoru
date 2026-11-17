@@ -249,6 +249,9 @@ export const en: Messages = {
   },
   feed: {
     title: 'Feed',
+    focus: 'From a notification',
+    focusClose: 'Hide',
+    focusMissing: 'This entry was deleted or is no longer available to you',
     description: 'Your history: lists, episodes, scores and notes',
     today: 'Today',
     yesterday: 'Yesterday',

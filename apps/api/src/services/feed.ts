@@ -1,11 +1,11 @@
 import type { AnimeNote, FeedItem, FeedPage, ListStatus, NoteInput, UserCard } from '@yoru/shared'
-import { and, asc, desc, eq, gte, inArray, lt, or } from 'drizzle-orm'
+import { type SQL, and, asc, desc, eq, gte, inArray, lt, or } from 'drizzle-orm'
 import { db, now } from '../db/client'
 import { activity, anime, animeNotes, feedEvents, listEntries, users } from '../db/schema'
 import { getSetting, setSetting } from '../lib/settings'
 import { notFound } from '../lib/http'
 import { toSummary } from './anime'
-import { commentCounts, deleteTargetComments, eventTarget, reactionSummary } from './interactions'
+import { commentCounts, deleteTargetComments, eventTarget, reactionSummary, visibleEvent } from './interactions'
 import { cardColumns, friendIds, hiddenUserIds, toCard } from './social'
 
 const EPISODE_MERGE_MS = 6 * 60 * 60_000
@@ -152,16 +152,32 @@ export function feedPage(viewerId: number, options: { before: string | null; lim
     inArray(feedEvents.userId, authors),
     cursor ? or(lt(feedEvents.createdAt, cursor.createdAt), and(eq(feedEvents.createdAt, cursor.createdAt), lt(feedEvents.id, cursor.id))) : undefined,
   ].filter((c) => c !== undefined)
-  const rows = db
+  const rows = eventRows(and(...conditions), limit + 1)
+  const page = rows.slice(0, limit)
+  const last = page[page.length - 1]?.event
+  return { items: toItems(viewerId, page), nextBefore: rows.length > limit && last ? `${last.createdAt}|${last.id}` : null }
+}
+
+export function feedEvent(viewerId: number, id: number): FeedItem {
+  visibleEvent(viewerId, id)
+  const item = toItems(viewerId, eventRows(eq(feedEvents.id, id), 1))[0]
+  if (!item) notFound('EVENT_NOT_FOUND')
+  return item
+}
+
+function eventRows(where: SQL | undefined, limit: number) {
+  return db
     .select({ event: feedEvents, user: cardColumns, anime })
     .from(feedEvents)
     .innerJoin(users, eq(users.id, feedEvents.userId))
     .innerJoin(anime, eq(anime.malId, feedEvents.malId))
-    .where(and(...conditions))
+    .where(where)
     .orderBy(desc(feedEvents.createdAt), desc(feedEvents.id))
-    .limit(limit + 1)
+    .limit(limit)
     .all()
-  const page = rows.slice(0, limit)
+}
+
+function toItems(viewerId: number, page: ReturnType<typeof eventRows>): FeedItem[] {
   const noteIds = page.filter((r) => r.event.type === 'note').map((r) => (r.event.data as { noteId?: number }).noteId).filter((id): id is number => typeof id === 'number')
   const notes = new Map(
     noteIds.length
@@ -197,8 +213,7 @@ export function feedPage(viewerId: number, options: { before: string | null; lim
       if (note) items.push({ ...base, type: 'note', note: toNote(note, user, base.comments) })
     }
   }
-  const last = page[page.length - 1]?.event
-  return { items, nextBefore: rows.length > limit && last ? `${last.createdAt}|${last.id}` : null }
+  return items
 }
 
 const BACKFILL_KEY = 'feed.backfill.v1'

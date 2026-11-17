@@ -452,6 +452,7 @@ export interface SocialNotification {
   titles: AnimeTitles | null
   imageUrl: string | null
   refId: number | null
+  target: { type: CommentTarget; id: number } | null
   text: string | null
   createdAt: string
   readAt: string | null

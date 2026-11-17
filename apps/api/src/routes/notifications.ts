@@ -3,7 +3,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import { type NotificationList, type NotificationSources, TRANSLATION_SOURCES } from '@yoru/shared'
 import { db, now } from '../db/client'
-import { anime, notifications, socialNotifications, users } from '../db/schema'
+import { anime, comments, notifications, socialNotifications, users } from '../db/schema'
 import { type AppEnv, requireAuth } from '../lib/auth'
 import { parseBody } from '../lib/validate'
 import { activeCalendars } from '../jobs/release-watcher'
@@ -40,6 +40,12 @@ export const notificationRoutes = new Hono<AppEnv>()
       .limit(50)
       .all()
       .filter((row) => !hidden.has(row.n.actorId))
+    const commentIds = social.filter((row) => row.n.type === 'comment' && row.n.refId).map((row) => row.n.refId!)
+    const commentTargets = new Map(
+      commentIds.length
+        ? db.select({ id: comments.id, type: comments.targetType, targetId: comments.targetId }).from(comments).where(inArray(comments.id, commentIds)).all().map((c) => [c.id, { type: c.type, id: c.targetId }] as const)
+        : [],
+    )
     const socialUnread = db
       .select({ count: sql<number>`count(*)` })
       .from(socialNotifications)
@@ -55,6 +61,7 @@ export const notificationRoutes = new Hono<AppEnv>()
         titles: title ? { title, titleEnglish: titleEnglish ?? null, titleJapanese: titleJapanese ?? null, titleRussian: titleRussian || null } : null,
         imageUrl: imageUrl ?? null,
         refId: n.refId,
+        target: n.type === 'reaction' && n.refId ? { type: 'event', id: n.refId } : n.type === 'comment' && n.refId ? (commentTargets.get(n.refId) ?? null) : null,
         text: n.text,
         createdAt: n.createdAt,
         readAt: n.readAt,

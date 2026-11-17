@@ -4,7 +4,7 @@ import { Hono } from 'hono'
 import { type AppEnv, requireAuth } from '../lib/auth'
 import { intParam, parseBody } from '../lib/validate'
 import { ensureAnime, getAnimeRow } from '../services/anime'
-import { animeNotesFor, createNote, deleteNote, feedPage, updateNote } from '../services/feed'
+import { animeNotesFor, createNote, deleteNote, feedEvent, feedPage, updateNote } from '../services/feed'
 import { addComment, deleteComment, editComment, listComments, toggleReaction } from '../services/interactions'
 
 function feedScope(value: string | undefined) {
@@ -22,6 +22,7 @@ export const feedRoutes = new Hono<AppEnv>()
       }),
     ),
   )
+  .get('/event/:id', (c) => c.json(feedEvent(c.get('user').id, intParam(c, 'id'))))
   .post('/:id/reaction', async (c) => {
     const { emoji } = await parseBody(c, reactionInputSchema)
     toggleReaction(c.get('user').id, intParam(c, 'id'), emoji)

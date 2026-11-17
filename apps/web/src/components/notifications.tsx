@@ -34,6 +34,9 @@ function socialLink(n: SocialNotification) {
   if (n.type === 'friend_accepted' || n.type === 'invite_accepted') return `/u/${n.actor.username}`
   if (n.type === 'recommendation' && n.malId) return animePath(n.malId)
   if (n.type === 'room_invite' && n.text) return `/together/${n.text}`
+  const comment = n.type === 'comment' && n.refId ? `&comment=${n.refId}` : ''
+  if (n.target?.type === 'note' && n.malId) return `${animePath(n.malId)}?note=${n.target.id}${comment}`
+  if (n.target?.type === 'event') return `/feed?event=${n.target.id}${comment}`
   return '/feed'
 }
 

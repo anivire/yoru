@@ -29,7 +29,7 @@ function canSeeNote(viewerId: number, note: NoteRow) {
   return note.userId === viewerId || (!note.private && !blockedBetween(viewerId, note.userId))
 }
 
-function visibleEvent(viewerId: number, id: number): EventRow {
+export function visibleEvent(viewerId: number, id: number): EventRow {
   const event = db.select().from(feedEvents).where(eq(feedEvents.id, id)).get()
   if (!event || !canSeeEvent(viewerId, event)) notFound('EVENT_NOT_FOUND')
   return event
