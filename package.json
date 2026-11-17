@@ -2,6 +2,7 @@
   "name": "yoru",
   "private": true,
   "version": "0.67.1",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "workspaces": [
     "apps/*",
