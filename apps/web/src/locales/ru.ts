@@ -188,7 +188,7 @@ export const ru = {
   },
   friends: {
     title: 'Друзья',
-    description: 'Заявки, друзья и поиск людей на этом сервере',
+    description: 'Заявки, список друзей и поиск новых на этом сервере',
     incoming: 'Заявки в друзья',
     outgoing: 'Отправленные заявки',
     list: 'Друзья',
@@ -796,7 +796,7 @@ export const ru = {
     anySource: 'Любой включённый',
     anySourceHint: 'От источника, где серия вышла раньше',
     noSources: 'Администратор не включил ни одного подходящего источника',
-    socialNotifications: 'От людей',
+    socialNotifications: 'От друзей',
     socialNotificationsHint: 'Уведомления от друзей и других пользователей сервера',
     notifyFriends: 'Заявки в друзья и принятые приглашения',
     notifyComments: 'Комментарии к вашим записям и заметкам',
