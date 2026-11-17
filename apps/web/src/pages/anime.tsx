@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { AnimeDetails, ListEntry } from '@yoru/shared'
-import { Badge, Dialog, DialogContent, DialogTrigger, EmptyState, Image, Lightbox, cn } from '@yoru/ui'
-import { RiCalendarScheduleFill, RiClapperboardFill, RiPlayFill } from '@remixicon/react'
+import { Badge, EmptyState, Image, Lightbox, cn } from '@yoru/ui'
+import { RiCalendarScheduleFill, RiPlayFill } from '@remixicon/react'
 import { EpisodeCount, GLASS_CHIP, Score } from '../components/anime-cards'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -79,61 +79,19 @@ function Synopsis({ text, open, onToggle }: { text: string; open: boolean; onTog
   )
 }
 
-function youtubeId(url: string): string | null {
-  try {
-    const u = new URL(url)
-    if (u.hostname.endsWith('youtu.be')) return u.pathname.slice(1) || null
-    if (u.searchParams.get('v')) return u.searchParams.get('v')
-    const embed = /\/embed\/([\w-]{6,})/.exec(u.pathname)
-    return embed?.[1] ?? null
-  } catch {
-    return null
-  }
-}
-
 function TrailerButton({ url }: { url: string }) {
   const { t } = useTranslation()
-  const id = youtubeId(url)
-  if (!id) {
-    return (
-      <LinkChip
-        href={url}
-        external
-        label={t('anime.trailer')}
-        logo={
-          <LinkLogo color="#ff0033">
-            <RiClapperboardFill />
-          </LinkLogo>
-        }
-      />
-    )
-  }
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <LinkChip
-          label={t('anime.trailer')}
-          logo={
-            <LinkLogo color="#ff0033">
-              <RiPlayFill />
-            </LinkLogo>
-          }
-        />
-      </DialogTrigger>
-      <DialogContent title={t('anime.trailer')} className="w-[min(94vw,56rem)]">
-        <div className="p-4 pt-2">
-          <div className="aspect-video overflow-hidden rounded-lg bg-black">
-            <iframe
-              src={`https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`}
-              title={t('anime.trailer')}
-              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-              allowFullScreen
-              className="h-full w-full"
-            />
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <LinkChip
+      href={url}
+      external
+      label={t('anime.trailer')}
+      logo={
+        <LinkLogo color="#ff0033">
+          <RiPlayFill />
+        </LinkLogo>
+      }
+    />
   )
 }
 
