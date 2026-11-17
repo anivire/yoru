@@ -197,7 +197,9 @@ export function Tooltip({ content, children, side = 'top' }: { content: ReactNod
   return (
     <T.Provider delayDuration={250}>
       <T.Root>
-        <T.Trigger asChild>{children}</T.Trigger>
+        <T.Trigger asChild onFocus={(e) => !e.currentTarget.matches(':focus-visible') && e.preventDefault()}>
+          {children}
+        </T.Trigger>
         <T.Portal>
           <T.Content side={side} sideOffset={6} className={cn(panel, 'max-w-72 rounded-md px-2.5 py-1.5 text-xs')}>
             {content}
