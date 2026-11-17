@@ -2,9 +2,9 @@ import type { RoomPlayback, RoomPlaybackInput, SkipTime, StreamSource } from '@y
 import { Spinner, cn } from '@yoru/ui'
 import type Hls from 'hls.js'
 import type JASSUB from 'jassub'
-import { RiArrowLeftSFill, RiCheckFill, RiCloseLine, RiKeyboardBoxFill, RiClosedCaptioningFill, RiClosedCaptioningLine, RiDashboard3Fill, RiFullscreenExitFill, RiFullscreenFill, RiPauseLargeFill, RiPictureInPicture2Fill, RiPlayLargeFill, RiSettings3Fill, RiSkipBackFill, RiSkipForwardFill, RiVolumeDownFill, RiVolumeMuteFill, RiVolumeUpFill } from '@remixicon/react'
+import { RiArrowLeftSFill, RiCheckFill, RiCloseLine, RiKeyboardBoxFill, RiClosedCaptioningFill, RiClosedCaptioningLine, RiDashboard3Fill, RiFullscreenExitFill, RiFullscreenFill, RiPauseLargeFill, RiPictureInPicture2Fill, RiPlayLargeFill, RiRewindFill, RiSpeedFill, RiSettings3Fill, RiSkipBackFill, RiSkipForwardFill, RiVolumeDownFill, RiVolumeMuteFill, RiVolumeUpFill } from '@remixicon/react'
 import { useQuery } from '@tanstack/react-query'
-import { Fragment, type PointerEvent, type ReactNode, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
+import { Fragment, type MouseEvent, type PointerEvent, type ReactNode, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatTime } from '../../lib/format'
 import { assToVtt } from './ass-to-vtt'
@@ -67,6 +67,34 @@ function syncTarget(playback: RoomPlayback, offset: number) {
 }
 
 const COUNTDOWN_SECONDS = 5
+const DOUBLE_TAP_MS = 300
+const TAP_SEEK = 5
+const HOLD_MS = 450
+const HOLD_RATE = 2
+const FLASH_MS = 650
+const NOTICE_MS = 900
+const ICON_FLASH_MS = 500
+const CONTROLS_MS = 3000
+const FRAME = 1 / 24
+const SWIPE_EXIT = 80
+
+function coarsePointer() {
+  return window.matchMedia('(pointer: coarse)').matches
+}
+
+function lockOrientation(video: HTMLVideoElement | null) {
+  if (!coarsePointer() || (video && video.videoHeight > video.videoWidth)) return
+  const orientation = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }
+  void orientation.lock?.('landscape').catch(() => undefined)
+}
+
+function unlockOrientation() {
+  try {
+    screen.orientation?.unlock?.()
+  } catch {
+    return
+  }
+}
 const RESUME_NOTICE_MS = 8000
 
 const SHORTCUTS: { keys: string[]; label: string }[] = [
@@ -75,6 +103,8 @@ const SHORTCUTS: { keys: string[]; label: string }[] = [
   { keys: ['J', 'L'], label: 'seek10' },
   { keys: ['S'], label: 'skip85' },
   { keys: ['0–9'], label: 'jump' },
+  { keys: ['Home', 'End'], label: 'startEnd' },
+  { keys: [',', '.'], label: 'frame' },
   { keys: ['↑', '↓'], label: 'volume' },
   { keys: ['M'], label: 'mute' },
   { keys: ['<', '>'], label: 'speed' },
@@ -145,6 +175,19 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   const [entry, setEntry] = useState<{ key: string; from: number } | null>(null)
   const [help, setHelp] = useState(false)
   const [pip, setPip] = useState(false)
+  const [seekFlash, setSeekFlash] = useState<{ side: -1 | 1; amount: number; at: number } | null>(null)
+  const [notice, setNotice] = useState<{ text: string; at: number } | null>(null)
+  const [holding, setHolding] = useState(false)
+  const [touch, setTouch] = useState(coarsePointer)
+  const [started, setStarted] = useState(false)
+  const [iconFlash, setIconFlash] = useState<{ play: boolean; at: number } | null>(null)
+  const swipeRef = useRef<{ x: number; y: number } | null>(null)
+  const pointerRef = useRef('mouse')
+  const tapRef = useRef<{ at: number; side: number } | null>(null)
+  const holdRef = useRef<{ timer?: number; active: boolean; consumed: boolean }>({ active: false, consumed: false })
+  const rotatedRef = useRef(false)
+  const flashSeek = (side: -1 | 1, amount: number) =>
+    setSeekFlash((prev) => ({ side, amount: prev && prev.side === side ? prev.amount + amount : amount, at: performance.now() }))
   const [preview, setPreview] = useState(false)
   const [resumeFrom, setResumeFrom] = useState(startAt > 0 ? startAt : null)
   const changeAutoSkip = (kind: SkipTime['kind'], on: boolean) => {
@@ -166,6 +209,21 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   useEffect(() => {
     rateRef.current = rate
   }, [rate])
+  useEffect(() => {
+    if (!seekFlash) return
+    const id = window.setTimeout(() => setSeekFlash(null), FLASH_MS)
+    return () => window.clearTimeout(id)
+  }, [seekFlash])
+  useEffect(() => {
+    if (!iconFlash) return
+    const id = window.setTimeout(() => setIconFlash(null), ICON_FLASH_MS)
+    return () => window.clearTimeout(id)
+  }, [iconFlash])
+  useEffect(() => {
+    if (!notice) return
+    const id = window.setTimeout(() => setNotice(null), NOTICE_MS)
+    return () => window.clearTimeout(id)
+  }, [notice])
   useEffect(() => {
     if (resumeFrom === null || !playing) return
     const id = window.setTimeout(() => setResumeFrom(null), RESUME_NOTICE_MS)
@@ -373,7 +431,14 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   }, [rate])
 
   useEffect(() => {
-    const onFs = () => setFullscreen(fullscreenElement() === rootRef.current)
+    const onFs = () => {
+      const on = fullscreenElement() === rootRef.current
+      setFullscreen(on)
+      if (!on) {
+        rotatedRef.current = false
+        unlockOrientation()
+      }
+    }
     document.addEventListener('fullscreenchange', onFs)
     document.addEventListener('webkitfullscreenchange', onFs)
     return () => {
@@ -399,7 +464,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         setControls(false)
         setMenu(null)
       }
-    }, 2500)
+    }, CONTROLS_MS)
   }, [])
 
   const toggle = useCallback(() => {
@@ -431,10 +496,32 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
     const native = () => video?.webkitEnterFullscreen?.()
     const fallback = () => (IS_IOS ? setStretched(true) : native())
     if (nativeIos) native()
-    else if (root?.requestFullscreen) void root.requestFullscreen().catch(fallback)
+    else if (root?.requestFullscreen) void root.requestFullscreen().then(() => lockOrientation(video), fallback)
     else if (root?.webkitRequestFullscreen) root.webkitRequestFullscreen()
     else fallback()
   }, [stretched, nativeIos])
+
+  useEffect(() => {
+    if (nativeIos) return
+    const media = window.matchMedia('(orientation: landscape)')
+    const onChange = () => {
+      const root = rootRef.current
+      const video = videoRef.current
+      if (!coarsePointer() || !root) return
+      if (media.matches) {
+        if (!video || video.paused || fullscreenElement() || !root.requestFullscreen) return
+        rotatedRef.current = true
+        void root.requestFullscreen().catch(() => {
+          rotatedRef.current = false
+        })
+      } else if (rotatedRef.current && fullscreenElement() === root) {
+        rotatedRef.current = false
+        void document.exitFullscreen().catch(() => undefined)
+      }
+    }
+    media.addEventListener('change', onChange)
+    return () => media.removeEventListener('change', onChange)
+  }, [nativeIos])
 
   useEffect(() => {
     if (!stretched) return
@@ -482,27 +569,44 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
       switch (e.key) {
         case ' ':
         case 'k':
+          setIconFlash({ play: v.paused, at: performance.now() })
           toggle()
+          break
+        case ',':
+        case '.':
+          if (!v.paused) return
+          v.currentTime = Math.max(0, Math.min(v.duration || 0, v.currentTime + (e.key === '.' ? FRAME : -FRAME)))
+          break
+        case 'Home':
+          v.currentTime = 0
+          break
+        case 'End':
+          if (v.duration) v.currentTime = v.duration
           break
         case 'ArrowLeft':
         case 'j':
           seekBy(e.key === 'j' ? -10 : -5)
+          flashSeek(-1, e.key === 'j' ? 10 : 5)
           break
         case 'ArrowRight':
         case 'l':
           seekBy(e.key === 'l' ? 10 : 5)
+          flashSeek(1, e.key === 'l' ? 10 : 5)
           break
         case 'ArrowUp':
-          setVolume((x) => Math.min(1, x + 0.1))
+        case 'ArrowDown': {
+          const next = Math.round(Math.max(0, Math.min(1, (muted ? 0 : volume) + (e.key === 'ArrowUp' ? 0.1 : -0.1))) * 100) / 100
+          setVolume(next)
+          setMuted(false)
+          setNotice({ text: `${Math.round(next * 100)}%`, at: performance.now() })
           break
-        case 'ArrowDown':
-          setVolume((x) => Math.max(0, x - 0.1))
-          break
+        }
         case 'f':
           toggleFullscreen()
           break
         case 'm':
-          setMuted((x) => !x)
+          setMuted(!muted)
+          setNotice({ text: muted ? `${Math.round(volume * 100)}%` : t('player.muted'), at: performance.now() })
           break
         case 'c':
           setSubs(!subsOn)
@@ -519,7 +623,9 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         case '>':
         case '<': {
           const i = RATES.indexOf(rateRef.current)
-          setRate(RATES[Math.max(0, Math.min(RATES.length - 1, (i === -1 ? RATES.indexOf(1) : i) + (e.key === '>' ? 1 : -1)))] ?? 1)
+          const next = RATES[Math.max(0, Math.min(RATES.length - 1, (i === -1 ? RATES.indexOf(1) : i) + (e.key === '>' ? 1 : -1)))] ?? 1
+          setRate(next)
+          setNotice({ text: `${next}×`, at: performance.now() })
           break
         }
         case '?':
@@ -541,7 +647,41 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [toggle, seekBy, toggleFullscreen, poke, onNext, onPrev, subsOn, help])
+  }, [toggle, seekBy, toggleFullscreen, poke, onNext, onPrev, subsOn, help, volume, muted, t])
+
+  const startHold = () => {
+    const v = videoRef.current
+    if (!v || v.paused || sync) return
+    holdRef.current.active = true
+    setVideoRate(v, HOLD_RATE)
+    setHolding(true)
+  }
+  const endHold = () => {
+    window.clearTimeout(holdRef.current.timer)
+    if (!holdRef.current.active) return
+    holdRef.current.active = false
+    holdRef.current.consumed = true
+    const v = videoRef.current
+    if (v) setVideoRate(v, rateRef.current)
+    setHolding(false)
+  }
+  const tap = (e: MouseEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    const x = (e.clientX - r.left) / r.width
+    const side = x < 0.4 ? -1 : x > 0.6 ? 1 : 0
+    const last = tapRef.current
+    tapRef.current = { at: e.timeStamp, side }
+    if (side && last && last.side === side && e.timeStamp - last.at < DOUBLE_TAP_MS) {
+      seekBy(side * TAP_SEEK)
+      flashSeek(side, TAP_SEEK)
+      setMenu(null)
+      if (videoRef.current && !videoRef.current.paused) setControls(false)
+      return
+    }
+    if (menu) setMenu(null)
+    else if (controls) setControls(false)
+    else poke()
+  }
 
   const segmentAt = (at: number) => skips?.find((s) => at >= s.start && at < s.end - 1)
   const activeSkip = segmentAt(time)
@@ -584,10 +724,60 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         full ? 'rounded-none' : 'rounded-xl',
         !controls && 'cursor-none',
       )}
-      onMouseMove={poke}
-      onMouseLeave={() => playing && setControls(false)}
+      onPointerDownCapture={(e) => {
+        pointerRef.current = e.pointerType
+        setTouch(e.pointerType === 'touch')
+      }}
+      onPointerMove={(e) => {
+        if (e.pointerType === 'mouse') poke()
+      }}
+      onPointerLeave={(e) => {
+        if (e.pointerType === 'mouse' && playing) setControls(false)
+      }}
     >
-      <div className="absolute inset-0" onClick={() => (menu ? setMenu(null) : toggle())} onDoubleClick={toggleFullscreen}>
+      <div
+        className={cn('absolute inset-0 select-none [-webkit-touch-callout:none]', full && 'touch-none')}
+        onPointerDown={(e) => {
+          if (e.pointerType === 'mouse' && e.button !== 0) return
+          window.clearTimeout(holdRef.current.timer)
+          holdRef.current.consumed = false
+          holdRef.current.timer = window.setTimeout(startHold, HOLD_MS)
+          swipeRef.current = e.pointerType === 'touch' ? { x: e.clientX, y: e.clientY } : null
+        }}
+        onPointerMove={(e) => {
+          const start = swipeRef.current
+          if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 12) window.clearTimeout(holdRef.current.timer)
+        }}
+        onPointerUp={(e) => {
+          const start = swipeRef.current
+          swipeRef.current = null
+          if (start && full && e.clientY - start.y > SWIPE_EXIT && Math.abs(e.clientX - start.x) < SWIPE_EXIT) {
+            holdRef.current.consumed = true
+            toggleFullscreen()
+          }
+          endHold()
+        }}
+        onPointerCancel={endHold}
+        onPointerLeave={endHold}
+        onContextMenu={(e) => {
+          if (pointerRef.current === 'touch') e.preventDefault()
+        }}
+        onClick={(e) => {
+          if (holdRef.current.consumed) {
+            holdRef.current.consumed = false
+            return
+          }
+          if (pointerRef.current === 'touch') tap(e)
+          else if (menu) setMenu(null)
+          else {
+            setIconFlash({ play: Boolean(videoRef.current?.paused), at: performance.now() })
+            toggle()
+          }
+        }}
+        onDoubleClick={() => {
+          if (pointerRef.current !== 'touch') toggleFullscreen()
+        }}
+      >
         <video
           ref={videoRef}
           className="h-full w-full"
@@ -596,6 +786,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
           onPlay={() => {
             duckSounds(true)
             setPlaying(true)
+            setStarted(true)
             setCountdown(null)
             setBlocked(false)
             poke()
@@ -704,7 +895,12 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
       ) : null}
 
       {resumeFrom !== null && !error && countdown === null && !activeSkip ? (
-        <div className={cn('absolute left-3 z-10 flex h-10 items-center gap-3 rounded-xl bg-black/60 pl-4 pr-1 text-sm text-white shadow-2xl transition-[bottom] sm:left-5', controls ? 'bottom-20 sm:bottom-24' : 'bottom-5')}>
+        <div
+          className={cn(
+            'absolute left-3 z-10 flex h-8 items-center gap-2 whitespace-nowrap rounded-lg bg-black/60 pl-3 pr-1 text-xs text-white shadow-2xl sm:left-5 sm:h-10 sm:gap-3 sm:rounded-xl sm:pl-4 sm:text-sm sm:transition-[bottom]',
+            controls ? 'top-14 sm:top-auto sm:bottom-24' : 'top-3 sm:top-auto sm:bottom-5',
+          )}
+        >
           {t('player.resumed', { time: formatTime(resumeFrom) })}
           <button
             type="button"
@@ -714,7 +910,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
               setResumeFrom(null)
               poke()
             }}
-            className="h-8 cursor-pointer rounded-lg bg-white/15 px-3 font-medium hover:bg-white/25"
+            className="h-6 cursor-pointer rounded-md bg-white/15 px-2 font-medium hover:bg-white/25 sm:h-8 sm:rounded-lg sm:px-3"
           >
             {t('player.fromStart')}
           </button>
@@ -772,10 +968,59 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         </div>
       ) : null}
 
-      {!playing && !waiting && !error && !pip && countdown === null ? (
-        <button type="button" onClick={toggle} className="absolute left-1/2 top-1/2 grid size-12 -translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/90 text-black shadow-2xl sm:size-16">
-          <RiPlayLargeFill className="size-6 sm:size-8" />
+      {seekFlash ? (
+        <div
+          key={seekFlash.side}
+          className={cn('pointer-events-none absolute inset-y-0 z-10 grid w-[38%] place-items-center bg-white/10 animate-fade', seekFlash.side < 0 ? 'left-0 rounded-r-[50%]' : 'right-0 rounded-l-[50%]')}
+        >
+          <div className="flex flex-col items-center gap-1">
+            {seekFlash.side < 0 ? <RiRewindFill className="size-7" /> : <RiSpeedFill className="size-7" />}
+            <span className="text-xs font-semibold">{t('player.seekSeconds', { count: seekFlash.amount })}</span>
+          </div>
+        </div>
+      ) : null}
+
+      {iconFlash && !touch ? (
+        <div key={iconFlash.at} className="pointer-events-none absolute left-1/2 top-1/2 z-10 grid size-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-black/55 animate-icon-flash">
+          {iconFlash.play ? <RiPlayLargeFill className="size-8" /> : <RiPauseLargeFill className="size-8" />}
+        </div>
+      ) : null}
+
+      {!started && !touch && !playing && !waiting && !error && !blocked && countdown === null ? (
+        <button type="button" onClick={toggle} aria-label={t('player.play')} className="absolute left-1/2 top-1/2 z-10 grid size-16 -translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/90 text-black shadow-2xl">
+          <RiPlayLargeFill className="size-8" />
         </button>
+      ) : null}
+
+      {touch && !error && !pip && countdown === null ? (
+        <div className={cn('pointer-events-none absolute inset-0 z-[5] flex items-center justify-center gap-10 bg-black/40 transition-opacity duration-200', controls && !seekFlash ? 'opacity-100' : 'opacity-0')}>
+          <TouchButton label={t('player.prev')} onClick={onPrev} enabled={controls && !seekFlash} icon={<RiSkipBackFill className="size-6" />} />
+          {waiting ? (
+            <span className="size-16" />
+          ) : (
+            <TouchButton label={playing ? t('player.pause') : t('player.play')} onClick={toggle} enabled={controls && !seekFlash} large icon={playing ? <RiPauseLargeFill className="size-8" /> : <RiPlayLargeFill className="size-8" />} />
+          )}
+          <TouchButton label={t('player.next')} onClick={onNext} enabled={controls && !seekFlash} icon={<RiSkipForwardFill className="size-6" />} />
+        </div>
+      ) : null}
+
+      {touch && !controls && !full && duration ? (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 bg-white/25">
+          <div className="h-full bg-accent" style={{ width: `${pct}%` }} />
+        </div>
+      ) : null}
+
+      {holding || notice ? (
+        <div className="pointer-events-none absolute left-1/2 top-14 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/65 px-3.5 py-1.5 text-sm font-semibold shadow-2xl animate-fade">
+          {holding ? (
+            <>
+              {HOLD_RATE}×
+              <RiSpeedFill className="size-4" />
+            </>
+          ) : (
+            notice?.text
+          )}
+        </div>
       ) : null}
 
       <div style={stretched ? SAFE_TOP : undefined} className={cn('pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 to-transparent px-3 pb-8 pt-2.5 transition-opacity sm:px-5 sm:pb-10 sm:pt-4', controls ? 'opacity-100' : 'opacity-0')}>
@@ -783,7 +1028,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         <div className="truncate text-sm font-medium sm:text-[0.9375rem]">{title}</div>
       </div>
 
-      <div style={stretched ? SAFE_BOTTOM : undefined} className={cn('absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-2 pb-1.5 pt-10 transition-opacity sm:px-4 sm:pb-3 sm:pt-14', controls ? 'opacity-100' : 'pointer-events-none opacity-0')}>
+      <div onPointerDown={poke} style={stretched ? SAFE_BOTTOM : undefined} className={cn('absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-2 pb-1.5 pt-10 transition-opacity sm:px-4 sm:pb-3 sm:pt-14', controls ? 'opacity-100' : 'pointer-events-none opacity-0')}>
         <div
           className="group/seek relative mb-2 flex h-4 cursor-pointer touch-none items-center"
           onPointerDown={(e) => {
@@ -848,9 +1093,9 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         </div>
 
         <div className="flex items-center gap-1">
-          {onPrev ? <ControlButton label={t('player.prev')} onClick={onPrev} icon={<RiSkipBackFill className="fill-current" />} className="hidden sm:grid" /> : null}
-          <ControlButton label={playing ? t('player.pause') : t('player.play')} onClick={toggle} icon={playing ? <RiPauseLargeFill /> : <RiPlayLargeFill />} />
-          {onNext ? <ControlButton label={t('player.next')} onClick={onNext} icon={<RiSkipForwardFill className="fill-current" />} /> : null}
+          {onPrev ? <ControlButton label={t('player.prev')} onClick={onPrev} icon={<RiSkipBackFill className="fill-current" />} className={touch ? 'hidden' : 'hidden sm:grid'} /> : null}
+          <ControlButton label={playing ? t('player.pause') : t('player.play')} onClick={toggle} icon={playing ? <RiPauseLargeFill /> : <RiPlayLargeFill />} className={touch ? 'hidden' : undefined} />
+          {onNext ? <ControlButton label={t('player.next')} onClick={onNext} icon={<RiSkipForwardFill className="fill-current" />} className={touch ? 'hidden' : undefined} /> : null}
           <div className="group/vol flex items-center">
             <ControlButton label={t('player.mute')} onClick={() => setMuted((m) => !m)} icon={<VolumeIcon />} />
             <input
@@ -928,6 +1173,21 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         </div>
       </div>
     </div>
+  )
+}
+
+function TouchButton({ label, onClick, icon, enabled, large }: { label: string; onClick?: () => void; icon: ReactNode; enabled: boolean; large?: boolean }) {
+  if (!onClick) return <span className={large ? 'size-16' : 'size-12'} />
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      tabIndex={enabled ? 0 : -1}
+      onClick={onClick}
+      className={cn('grid cursor-pointer place-items-center rounded-full bg-black/35 text-white', large ? 'size-16' : 'size-12', enabled && 'pointer-events-auto')}
+    >
+      {icon}
+    </button>
   )
 }
 

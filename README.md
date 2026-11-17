@@ -22,7 +22,7 @@ Lists, a player with subtitles or dubs, a release calendar, friends and a shared
 - Player with video from Anime365, Kodik or your own extensions. If the first source has no episode, the next one is used.
 - Subtitles or voice-over, a favourite translation author for each, and playback that resumes where you stopped.
 - Skip buttons for openings and endings; skip one once and the next ones skip themselves.
-- Frame previews on the timeline, keyboard shortcuts (press `?` in the player) and picture-in-picture.
+- Frame previews on the timeline, keyboard shortcuts (press `?` in the player) and picture-in-picture. On phones: double-tap the sides to seek, tap to show the controls with play, previous and next in the middle, hold for 2× speed, turn the phone sideways for fullscreen and swipe down to leave it.
 - Watch together (beta): a room where pause, seeking, speed, the episode and the translation stay in sync for everyone.
 
 **Track**

@@ -332,6 +332,21 @@
   }
 }
 
+@utility animate-icon-flash {
+  animation: yoru-icon-flash 500ms ease-out forwards;
+}
+
+@keyframes yoru-icon-flash {
+  from {
+    opacity: 1;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+    scale: 1.6;
+  }
+}
+
 @utility animate-pop {
   animation: yoru-fade-in 140ms ease-out;
 }
