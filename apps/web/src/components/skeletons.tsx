@@ -84,7 +84,7 @@ export function UpcomingCardSkeleton() {
 export function HomeSkeleton() {
   return (
     <>
-      <div className="page-frame px-4 pb-12 pt-6 sm:px-6">
+      <div className="page-frame page-top-double px-4 pb-12 sm:px-6">
         <div className="mb-6 flex h-1 items-center">
           <TextLine className="text-[0.9375rem]" bar="w-40" />
         </div>
@@ -136,7 +136,8 @@ export function HomeSkeleton() {
 export function AnimePageSkeleton() {
   return (
     <>
-      <div className="page-frame px-4 pb-10 pt-4 sm:px-6 sm:pt-(--page-top,2.5rem)">
+      <div className="page-frame page-top-double px-4 pb-10 sm:px-6">
+        <TextLine className="mb-6 text-[0.8125rem]" bar="w-64" />
         <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
           <div className="flex w-36 shrink-0 flex-col gap-3 sm:w-48">
             <Skeleton className="aspect-[2/3] w-full rounded-xl" />

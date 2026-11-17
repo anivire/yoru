@@ -22,6 +22,7 @@ import { keys } from '../lib/queries'
 import { useDocumentTitle } from '../lib/title'
 import { animePath, useAnimeTitle } from '../lib/anime-title'
 import { TLink } from '../components/transition-link'
+import { Breadcrumbs } from '../components/breadcrumbs'
 import { AnimeExtrasSections, ScreenshotsSection } from '../components/anime-extras'
 
 const MORE_SPACE = 24
@@ -177,7 +178,16 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
   ].filter((f) => f !== null)
   return (
     <div>
-      <div className="page-frame px-4 pb-10 pt-8 sm:px-6 sm:pt-[calc(var(--page-top,2.5rem)*2)]">
+      <div className="page-frame page-top-double px-4 pb-10 sm:px-6">
+        <Breadcrumbs
+          className="mb-6"
+          items={[
+            { label: t('nav.home'), to: '/' },
+            { label: t('nav.search'), to: '/search' },
+            ...(anime.type ? [{ label: typeLabel(anime.type), to: `/search?type=${anime.type}` }] : []),
+            { label: mainTitle },
+          ]}
+        />
         <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
           <div className="flex w-36 shrink-0 flex-col gap-3 sm:w-48">
             {anime.imageUrl ? (

@@ -29,7 +29,7 @@ function Hero({ anime, episode, label }: { anime: AnimeSummary; episode: number 
   return (
     <div className="relative isolate -mt-(--header-h) pt-(--header-h)">
       <HeroBackdrop src={anime.imageUrl} />
-      <div className="page-frame px-4 pb-12 pt-6 sm:px-6">
+      <div className="page-frame page-top-double px-4 pb-12 sm:px-6">
         <div className="mb-6 flex h-1 items-center text-[0.9375rem] font-medium text-muted-foreground">{label}</div>
         <div className="flex items-end gap-6">
           <TLink to={animePath(anime.malId, anime.title)} className="hidden shrink-0 sm:block">

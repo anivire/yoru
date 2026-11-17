@@ -338,6 +338,7 @@ export const en: Messages = {
   },
   common: {
     close: 'Close',
+    breadcrumbs: 'Breadcrumbs',
     scrollPrev: 'Scroll back',
     scrollNext: 'Scroll forward',
     save: 'Save',

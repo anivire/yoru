@@ -3,12 +3,14 @@ import type { AnimeCharacter } from '@yoru/shared'
 import { Image, Lightbox, Skeleton, cn } from '@yoru/ui'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useLocation } from 'react-router'
 import { api } from '../lib/api'
 import { seasonLabel, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
 import { AnimeCard, Rail } from './anime-cards'
 import { TLink } from './transition-link'
-import { seiyuuPath } from '../lib/anime-title'
+import { seiyuuPath, useAnimeTitle } from '../lib/anime-title'
+import type { Crumb } from './breadcrumbs'
 
 function useListStatuses() {
   return useQuery({ queryKey: keys.listStatuses, queryFn: api.listStatuses, staleTime: 60_000 }).data
@@ -55,7 +57,7 @@ function Portrait({ src }: { src: string | null }) {
   return <div className="aspect-[3/4] overflow-hidden bg-muted">{src ? <Image src={src} alt="" loading="lazy" className="h-full w-full object-cover" /> : null}</div>
 }
 
-function CharacterCard({ character }: { character: AnimeCharacter }) {
+function CharacterCard({ character, from }: { character: AnimeCharacter; from?: Crumb }) {
   const { t } = useTranslation()
   const va = character.voiceActor
   return (
@@ -63,7 +65,7 @@ function CharacterCard({ character }: { character: AnimeCharacter }) {
       <div className="grid grid-cols-2">
         <Portrait src={character.imageUrl} />
         {va ? (
-          <TLink to={seiyuuPath(va.id, va.name)} aria-label={va.name} className="transition-[filter] duration-100 hover:brightness-110">
+          <TLink to={seiyuuPath(va.id, va.name)} state={{ from }} aria-label={va.name} className="transition-[filter] duration-100 hover:brightness-110">
             <Portrait src={va.imageUrl} />
           </TLink>
         ) : (
@@ -76,7 +78,7 @@ function CharacterCard({ character }: { character: AnimeCharacter }) {
           <div className="mt-0.5 truncate text-xs text-muted-foreground">{t(`anime.role.${character.role}`)}</div>
         </div>
         {va ? (
-          <TLink to={seiyuuPath(va.id, va.name)} className="group/va min-w-0 text-right">
+          <TLink to={seiyuuPath(va.id, va.name)} state={{ from }} className="group/va min-w-0 text-right">
             <div className="line-clamp-2 text-sm leading-snug transition-colors group-hover/va:text-accent">{va.name}</div>
             <div className="mt-0.5 truncate text-xs text-muted-foreground">{t('anime.seiyu')}</div>
           </TLink>
@@ -89,12 +91,16 @@ function CharacterCard({ character }: { character: AnimeCharacter }) {
 function CharactersSection({ malId }: { malId: number }) {
   const { t } = useTranslation()
   const { data } = useAnimeExtras(malId)
+  const page = useQuery({ queryKey: keys.anime(malId), queryFn: () => api.anime(malId) }).data
+  const title = useAnimeTitle()
+  const { pathname } = useLocation()
   if (!data?.characters.length) return null
+  const from = page ? { label: title(page.anime), to: pathname } : undefined
   return (
     <Section title={t('anime.characters')}>
       <Rail>
         {data.characters.map((c) => (
-          <CharacterCard key={c.id} character={c} />
+          <CharacterCard key={c.id} character={c} from={from} />
         ))}
       </Rail>
     </Section>

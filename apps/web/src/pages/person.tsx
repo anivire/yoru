@@ -4,9 +4,10 @@ import { Button, EmptyState, Image, Lightbox, Skeleton, cn } from '@yoru/ui'
 import { RiArrowDownSLine, RiGlobalLine } from '@remixicon/react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useParams } from 'react-router'
+import { useLocation, useParams } from 'react-router'
 import { AnimeCard, GLASS_CHIP } from '../components/anime-cards'
 import { Page } from '../components/app-shell'
+import { type Crumb, Breadcrumbs } from '../components/breadcrumbs'
 import MarkdownRender from '../components/markdown-render'
 import { LinkList, LinkLogo, LinkRow, ServiceLogo } from '../components/service-links'
 import { AnimeCardSkeleton, TextLine } from '../components/skeletons'
@@ -16,7 +17,7 @@ import { i18n } from '../lib/i18n'
 import { keys } from '../lib/queries'
 import { useDocumentTitle } from '../lib/title'
 
-const HEADER_FRAME = 'page-frame px-4 pb-10 pt-8 sm:px-6 sm:pt-[calc(var(--page-top,2.5rem)*2)]'
+const HEADER_FRAME = 'page-frame page-top-double px-4 pb-10 sm:px-6'
 
 function birthday(b: Person['birthday']) {
   if (!b) return null
@@ -46,7 +47,7 @@ function PersonLinks({ person, className }: { person: Person; className?: string
   )
 }
 
-function PersonHeader({ person }: { person: Person }) {
+function PersonHeader({ person, crumbs }: { person: Person; crumbs: Crumb[] }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const facts = [
@@ -57,6 +58,7 @@ function PersonHeader({ person }: { person: Person }) {
   const long = (person.description?.length ?? 0) > 400
   return (
     <div className={HEADER_FRAME}>
+      <Breadcrumbs items={crumbs} className="mb-6" />
       <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
         <div className="flex w-36 shrink-0 flex-col gap-3 sm:w-48">
           {person.imageUrl ? (
@@ -146,6 +148,7 @@ function PersonSkeleton() {
   return (
     <div className="relative isolate -mt-(--header-h) pt-(--header-h)">
       <div className={HEADER_FRAME}>
+        <TextLine className="mb-6 text-[0.8125rem]" bar="w-56" />
         <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
           <div className="flex w-36 shrink-0 flex-col gap-3 sm:w-48">
             <Skeleton className="aspect-[2/3] w-full rounded-xl" />
@@ -198,6 +201,7 @@ export function PersonPage() {
   const { t } = useTranslation()
   const id = Number(useParams().id?.split('-')[0])
   const { backdrop } = useAppearance()
+  const from = (useLocation().state as { from?: Crumb } | null)?.from
   const person = useInfiniteQuery({
     queryKey: ['person', id],
     queryFn: ({ pageParam }) => api.person(id, pageParam),
@@ -226,7 +230,7 @@ export function PersonPage() {
         {first.imageUrl ? <img src={first.imageUrl} alt="" className="h-full w-full scale-110 object-cover object-[50%_25%] opacity-50 blur-xl" /> : null}
         <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-background/50 to-background/20" />
       </div>
-      <PersonHeader person={first} />
+      <PersonHeader person={first} crumbs={[{ label: t('nav.home'), to: '/' }, ...(from ? [from] : []), { label: t('anime.seiyu') }, { label: first.name }]} />
       <Page>
         <h2 className="mb-2 text-xl font-semibold tracking-tight">{t('person.roles')}</h2>
         {roles.length ? (

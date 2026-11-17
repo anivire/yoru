@@ -336,6 +336,7 @@ export const ru = {
   },
   common: {
     close: 'Закрыть',
+    breadcrumbs: 'Навигационная цепочка',
     scrollPrev: 'Прокрутить назад',
     scrollNext: 'Прокрутить вперёд',
     save: 'Сохранить',

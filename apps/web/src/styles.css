@@ -17,6 +17,13 @@ body {
   min-height: 100dvh;
 }
 
+@utility page-top-double {
+  padding-top: 2rem;
+  @media (width >= 40rem) {
+    padding-top: calc(var(--page-top, 2.5rem) * 2);
+  }
+}
+
 @utility page-frame {
   max-width: var(--page-max);
   margin-left: clamp(var(--rail-left, 0px), calc((100% - var(--page-max)) / 2), calc(100% - var(--page-max) - var(--rail-right, 0px)));
