@@ -62,7 +62,7 @@ Lists, a player with subtitles or dubs, a release calendar, friends and a shared
 
 ### Docker (recommended)
 
-A multi-arch image (`amd64`, `arm64`) is published to GHCR on every push to `master`. Everything yoru stores lives on one `/data` volume, and database migrations run on start.
+A multi-arch image (`amd64`, `arm64`) is published to GHCR for every release. Everything yoru stores lives on one `/data` volume, and database migrations run on start.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/anivire/yoru/master/docs/deploy/docker-compose.yml -o docker-compose.yml
@@ -92,11 +92,11 @@ The image tag in `docker-compose.yml` decides what you get:
 | `latest` | The newest release. Recommended |
 | `0.68` | Only fixes for 0.68, no new features |
 | `0.68.0` | Exactly this release, it never changes |
-| `edge` | Every change as soon as it lands in `master`, before a release. Can break |
+| `edge` | Every change as soon as it lands in the `develop` branch, before a release. Can break |
 
 ### Dokploy and Coolify
 
-Step-by-step guides: [Dokploy](docs/deploy/dokploy.md), [Coolify](docs/deploy/coolify.md). Both build the image on your server from the repository, so they follow `master` like the `edge` tag.
+Step-by-step guides: [Dokploy](docs/deploy/dokploy.md), [Coolify](docs/deploy/coolify.md). Both build the image on your server from the repository. The `master` branch only gets releases and hotfixes; `develop` gets every change, like the `edge` tag.
 
 <details>
 <summary>Building from source</summary>
@@ -140,7 +140,8 @@ All variables are optional except `APP_URL`. Tokens, OAuth keys, API addresses a
 | `SHIKIMORI_CLIENT_ID`, `SHIKIMORI_CLIENT_SECRET` | | Shikimori import |
 | `MAL_CLIENT_ID`, `MAL_CLIENT_SECRET` | | MyAnimeList import |
 | `ANIME365_URL`, `JIKAN_URL`, `SHIKIMORI_URL`, `ANILIST_URL`, `KITSU_URL`, `ANILIBRIA_URL`, `KODIK_URL` | public instances | API addresses |
-| `GITHUB_REPO`, `GITHUB_BRANCH`, `GITHUB_TOKEN` | `anivire/yoru`, `master` | Update check; the token is only for a private repository |
+| `RELEASE_CHANNEL` | `stable` | `stable` checks for new releases, `edge` for new commits on `GITHUB_BRANCH`. Set at build time; the published images set it themselves |
+| `GITHUB_REPO`, `GITHUB_BRANCH`, `GITHUB_TOKEN` | `anivire/yoru`, `master` on stable, `develop` on edge | Update check and changelog; the token is only for a private repository |
 | `RELEASE_POLL_MINUTES` | `5` | How often new Anime365 releases are checked |
 | `SESSION_DAYS` | `30` | Login session lifetime |
 | `DATA_DIR`, `DATABASE_PATH` | `./data`, `<DATA_DIR>/yoru.db` | Database location; the Docker image uses `/data` |

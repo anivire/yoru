@@ -54,7 +54,7 @@ To keep copies, add a **Volume Backup** for `yoru-data` with an S3 destination (
 
 ## Updates
 
-Turn on **Autodeploy** on the **General** tab to rebuild on every push to the branch, or press **Deploy** by hand. Migrations run on start. The footer in yoru shows the running version and commit and tells you when the branch is ahead. Deploying from `master` gives you every change before it is released, the same as the `edge` image tag.
+Turn on **Autodeploy** on the **General** tab to rebuild on every push to the branch, or press **Deploy** by hand. Migrations run on start. The footer in yoru shows the running version and commit and tells you when the branch is ahead. The `master` branch only gets releases and hotfixes. To get every change before it is released, deploy the `develop` branch instead and add `RELEASE_CHANNEL=edge` to the environment, so the footer compares your build with `develop`.
 
 ## Troubleshooting
 

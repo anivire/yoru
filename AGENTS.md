@@ -77,21 +77,23 @@ There is no test suite. Before finishing a change, run the typecheck for every p
 
 ## Releases
 
-There are two channels. Every push to `master` is **edge**: the Docker image `ghcr.io/anivire/yoru:edge` (and `sha-<commit>`), and the owner's Dokploy site, which builds from the repository and is what they test. A **stable** release is a `vX.Y.Z` tag: it publishes the image as `latest`, `X.Y.Z` and `X.Y` and a GitHub Release. The image knows its channel (`RELEASE_CHANNEL`, set by `.github/workflows/docker.yml`): stable instances compare their version with the latest GitHub Release, edge instances compare their commit with `master`. The in-app changelog groups commits by `chore: release X.Y.Z` commits and shows the commits after the last one as the next version on edge only.
+Work happens on the `develop` branch; `master` only gets releases and hotfixes. There are two channels. Every push to `develop` is **edge**: the Docker image `ghcr.io/anivire/yoru:edge` (and `sha-<commit>`), and the owner's Dokploy site, which builds `develop` with `RELEASE_CHANNEL=edge` and is what they test. A **stable** release is a `vX.Y.Z` tag on `master`: it publishes the image as `latest`, `X.Y.Z` and `X.Y` and a GitHub Release. The image knows its channel (`RELEASE_CHANNEL`, set by `.github/workflows/docker.yml`): stable instances compare their version with the latest GitHub Release, edge instances compare their commit with `develop` (`GITHUB_BRANCH` defaults to `master` on stable and `develop` on edge). The in-app changelog groups commits by `chore: release X.Y.Z` commits and shows the commits after the last one as the next version on edge only.
 
 Unless told otherwise, finish each batch of changes like this:
 
 1. Typecheck and build.
 2. Commit with a Conventional Commits subject: `type: summary`, lowercase, imperative, no trailing period and no version number (e.g. `feat: add a bottom navigation bar option`). Types: `feat` for new behaviour, `fix` for bug fixes, `perf` for speedups, `refactor` for code changes without behaviour change, `style` for visual tweaks to existing UI, `docs` for documentation, `chore` for version bumps, dependencies and tooling, `build` for Docker and build setup. An optional scope is fine (`fix(import): …`). Keep unrelated changes in separate commits.
    The subjects of `feat`, `fix`, `perf` and `style` commits are shown to users on the in-app changelog page (`/changelog`), so write them for people using the app: say what changed for them in plain, general words. Name the feature or screen, not the code. No library, package, component, file or function names, no internal jargon, no references to where an idea came from. Bad: `feat: voice controls like the foley demo`, `fix: wrap StepSlider labels in a span`. Good: `feat: add sounds to buttons, tabs and text fields`, `fix: keep volume labels from overlapping on phones`. Technical detail belongs in the commit body.
-3. Push to `origin master`. Do not bump the version.
+3. Push to `origin develop`. Do not bump the version.
 
 When the owner asks for a release:
 
 1. Pick the version from the commits since the last `v*` tag: patch for fixes and small tweaks, minor for features or new dependencies, major only on request.
-2. Bump every workspace: `npm version X.Y.Z --no-git-tag-version --workspaces --include-workspace-root`, and commit it as `chore: release X.Y.Z`.
+2. On `develop`, bump every workspace: `npm version X.Y.Z --no-git-tag-version --workspaces --include-workspace-root`, and commit it as `chore: release X.Y.Z`. Then bring it to `master` without a merge commit: `git checkout master && git merge --ff-only develop`.
 3. Create an annotated tag whose message is two or three sentences about the highlights, written for people using the app: `git tag -a vX.Y.Z -m "…"`. `.github/workflows/release.yml` puts it on top of the release notes and lists the `feat`, `perf`, `style` and `fix` commits under it (`.github/scripts/release-notes.mjs`).
-4. Push both: `git push origin master vX.Y.Z`.
+4. Push all three: `git push origin master develop vX.Y.Z`, then switch back to `develop`.
+
+A hotfix for a release goes on `master`: commit the fix, release it as a patch the same way (bump, commit, tag, push), then merge `master` back into `develop`.
 
 The repository `docker-compose.yml` builds from source because the Dokploy and Coolify guides deploy from the repository; the README quick start downloads `docs/deploy/docker-compose.yml`, which uses the published `latest` image.
 
