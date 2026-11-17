@@ -894,11 +894,12 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         </div>
       ) : null}
 
-      {resumeFrom !== null && !error && countdown === null && !activeSkip ? (
+      {resumeFrom !== null && !error && countdown === null && !activeSkip && !(touch && controls) ? (
         <div
           className={cn(
-            'absolute left-3 z-10 flex h-8 items-center gap-2 whitespace-nowrap rounded-lg bg-black/60 pl-3 pr-1 text-xs text-white shadow-2xl sm:left-5 sm:h-10 sm:gap-3 sm:rounded-xl sm:pl-4 sm:text-sm sm:transition-[bottom]',
-            controls ? 'top-14 sm:top-auto sm:bottom-24' : 'top-3 sm:top-auto sm:bottom-5',
+            'absolute left-3 z-10 flex items-center whitespace-nowrap bg-black/60 text-white shadow-2xl transition-[bottom] sm:left-5',
+            touch ? 'bottom-3 h-8 gap-2 rounded-lg pl-3 pr-1 text-xs' : 'h-10 gap-3 rounded-xl pl-4 pr-1 text-sm',
+            !touch && (controls ? 'bottom-24' : 'bottom-5'),
           )}
         >
           {t('player.resumed', { time: formatTime(resumeFrom) })}
@@ -910,7 +911,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
               setResumeFrom(null)
               poke()
             }}
-            className="h-6 cursor-pointer rounded-md bg-white/15 px-2 font-medium hover:bg-white/25 sm:h-8 sm:rounded-lg sm:px-3"
+            className={cn('cursor-pointer bg-white/15 font-medium hover:bg-white/25', touch ? 'h-6 rounded-md px-2' : 'h-8 rounded-lg px-3')}
           >
             {t('player.fromStart')}
           </button>
