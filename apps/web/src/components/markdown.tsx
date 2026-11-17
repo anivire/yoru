@@ -126,7 +126,6 @@ export function MarkdownEditor({ value, onChange, placeholder, maxLength }: { va
           {value.trim() ? <Markdown text={value} /> : <p className="text-sm text-subtle-foreground">{t('markdown.empty')}</p>}
         </div>
       )}
-      <p className="text-xs text-subtle-foreground">{t('markdown.hint')}</p>
     </div>
   )
 }

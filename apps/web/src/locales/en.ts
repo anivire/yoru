@@ -294,7 +294,6 @@ export const en: Messages = {
     write: 'Write',
     preview: 'Preview',
     empty: 'Nothing to preview',
-    hint: 'Markdown is supported: **bold**, _italic_, lists, quotes, links and code',
     sample: 'text',
     bold: 'Bold',
     italic: 'Italic',
