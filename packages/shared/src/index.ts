@@ -21,7 +21,7 @@ export const DATA_SOURCES = ['anime365', 'jikan', 'shikimori', 'anilist', 'kitsu
 export type DataSourceId = (typeof DATA_SOURCES)[number]
 export type MetadataSource = (typeof METADATA_SOURCES)[number]
 
-export const FEATURES = ['discover', 'screenshots', 'russianTitles', 'related', 'franchise', 'skip', 'updates'] as const
+export const FEATURES = ['discover', 'screenshots', 'russianTitles', 'franchise', 'related', 'skip', 'updates'] as const
 export type FeatureId = (typeof FEATURES)[number]
 
 export const FEATURE_SOURCES: Record<FeatureId, DataSourceId> = {
