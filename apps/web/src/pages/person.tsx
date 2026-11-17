@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import type { ListStatus, PersonPage as Person, PersonRole } from '@yoru/shared'
 import { Button, EmptyState, Image, Lightbox, Skeleton, cn } from '@yoru/ui'
-import { RiArrowDownSLine, RiGlobalLine } from '@remixicon/react'
+import { RiGlobalLine } from '@remixicon/react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useParams } from 'react-router'
@@ -9,7 +9,7 @@ import { AnimeCard, GLASS_CHIP } from '../components/anime-cards'
 import { Page } from '../components/app-shell'
 import { type Crumb, Breadcrumbs } from '../components/breadcrumbs'
 import MarkdownRender from '../components/markdown-render'
-import { LinkList, LinkLogo, LinkRow, ServiceLogo } from '../components/service-links'
+import { LinkChip, LinkChips, LinkLogo, ServiceLogo } from '../components/service-links'
 import { AnimeCardSkeleton, TextLine } from '../components/skeletons'
 import { api } from '../lib/api'
 import { useAppearance } from '../lib/appearance'
@@ -25,13 +25,13 @@ function birthday(b: Person['birthday']) {
   return new Date(b.year ?? 2000, b.month - 1, b.day ?? 1).toLocaleDateString(i18n.language, { day: b.day ? 'numeric' : undefined, month: 'long', year: b.year ? 'numeric' : undefined })
 }
 
-function PersonLinks({ person, className }: { person: Person; className?: string }) {
+function PersonLinks({ person }: { person: Person }) {
   if (!person.url && !person.links.length) return null
   return (
-    <LinkList className={className}>
-      {person.url ? <LinkRow href={person.url} external logo={<ServiceLogo service="anilist" />} label="AniList" /> : null}
+    <LinkChips>
+      {person.url ? <LinkChip href={person.url} external logo={<ServiceLogo service="anilist" />} label="AniList" /> : null}
       {person.links.map((link) => (
-        <LinkRow
+        <LinkChip
           key={link.url}
           href={link.url}
           external
@@ -43,7 +43,7 @@ function PersonLinks({ person, className }: { person: Person; className?: string
           }
         />
       ))}
-    </LinkList>
+    </LinkChips>
   )
 }
 
@@ -70,7 +70,6 @@ function PersonHeader({ person, crumbs }: { person: Person; crumbs: Crumb[] }) {
           ) : (
             <div className="aspect-[2/3] w-full rounded-xl bg-muted shadow-2xl" />
           )}
-          <PersonLinks person={person} className="hidden sm:flex" />
         </div>
         <div className="flex w-full min-w-0 flex-1 flex-col items-center gap-3 text-center sm:items-stretch sm:text-left">
           <div className="w-full">
@@ -80,6 +79,7 @@ function PersonHeader({ person, crumbs }: { person: Person; crumbs: Crumb[] }) {
           <div className="flex flex-wrap justify-center gap-1.5 sm:justify-start">
             <span className={cn('inline-flex h-6 items-center rounded-full px-2.5 text-xs font-medium', GLASS_CHIP)}>{t('anime.seiyu')}</span>
           </div>
+          <PersonLinks person={person} />
           {facts.length ? (
             <div className="flex flex-col items-center gap-1 text-[0.8125rem] text-muted-foreground sm:items-start">
               {facts.map(([label, value]) => (
@@ -91,18 +91,16 @@ function PersonHeader({ person, crumbs }: { person: Person; crumbs: Crumb[] }) {
           ) : null}
           {person.description ? (
             <div className="flex w-full max-w-3xl flex-col gap-1 text-left">
-              <div className={cn('text-foreground/80', long && !open && 'max-h-36 overflow-hidden [mask-image:linear-gradient(to_bottom,black_55%,transparent)]')}>
+              <div className={cn('text-foreground/80', long && !open && 'max-h-36 overflow-hidden [mask-image:linear-gradient(to_bottom,black_calc(100%-3.5rem),transparent)]')}>
                 <MarkdownRender text={person.description} />
               </div>
               {long ? (
-                <Button size="sm" variant="secondary" className="mt-1 self-start" onClick={() => setOpen(!open)}>
-                  <RiArrowDownSLine className={cn('transition-transform', open && 'rotate-180')} />
+                <button type="button" onClick={() => setOpen(!open)} className="cursor-pointer self-start text-[0.8125rem] font-medium text-foreground hover:text-accent">
                   {open ? t('anime.less') : t('anime.more')}
-                </Button>
+                </button>
               ) : null}
             </div>
           ) : null}
-          <PersonLinks person={person} className="w-full max-sm:grid max-sm:grid-cols-2 sm:hidden" />
         </div>
       </div>
     </div>
@@ -152,14 +150,6 @@ function PersonSkeleton() {
         <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
           <div className="flex w-36 shrink-0 flex-col gap-3 sm:w-48">
             <Skeleton className="aspect-[2/3] w-full rounded-xl" />
-            <div className="hidden flex-col gap-0.5 sm:flex">
-              {[16, 24, 20].map((w) => (
-                <div key={w} className="flex h-9 items-center gap-3">
-                  <Skeleton className="size-6 shrink-0 rounded-md" />
-                  <Skeleton className="h-3 rounded-full" style={{ width: `${w * 0.25}rem` }} />
-                </div>
-              ))}
-            </div>
           </div>
           <div className="flex w-full min-w-0 flex-1 flex-col items-center gap-3 sm:items-stretch">
             <div className="flex w-full flex-col items-center sm:items-start">
@@ -167,6 +157,11 @@ function PersonSkeleton() {
               <TextLine className="mt-1 w-full justify-center text-base sm:justify-start sm:text-lg" bar="w-1/4" />
             </div>
             <Skeleton className="h-6 w-14 rounded-full" />
+            <div className="flex flex-wrap justify-center gap-1.5 sm:justify-start">
+              {[22, 28].map((w) => (
+                <Skeleton key={w} className="h-8 rounded-md" style={{ width: `${w * 0.25}rem` }} />
+              ))}
+            </div>
             <div className="flex flex-wrap justify-center gap-x-5 sm:justify-start">
               <TextLine className="text-[0.8125rem]" bar="w-40" />
               <TextLine className="text-[0.8125rem]" bar="w-36" />
@@ -226,7 +221,7 @@ export function PersonPage() {
 
   return (
     <div className="relative isolate -mt-(--header-h) pt-(--header-h)">
-      <div className={cn('pointer-events-none absolute inset-x-0 top-0 -z-10 h-[52rem] overflow-hidden', backdrop === 'glow' ? 'backdrop-glow' : '[mask-image:linear-gradient(to_bottom,black_30%,transparent)]')}>
+      <div className={cn('pointer-events-none absolute inset-x-0 top-0 -z-10 h-[35rem] overflow-hidden', backdrop === 'glow' ? 'backdrop-glow' : '[mask-image:linear-gradient(to_bottom,black_30%,transparent)]')}>
         {first.imageUrl ? <img src={first.imageUrl} alt="" className="h-full w-full scale-110 object-cover object-[50%_25%] opacity-50 blur-xl" /> : null}
         <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-background/50 to-background/20" />
       </div>

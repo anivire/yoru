@@ -782,7 +782,7 @@ export const en: Messages = {
     pageWidth: 'Maximum width',
     expandSynopsis: 'Show full anime synopsis',
     allSettings: 'All settings',
-    expandSynopsisHint: 'Otherwise the synopsis is cut to the poster height and opens fully with “More”',
+    expandSynopsisHint: 'Otherwise the synopsis is cut to the height of the poster column and opens fully with “More”',
     friendAvatars: 'Friends on cards',
     friendAvatarsHint: 'Avatars of friends who have the title in their list',
     feedScope: 'Default feed',

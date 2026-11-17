@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AnimeLink, AnimeService } from '@yoru/shared'
-import { cn } from '@yoru/ui'
+import { buttonVariants, cn } from '@yoru/ui'
 import { RiExternalLinkLine } from '@remixicon/react'
 import { type ComponentProps, type ReactNode, forwardRef } from 'react'
 import { api } from '../lib/api'
+import { GLASS_CHIP } from './anime-cards'
 import { keys } from '../lib/queries'
 import { PROVIDER_PATHS } from './providers'
 
@@ -41,38 +42,37 @@ export function ServiceLogo({ service }: { service: AnimeService }) {
   )
 }
 
-const rowClass =
-  'group flex h-9 w-full cursor-pointer items-center gap-3 rounded-lg px-2 text-left text-sm text-muted-foreground transition-colors hover:bg-foreground/[0.05] hover:text-foreground'
+const linkClass = cn(buttonVariants({ variant: 'secondary', size: 'sm' }), GLASS_CHIP, 'group pl-1 hover:bg-white dark:hover:bg-white/15')
 
-type RowProps = { logo: ReactNode; label: string; external?: boolean }
+type LinkProps = { logo: ReactNode; label: string; external?: boolean }
 
-export const LinkRow = forwardRef<HTMLAnchorElement & HTMLButtonElement, RowProps & ComponentProps<'a'> & ComponentProps<'button'>>(function LinkRow(
+export const LinkChip = forwardRef<HTMLAnchorElement & HTMLButtonElement, LinkProps & ComponentProps<'a'> & ComponentProps<'button'>>(function LinkChip(
   { logo, label, external, href, className, ...props },
   ref,
 ) {
   const content = (
     <>
       {logo}
-      <span className="min-w-0 flex-1 truncate">{label}</span>
-      {external ? <RiExternalLinkLine className="size-4 shrink-0 text-subtle-foreground opacity-0 transition-opacity group-hover:opacity-100" /> : null}
+      {label}
+      {external ? <RiExternalLinkLine className="-ml-0.5 opacity-40 transition-opacity group-hover:opacity-70" /> : null}
     </>
   )
   if (href) {
     return (
-      <a ref={ref} href={href} target="_blank" rel="noreferrer" className={cn(rowClass, className)} {...props}>
+      <a ref={ref} href={href} target="_blank" rel="noreferrer" className={cn(linkClass, className)} {...props}>
         {content}
       </a>
     )
   }
   return (
-    <button ref={ref} type="button" className={cn(rowClass, className)} {...props}>
+    <button ref={ref} type="button" className={cn(linkClass, className)} {...props}>
       {content}
     </button>
   )
 })
 
-export function LinkList({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn('-mx-2 flex flex-col gap-0.5', className)}>{children}</div>
+export function LinkChips({ children }: { children: ReactNode }) {
+  return <div className="flex flex-wrap justify-center gap-1.5 sm:justify-start">{children}</div>
 }
 
 export function ServiceLinks({ malId }: { malId: number }) {
@@ -81,7 +81,7 @@ export function ServiceLinks({ malId }: { malId: number }) {
   return (
     <>
       {links.map((link) => (
-        <LinkRow key={link.service} href={link.url} external logo={<ServiceLogo service={link.service} />} label={SERVICES[link.service].name} />
+        <LinkChip key={link.service} href={link.url} external logo={<ServiceLogo service={link.service} />} label={SERVICES[link.service].name} />
       ))}
     </>
   )

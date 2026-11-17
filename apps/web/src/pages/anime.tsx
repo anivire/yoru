@@ -10,7 +10,7 @@ import { Navigate, useLocation, useParams } from 'react-router'
 import { Page } from '../components/app-shell'
 import { ListEditor } from '../components/list-editor'
 import { airedLimit } from '../components/quick-edit'
-import { LinkList, LinkLogo, LinkRow, ServiceLinks } from '../components/service-links'
+import { LinkChip, LinkChips, LinkLogo, ServiceLinks } from '../components/service-links'
 import { AnimePageSkeleton } from '../components/skeletons'
 import { WatchSection } from '../components/watch-section'
 import { NotesSection } from '../components/notes'
@@ -60,19 +60,21 @@ function Synopsis({ text, open, onToggle }: { text: string; open: boolean; onTog
     return () => observer.disconnect()
   }, [text, open])
   return (
-    <div ref={wrapRef} className={cn('flex w-full max-w-3xl flex-col gap-1', !open && 'sm:min-h-0 sm:flex-1 sm:basis-0')}>
-      <p
-        ref={textRef}
-        className="whitespace-pre-line text-left text-[0.9375rem] leading-relaxed text-foreground/80"
-        style={open ? undefined : { display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: lines, overflow: 'hidden' }}
-      >
-        {text}
-      </p>
-      {(open ? text.length > 280 : overflows) ? (
-        <button type="button" onClick={onToggle} className="cursor-pointer self-start text-[0.8125rem] font-medium text-foreground hover:text-accent">
-          {open ? t('anime.less') : t('anime.more')}
-        </button>
-      ) : null}
+    <div ref={wrapRef} className={cn('w-full max-w-3xl', !open && 'relative sm:min-h-32 sm:flex-1')}>
+      <div className={cn('flex flex-col gap-1', !open && 'sm:absolute sm:inset-0')}>
+        <p
+          ref={textRef}
+          className={cn('whitespace-pre-line text-left text-[0.9375rem] leading-relaxed text-foreground/80', !open && overflows && '[mask-image:linear-gradient(to_bottom,black_calc(100%-3.5rem),transparent)]')}
+          style={open ? undefined : { maxHeight: `${lines}lh`, overflow: 'hidden' }}
+        >
+          {text}
+        </p>
+        {(open ? text.length > 280 : overflows) ? (
+          <button type="button" onClick={onToggle} className="cursor-pointer self-start text-[0.8125rem] font-medium text-foreground hover:text-accent">
+            {open ? t('anime.less') : t('anime.more')}
+          </button>
+        ) : null}
+      </div>
     </div>
   )
 }
@@ -94,7 +96,7 @@ function TrailerButton({ url }: { url: string }) {
   const id = youtubeId(url)
   if (!id) {
     return (
-      <LinkRow
+      <LinkChip
         href={url}
         external
         label={t('anime.trailer')}
@@ -109,7 +111,7 @@ function TrailerButton({ url }: { url: string }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <LinkRow
+        <LinkChip
           label={t('anime.trailer')}
           logo={
             <LinkLogo color="#ff0033">
@@ -135,14 +137,12 @@ function TrailerButton({ url }: { url: string }) {
   )
 }
 
-function Links({ anime, className }: { anime: AnimeDetails; className?: string }) {
+function Links({ anime }: { anime: AnimeDetails }) {
   return (
-    <div className={className}>
-      <LinkList className="max-sm:grid max-sm:grid-cols-2">
-        <ServiceLinks malId={anime.malId} />
-        {anime.trailerUrl ? <TrailerButton url={anime.trailerUrl} /> : null}
-      </LinkList>
-    </div>
+    <LinkChips>
+      <ServiceLinks malId={anime.malId} />
+      {anime.trailerUrl ? <TrailerButton url={anime.trailerUrl} /> : null}
+    </LinkChips>
   )
 }
 
@@ -188,7 +188,7 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
             { label: mainTitle },
           ]}
         />
-        <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
+        <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-stretch sm:gap-6">
           <div className="flex w-36 shrink-0 flex-col gap-3 sm:w-48">
             {anime.imageUrl ? (
               <Lightbox src={anime.imageUrl} title={anime.title} closeLabel={t('common.close')}>
@@ -203,15 +203,14 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
               <ListEditor malId={anime.malId} entry={entry} total={anime.episodes} aired={airedLimit(anime)} />
               <RecommendButton malId={anime.malId} className="w-full" />
             </div>
-            <Links anime={anime} className="hidden sm:block" />
           </div>
-          <div className={cn('flex w-full min-w-0 flex-1 flex-col items-center gap-3 text-center sm:items-stretch sm:text-left', !open && 'sm:h-72')}>
+          <div className="flex w-full min-w-0 flex-1 flex-col items-center gap-3 text-center sm:items-stretch sm:text-left">
             <div className="w-full">
               <h1 className="line-clamp-3 text-2xl font-semibold tracking-tight sm:line-clamp-2 sm:text-4xl">{mainTitle}</h1>
               {secondaryTitle ? (
                 <div className="mt-1 text-base font-medium text-muted-foreground sm:truncate sm:text-lg sm:font-normal">{secondaryTitle}</div>
               ) : null}
-              {anime.titleJapanese && anime.titleJapanese !== mainTitle ? <div className="hidden truncate text-sm text-subtle-foreground sm:block">{anime.titleJapanese}</div> : null}
+              {anime.titleJapanese && anime.titleJapanese !== mainTitle ? <div className="hidden truncate text-sm text-muted-foreground sm:block">{anime.titleJapanese}</div> : null}
             </div>
             <MobileEntryRow anime={anime} entry={entry} />
             <div className="flex flex-wrap items-center justify-center gap-2 text-sm sm:justify-start">
@@ -247,6 +246,7 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
                 })}
               </div>
             ) : null}
+            <Links anime={anime} />
             {facts.length ? (
               <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-[0.8125rem] text-muted-foreground sm:justify-start">
                 {facts.map((f) => (
@@ -257,7 +257,6 @@ function Header({ anime, entry }: { anime: AnimeDetails; entry: ListEntry | null
               </div>
             ) : null}
             {anime.synopsis ? <Synopsis text={anime.synopsis} open={open} onToggle={() => setOpen(!open)} /> : null}
-            <Links anime={anime} className="w-full sm:hidden" />
           </div>
         </div>
       </div>
@@ -288,7 +287,7 @@ export function AnimePage() {
   return (
     <div className="relative isolate -mt-(--header-h) pt-(--header-h)">
       {location.pathname !== path ? <Navigate to={{ pathname: path, search: location.search, hash: location.hash }} state={location.state} replace /> : null}
-      <div className={cn('pointer-events-none absolute inset-x-0 top-0 -z-10 h-[52rem] overflow-hidden', backdrop === 'glow' ? 'backdrop-glow' : '[mask-image:linear-gradient(to_bottom,black_30%,transparent)]')}>
+      <div className={cn('pointer-events-none absolute inset-x-0 top-0 -z-10 h-[35rem] overflow-hidden', backdrop === 'glow' ? 'backdrop-glow' : '[mask-image:linear-gradient(to_bottom,black_30%,transparent)]')}>
         {data.anime.imageUrl ? <img src={data.anime.imageUrl} alt="" className="h-full w-full scale-110 object-cover object-[50%_25%] opacity-50 blur-xl" /> : null}
         <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-background/50 to-background/20" />
       </div>

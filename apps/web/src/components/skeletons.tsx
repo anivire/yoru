@@ -142,14 +142,6 @@ export function AnimePageSkeleton() {
           <div className="flex w-36 shrink-0 flex-col gap-3 sm:w-48">
             <Skeleton className="aspect-[2/3] w-full rounded-xl" />
             <Skeleton className="hidden h-8 w-full rounded-lg sm:block" />
-            <div className="hidden flex-col gap-0.5 sm:flex">
-              {[28, 20, 16, 14, 24].map((w) => (
-                <div key={w} className="flex h-9 items-center gap-3">
-                  <Skeleton className="size-6 shrink-0 rounded-md" />
-                  <Skeleton className="h-3 rounded-full" style={{ width: `${w * 0.25}rem` }} />
-                </div>
-              ))}
-            </div>
           </div>
           <div className="flex w-full min-w-0 flex-1 flex-col items-center gap-3 sm:items-stretch">
             <div className="flex w-full flex-col items-center sm:items-start">
@@ -165,6 +157,11 @@ export function AnimePageSkeleton() {
             <div className="flex flex-wrap gap-1.5">
               {[16, 20, 14, 18].map((w) => (
                 <Skeleton key={w} className="h-6 rounded-full" style={{ width: `${w * 0.25}rem` }} />
+              ))}
+            </div>
+            <div className="flex flex-wrap justify-center gap-1.5 sm:justify-start">
+              {[28, 22, 20, 18, 26].map((w) => (
+                <Skeleton key={w} className="h-8 rounded-md" style={{ width: `${w * 0.25}rem` }} />
               ))}
             </div>
             <div className="max-w-3xl text-[0.9375rem] leading-relaxed">
