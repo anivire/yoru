@@ -4,7 +4,7 @@ import type Hls from 'hls.js'
 import type JASSUB from 'jassub'
 import { RiArrowLeftSFill, RiCheckFill, RiClosedCaptioningFill, RiClosedCaptioningLine, RiDashboard3Fill, RiFullscreenExitFill, RiFullscreenFill, RiPauseLargeFill, RiPictureInPicture2Fill, RiPlayLargeFill, RiSettings3Fill, RiSkipBackFill, RiSkipForwardFill, RiVolumeDownFill, RiVolumeMuteFill, RiVolumeUpFill } from '@remixicon/react'
 import { useQuery } from '@tanstack/react-query'
-import { type ReactNode, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
+import { type PointerEvent, type ReactNode, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatTime } from '../../lib/format'
 import { assToVtt } from './ass-to-vtt'
@@ -110,6 +110,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   const [controls, setControls] = useState(true)
   const [menu, setMenu] = useState<Menu>(null)
   const [hover, setHover] = useState<{ x: number; time: number } | null>(null)
+  const [drag, setDrag] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [blocked, setBlocked] = useState(false)
   const syncRef = useRef(sync)
@@ -483,7 +484,12 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   }, [countdown])
 
   const VolumeIcon = muted || volume === 0 ? RiVolumeMuteFill : volume < 0.5 ? RiVolumeDownFill : RiVolumeUpFill
-  const pct = duration ? (time / duration) * 100 : 0
+  const seekPoint = (e: PointerEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    const ratio = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width))
+    return { x: ratio * r.width, time: ratio * duration }
+  }
+  const pct = duration ? ((drag ?? time) / duration) * 100 : 0
   const hoverSegment = hover ? skips?.find((s) => hover.time >= s.start && hover.time <= s.end) : undefined
 
   return (
@@ -637,18 +643,36 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
 
       <div style={stretched ? SAFE_BOTTOM : undefined} className={cn('absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-2 pb-1.5 pt-10 transition-opacity sm:px-4 sm:pb-3 sm:pt-14', controls ? 'opacity-100' : 'pointer-events-none opacity-0')}>
         <div
-          className="group/seek relative mb-2 flex h-4 cursor-pointer items-center"
-          onMouseMove={(e) => {
-            const r = e.currentTarget.getBoundingClientRect()
-            const ratio = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width))
-            setHover({ x: ratio * r.width, time: ratio * duration })
+          className="group/seek relative mb-2 flex h-4 cursor-pointer touch-none items-center"
+          onPointerDown={(e) => {
+            if (!duration || e.button !== 0) return
+            e.currentTarget.setPointerCapture(e.pointerId)
+            const point = seekPoint(e)
+            setHover(point)
+            setDrag(point.time)
           }}
-          onMouseLeave={() => setHover(null)}
-          onClick={(e) => {
-            const r = e.currentTarget.getBoundingClientRect()
+          onPointerMove={(e) => {
+            const point = seekPoint(e)
+            if (e.pointerType === 'mouse' || drag !== null) setHover(point)
+            if (drag !== null) {
+              setDrag(point.time)
+              poke()
+            }
+          }}
+          onPointerUp={(e) => {
+            if (drag === null) return
+            const target = seekPoint(e).time
             const v = videoRef.current
-            if (v && duration) v.currentTime = ((e.clientX - r.left) / r.width) * duration
+            if (v) v.currentTime = target
+            setTime(target)
+            setDrag(null)
+            if (e.pointerType !== 'mouse') setHover(null)
           }}
+          onPointerCancel={() => {
+            setDrag(null)
+            setHover(null)
+          }}
+          onPointerLeave={() => drag === null && setHover(null)}
         >
           <div className="relative h-1 w-full overflow-hidden rounded-full bg-white/20 transition-[height] group-hover/seek:h-1.5">
             <div className="absolute inset-y-0 left-0 bg-white/30" style={{ width: `${duration ? (buffered / duration) * 100 : 0}%` }} />
@@ -663,7 +687,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
                 ))
               : null}
           </div>
-          <div className="absolute size-3 -translate-x-1/2 rounded-full bg-accent shadow zoom-layer transition-transform [--zoom:0] group-hover/seek:[--zoom:1]" style={{ left: `${pct}%` }} />
+          <div className={cn('absolute size-3 -translate-x-1/2 rounded-full bg-accent shadow zoom-layer transition-transform group-hover/seek:[--zoom:1]', drag === null ? '[--zoom:0]' : '[--zoom:1]')} style={{ left: `${pct}%` }} />
           {hover ? (
             <div className="absolute -top-8 -translate-x-1/2 rounded-md bg-black/80 px-2 py-0.5 font-mono text-xs" style={{ left: hover.x }}>
               {formatTime(hover.time)}
