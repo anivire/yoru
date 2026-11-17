@@ -79,7 +79,7 @@ function PersonHeader({ person }: { person: Person }) {
             <span className={cn('inline-flex h-6 items-center rounded-full px-2.5 text-xs font-medium', GLASS_CHIP)}>{t('anime.seiyu')}</span>
           </div>
           {facts.length ? (
-            <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-[0.8125rem] text-muted-foreground sm:justify-start">
+            <div className="flex flex-col items-center gap-1 text-[0.8125rem] text-muted-foreground sm:items-start">
               {facts.map(([label, value]) => (
                 <span key={label}>
                   {label}: <span className="text-foreground">{value}</span>

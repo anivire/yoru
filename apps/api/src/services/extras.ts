@@ -100,7 +100,7 @@ function splitDescription(raw: string | null) {
     if (found.length && /^[\s,|·•:\-–—()_*]*$/.test(rest)) continue
     kept.push(line.replace(MD_LINK, '$1'))
   }
-  const heading = (line: string) => /^\s*(#{1,6}\s+.+|(__|\*\*)?[^:]{1,40}:(__|\*\*)?)\s*$/.test(line)
+  const heading = (line: string) => /^\s*(#{1,6}\s+.+|(__|\*\*)[^_*]{1,60}(__|\*\*):?|(__|\*\*)?[^:]{1,40}:(__|\*\*)?)\s*$/.test(line)
   const filled = kept.filter((line, i) => {
     if (!heading(line)) return true
     const next = kept.slice(i + 1).find((l) => l.trim())
