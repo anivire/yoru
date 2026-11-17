@@ -904,6 +904,8 @@ export const en: Messages = {
     usesUnlimited: 'Unlimited',
     multiUse: 'Reusable',
     joinedCount: 'joined: {{count}}',
+    joined: 'joined:',
+    joinedMore: '{{count}} more, names not recorded',
     days: '{{count}} days',
     used: 'Used by {{user}}',
     expired: 'Expired',

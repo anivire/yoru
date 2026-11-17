@@ -1,4 +1,4 @@
-import { desc, eq, sql } from 'drizzle-orm'
+import { desc, eq, isNotNull, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
@@ -50,6 +50,12 @@ const usedByUser = alias(users, 'used_by_user')
 const SINGLE_USE_SOURCES = ['jikan', 'kitsu', 'anilibria', 'kodik']
 
 function listInvites(): Invite[] {
+  const joined = new Map<number, Invite['joined']>()
+  for (const user of db.select({ inviteId: users.inviteId, username: users.username, displayName: users.displayName }).from(users).where(isNotNull(users.inviteId)).orderBy(desc(users.createdAt)).all()) {
+    const list = joined.get(user.inviteId!) ?? []
+    list.push({ username: user.username, displayName: user.displayName })
+    joined.set(user.inviteId!, list)
+  }
   return db
     .select({ invite: invites, usedBy: usedByUser.username })
     .from(invites)
@@ -66,6 +72,7 @@ function listInvites(): Invite[] {
       usedBy,
       multiUse: invite.multiUse,
       uses: invite.uses,
+      joined: joined.get(invite.id) ?? [],
     }))
 }
 

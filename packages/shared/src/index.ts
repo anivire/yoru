@@ -473,6 +473,7 @@ export interface Invite {
   usedBy: string | null
   multiUse: boolean
   uses: number
+  joined: { username: string; displayName: string | null }[]
 }
 
 export type ReleaseChannel = 'stable' | 'edge'

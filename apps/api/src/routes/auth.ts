@@ -62,7 +62,7 @@ export const authRoutes = new Hono<AppEnv>()
     const user = db.transaction((tx) => {
       const created = tx
         .insert(users)
-        .values({ username: input.username, passwordHash, role: invite.role, invitedBy: invite.createdBy, createdAt: now() })
+        .values({ username: input.username, passwordHash, role: invite.role, invitedBy: invite.createdBy, inviteId: invite.id, createdAt: now() })
         .returning()
         .get()
       tx.update(invites)

@@ -8,6 +8,9 @@ import {
   CardHeader,
   CardTitle,
   Field,
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
   Input,
   Popover,
   Segmented,
@@ -20,7 +23,7 @@ import {
   toast,
 } from '@yoru/ui'
 import { RiAddFill, RiDatabase2Fill, RiDeleteBin6Fill, RiFileCopyFill, RiGroupFill, RiKey2Fill, RiShieldUserFill, RiTicket2Fill } from '@remixicon/react'
-import { useState } from 'react'
+import { Fragment, type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 import { OAuthSettings } from '../components/admin-sources'
@@ -38,6 +41,43 @@ function inviteState(invite: Invite): 'used' | 'expired' | 'active' {
   if (invite.usedAt && !invite.multiUse) return 'used'
   if (invite.expiresAt && Date.parse(invite.expiresAt) < Date.now()) return 'expired'
   return 'active'
+}
+
+function Joined({ invite }: { invite: Invite }) {
+  const { t } = useTranslation()
+  const shown = invite.joined.slice(0, 2)
+  const more = invite.uses - shown.length
+  const unknown = invite.uses - invite.joined.length
+  const link = (user: Invite['joined'][number]) => (
+    <TLink key={user.username} to={`/u/${user.username}`} className="text-foreground hover:underline">
+      {nameOf(user)}
+    </TLink>
+  )
+  if (!invite.uses) return <>{t('admin.joinedCount', { count: 0 })}</>
+  return (
+    <>
+      {t('admin.joined')}{' '}
+      {shown.map((user, i) => (
+        <Fragment key={user.username}>
+          {i ? ', ' : null}
+          {link(user)}
+        </Fragment>
+      ))}
+      {more > 0 ? (
+        <HoverCard openDelay={150} closeDelay={100}>
+          <HoverCardTrigger asChild>
+            <button type="button" className="ml-1 cursor-default rounded-full bg-muted px-1.5 font-medium text-foreground">
+              +{more}
+            </button>
+          </HoverCardTrigger>
+          <HoverCardContent className="flex max-h-72 w-56 flex-col gap-1.5 overflow-y-auto p-3 text-sm">
+            {invite.joined.map(link)}
+            {unknown > 0 ? <span className="text-muted-foreground">{t('admin.joinedMore', { count: unknown })}</span> : null}
+          </HoverCardContent>
+        </HoverCard>
+      ) : null}
+    </>
+  )
 }
 
 function ConfirmDelete({ label, onConfirm }: { label: string; onConfirm: () => void }) {
@@ -158,14 +198,19 @@ function Invites() {
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-mono text-[0.8125rem]">{link}</div>
                     <div className="text-xs text-muted-foreground">
-                      {[
+                      {([
                         invite.note,
-                        invite.multiUse ? t('admin.joinedCount', { count: invite.uses }) : null,
+                        invite.multiUse ? <Joined invite={invite} /> : null,
                         t('admin.createdOn', { date: formatDate(invite.createdAt) }),
                         invite.expiresAt ? t('admin.validUntil', { date: formatDate(invite.expiresAt) }) : t('admin.noExpiry'),
-                      ]
+                      ] as ReactNode[])
                         .filter(Boolean)
-                        .join(' · ')}
+                        .map((item, i) => (
+                          <Fragment key={i}>
+                            {i ? ' · ' : null}
+                            {item}
+                          </Fragment>
+                        ))}
                     </div>
                     <div className="mt-1.5 sm:hidden">{badge}</div>
                   </div>

@@ -902,6 +902,8 @@ export const ru = {
     usesUnlimited: 'Без ограничений',
     multiUse: 'Многоразовое',
     joinedCount: 'вступили: {{count}}',
+    joined: 'вступили:',
+    joinedMore: 'ещё {{count}}, имена не сохранились',
     days: '{{count}} дн.',
     used: 'Использовано: {{user}}',
     expired: 'Истекло',
