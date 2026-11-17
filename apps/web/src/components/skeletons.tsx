@@ -133,7 +133,7 @@ export function HomeSkeleton() {
   )
 }
 
-export function AnimePageSkeleton() {
+export function AnimePageSkeleton({ single }: { single?: boolean }) {
   return (
     <>
       <div className="page-frame page-top-double px-4 pb-10 sm:px-6">
@@ -191,9 +191,9 @@ export function AnimePageSkeleton() {
           <Skeleton className="size-10 rounded-xl sm:order-last sm:ml-auto sm:w-48" />
           <Skeleton className="col-span-3 h-10 w-full rounded-xl sm:w-72" />
         </div>
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className={cn('grid gap-5', !single && 'lg:grid-cols-[minmax(0,1fr)_22rem]')}>
           <Skeleton className="aspect-video w-full rounded-xl" />
-          <div className="flex flex-col gap-1">
+          <div className={cn('flex flex-col gap-1', single && 'hidden')}>
             <TextLine className="mb-3 text-sm" bar="w-24" />
             {Array.from({ length: 4 }, (_, i) => (
               <div key={i} className="flex gap-3 p-1.5">

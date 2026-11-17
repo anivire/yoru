@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { AnimeDetails, ListEntry } from '@yoru/shared'
 import { Badge, Dialog, DialogContent, DialogTrigger, EmptyState, Image, Lightbox, cn } from '@yoru/ui'
 import { RiCalendarScheduleFill, RiClapperboardFill, RiPlayFill } from '@remixicon/react'
@@ -18,7 +18,7 @@ import { FriendsOnAnime, RecommendButton } from '../components/social'
 import { api } from '../lib/api'
 import { useAppearance } from '../lib/appearance'
 import { formatDate, formatDateTime, relativeTime, seasonLabel, typeLabel } from '../lib/format'
-import { keys } from '../lib/queries'
+import { cachedEpisodeCount, keys } from '../lib/queries'
 import { useDocumentTitle } from '../lib/title'
 import { animePath, useAnimeTitle } from '../lib/anime-title'
 import { TLink } from '../components/transition-link'
@@ -270,11 +270,12 @@ export function AnimePage() {
   const location = useLocation()
   const malId = Number.parseInt(param, 10)
   const { backdrop } = useAppearance()
+  const queryClient = useQueryClient()
   const { data, isPending, isError, error } = useQuery({ queryKey: keys.anime(malId), queryFn: () => api.anime(malId), enabled: malId > 0 })
   const title = useAnimeTitle()
   useDocumentTitle(data ? title(data.anime) : undefined)
 
-  if (isPending) return <AnimePageSkeleton />
+  if (isPending) return <AnimePageSkeleton single={cachedEpisodeCount(queryClient, malId) === 1} />
   if (isError || !data) {
     return (
       <Page>

@@ -217,6 +217,29 @@ export function useDeleteEntry(malId: number) {
 }
 
 export function errorMessage(error: unknown, t: (key: string) => string): string {
+export function cachedEpisodeCount(client: QueryClient, malId: number): number | null {
+  const seen = new Set<object>()
+  const find = (value: unknown, depth: number): number | null | undefined => {
+    if (!value || typeof value !== 'object' || depth > 6 || seen.has(value)) return undefined
+    seen.add(value)
+    const items = Array.isArray(value) ? value : Object.values(value)
+    if (!Array.isArray(value) && (value as { malId?: unknown }).malId === malId && 'episodes' in value) {
+      const episodes = (value as { episodes: unknown }).episodes
+      return typeof episodes === 'number' ? episodes : null
+    }
+    for (const item of items) {
+      const found = find(item, depth + 1)
+      if (found !== undefined) return found
+    }
+    return undefined
+  }
+  for (const query of client.getQueryCache().getAll()) {
+    const found = find(query.state.data, 0)
+    if (found !== undefined) return found
+  }
+  return null
+}
+
   if (!(error instanceof Error)) return t('common.error')
   const map: Record<string, string> = {
     ANIME365_TOKEN_MISSING: 'player.tokenMissing',
