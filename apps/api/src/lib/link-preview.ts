@@ -30,6 +30,8 @@ const TEXT = {
   },
 }
 
+const EMBED_COLOR = '#c6befa'
+
 function escape(value: string) {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
@@ -84,7 +86,9 @@ export function withPreview(c: Context, html: string) {
     ['property', 'og:image', p.image],
     ['name', 'twitter:card', p.large ? 'summary_large_image' : 'summary'],
   ]
-  if (p.large) meta.push(['property', 'og:image:width', '1200'], ['property', 'og:image:height', '630'])
+  if (p.large) meta.push(['property', 'og:image:width', '2400'], ['property', 'og:image:height', '1260'])
   const tags = meta.map(([attr, key, value]) => `<meta ${attr}="${key}" content="${escape(value)}" />`).join('\n    ')
-  return html.replace(/<title>[^<]*<\/title>/, `<title>${escape(p.pageTitle ?? 'yoru')}</title>\n    ${tags}`)
+  const page = html.replace(/<title>[^<]*<\/title>/, `<title>${escape(p.pageTitle ?? 'yoru')}</title>\n    ${tags}`)
+  if (!/discordbot/i.test(c.req.header('user-agent') ?? '')) return page
+  return page.replace(/<meta name="theme-color" content="[^"]*"/, `<meta name="theme-color" content="${EMBED_COLOR}"`)
 }
