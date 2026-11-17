@@ -1,13 +1,14 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { serveStatic } from '@hono/node-server/serve-static'
-import { Hono } from 'hono'
+import { type Context, Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 import { logger } from 'hono/logger'
 import { secureHeaders } from 'hono/secure-headers'
 import { env } from './env'
 import type { AppEnv } from './lib/auth'
 import { UpstreamError } from './lib/http'
+import { withPreview } from './lib/link-preview'
 import { requireAuth, sessionUser } from './lib/auth'
 import { adminRoutes } from './routes/admin'
 import { animeRoutes } from './routes/anime'
@@ -30,6 +31,10 @@ export const app = new Hono<AppEnv>()
 
 app.use(logger((line) => (line.includes('/api/progress') ? undefined : console.log(line))))
 app.use(secureHeaders({ crossOriginEmbedderPolicy: false, crossOriginResourcePolicy: false, contentSecurityPolicy: undefined }))
+app.use(async (c, next) => {
+  await next()
+  c.header('X-Robots-Tag', 'noindex, nofollow')
+})
 
 app.get('/api/health', (c) => c.json({ ok: true }))
 app.get('/api/build', (c) => {
@@ -71,6 +76,10 @@ app.all('/api/*', (c) => c.json({ error: 'Not found' }, 404))
 if (env.webDist && fs.existsSync(env.webDist)) {
   const root = path.relative(process.cwd(), env.webDist) || '.'
   const indexHtml = fs.readFileSync(path.join(env.webDist, 'index.html'), 'utf8')
+  const spa = (c: Context<AppEnv>) => {
+    c.header('Cache-Control', 'no-cache')
+    return c.html(withPreview(c, indexHtml))
+  }
   app.use(
     '/assets/*',
     serveStatic({
@@ -81,6 +90,8 @@ if (env.webDist && fs.existsSync(env.webDist)) {
     }),
   )
   app.all('/assets/*', (c) => c.text('Not found', 404))
+  app.get('/', spa)
+  app.get('/index.html', spa)
   app.use(
     '*',
     serveStatic({
@@ -90,10 +101,7 @@ if (env.webDist && fs.existsSync(env.webDist)) {
       },
     }),
   )
-  app.get('*', (c) => {
-    c.header('Cache-Control', 'no-cache')
-    return c.html(indexHtml)
-  })
+  app.get('*', spa)
 }
 
 app.onError((error, c) => {
