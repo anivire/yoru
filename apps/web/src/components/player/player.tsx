@@ -2,12 +2,13 @@ import type { RoomPlayback, RoomPlaybackInput, SkipTime, StreamSource } from '@y
 import { Spinner, cn } from '@yoru/ui'
 import type Hls from 'hls.js'
 import type JASSUB from 'jassub'
-import { RiArrowLeftSFill, RiCheckFill, RiClosedCaptioningFill, RiClosedCaptioningLine, RiDashboard3Fill, RiFullscreenExitFill, RiFullscreenFill, RiPauseLargeFill, RiPictureInPicture2Fill, RiPlayLargeFill, RiSettings3Fill, RiSkipBackFill, RiSkipForwardFill, RiVolumeDownFill, RiVolumeMuteFill, RiVolumeUpFill } from '@remixicon/react'
+import { RiArrowLeftSFill, RiCheckFill, RiCloseLine, RiKeyboardBoxFill, RiClosedCaptioningFill, RiClosedCaptioningLine, RiDashboard3Fill, RiFullscreenExitFill, RiFullscreenFill, RiPauseLargeFill, RiPictureInPicture2Fill, RiPlayLargeFill, RiSettings3Fill, RiSkipBackFill, RiSkipForwardFill, RiVolumeDownFill, RiVolumeMuteFill, RiVolumeUpFill } from '@remixicon/react'
 import { useQuery } from '@tanstack/react-query'
-import { type PointerEvent, type ReactNode, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
+import { Fragment, type PointerEvent, type ReactNode, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatTime } from '../../lib/format'
 import { assToVtt } from './ass-to-vtt'
+import { FramePreview } from './frame-preview'
 import { useAppearance } from '../../lib/appearance'
 import { IS_IOS } from '../../lib/device'
 import { duckSounds } from '../../lib/sounds'
@@ -66,6 +67,22 @@ function syncTarget(playback: RoomPlayback, offset: number) {
 }
 
 const COUNTDOWN_SECONDS = 5
+const RESUME_NOTICE_MS = 8000
+
+const SHORTCUTS: { keys: string[]; label: string }[] = [
+  { keys: ['Space', 'K'], label: 'playPause' },
+  { keys: ['←', '→'], label: 'seek5' },
+  { keys: ['J', 'L'], label: 'seek10' },
+  { keys: ['S'], label: 'skip85' },
+  { keys: ['0–9'], label: 'jump' },
+  { keys: ['↑', '↓'], label: 'volume' },
+  { keys: ['M'], label: 'mute' },
+  { keys: ['<', '>'], label: 'speed' },
+  { keys: ['C'], label: 'subtitles' },
+  { keys: ['F'], label: 'fullscreen' },
+  { keys: ['Shift+N', 'Shift+P'], label: 'episodes' },
+  { keys: ['?'], label: 'help' },
+]
 
 const SEGMENT_TONES: Record<SkipTime['kind'], string> = {
   op: 'bg-accent/50',
@@ -126,6 +143,10 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   const [blocked, setBlocked] = useState(false)
   const [autoSkip, setAutoSkip] = useState(readAutoSkip)
   const [entry, setEntry] = useState<{ key: string; from: number } | null>(null)
+  const [help, setHelp] = useState(false)
+  const [pip, setPip] = useState(false)
+  const [preview, setPreview] = useState(false)
+  const [resumeFrom, setResumeFrom] = useState(startAt > 0 ? startAt : null)
   const changeAutoSkip = (kind: SkipTime['kind'], on: boolean) => {
     const next = on ? [...new Set([...autoSkip, kind])] : autoSkip.filter((k) => k !== kind)
     setAutoSkip(next)
@@ -145,6 +166,11 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   useEffect(() => {
     rateRef.current = rate
   }, [rate])
+  useEffect(() => {
+    if (resumeFrom === null || !playing) return
+    const id = window.setTimeout(() => setResumeFrom(null), RESUME_NOTICE_MS)
+    return () => window.clearTimeout(id)
+  }, [resumeFrom, playing])
   useEffect(() => {
     syncRef.current = sync
   })
@@ -267,6 +293,20 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   }, [source])
 
   useEffect(() => () => hlsRef.current?.destroy(), [])
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    const enter = () => setPip(true)
+    const leave = () => setPip(false)
+    video.addEventListener('enterpictureinpicture', enter)
+    video.addEventListener('leavepictureinpicture', leave)
+    return () => {
+      video.removeEventListener('enterpictureinpicture', enter)
+      video.removeEventListener('leavepictureinpicture', leave)
+      if (document.pictureInPictureElement === video) void document.exitPictureInPicture().catch(() => undefined)
+    }
+  }, [])
 
   useEffect(() => {
     const video = videoRef.current
@@ -476,7 +516,24 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         case 'P':
           onPrev?.()
           break
+        case '>':
+        case '<': {
+          const i = RATES.indexOf(rateRef.current)
+          setRate(RATES[Math.max(0, Math.min(RATES.length - 1, (i === -1 ? RATES.indexOf(1) : i) + (e.key === '>' ? 1 : -1)))] ?? 1)
+          break
+        }
+        case '?':
+          setHelp((h) => !h)
+          break
+        case 'Escape':
+          if (!help) return
+          setHelp(false)
+          break
         default:
+          if (e.key >= '0' && e.key <= '9' && !e.ctrlKey && !e.metaKey && !e.altKey && v.duration) {
+            v.currentTime = (v.duration * Number(e.key)) / 10
+            break
+          }
           return
       }
       e.preventDefault()
@@ -484,7 +541,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [toggle, seekBy, toggleFullscreen, poke, onNext, onPrev, subsOn])
+  }, [toggle, seekBy, toggleFullscreen, poke, onNext, onPrev, subsOn, help])
 
   const segmentAt = (at: number) => skips?.find((s) => at >= s.start && at < s.end - 1)
   const activeSkip = segmentAt(time)
@@ -589,7 +646,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         </video>
       </div>
 
-      {waiting && !error ? (
+      {waiting && !error && !pip ? (
         <div className="pointer-events-none absolute inset-0 grid place-items-center">
           <Spinner className="size-10 text-white/80" />
         </div>
@@ -646,6 +703,51 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         </div>
       ) : null}
 
+      {resumeFrom !== null && !error && countdown === null && !activeSkip ? (
+        <div className={cn('absolute left-3 z-10 flex h-10 items-center gap-3 rounded-xl bg-black/60 pl-4 pr-1 text-sm text-white shadow-2xl transition-[bottom] sm:left-5', controls ? 'bottom-20 sm:bottom-24' : 'bottom-5')}>
+          {t('player.resumed', { time: formatTime(resumeFrom) })}
+          <button
+            type="button"
+            onClick={() => {
+              const v = videoRef.current
+              if (v) v.currentTime = 0
+              setResumeFrom(null)
+              poke()
+            }}
+            className="h-8 cursor-pointer rounded-lg bg-white/15 px-3 font-medium hover:bg-white/25"
+          >
+            {t('player.fromStart')}
+          </button>
+        </div>
+      ) : null}
+
+      {help ? (
+        <div className="absolute inset-0 z-30 grid place-items-center overflow-y-auto bg-black/70 p-4" onClick={() => setHelp(false)}>
+          <div className="w-full max-w-md rounded-2xl bg-black/85 p-4 shadow-2xl backdrop-blur-xl animate-pop sm:p-5" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-3 flex items-center justify-between">
+              <div className="text-[0.9375rem] font-semibold">{t('player.keys.title')}</div>
+              <button type="button" onClick={() => setHelp(false)} aria-label={t('common.close')} className="grid size-8 cursor-pointer place-items-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white">
+                <RiCloseLine className="size-5" />
+              </button>
+            </div>
+            <div className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 text-[0.8125rem]">
+              {SHORTCUTS.map((s) => (
+                <Fragment key={s.label}>
+                  <div className="flex gap-1">
+                    {s.keys.map((k) => (
+                      <kbd key={k} className="min-w-7 rounded-md bg-white/15 px-1.5 py-0.5 text-center font-mono text-xs">
+                        {k}
+                      </kbd>
+                    ))}
+                  </div>
+                  <span className="text-white/80">{t(`player.keys.${s.label}`)}</span>
+                </Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {countdown !== null ? (
         <div className="absolute inset-0 z-10 grid place-items-center bg-black/70 p-4">
           <div className="flex flex-col items-center gap-3 text-center">
@@ -670,7 +772,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         </div>
       ) : null}
 
-      {!playing && !waiting && !error && countdown === null ? (
+      {!playing && !waiting && !error && !pip && countdown === null ? (
         <button type="button" onClick={toggle} className="absolute left-1/2 top-1/2 grid size-12 -translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/90 text-black shadow-2xl sm:size-16">
           <RiPlayLargeFill className="size-6 sm:size-8" />
         </button>
@@ -693,7 +795,10 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
           }}
           onPointerMove={(e) => {
             const point = seekPoint(e)
-            if (e.pointerType === 'mouse' || drag !== null) setHover(point)
+            if (e.pointerType === 'mouse' || drag !== null) {
+              setHover(point)
+              setPreview(true)
+            }
             if (drag !== null) {
               setDrag(point.time)
               poke()
@@ -728,10 +833,16 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
             <div className="absolute inset-y-0 left-0 bg-accent" style={{ width: `${pct}%` }} />
           </div>
           <div className={cn('absolute size-3 -translate-x-1/2 rounded-full bg-accent shadow zoom-layer transition-transform group-hover/seek:[--zoom:1]', drag === null ? '[--zoom:0]' : '[--zoom:1]')} style={{ left: `${pct}%` }} />
-          {hover ? (
-            <div className="absolute -top-8 -translate-x-1/2 rounded-md bg-black/80 px-2 py-0.5 font-mono text-xs" style={{ left: hover.x }}>
-              {formatTime(hover.time)}
-              {hoverSegment ? <span className="ml-1.5 font-sans text-white/70">{t(`player.segment.${hoverSegment.kind}`)}</span> : null}
+          {hover || preview ? (
+            <div
+              className={cn('pointer-events-none absolute bottom-full mb-3 flex -translate-x-1/2 flex-col items-center gap-1.5', !hover && 'invisible')}
+              style={{ left: preview ? `clamp(6rem, ${hover?.x ?? 0}px, calc(100% - 6rem))` : hover?.x }}
+            >
+              {preview ? <FramePreview sources={sources} time={hover?.time ?? null} /> : null}
+              <div className="rounded-md bg-black/80 px-2 py-0.5 font-mono text-xs">
+                {formatTime(hover?.time ?? 0)}
+                {hoverSegment ? <span className="ml-1.5 font-sans text-white/70">{t(`player.segment.${hoverSegment.kind}`)}</span> : null}
+              </div>
             </div>
           ) : null}
         </div>
@@ -773,6 +884,15 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
                       {subtitlesUrl ? (
                         <MenuRow icon={<RiClosedCaptioningFill />} label={t('player.subtitles')} value={subsOn ? 'ASS' : t('player.subtitlesOff')} onClick={() => setMenu('subs')} />
                       ) : null}
+                      <MenuRow
+                        icon={<RiKeyboardBoxFill />}
+                        label={t('player.keys.title')}
+                        value="?"
+                        onClick={() => {
+                          setMenu(null)
+                          setHelp(true)
+                        }}
+                      />
                     </>
                   ) : (
                     <>
@@ -796,7 +916,12 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
               ) : null}
             </div>
             {document.pictureInPictureEnabled ? (
-              <ControlButton label={t('player.pip')} onClick={() => void videoRef.current?.requestPictureInPicture().catch(() => undefined)} icon={<RiPictureInPicture2Fill />} />
+              <ControlButton
+                label={t('player.pip')}
+                active={pip}
+                onClick={() => void (pip ? document.exitPictureInPicture() : videoRef.current?.requestPictureInPicture())?.catch(() => undefined)}
+                icon={<RiPictureInPicture2Fill />}
+              />
             ) : null}
             <ControlButton label={t('player.fullscreen')} onClick={toggleFullscreen} icon={full ? <RiFullscreenExitFill /> : <RiFullscreenFill />} />
           </div>
