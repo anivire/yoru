@@ -1,9 +1,16 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { type Plugin, defineConfig } from 'vite'
+
+const syncSubtitleCanvas = (): Plugin => ({
+  name: 'sync-subtitle-canvas',
+  transform(code, id) {
+    if (/jassub[\\/]dist[\\/]worker[\\/]renderers/.test(id)) return code.replace(/desynchronized: true/g, 'desynchronized: false')
+  },
+})
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), syncSubtitleCanvas()],
   server: {
     port: 5173,
     proxy: {
@@ -15,6 +22,7 @@ export default defineConfig({
   },
   worker: {
     format: 'es',
+    plugins: () => [syncSubtitleCanvas()],
   },
   build: {
     target: 'es2022',
