@@ -43,7 +43,8 @@ export async function episodeList(userId: number, row: AnimeRow): Promise<Episod
     useJikan ? jikanThumbs(row).catch(() => new Map<number, string>()) : new Map<number, string>(),
     providerEpisodes(row.malId).catch(() => []),
   ])
-  const available = new Map(provider.map((e) => [Number(e.episodeInt), e]))
+  const limit = row.episodes || Infinity
+  const available = new Map(provider.filter((e) => Number(e.episodeInt) <= limit).map((e) => [Number(e.episodeInt), e]))
   const metaByNumber = new Map(meta.map((e) => [e.mal_id, e]))
   const progress = new Map(
     db
@@ -54,12 +55,7 @@ export async function episodeList(userId: number, row: AnimeRow): Promise<Episod
       .map((p) => [p.episode, p]),
   )
   const watchedUpTo = getEntry(userId, row.malId)?.progress ?? 0
-  const count = Math.max(
-    row.episodes ?? 0,
-    meta.at(-1)?.mal_id ?? 0,
-    provider.length ? Number(provider.at(-1)!.episodeInt) : 0,
-    row.status === 'finished' && !row.episodes ? 1 : 0,
-  )
+  const count = row.episodes || Math.max(meta.at(-1)?.mal_id ?? 0, provider.length ? Number(provider.at(-1)!.episodeInt) : 0, row.status === 'finished' ? 1 : 0)
   const result: Episode[] = []
   for (let n = 1; n <= count; n++) {
     const m = metaByNumber.get(n)

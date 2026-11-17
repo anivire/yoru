@@ -200,6 +200,6 @@ export function upsertA365Summaries(rows: A365Series[]): AnimeSummary[] {
 
 export function setLatestEpisode(malId: number, episode: number) {
   const row = getAnimeRow(malId)
-  if (!row || (row.latestEpisode ?? 0) >= episode) return
+  if (!row || (row.latestEpisode ?? 0) >= episode || (row.episodes && episode > row.episodes)) return
   db.update(anime).set({ latestEpisode: episode }).where(eq(anime.malId, malId)).run()
 }
