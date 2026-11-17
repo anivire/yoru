@@ -749,7 +749,7 @@ export const en: Messages = {
     heroBanner: 'Top banner',
     heroBannerHint: 'Large card with the anime you are watching',
     navigation: 'Navigation',
-    navigationHint: 'Which tabs to show in the header and menu',
+    navigationHint: 'Order of the tabs in the header and menu, and which to show',
     title: 'Settings',
     appearance: 'Appearance',
     profile: 'Profile',

@@ -747,7 +747,7 @@ export const ru = {
     heroBanner: 'Баннер наверху',
     heroBannerHint: 'Крупная карточка с аниме, которое вы смотрите',
     navigation: 'Навигация',
-    navigationHint: 'Какие вкладки показывать в шапке и в меню',
+    navigationHint: 'Порядок вкладок в шапке и в меню и какие из них показывать',
     title: 'Настройки',
     appearance: 'Внешний вид',
     profile: 'Профиль',

@@ -50,6 +50,7 @@ interface State {
   showHero: boolean
   homeSections: HomeSectionSetting[]
   hiddenNav: NavKey[]
+  navOrder: NavKey[]
   defaultKind: StreamKind
   preferredAuthors: FavoriteAuthors
   navPosition: NavPosition
@@ -79,6 +80,15 @@ function normalizeNav(value: unknown): NavKey[] {
   return list.length >= NAV.length ? [] : (list as NavKey[])
 }
 
+const DEFAULT_NAV_ORDER: NavKey[] = NAV.map((n) => n.key)
+
+function normalizeNavOrder(value: unknown): NavKey[] {
+  const known = new Set<string>(DEFAULT_NAV_ORDER)
+  const list = Array.isArray(value) ? [...new Set((value as string[]).filter((k) => known.has(k)))] : []
+  const seen = new Set(list)
+  return [...(list as NavKey[]), ...DEFAULT_NAV_ORDER.filter((k) => !seen.has(k))]
+}
+
 interface Appearance extends State {
   stretch: boolean
   tablet: boolean
@@ -90,6 +100,7 @@ interface Appearance extends State {
   setShowHero: (show: boolean) => void
   setHomeSections: (sections: HomeSectionSetting[]) => void
   setHiddenNav: (hidden: NavKey[]) => void
+  setNavOrder: (order: NavKey[]) => void
   setDefaultKind: (kind: StreamKind) => void
   setPreferredAuthors: (authors: FavoriteAuthors) => void
   setNavPosition: (position: NavPosition) => void
@@ -117,6 +128,7 @@ function load(): State {
       showHero?: boolean
       homeSections?: unknown
       hiddenNav?: unknown
+      navOrder?: unknown
       defaultKind?: string
       preferredAuthors?: unknown
       navPosition?: string
@@ -143,6 +155,7 @@ function load(): State {
       showHero: raw.showHero !== false,
       homeSections: normalizeSections(raw.homeSections),
       hiddenNav: normalizeNav(raw.hiddenNav),
+      navOrder: normalizeNavOrder(raw.navOrder),
       defaultKind: STREAM_KINDS.includes(raw.defaultKind as StreamKind) ? (raw.defaultKind as StreamKind) : 'sub',
       preferredAuthors: normalizeFavorites(raw.preferredAuthors),
       navPosition: raw.navPosition === 'top' || raw.navPosition === 'bottom' || raw.navPosition === 'right' ? raw.navPosition : 'left',
@@ -157,7 +170,7 @@ function load(): State {
       feedScope: FEED_SCOPES.includes(raw.feedScope as FeedScope) ? (raw.feedScope as FeedScope) : 'me',
     }
   } catch {
-    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], defaultKind: 'sub', preferredAuthors: {}, navPosition: 'left', navLabels: 'always', backdrop: 'full', iosFullscreen: 'native', autoNext: true, watchedAt: 0.85, titleLanguage: 'romaji', appearanceButton: true, friendAvatars: true, feedScope: 'me' }
+    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], navOrder: DEFAULT_NAV_ORDER, defaultKind: 'sub', preferredAuthors: {}, navPosition: 'left', navLabels: 'always', backdrop: 'full', iosFullscreen: 'native', autoNext: true, watchedAt: 0.85, titleLanguage: 'romaji', appearanceButton: true, friendAvatars: true, feedScope: 'me' }
   }
 }
 
@@ -263,6 +276,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
         setShowHero: (showHero) => setState((s) => ({ ...s, showHero })),
         setHomeSections: (homeSections) => setState((s) => ({ ...s, homeSections })),
         setHiddenNav: (hiddenNav) => setState((s) => ({ ...s, hiddenNav: normalizeNav(hiddenNav) })),
+        setNavOrder: (navOrder) => setState((s) => ({ ...s, navOrder: normalizeNavOrder(navOrder) })),
         setDefaultKind: (defaultKind) => setState((s) => ({ ...s, defaultKind })),
         setPreferredAuthors: (preferredAuthors) => setState((s) => ({ ...s, preferredAuthors })),
         setNavPosition: (navPosition) => setState((s) => ({ ...s, navPosition })),

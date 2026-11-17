@@ -3,9 +3,9 @@ import { DndContext, type DragEndEvent, KeyboardSensor, type Modifier, PointerSe
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { RiDraggable, RiImageFill, RiLayoutBottom2Fill, RiLayoutLeft2Fill, RiLayoutRight2Fill, RiLayoutTop2Fill, RiPaletteFill } from '@remixicon/react'
-import type { ReactNode } from 'react'
+import type { ComponentType, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { type BackdropShape, FEED_SCOPES, type HomeSectionSetting, type NavLabels, type NavPosition, useAppearance } from '../lib/appearance'
+import { type BackdropShape, FEED_SCOPES, type NavLabels, type NavPosition, useAppearance } from '../lib/appearance'
 import { HOME_SECTIONS, NAV } from '../lib/navigation'
 
 export const restrictToVertical: Modifier = ({ transform }) => ({ ...transform, x: 0 })
@@ -14,11 +14,24 @@ function IconTile({ children }: { children: ReactNode }) {
   return <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent [&_svg]:size-4">{children}</span>
 }
 
-function SortableSection({ section, onToggle }: { section: HomeSectionSetting; onToggle: (visible: boolean) => void }) {
+function useReorderSensors() {
+  return useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
+}
+
+function reorder<T>(items: T[], id: (item: T) => string, { active, over }: DragEndEvent) {
+  if (!over || active.id === over.id) return null
+  const from = items.findIndex((item) => id(item) === active.id)
+  const to = items.findIndex((item) => id(item) === over.id)
+  if (from < 0 || to < 0) return null
+  return arrayMove(items, from, to)
+}
+
+function SortableRow({ id, icon: Icon, label, checked, disabled, onToggle }: { id: string; icon: ComponentType; label: ReactNode; checked: boolean; disabled?: boolean; onToggle: (checked: boolean) => void }) {
   const { t } = useTranslation()
-  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: section.id })
-  const meta = HOME_SECTIONS.find((s) => s.id === section.id)!
-  const Icon = meta.icon
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id })
   return (
     <div
       ref={setNodeRef}
@@ -38,8 +51,8 @@ function SortableSection({ section, onToggle }: { section: HomeSectionSetting; o
       <IconTile>
         <Icon />
       </IconTile>
-      <span className={cn('min-w-0 flex-1 truncate text-sm', !section.visible && 'text-muted-foreground')}>{t(meta.label)}</span>
-      <Switch checked={section.visible} onCheckedChange={onToggle} />
+      <span className={cn('min-w-0 flex-1 truncate text-sm', !checked && 'text-muted-foreground')}>{label}</span>
+      <Switch checked={checked} disabled={disabled} onCheckedChange={onToggle} />
     </div>
   )
 }
@@ -47,16 +60,10 @@ function SortableSection({ section, onToggle }: { section: HomeSectionSetting; o
 export function HomeLayoutSettings() {
   const { t } = useTranslation()
   const { homeSections, setHomeSections, showHero, setShowHero } = useAppearance()
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  )
-  const onDragEnd = ({ active, over }: DragEndEvent) => {
-    if (!over || active.id === over.id) return
-    const from = homeSections.findIndex((s) => s.id === active.id)
-    const to = homeSections.findIndex((s) => s.id === over.id)
-    if (from < 0 || to < 0) return
-    setHomeSections(arrayMove(homeSections, from, to))
+  const sensors = useReorderSensors()
+  const onDragEnd = (event: DragEndEvent) => {
+    const next = reorder(homeSections, (s) => s.id, event)
+    if (next) setHomeSections(next)
   }
   return (
     <Card className="py-1">
@@ -73,13 +80,19 @@ export function HomeLayoutSettings() {
       </label>
       <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVertical]} onDragEnd={onDragEnd}>
         <SortableContext items={homeSections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-          {homeSections.map((section) => (
-            <SortableSection
-              key={section.id}
-              section={section}
-              onToggle={(visible) => setHomeSections(homeSections.map((s) => (s.id === section.id ? { ...s, visible } : s)))}
-            />
-          ))}
+          {homeSections.map((section) => {
+            const meta = HOME_SECTIONS.find((s) => s.id === section.id)!
+            return (
+              <SortableRow
+                key={section.id}
+                id={section.id}
+                icon={meta.icon}
+                label={t(meta.label)}
+                checked={section.visible}
+                onToggle={(visible) => setHomeSections(homeSections.map((s) => (s.id === section.id ? { ...s, visible } : s)))}
+              />
+            )
+          })}
         </SortableContext>
       </DndContext>
     </Card>
@@ -135,28 +148,36 @@ export function NavPositionSettings() {
 
 export function NavigationSettings() {
   const { t } = useTranslation()
-  const { hiddenNav, setHiddenNav, appearanceButton, setAppearanceButton } = useAppearance()
+  const { hiddenNav, setHiddenNav, navOrder, setNavOrder, appearanceButton, setAppearanceButton } = useAppearance()
+  const sensors = useReorderSensors()
   const visibleCount = NAV.length - hiddenNav.length
+  const onDragEnd = (event: DragEndEvent) => {
+    const next = reorder(navOrder, (key) => key, event)
+    if (next) setNavOrder(next)
+  }
   return (
     <Card className="py-1">
-      {NAV.map((item) => {
-        const visible = !hiddenNav.includes(item.key)
-        const Icon = item.icon
-        return (
-          <label key={item.key} className="flex cursor-pointer items-center gap-3 px-5 py-2.5">
-            <IconTile>
-              <Icon />
-            </IconTile>
-            <span className={cn('min-w-0 flex-1 text-sm', !visible && 'text-muted-foreground')}>{t(`nav.${item.key}`)}</span>
-            <Switch
-              checked={visible}
-              disabled={visible && visibleCount <= 1}
-              onCheckedChange={(on) => setHiddenNav(on ? hiddenNav.filter((k) => k !== item.key) : [...hiddenNav, item.key])}
-            />
-          </label>
-        )
-      })}
-      <label className="hidden cursor-pointer items-center gap-3 px-5 py-2.5 md:flex">
+      <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVertical]} onDragEnd={onDragEnd}>
+        <SortableContext items={navOrder} strategy={verticalListSortingStrategy}>
+          {navOrder.map((key) => {
+            const item = NAV.find((n) => n.key === key)!
+            const visible = !hiddenNav.includes(key)
+            return (
+              <SortableRow
+                key={key}
+                id={key}
+                icon={item.icon}
+                label={t(`nav.${key}`)}
+                checked={visible}
+                disabled={visible && visibleCount <= 1}
+                onToggle={(on) => setHiddenNav(on ? hiddenNav.filter((k) => k !== key) : [...hiddenNav, key])}
+              />
+            )
+          })}
+        </SortableContext>
+      </DndContext>
+      <label className="hidden cursor-pointer items-center gap-3 py-2.5 pl-2 pr-5 md:flex">
+        <span className="size-8 shrink-0" aria-hidden />
         <IconTile>
           <RiPaletteFill />
         </IconTile>

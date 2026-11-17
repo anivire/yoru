@@ -33,8 +33,8 @@ import { UserAvatar, nameOf } from './user-avatar'
 const NAV_ITEM = 'relative inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-medium transition-colors [&_svg]:size-4 [&_svg]:shrink-0'
 
 function useVisibleNav() {
-  const { hiddenNav } = useAppearance()
-  return NAV.filter((n) => !hiddenNav.includes(n.key))
+  const { hiddenNav, navOrder } = useAppearance()
+  return navOrder.map((key) => NAV.find((n) => n.key === key)!).filter((n) => !hiddenNav.includes(n.key))
 }
 
 function NavItems({ compact = false, side = 'bottom' }: { compact?: boolean; side?: 'top' | 'bottom' }) {
@@ -108,10 +108,10 @@ function DesktopNav({ side }: { side: 'top' | 'bottom' }) {
   const frame = useRef<HTMLDivElement>(null)
   const full = useRef<HTMLDivElement>(null)
   const { pathname } = useLocation()
-  const { pageWidth, hiddenNav } = useAppearance()
+  const { pageWidth, hiddenNav, navOrder } = useAppearance()
   const fits = useFits(frame, full)
   const compact = side === 'top' || !fits
-  const indicator = useSlidingIndicator(ref, '[aria-current="page"]', `${pathname}|${pageWidth}|${hiddenNav.join()}|${compact}`)
+  const indicator = useSlidingIndicator(ref, '[aria-current="page"]', `${pathname}|${pageWidth}|${hiddenNav.join()}|${navOrder.join()}|${compact}`)
   return (
     <div ref={frame} className="relative hidden min-w-0 flex-1 justify-center md:flex">
       <div ref={full} inert aria-hidden className="pointer-events-none invisible absolute left-0 top-0 flex w-max items-center gap-1">
@@ -338,10 +338,10 @@ function SideRailContent({ position }: { position: 'left' | 'right' }) {
   const { t } = useTranslation()
   const ref = useRef<HTMLElement>(null)
   const { pathname } = useLocation()
-  const { hiddenNav, appearanceButton } = useAppearance()
+  const { hiddenNav, navOrder, appearanceButton } = useAppearance()
   const railButton = useRailButton()
   const nav = useVisibleNav()
-  const indicator = useSlidingIndicator(ref, '[aria-current="page"]', `${pathname}|${hiddenNav.join()}|${position}`)
+  const indicator = useSlidingIndicator(ref, '[aria-current="page"]', `${pathname}|${hiddenNav.join()}|${navOrder.join()}|${position}`)
   const side = position === 'left' ? 'right' : 'left'
   return (
     <>
