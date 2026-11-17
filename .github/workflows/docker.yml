@@ -2,7 +2,6 @@ name: Docker image
 
 on:
   push:
-    branches: [develop]
     tags: ['v*.*.*']
   workflow_dispatch:
 
@@ -16,7 +15,6 @@ permissions:
 
 env:
   IMAGE: ghcr.io/${{ github.repository }}
-  CHANNEL: ${{ github.ref_type == 'tag' && 'stable' || 'edge' }}
 
 jobs:
   image:
@@ -37,12 +35,10 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE }}
-          flavor: latest=${{ github.ref_type == 'tag' }}
+          flavor: latest=true
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=edge,enable=${{ github.ref_type == 'branch' }}
-            type=sha,format=short,enable=${{ github.ref_type == 'branch' }}
           labels: |
             org.opencontainers.image.title=yoru
             org.opencontainers.image.description=A self-hosted anime tracker and player for you and the people you invite
@@ -55,7 +51,7 @@ jobs:
           push: true
           build-args: |
             GIT_COMMIT=${{ github.sha }}
-            RELEASE_CHANNEL=${{ env.CHANNEL }}
+            RELEASE_CHANNEL=stable
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha

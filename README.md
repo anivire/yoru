@@ -92,11 +92,10 @@ The image tag in `docker-compose.yml` decides what you get:
 | `latest` | The newest release. Recommended |
 | `0.68` | Only fixes for 0.68, no new features |
 | `0.68.0` | Exactly this release, it never changes |
-| `edge` | Every change as soon as it lands in the `develop` branch, before a release. Can break |
 
 ### Dokploy and Coolify
 
-Step-by-step guides: [Dokploy](docs/deploy/dokploy.md), [Coolify](docs/deploy/coolify.md). Both build the image on your server from the repository. The `master` branch only gets releases and hotfixes; `develop` gets every change, like the `edge` tag.
+Step-by-step guides: [Dokploy](docs/deploy/dokploy.md), [Coolify](docs/deploy/coolify.md). Both build the image on your server from the repository. The `master` branch only gets releases and hotfixes; `develop` gets every change before it is released.
 
 <details>
 <summary>Building from source</summary>
