@@ -25,7 +25,7 @@ import { NotificationsPopover, useNotificationSound } from './notifications'
 import { RailLabel, RailProvider, RailTip, useRailButton, BetaIcon, RailIcon } from './rail'
 import { BetaBadge } from './watch-together'
 import { Footer } from './footer'
-import { TLink, TNavLink, useTransitionNavigate } from './transition-link'
+import { TLink, TNavLink } from './transition-link'
 import { AppearancePopover } from './appearance-panel'
 import { FriendTitlesProvider } from './friend-titles'
 import { UserAvatar, nameOf } from './user-avatar'
@@ -126,7 +126,6 @@ function DesktopNav({ side }: { side: 'top' | 'bottom' }) {
 }
 
 function MobileMenu() {
-  const go = useTransitionNavigate()
   const { t } = useTranslation()
   const nav = useVisibleNav()
   const { pathname } = useLocation()
@@ -157,14 +156,12 @@ function MobileMenu() {
         {nav.map(({ to, key, icon: Icon, end }) => {
           const active = Boolean(matchPath({ path: to, end }, pathname))
           return (
-            <DropdownMenuItem
-              key={to}
-              onSelect={() => go(to)}
-              className={cn(active && 'bg-accent-soft text-accent data-[highlighted]:bg-accent-soft [&_svg]:text-accent')}
-            >
-              <Icon />
-              {t(`nav.${key}`)}
-              {key === 'together' ? <BetaBadge className="ml-auto" /> : null}
+            <DropdownMenuItem key={to} asChild className={cn(active && 'bg-accent-soft text-accent data-[highlighted]:bg-accent-soft [&_svg]:text-accent')}>
+              <TLink to={to}>
+                <Icon />
+                {t(`nav.${key}`)}
+                {key === 'together' ? <BetaBadge className="ml-auto" /> : null}
+              </TLink>
             </DropdownMenuItem>
           )
         })}
@@ -190,7 +187,6 @@ function ProfileLabel() {
 }
 
 function AccountItems({ settings = true }: { settings?: boolean }) {
-  const go = useTransitionNavigate()
   const { t } = useTranslation()
   const user = useUser()
   const navigate = useNavigate()
@@ -203,24 +199,32 @@ function AccountItems({ settings = true }: { settings?: boolean }) {
   }
   return (
     <>
-      <DropdownMenuItem onSelect={() => go(`/u/${user.username}`)}>
-        <RiAccountCircleFill />
-        {t('nav.profile')}
+      <DropdownMenuItem asChild>
+        <TLink to={`/u/${user.username}`}>
+          <RiAccountCircleFill />
+          {t('nav.profile')}
+        </TLink>
       </DropdownMenuItem>
-      <DropdownMenuItem onSelect={() => go('/friends')}>
-        <RiGroupFill />
-        {t('nav.friends')}
+      <DropdownMenuItem asChild>
+        <TLink to="/friends">
+          <RiGroupFill />
+          {t('nav.friends')}
+        </TLink>
       </DropdownMenuItem>
       {settings ? (
-        <DropdownMenuItem onSelect={() => go('/settings')}>
-          <RiSettings3Fill />
-          {t('nav.settings')}
+        <DropdownMenuItem asChild>
+          <TLink to="/settings">
+            <RiSettings3Fill />
+            {t('nav.settings')}
+          </TLink>
         </DropdownMenuItem>
       ) : null}
       {user.role === 'admin' ? (
-        <DropdownMenuItem onSelect={() => go('/admin')}>
-          <RiShieldFill />
-          {t('nav.admin')}
+        <DropdownMenuItem asChild>
+          <TLink to="/admin">
+            <RiShieldFill />
+            {t('nav.admin')}
+          </TLink>
         </DropdownMenuItem>
       ) : null}
       <DropdownMenuItem onSelect={logout} className="text-danger data-[highlighted]:bg-danger-soft [&_svg]:text-danger">
