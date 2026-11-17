@@ -141,7 +141,10 @@ export function AnimePageSkeleton() {
         <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
           <div className="flex w-36 shrink-0 flex-col gap-3 sm:w-48">
             <Skeleton className="aspect-[2/3] w-full rounded-xl" />
-            <Skeleton className="hidden h-8 w-full rounded-lg sm:block" />
+            <div className="hidden flex-col gap-2 sm:flex">
+              <Skeleton className="h-8 w-full rounded-md" />
+              <Skeleton className="h-9 w-full rounded-lg" />
+            </div>
           </div>
           <div className="flex w-full min-w-0 flex-1 flex-col items-center gap-3 sm:items-stretch">
             <div className="flex w-full flex-col items-center sm:items-start">
@@ -164,7 +167,8 @@ export function AnimePageSkeleton() {
                 <Skeleton key={w} className="h-8 rounded-md" style={{ width: `${w * 0.25}rem` }} />
               ))}
             </div>
-            <div className="max-w-3xl text-[0.9375rem] leading-relaxed">
+            <TextLine className="w-full justify-center text-[0.8125rem] sm:justify-start" bar="w-72" />
+            <div className="w-full max-w-3xl text-[0.9375rem] leading-relaxed sm:min-h-32">
               <TextLine />
               <TextLine />
               <TextLine />
