@@ -43,6 +43,7 @@ export const env = {
   userAgent: str('USER_AGENT', 'Yoru'),
   appVersion: str('APP_VERSION'),
   gitCommit: str('GIT_COMMIT'),
+  releaseChannel: str('RELEASE_CHANNEL') === 'stable' ? ('stable' as const) : ('edge' as const),
   githubRepo: str('GITHUB_REPO', 'anivire/yoru'),
   githubBranch: str('GITHUB_BRANCH', 'master'),
   githubToken: str('GITHUB_TOKEN'),

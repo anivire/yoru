@@ -129,8 +129,10 @@ export const en: Messages = {
   },
   changelog: {
     title: 'Changelog',
-    description: 'What changed in yoru, from the commits on GitHub',
+    description: 'What changed in yoru from version to version',
     current: 'Your version',
+    next: 'Next version',
+    nextHint: 'Not released yet',
     empty: 'No changes yet',
     sections: { feat: 'New', improve: 'Improved', fix: 'Fixed' },
   },

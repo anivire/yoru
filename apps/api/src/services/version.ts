@@ -59,6 +59,24 @@ interface GithubCommit {
   commit: { message: string; committer?: { date?: string } }
 }
 
+interface GithubRelease {
+  tag_name: string
+  name: string | null
+  html_url: string
+  published_at: string | null
+}
+
+function newer(a: string, b: string) {
+  const pa = a.split('.').map(Number)
+  const pb = b.split('.').map(Number)
+  for (let i = 0; i < 3; i++) {
+    const x = pa[i] ?? 0
+    const y = pb[i] ?? 0
+    if (x !== y) return x > y
+  }
+  return false
+}
+
 async function versionAt(sha: string): Promise<string | null> {
   const file = await github<{ content?: string }>(`/contents/package.json?ref=${sha}`).catch(() => null)
   if (!file?.content) return null
@@ -94,15 +112,32 @@ async function latestInfo(commit: string | null) {
   })
 }
 
+async function latestRelease() {
+  const { repo } = githubConfig()
+  if (!featureEnabled('updates')) throw new SourceOffError('github', 503, 'GitHub is disabled')
+  return cached(`github:release:${repo}`, LATEST_TTL, async () => {
+    const release = await github<GithubRelease>('/releases/latest')
+    return {
+      commit: null,
+      version: release.tag_name.replace(/^v/, ''),
+      message: release.name || release.tag_name,
+      date: release.published_at,
+      url: release.html_url,
+    }
+  })
+}
+
 function toEntry(commit: GithubCommit): ChangelogEntry {
   const subject = commit.commit.message.split('\n')[0]?.trim() ?? ''
   const match = /^(\w+)(?:\(([^)]+)\))?!?:\s*(.+)$/.exec(subject)
   const type = match?.[1]?.toLowerCase() as ChangeType | undefined
+  const release = type === 'chore' ? (/^release v?(\d+\.\d+\.\d+)$/.exec(match?.[3] ?? '')?.[1] ?? null) : null
   return {
     sha: commit.sha,
     type: type && CHANGE_TYPES.has(type) ? type : 'other',
     scope: match?.[2] ?? null,
     subject: match?.[3] ?? subject,
+    release,
     date: commit.commit.committer?.date ?? null,
     url: commit.html_url,
   }
@@ -114,7 +149,7 @@ export async function changelog(page: number): Promise<Changelog> {
   const commits = await cached(`github:changelog:${repo}:${branch}:${page}`, LATEST_TTL, () =>
     github<GithubCommit[]>(`/commits?sha=${encodeURIComponent(branch)}&per_page=${CHANGELOG_PAGE}&page=${page}`),
   )
-  return { entries: commits.map(toEntry), current: current.commit, nextPage: commits.length === CHANGELOG_PAGE ? page + 1 : null }
+  return { entries: commits.map(toEntry), current: current.commit, channel: env.releaseChannel, nextPage: commits.length === CHANGELOG_PAGE ? page + 1 : null }
 }
 
 export function buildInfo() {
@@ -123,13 +158,27 @@ export function buildInfo() {
 
 export async function versionInfo(withUpdates: boolean): Promise<VersionInfo> {
   const repoUrl = `https://github.com/${githubConfig().repo}`
-  const info = withUpdates ? await latestInfo(current.commit).catch(() => null) : null
-  const latest = info?.latest ?? null
-  return {
+  const base = {
     version: current.version,
     commit: current.commit,
     commitUrl: current.commit ? `${repoUrl}/commit/${current.commit}` : null,
+    channel: env.releaseChannel,
     repoUrl,
+  }
+  if (env.releaseChannel === 'stable') {
+    const latest = withUpdates ? await latestRelease().catch(() => null) : null
+    return {
+      ...base,
+      latest,
+      behindBy: null,
+      updateAvailable: Boolean(latest && newer(latest.version, current.version)),
+      compareUrl: latest?.url ?? null,
+    }
+  }
+  const info = withUpdates ? await latestInfo(current.commit).catch(() => null) : null
+  const latest = info?.latest ?? null
+  return {
+    ...base,
     latest,
     behindBy: info?.behindBy ?? null,
     updateAvailable: Boolean(latest && current.commit && latest.commit !== current.commit && (info?.behindBy ?? 1) > 0),

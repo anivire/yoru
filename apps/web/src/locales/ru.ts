@@ -127,8 +127,10 @@ export const ru = {
   },
   changelog: {
     title: 'История изменений',
-    description: 'Что менялось в yoru, по коммитам на GitHub',
+    description: 'Что менялось в yoru от версии к версии',
     current: 'Ваша версия',
+    next: 'Следующая версия',
+    nextHint: 'Ещё не вышла',
     empty: 'Изменений пока нет',
     sections: { feat: 'Новое', improve: 'Улучшения', fix: 'Исправления' },
   },

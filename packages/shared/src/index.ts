@@ -475,12 +475,15 @@ export interface Invite {
   uses: number
 }
 
+export type ReleaseChannel = 'stable' | 'edge'
+
 export interface VersionInfo {
   version: string
   commit: string | null
   commitUrl: string | null
+  channel: ReleaseChannel
   repoUrl: string
-  latest: { commit: string; version: string | null; message: string; date: string | null; url: string } | null
+  latest: { commit: string | null; version: string | null; message: string; date: string | null; url: string } | null
   behindBy: number | null
   updateAvailable: boolean
   compareUrl: string | null
@@ -493,6 +496,7 @@ export interface ChangelogEntry {
   type: ChangeType
   scope: string | null
   subject: string
+  release: string | null
   date: string | null
   url: string
 }
@@ -500,6 +504,7 @@ export interface ChangelogEntry {
 export interface Changelog {
   entries: ChangelogEntry[]
   current: string | null
+  channel: ReleaseChannel
   nextPage: number | null
 }
 

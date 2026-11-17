@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
-import type { ChangeType, ChangelogEntry } from '@yoru/shared'
+import type { ChangeType, ChangelogEntry, ReleaseChannel } from '@yoru/shared'
 import { Button, EmptyState, Skeleton, cn } from '@yoru/ui'
 import { useTranslation } from 'react-i18next'
 import { Page, PageHeader } from '../components/app-shell'
@@ -16,9 +16,10 @@ const SECTION_TONE: Record<Section, string> = {
   fix: 'bg-success-soft text-success',
 }
 
-interface Day {
+interface Release {
   key: string
-  date: Date
+  version: string | null
+  date: Date | null
   current: boolean
   sections: Partial<Record<Section, ChangelogEntry[]>>
 }
@@ -27,40 +28,42 @@ function dayKey(date: Date) {
   return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
 }
 
-function buildDays(entries: ChangelogEntry[], current: string | null): Day[] {
-  const days: Day[] = []
+function buildReleases(entries: ChangelogEntry[], current: string | null, channel: ReleaseChannel): Release[] {
+  const releases: Release[] = []
+  let release: Release | undefined
   for (const entry of entries) {
-    const date = entry.date ? new Date(entry.date) : new Date(0)
-    const key = dayKey(date)
-    let day = days[days.length - 1]
-    if (day?.key !== key) {
-      day = { key, date, current: false, sections: {} }
-      days.push(day)
+    if (entry.release || !release) {
+      release = { key: entry.release ?? 'next', version: entry.release, date: entry.release && entry.date ? new Date(entry.date) : null, current: false, sections: {} }
+      releases.push(release)
     }
-    if (entry.sha === current) day.current = true
+    if (entry.sha === current) release.current = true
     const section = SECTION_OF[entry.type]
-    if (section) (day.sections[section] ??= []).push(entry)
+    if (section) (release.sections[section] ??= []).push(entry)
   }
-  return days.filter((day) => day.current || SECTIONS.some((s) => day.sections[s]?.length))
+  return releases.filter((r) => (r.version || channel === 'edge') && (r.current || SECTIONS.some((s) => r.sections[s]?.length)))
 }
 
-function DayBlock({ day }: { day: Day }) {
+function ReleaseDate({ date }: { date: Date }) {
   const { t, i18n } = useTranslation()
   const today = new Date()
   const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1)
-  const relative = dayKey(day.date) === dayKey(today) ? t('feed.today') : dayKey(day.date) === dayKey(yesterday) ? t('feed.yesterday') : null
-  const date = new Intl.DateTimeFormat(i18n.language, { day: 'numeric', month: 'long', ...(day.date.getFullYear() !== today.getFullYear() ? { year: 'numeric' } : {}) }).format(day.date)
+  const relative = dayKey(date) === dayKey(today) ? t('feed.today') : dayKey(date) === dayKey(yesterday) ? t('feed.yesterday') : null
+  return relative ?? new Intl.DateTimeFormat(i18n.language, { day: 'numeric', month: 'long', ...(date.getFullYear() !== today.getFullYear() ? { year: 'numeric' } : {}) }).format(date)
+}
+
+function ReleaseBlock({ release }: { release: Release }) {
+  const { t } = useTranslation()
   return (
     <section className="relative pb-10 pl-8 last:pb-0 sm:grid sm:grid-cols-[9rem_1fr] sm:gap-8 sm:pl-0">
-      <span aria-hidden className={cn('absolute left-0 top-1.5 size-3 rounded-full ring-4 ring-background sm:left-[9.5rem]', day.current ? 'bg-accent' : 'bg-border')} />
+      <span aria-hidden className={cn('absolute left-0 top-1.5 size-3 rounded-full ring-4 ring-background sm:left-[9.5rem]', release.current ? 'bg-accent' : 'bg-border')} />
       <div className="mb-3 sm:mb-0 sm:text-right">
-        <div className="text-[0.9375rem] font-semibold">{relative ?? date}</div>
-        {relative ? <div className="text-[0.8125rem] text-muted-foreground">{date}</div> : null}
-        {day.current ? <span className="mt-1.5 inline-flex rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">{t('changelog.current')}</span> : null}
+        <div className="text-[0.9375rem] font-semibold">{release.version ? `v${release.version}` : t('changelog.next')}</div>
+        <div className="text-[0.8125rem] text-muted-foreground">{release.date ? <ReleaseDate date={release.date} /> : t('changelog.nextHint')}</div>
+        {release.current ? <span className="mt-1.5 inline-flex rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">{t('changelog.current')}</span> : null}
       </div>
       <div className="flex flex-col gap-4 sm:pl-6">
         {SECTIONS.map((section) => {
-          const items = day.sections[section]
+          const items = release.sections[section]
           if (!items?.length) return null
           return (
             <div key={section}>
@@ -122,7 +125,8 @@ export function ChangelogPage() {
     staleTime: 15 * 60_000,
   })
   const entries = log.data?.pages.flatMap((p) => p.entries) ?? []
-  const days = buildDays(entries, log.data?.pages[0]?.current ?? null)
+  const first = log.data?.pages[0]
+  const releases = buildReleases(entries, first?.current ?? null, first?.channel ?? 'edge')
 
   return (
     <Page>
@@ -132,13 +136,13 @@ export function ChangelogPage() {
           <ChangelogSkeleton />
         ) : log.isError ? (
           <EmptyState mood="error" title={t('common.error')} description={log.error.message} action={<Button onClick={() => log.refetch()}>{t('common.retry')}</Button>} />
-        ) : !days.length ? (
+        ) : !releases.length ? (
           <EmptyState mood="sleepy" title={t('changelog.empty')} />
         ) : (
           <div className="relative">
             <span aria-hidden className="absolute bottom-0 left-1.5 top-2 w-px bg-border sm:left-[9.875rem]" />
-            {days.map((day) => (
-              <DayBlock key={day.key} day={day} />
+            {releases.map((release) => (
+              <ReleaseBlock key={release.key} release={release} />
             ))}
             {log.hasNextPage ? (
               <div className="relative flex justify-center pt-10">
