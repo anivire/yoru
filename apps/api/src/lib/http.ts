@@ -49,6 +49,11 @@ export function cacheGet<T>(key: string): T | null {
   return JSON.parse(row.value) as T
 }
 
+export function cachePeek<T>(key: string): T | null {
+  const row = cacheRow(key)
+  return row ? (JSON.parse(row.value) as T) : null
+}
+
 export function cacheSet(key: string, value: unknown, ttlMs: number) {
   const expiresAt = Date.now() + ttlMs
   const json = JSON.stringify(value)
