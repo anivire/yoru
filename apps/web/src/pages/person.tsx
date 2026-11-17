@@ -64,7 +64,7 @@ function PersonHeader({ person, crumbs }: { person: Person; crumbs: Crumb[] }) {
           {person.imageUrl ? (
             <Lightbox src={person.imageUrl} title={person.name} closeLabel={t('common.close')}>
               <button type="button" aria-label={person.name} className="group aspect-[2/3] w-full cursor-zoom-in overflow-hidden rounded-xl bg-muted shadow-2xl">
-                <Image src={person.imageUrl} alt="" className="h-full w-full object-cover transition-[filter] duration-100 group-hover:brightness-110" />
+                <Image src={person.imageUrl} alt="" className="h-full w-full object-cover transition-[filter] duration-200 group-hover:brightness-110" />
               </button>
             </Lightbox>
           ) : (

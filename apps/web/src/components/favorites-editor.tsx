@@ -100,7 +100,7 @@ function Editor({ profile }: { profile: ProfileSettings }) {
                 return (
                   <button key={entry.malId} type="button" aria-pressed={pinned} onClick={() => toggle(entry.anime)} className="group flex cursor-pointer flex-col gap-1.5 pb-4 text-left">
                     <span className={cn('relative block aspect-[2/3] overflow-hidden rounded-xl bg-muted', pinned && 'ring-2 ring-accent ring-offset-2 ring-offset-popover')}>
-                      {entry.anime.imageUrl ? <Image src={entry.anime.imageUrl} alt="" className="size-full object-cover transition-[filter] group-hover:brightness-110" /> : null}
+                      {entry.anime.imageUrl ? <Image src={entry.anime.imageUrl} alt="" className="size-full object-cover transition-[filter] duration-200 group-hover:brightness-110" /> : null}
                       <span className={cn('absolute right-1.5 top-1.5 grid size-6 place-items-center rounded-full transition-opacity [&_svg]:size-4', pinned ? 'bg-accent text-accent-foreground' : 'bg-black/60 text-white opacity-0 group-hover:opacity-100')}>
                         {pinned ? <RiCheckFill /> : <RiAddFill />}
                       </span>

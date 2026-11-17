@@ -65,7 +65,7 @@ function CharacterCard({ character, from }: { character: AnimeCharacter; from?: 
       <div className="grid grid-cols-2">
         <Portrait src={character.imageUrl} />
         {va ? (
-          <TLink to={seiyuuPath(va.id, va.name)} state={{ from }} aria-label={va.name} className="transition-[filter] duration-100 hover:brightness-110">
+          <TLink to={seiyuuPath(va.id, va.name)} state={{ from }} aria-label={va.name} className="transition-[filter] duration-200 hover:brightness-110">
             <Portrait src={va.imageUrl} />
           </TLink>
         ) : (
@@ -145,7 +145,7 @@ export function ScreenshotsSection({ malId }: { malId: number }) {
         {data.map((shot, i) => (
           <Lightbox key={shot.full} src={shot.full} title={`${t('anime.screenshots')} ${i + 1}`} closeLabel={t('common.close')}>
             <button type="button" className="group aspect-video cursor-zoom-in overflow-hidden rounded-xl bg-muted">
-              <Image src={shot.thumb} alt="" className="h-full w-full object-cover transition-[filter] duration-100 group-hover:brightness-110" />
+              <Image src={shot.thumb} alt="" className="h-full w-full object-cover transition-[filter] duration-200 group-hover:brightness-110" />
             </button>
           </Lightbox>
         ))}
