@@ -44,7 +44,7 @@ function HoverPreview({ anime, footer, children }: { anime: AnimeSummary; footer
       <HoverCardContent side="right" className="w-80 p-3">
         <div className="flex gap-3">
           <div className="aspect-[2/3] w-20 shrink-0 overflow-hidden rounded-lg bg-muted">
-            {anime.imageUrl ? <Image src={anime.imageUrl} alt="" className="h-full w-full object-cover" /> : null}
+            {anime.imageUrl ? <Image src={anime.imageUrl} alt="" fallback className="h-full w-full object-cover" /> : null}
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <div className="line-clamp-2 text-sm font-semibold leading-snug">{title(anime)}</div>

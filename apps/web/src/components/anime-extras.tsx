@@ -54,7 +54,7 @@ function RelatedSection({ malId }: { malId: number }) {
 }
 
 function Portrait({ src }: { src: string | null }) {
-  return <div className="aspect-[3/4] overflow-hidden bg-muted">{src ? <Image src={src} alt="" loading="lazy" className="h-full w-full object-cover" /> : null}</div>
+  return <div className="aspect-[3/4] overflow-hidden bg-muted">{src ? <Image src={src} alt="" loading="lazy" fallback className="h-full w-full object-cover" /> : null}</div>
 }
 
 function CharacterCard({ character, from }: { character: AnimeCharacter; from?: Crumb }) {

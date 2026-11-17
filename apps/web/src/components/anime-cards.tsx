@@ -15,7 +15,7 @@ import { FriendStack, useFriendsOn } from './friend-titles'
 export function Poster({ src, alt, className }: { src: string | null; alt: string; className?: string }) {
   return (
     <div className={cn('relative overflow-hidden rounded-xl bg-muted', className)}>
-      {src ? <Image src={src} alt={alt} loading="lazy" className="absolute inset-0 h-full w-full object-cover" /> : null}
+      {src ? <Image src={src} alt={alt} loading="lazy" fallback className="absolute inset-0 h-full w-full object-cover" /> : null}
     </div>
   )
 }
@@ -140,6 +140,7 @@ export function AnimeCard({
             src={anime.imageUrl}
             alt={anime.title}
             loading="lazy"
+            fallback
             className="absolute inset-0 h-full w-full zoom-layer object-cover transition-transform duration-150 ease-out group-hover:will-change-transform group-hover:[--zoom:1.05]"
           />
         ) : null}

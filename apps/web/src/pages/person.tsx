@@ -64,7 +64,7 @@ function PersonHeader({ person, crumbs }: { person: Person; crumbs: Crumb[] }) {
           {person.imageUrl ? (
             <Lightbox src={person.imageUrl} title={person.name} closeLabel={t('common.close')}>
               <button type="button" aria-label={person.name} className="group aspect-[2/3] w-full cursor-zoom-in overflow-hidden rounded-xl bg-muted shadow-2xl">
-                <Image src={person.imageUrl} alt="" className="h-full w-full object-cover transition-[filter] duration-200 group-hover:brightness-110" />
+                <Image src={person.imageUrl} alt="" fallback className="h-full w-full object-cover transition-[filter] duration-200 group-hover:brightness-110" />
               </button>
             </Lightbox>
           ) : (
@@ -130,7 +130,7 @@ function RoleRow({ role, status }: { role: PersonRole; status?: ListStatus }) {
       <div className="scrollbar-none flex min-w-0 gap-3 overflow-x-auto">
         {role.characters.map((c) => (
           <div key={c.id} className="flex w-24 shrink-0 flex-col gap-2 sm:w-28">
-            <div className="aspect-[2/3] overflow-hidden rounded-xl bg-muted shadow-sm">{c.imageUrl ? <Image src={c.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" /> : null}</div>
+            <div className="aspect-[2/3] overflow-hidden rounded-xl bg-muted shadow-sm">{c.imageUrl ? <Image src={c.imageUrl} alt="" loading="lazy" fallback className="h-full w-full object-cover" /> : null}</div>
             <div className="px-0.5">
               <div className="line-clamp-2 text-sm font-medium leading-snug">{c.name}</div>
               <div className="mt-0.5 truncate text-xs text-muted-foreground">{t(`anime.role.${c.role}`)}</div>
