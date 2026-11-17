@@ -7,7 +7,7 @@ import { env } from '../env'
 import { UpstreamError, badRequest, notFound } from '../lib/http'
 import { setExternalProviders } from '../providers/chain'
 import type { AnimeData, MetadataProvider, SearchProvider, VideoProvider } from '../providers/types'
-import { type AnimeRow, getAnimeRow, toSummary, upsertAnime } from '../services/anime'
+import { type AnimeRow, getAnimeRow, storedSummaries } from '../services/anime'
 import { proxyUrl } from './proxy'
 import { ExtensionError, callExtension } from './sandbox'
 
@@ -179,10 +179,10 @@ function searchProvider(row: ExtensionRow): SearchProvider {
     accepts: (query) => !query.genres.length,
     async search(query) {
       const raw = await call(row.id, 'search', [{ q: query.q, page: query.page, type: query.type ?? null, status: query.status ?? null }], searchSchema)
-      const items = raw.items.map((item) => {
-        upsertAnime(animeData(item, item.malId), { onlyIfMissing: true })
-        return toSummary(getAnimeRow(item.malId)!)
-      })
+      const items = storedSummaries(
+        raw.items.map((item) => animeData(item, item.malId)),
+        `ext:${row.id}`,
+      )
       return { items, hasNextPage: raw.hasNextPage ?? false, total: null }
     },
   }

@@ -1,4 +1,5 @@
 import type { Genre, SearchResult } from '@yoru/shared'
+import { cards } from '../services/cards'
 import { activeProviders } from './chain'
 import type { SearchQuery } from './types'
 
@@ -25,7 +26,7 @@ export async function searchAnime(query: SearchQuery): Promise<SearchResult> {
     if (!provider.accepts(query) || (query.genres.length && provider.id !== genresFrom)) continue
     try {
       const page = await provider.search(query)
-      return { items: page.items, pagination: { page: query.page, hasNextPage: page.hasNextPage, total: page.total }, provider: provider.id, features: provider.features }
+      return { items: await cards(page.items), pagination: { page: query.page, hasNextPage: page.hasNextPage, total: page.total }, provider: provider.id, features: provider.features }
     } catch (error) {
       lastError = error
     }

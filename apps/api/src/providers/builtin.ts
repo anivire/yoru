@@ -1,11 +1,10 @@
 import { UpstreamError } from '../lib/http'
 import { sourceEnabled } from '../lib/sources'
 import { now } from '../db/client'
-import { fetchFromA365, fromJikan, getAnimeRow, toSummary, upsertA365Summaries, upsertAnime, upsertJikanSummaries } from '../services/anime'
+import { fetchFromA365, fromJikan, storedSummaries, upsertA365Summaries } from '../services/anime'
 import { type AniListFullMedia, anilist } from '../services/anilist'
 import { type KitsuEntry, kitsu } from '../services/kitsu'
 import { anime365 } from '../services/anime365'
-import { fillMissing } from '../services/discover'
 import { jikan } from '../services/jikan'
 import { shikiSummaries, shikimori } from '../services/shikimori'
 import type { AnimeData, MetadataProvider, SearchProvider, SearchQuery } from './types'
@@ -102,14 +101,8 @@ function fromKitsu(entry: KitsuEntry): KeyedAnime | null {
   }
 }
 
-function storeSummaries(items: (KeyedAnime | null)[]) {
-  const seen = new Set<number>()
-  return items
-    .filter((item): item is KeyedAnime => item !== null && !seen.has(item.malId) && Boolean(seen.add(item.malId)))
-    .map((item) => {
-      upsertAnime(item, { onlyIfMissing: true })
-      return toSummary(getAnimeRow(item.malId)!)
-    })
+function keyed(items: (KeyedAnime | null)[]): KeyedAnime[] {
+  return items.filter((item): item is KeyedAnime => item !== null)
 }
 
 function hasFilters(query: SearchQuery): boolean {
@@ -141,6 +134,7 @@ const anilistMetadata: MetadataProvider = {
     const media = await anilist.anime(malId)
     return media ? fromAniList(media) : null
   },
+  many: async (malIds) => keyed((await anilist.many(malIds)).map(fromAniList)),
 }
 
 const kitsuMetadata: MetadataProvider = {
@@ -168,7 +162,7 @@ const anilistSearch: SearchProvider = {
       format: query.type ? (ANILIST_FORMATS[query.type] ?? null) : null,
       status: query.status ? (ANILIST_FILTER_STATUS[query.status] ?? null) : null,
     })
-    return { items: storeSummaries(res.media.map(fromAniList)), hasNextPage: res.hasNextPage, total: null }
+    return { items: storedSummaries(keyed(res.media.map(fromAniList)), 'anilist'), hasNextPage: res.hasNextPage, total: null }
   },
 }
 
@@ -186,7 +180,7 @@ const kitsuSearch: SearchProvider = {
       subtype: query.type ? (KITSU_FILTER_TYPE[query.type] ?? null) : null,
       status: query.status ? (KITSU_FILTER_STATUS[query.status] ?? null) : null,
     })
-    return { items: storeSummaries(res.entries.map(fromKitsu)), hasNextPage: res.hasNextPage, total: null }
+    return { items: storedSummaries(keyed(res.entries.map(fromKitsu)), 'kitsu'), hasNextPage: res.hasNextPage, total: null }
   },
 }
 
@@ -212,7 +206,7 @@ const jikanSearch: SearchProvider = {
             ...query.params,
           }),
         )
-    return { items: upsertJikanSummaries(res.data), hasNextPage: res.pagination.has_next_page, total: res.pagination.items?.total ?? null }
+    return { items: storedSummaries(res.data.map(fromJikan), 'jikan'), hasNextPage: res.pagination.has_next_page, total: res.pagination.items?.total ?? null }
   },
   genres: async () => (await jikan.genres()).map((g) => ({ id: g.mal_id, name: g.name, count: g.count })),
 }
@@ -252,7 +246,7 @@ const shikimoriSearch: SearchProvider = {
     const status = query.status ? SHIKI_STATUS[query.status] : undefined
     if (status) params.status = status
     const rows = await shikimori.animes(params)
-    return { items: fillMissing(shikiSummaries(rows)), hasNextPage: rows.length === PAGE_SIZE, total: null }
+    return { items: shikiSummaries(rows), hasNextPage: rows.length === PAGE_SIZE, total: null }
   },
 }
 

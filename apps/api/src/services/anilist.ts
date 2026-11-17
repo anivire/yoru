@@ -93,6 +93,8 @@ const FULL_MEDIA = `idMal format status episodes duration season seasonYear aver
   title { romaji english native } coverImage { extraLarge large } studios(isMain: true) { nodes { name } }
   startDate { year month day } endDate { year month day } trailer { site id }`
 
+const MANY_QUERY = `query ($ids: [Int]) { Page(perPage: 50) { media(idMal_in: $ids, type: ANIME) { ${FULL_MEDIA} } } }`
+
 const ANIME_QUERY = `query ($idMal: Int) { Media(idMal: $idMal, type: ANIME) { ${FULL_MEDIA} } }`
 
 const SEARCH_QUERY = `query ($page: Int, $perPage: Int, $search: String, $format: [MediaFormat], $status: MediaStatus, $sort: [MediaSort]) {
@@ -124,6 +126,11 @@ export const anilist = {
   },
   staff(id: number, page: number): Promise<AniListStaff | null> {
     return cached(`anilist:staff:${id}:${page}`, 3 * DAY, async () => ({ staff: (await graphql<{ Staff: AniListStaff | null }>(STAFF_QUERY, { id, page }))?.Staff ?? null })).then((r) => r.staff)
+  },
+  async many(malIds: number[]): Promise<AniListFullMedia[]> {
+    const ids = [...new Set(malIds)].slice(0, 50)
+    if (!ids.length) return []
+    return (await graphql<{ Page: { media: AniListFullMedia[] } }>(MANY_QUERY, { ids }))?.Page.media ?? []
   },
   anime(malId: number): Promise<AniListFullMedia | null> {
     return cached(`anilist:anime:${malId}`, DAY / 4, async () => ({ media: (await graphql<{ Media: AniListFullMedia | null }>(ANIME_QUERY, { idMal: malId }))?.Media ?? null })).then((r) => r.media)

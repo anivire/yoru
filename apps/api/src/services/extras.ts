@@ -1,11 +1,13 @@
-import type { AnimeCharacter, AnimeExtras, AnimeSummary, PersonPage, PersonRole, RelatedAnime } from '@yoru/shared'
+import type { AnimeCharacter, AnimeExtras, AnimeSummary, PersonPage, PersonRole, RelatedAnime, WatchOrderEntry } from '@yoru/shared'
 import { inArray } from 'drizzle-orm'
 import { db, now } from '../db/client'
 import { featureEnabled } from '../lib/features'
 import { notFound } from '../lib/http'
 import { anime } from '../db/schema'
 import { type AniListMedia, anilist } from './anilist'
-import { type AnimeRow, toSummary, upsertAnime } from './anime'
+import { toSummary, upsertAnime } from './anime'
+import { cards } from './cards'
+import { shikimori, shikiSummaries } from './shikimori'
 
 const STATUS: Record<string, string> = { FINISHED: 'finished', RELEASING: 'airing', NOT_YET_RELEASED: 'upcoming', CANCELLED: 'finished', HIATUS: 'airing' }
 const TYPES: Record<string, string> = { TV: 'tv', TV_SHORT: 'tv', MOVIE: 'movie', SPECIAL: 'special', OVA: 'ova', ONA: 'ona', MUSIC: 'music' }
@@ -31,21 +33,21 @@ function fromMedia(m: AniListMedia & { idMal: number }) {
   }
 }
 
-function summaries(items: AniListMedia[]): Map<number, AnimeSummary> {
+async function summaries(items: AniListMedia[]): Promise<Map<number, AnimeSummary>> {
   const valid = items.filter((m): m is AniListMedia & { idMal: number } => Boolean(m.idMal) && m.type !== 'MANGA')
   const ids = [...new Set(valid.map((m) => m.idMal))]
-  const existing = new Map(ids.length ? db.select().from(anime).where(inArray(anime.malId, ids)).all().map((r) => [r.malId, r]) : [])
-  const result = new Map<number, AnimeSummary>()
-  for (const m of valid) {
-    if (result.has(m.idMal)) continue
-    const row = existing.get(m.idMal)
-    const data = fromMedia(m)
-    if (!row) upsertAnime(data, { onlyIfMissing: true })
-    else if (!row.imageUrl && data.imageUrl) upsertAnime({ ...row, imageUrl: data.imageUrl })
-    const merged = row ? { ...row, imageUrl: row.imageUrl ?? data.imageUrl } : ({ ...data, titleRussian: null, latestEpisode: null } as unknown as AnimeRow)
-    result.set(m.idMal, toSummary(merged))
-  }
-  return result
+  if (!ids.length) return new Map()
+  for (const m of valid) upsertAnime(fromMedia(m), { onlyIfMissing: true })
+  const rows = db.select().from(anime).where(inArray(anime.malId, ids)).all()
+  const refined = await cards(rows.map(toSummary))
+  return new Map(refined.map((a) => [a.malId, a]))
+}
+
+export async function watchOrder(malId: number): Promise<WatchOrderEntry[]> {
+  if (!featureEnabled('franchise')) return []
+  const entries = await shikimori.franchise(malId).catch(() => [])
+  const list = await cards(shikiSummaries(entries.map((e) => e.anime)))
+  return entries.map((e, i) => ({ anime: list[i]!, side: e.side, relation: e.relation }))
 }
 
 export async function animeExtras(malId: number): Promise<AnimeExtras> {
@@ -54,14 +56,14 @@ export async function animeExtras(malId: number): Promise<AnimeExtras> {
 
   const relationEdges = media.relations.edges.filter((e) => e.node.type === 'ANIME' && e.node.idMal && e.node.idMal !== malId)
   const recNodes = media.recommendations.nodes.map((n) => n.mediaRecommendation).filter((m): m is AniListMedia => Boolean(m?.idMal) && m!.idMal !== malId)
-  const cards = summaries([...relationEdges.map((e) => e.node), ...recNodes])
+  const known = await summaries([...relationEdges.map((e) => e.node), ...recNodes])
 
   const rank = (r: string) => {
     const i = RELATION_ORDER.indexOf(r)
     return i === -1 ? RELATION_ORDER.length : i
   }
   const relations: RelatedAnime[] = relationEdges
-    .map((e) => ({ relation: e.relationType.toLowerCase(), anime: cards.get(e.node.idMal!)! }))
+    .map((e) => ({ relation: e.relationType.toLowerCase(), anime: known.get(e.node.idMal!)! }))
     .filter((r) => r.anime)
     .sort((a, b) => rank(a.relation.toUpperCase()) - rank(b.relation.toUpperCase()) || (a.anime.year ?? 9999) - (b.anime.year ?? 9999))
 
@@ -79,7 +81,7 @@ export async function animeExtras(malId: number): Promise<AnimeExtras> {
     })
 
   const relatedIds = new Set(relations.map((r) => r.anime.malId))
-  const recommendations = recNodes.map((m) => cards.get(m.idMal!)).filter((a): a is AnimeSummary => Boolean(a) && !relatedIds.has(a!.malId))
+  const recommendations = recNodes.map((m) => known.get(m.idMal!)).filter((a): a is AnimeSummary => Boolean(a) && !relatedIds.has(a!.malId))
 
   return { relations, characters, recommendations }
 }
@@ -114,10 +116,10 @@ export async function personPage(id: number, page: number): Promise<PersonPage> 
   const staff = featureEnabled('related') ? await anilist.staff(id, page) : null
   if (!staff?.name.full) throw notFound('PERSON_NOT_FOUND')
   const edges = staff.characterMedia.edges.filter((e) => e.node.type === 'ANIME' && e.node.idMal)
-  const cards = summaries(edges.map((e) => e.node))
+  const known = await summaries(edges.map((e) => e.node))
   const byAnime = new Map<number, PersonRole>()
   for (const e of edges) {
-    const anime = cards.get(e.node.idMal!)
+    const anime = known.get(e.node.idMal!)
     if (!anime) continue
     const role = byAnime.get(anime.malId) ?? { anime, characters: [] }
     byAnime.set(anime.malId, role)

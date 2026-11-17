@@ -169,6 +169,13 @@
       "when": 1794930299286,
       "tag": "0023_clamp_latest_episode",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1794949390440,
+      "tag": "0024_anime_source",
+      "breakpoints": true
     }
   ]
 }

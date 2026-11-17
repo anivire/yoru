@@ -3,7 +3,7 @@ import type { AnimeDetails, AnimeSummary } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { anime } from '../db/schema'
 import { UpstreamError } from '../lib/http'
-import { activeProviders } from '../providers/chain'
+import { activeProviders, primaryMetadata } from '../providers/chain'
 import { nextBroadcast } from '../lib/time'
 import { airedEpisode } from './aired'
 import { type A365Series, absoluteA365Url, anime365 } from './anime365'
@@ -121,26 +121,28 @@ function fromA365(s: A365Series, malId: number): AnimeInsert {
   }
 }
 
-export function upsertAnime(data: AnimeInsert, opts: { details?: boolean; onlyIfMissing?: boolean } = {}) {
-  const values = opts.details ? { ...data, detailsFetchedAt: now() } : data
+export function upsertAnime(data: AnimeInsert, opts: { details?: boolean; onlyIfMissing?: boolean; source?: string } = {}) {
+  const values = opts.details ? { ...data, detailsFetchedAt: now(), ...(opts.source ? { source: opts.source } : {}) } : data
   const { malId: _malId, ...set } = values
   const query = db.insert(anime).values(values)
   if (opts.onlyIfMissing) query.onConflictDoNothing().run()
   else query.onConflictDoUpdate({ target: anime.malId, set }).run()
 }
 
-export function upsertJikanSummaries(items: JikanAnime[]): AnimeSummary[] {
-  const existing = new Map(
-    items.length
-      ? db.select().from(anime).where(inArray(anime.malId, items.map((i) => i.mal_id))).all().map((r) => [r.malId, r])
-      : [],
-  )
-  return items.map((item) => {
-    const data = fromJikan(item)
-    const row = existing.get(item.mal_id)
-    if (!row) upsertAnime(data)
-    else if (!row.detailsFetchedAt) upsertAnime({ ...data, latestEpisode: row.latestEpisode })
-    return toSummary({ ...(row ?? ({} as AnimeRow)), ...data, latestEpisode: row?.latestEpisode ?? null } as AnimeRow)
+export function needsCard(row: AnimeRow | undefined, primary: string | null): boolean {
+  if (!row?.detailsFetchedAt) return true
+  return Boolean(primary && row.source && row.source !== primary)
+}
+
+export function storedSummaries(items: AnimeInsert[], from: string): AnimeSummary[] {
+  const primary = primaryMetadata()?.id
+  const seen = new Set<number>()
+  const unique = items.filter((item): item is AnimeInsert & { malId: number } => typeof item.malId === 'number' && !seen.has(item.malId) && Boolean(seen.add(item.malId)))
+  for (const item of unique) upsertAnime(item, primary === from ? { details: true, source: from } : { onlyIfMissing: true })
+  const rows = new Map(unique.length ? db.select().from(anime).where(inArray(anime.malId, unique.map((i) => i.malId))).all().map((r) => [r.malId, r]) : [])
+  return unique.flatMap((item) => {
+    const row = rows.get(item.malId)
+    return row ? [toSummary(row)] : []
   })
 }
 
@@ -160,10 +162,11 @@ function maxAge(row: AnimeRow): number {
 
 export async function ensureAnime(malId: number, opts: { force?: boolean } = {}): Promise<AnimeRow> {
   const row = getAnimeRow(malId)
-  const fresh = row?.detailsFetchedAt && Date.now() - Date.parse(row.detailsFetchedAt) < maxAge(row)
+  const providers = activeProviders('metadata')
+  const fresh = row && !needsCard(row, providers[0]?.id ?? null) && Date.now() - Date.parse(row.detailsFetchedAt!) < maxAge(row)
   if (row && fresh && !opts.force) return row
   let lastError: unknown = null
-  for (const [index, provider] of activeProviders('metadata').entries()) {
+  for (const [index, provider] of providers.entries()) {
     let data: AnimeInsert | null
     try {
       data = await provider.anime(malId)
@@ -173,7 +176,7 @@ export async function ensureAnime(malId: number, opts: { force?: boolean } = {})
       continue
     }
     if (!data) continue
-    upsertAnime({ ...data, malId }, { details: index === 0 })
+    upsertAnime({ ...data, malId }, { details: index === 0, source: provider.id })
     return getAnimeRow(malId)!
   }
   if (row) return row
@@ -188,14 +191,10 @@ export async function fetchFromA365(malId: number): Promise<AnimeInsert> {
 }
 
 export function upsertA365Summaries(rows: A365Series[]): AnimeSummary[] {
-  const result: AnimeSummary[] = []
-  for (const s of rows) {
-    if (!s.myAnimeListId || s.isHentai) continue
-    const data = fromA365(s, s.myAnimeListId)
-    upsertAnime(data, { onlyIfMissing: true })
-    result.push(toSummary(getAnimeRow(s.myAnimeListId)!))
-  }
-  return result
+  return storedSummaries(
+    rows.filter((s) => s.myAnimeListId && !s.isHentai).map((s) => fromA365(s, s.myAnimeListId!)),
+    'anime365',
+  )
 }
 
 export function setLatestEpisode(malId: number, episode: number) {

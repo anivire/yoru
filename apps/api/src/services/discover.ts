@@ -5,22 +5,10 @@ import { featureEnabled } from '../lib/features'
 import { cached } from '../lib/http'
 import { anime, listEntries } from '../db/schema'
 import type { AnimeSummary } from '@yoru/shared'
-import { ensureAnime, getAnimeRow, toSummary, upsertA365Summaries } from './anime'
+import { getAnimeRow, toSummary, upsertA365Summaries } from './anime'
+import { cards } from './cards'
 import { TYPE_TO_KIND, anime365 } from './anime365'
 import { currentSeason, shikiSummaries, shikimori } from './shikimori'
-
-const filling = new Set<number>()
-
-export function fillMissing(items: AnimeSummary[]): AnimeSummary[] {
-  for (const item of items.filter((i) => !i.imageUrl).slice(0, 12)) {
-    if (filling.has(item.malId)) continue
-    filling.add(item.malId)
-    ensureAnime(item.malId)
-      .catch(() => undefined)
-      .finally(() => filling.delete(item.malId))
-  }
-  return items
-}
 
 function a365Date(value: string | undefined): string {
   if (!value) return new Date().toISOString()
@@ -47,7 +35,7 @@ export async function schedule(userId: number, fromIso?: string, toIso?: string)
       .all()
       .map((e) => [e.malId, e.status as ListStatus]),
   )
-  const summaries = fillMissing(shikiSummaries(entries.map((e) => e.anime)))
+  const summaries = await cards(shikiSummaries(entries.map((e) => e.anime)))
   const available = new Map(
     entries.length
       ? db
@@ -109,7 +97,8 @@ async function loadRecent(): Promise<RecentItem[]> {
     result.push({ anime: toSummary(anime), episode, at: a365Date(row.activeDateTime), kind: TYPE_TO_KIND[row.type] ?? 'sub', author: row.authorsSummary?.trim() || null })
     if (result.length >= 24) break
   }
-  return result
+  const refined = await cards(result.map((r) => r.anime))
+  return result.map((r, i) => ({ ...r, anime: refined[i]! }))
 }
 
 const COLLECTIONS = {
@@ -145,7 +134,7 @@ export function collection(name: Collection): Promise<AnimeSummary[]> {
   return memoized(`collection:${name}`, async () => {
     const { season, ...params } = { season: undefined, ...COLLECTIONS[name] }
     const rows = await shikimori.animes({ ...params, ...(season ? { season: currentSeason() } : {}) })
-    return fillMissing(shikiSummaries(rows))
+    return cards(shikiSummaries(rows))
   })
 }
 
@@ -153,6 +142,6 @@ export function trending(genre: number | null): Promise<AnimeSummary[]> {
   if (!featureEnabled('discover')) return Promise.resolve([])
   return memoized(`trending:${genre ?? 'all'}`, async () => {
     const rows = await shikimori.animes({ season: currentSeason(), order: 'popularity', ...(genre ? { genre } : {}) })
-    return fillMissing(shikiSummaries(rows))
+    return cards(shikiSummaries(rows))
   })
 }

@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { createMiddleware } from 'hono/factory'
-import { type AnimePage, type ProviderCandidate, type Screenshot, type SkipTime, type WatchOrderEntry, providerMatchSchema } from '@yoru/shared'
+import { type AnimePage, type ProviderCandidate, type Screenshot, type SkipTime, providerMatchSchema } from '@yoru/shared'
 import { type AppEnv, requireAuth } from '../lib/auth'
 import { featureEnabled } from '../lib/features'
 import { chainSignature } from '../providers/chain'
@@ -10,10 +10,10 @@ import { ensureAnime, toDetails } from '../services/anime'
 import { anime365, seriesTitle } from '../services/anime365'
 import { episodeList } from '../services/episodes'
 import { getEntry, toEntry } from '../services/lists'
-import { animeExtras, personPage } from '../services/extras'
+import { animeExtras, personPage, watchOrder } from '../services/extras'
 import { animeLinks } from '../services/links'
 import { resolveMatch, setManualMatch } from '../services/provider'
-import { shikimori, shikiSummaries } from '../services/shikimori'
+import { shikimori } from '../services/shikimori'
 import { skipTimes } from '../services/aniskip'
 
 const RESPONSE_TTL = 10 * 60_000
@@ -86,11 +86,7 @@ export const animeRoutes = new Hono<AppEnv>()
     return c.json({ url: shots[0] ?? null })
   })
   .get('/:id/extras', async (c) => c.json(await animeExtras(intParam(c, 'id'))))
-  .get('/:id/franchise', async (c) => {
-    const entries = featureEnabled('franchise') ? await shikimori.franchise(intParam(c, 'id')).catch(() => []) : []
-    const cards = shikiSummaries(entries.map((e) => e.anime))
-    return c.json(entries.map((e, i): WatchOrderEntry => ({ anime: cards[i]!, side: e.side, relation: e.relation })))
-  })
+  .get('/:id/franchise', async (c) => c.json(await watchOrder(intParam(c, 'id'))))
   .get('/:id/screenshots', async (c) => c.json(featureEnabled('screenshots') ? await shikimori.gallery(intParam(c, 'id')).catch(() => [] as Screenshot[]) : []))
   .get('/:id/match', async (c) => c.json(await resolveMatch(intParam(c, 'id'))))
   .get('/:id/links', async (c) => c.json(await animeLinks(intParam(c, 'id'))))

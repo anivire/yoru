@@ -80,6 +80,10 @@ export function isActive(category: ChainCategory, id: string): boolean {
   return activeProviders(category).some((p) => p.id === id)
 }
 
+export function primaryMetadata(): ProviderMap['metadata'] | null {
+  return activeProviders('metadata')[0] ?? null
+}
+
 export function primaryProvider(category: ChainCategory): string | null {
   return activeProviders(category)[0]?.id ?? null
 }

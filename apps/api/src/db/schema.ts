@@ -95,6 +95,7 @@ export const anime = sqliteTable('anime', {
   trailerUrl: text('trailer_url'),
   latestEpisode: integer('latest_episode'),
   detailsFetchedAt: text('details_fetched_at'),
+  source: text('source'),
   updatedAt: text('updated_at').notNull(),
 })
 
