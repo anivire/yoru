@@ -21,7 +21,8 @@ Lists, a player with subtitles or dubs, a release calendar, friends and a shared
 **Watch**
 - Player with video from Anime365, Kodik or your own extensions. If the first source has no episode, the next one is used.
 - Subtitles or voice-over, a favourite translation author for each, and playback that resumes where you stopped.
-- Skip buttons for openings and endings.
+- Skip buttons for openings and endings; skip one once and the next ones skip themselves.
+- Frame previews on the timeline, keyboard shortcuts (press `?` in the player) and picture-in-picture.
 - Watch together (beta): a room where pause, seeking, speed, the episode and the translation stay in sync for everyone.
 
 **Track**
@@ -35,7 +36,8 @@ Lists, a player with subtitles or dubs, a release calendar, friends and a shared
 - Home page with continue watching, upcoming episodes and a watch activity grid.
 - Discover page with seasonal highlights, trending, top rated, upcoming and fresh translations.
 - Schedule as a month calendar of aired and upcoming episodes.
-- Anime pages with related titles in watch order, characters and voice actors, similar anime, screenshots and the trailer.
+- Anime pages with the franchise watch order (the main story with side stories, recaps and specials under it), characters and voice actors you can filter and search, similar anime, screenshots and the trailer.
+- Voice actor pages with every role and the characters they played.
 
 **Together**
 - Profiles with an avatar (GIFs too), favourites and privacy settings for the list, stats and friends.
@@ -124,7 +126,7 @@ Everything yoru takes from other services is set up in **Management → Sources*
 |---|---|---|
 | **Primary** | [MyAnimeList](https://myanimelist.net) via [Jikan](https://jikan.moe), [AniList](https://anilist.co), [Shikimori](https://shikimori.io), [Kitsu](https://kitsu.app), [Anime365](https://smotret-anime.app) | Anime data and search. Providers are asked top to bottom until one answers; only MyAnimeList is on by default. |
 | **Video** | [Anime365](https://smotret-anime.app), [AniLibria](https://anilibria.top), Kodik | The player, in order. |
-| **Features** | Shikimori, AniList, [AniSkip](https://aniskip.com), GitHub | Discover and schedule, screenshots, Russian titles, related titles and characters, skip times, the update check. Each has its own switch. |
+| **Features** | Shikimori, AniList, [AniSkip](https://aniskip.com), GitHub | Discover and schedule, screenshots, Russian titles, franchise watch order, related titles and characters, skip times, the update check. Each has its own switch. |
 
 ## Configuration
 

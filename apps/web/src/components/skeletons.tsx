@@ -178,6 +178,7 @@ export function AnimePageSkeleton({ single }: { single?: boolean }) {
         </div>
       </div>
       <div className="page-frame w-full px-4 pb-8 pt-4 sm:px-6 sm:pt-(--page-top,2rem)">
+        <WatchOrderSkeleton />
         <TextLine className="mb-4 text-xl font-semibold" bar="w-24" />
         <div className="mb-12 flex gap-4 overflow-hidden">
           {[0, 1, 2, 3].map((i) => (
@@ -208,6 +209,26 @@ export function AnimePageSkeleton({ single }: { single?: boolean }) {
         </div>
       </div>
     </>
+  )
+}
+
+export function WatchOrderSkeleton({ className }: { className?: string }) {
+  return (
+    <div className={cn('mb-12', className)}>
+      <TextLine className="mb-4 text-xl font-semibold" bar="w-48" />
+      <div className="gap-x-6 lg:columns-2">
+        {[false, true, false, false, true, false].map((side, i) => (
+          <div key={i} className={cn('flex break-inside-avoid items-center gap-3 py-1.5 pr-3', side ? 'pl-3 sm:pl-12' : 'pl-3')}>
+            {side ? <Skeleton className="size-4 shrink-0 rounded" /> : <Skeleton className="size-7 shrink-0 rounded-full" />}
+            <Skeleton className={cn('shrink-0 rounded-md', side ? 'h-11 w-8' : 'h-14 w-10')} />
+            <div className="min-w-0 flex-1">
+              <TextLine className={side ? 'text-[0.8125rem]' : 'text-sm'} bar={side ? 'w-2/5' : 'w-3/5'} />
+              <TextLine className="mt-0.5 text-xs" bar="w-1/4" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 

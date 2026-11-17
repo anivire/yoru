@@ -24,6 +24,7 @@ export const keys = {
   match: (id: number) => ['match', id] as const,
   links: (id: number) => ['links', id] as const,
   extras: (id: number) => ['extras', id] as const,
+  franchise: (id: number) => ['franchise', id] as const,
   screenshots: (id: number) => ['screenshots', id] as const,
   list: (params: object) => ['list', params] as const,
   listStatuses: ['list-statuses'] as const,
@@ -216,7 +217,6 @@ export function useDeleteEntry(malId: number) {
   })
 }
 
-export function errorMessage(error: unknown, t: (key: string) => string): string {
 export function cachedEpisodeCount(client: QueryClient, malId: number): number | null {
   const seen = new Set<object>()
   const find = (value: unknown, depth: number): number | null | undefined => {
@@ -240,6 +240,7 @@ export function cachedEpisodeCount(client: QueryClient, malId: number): number |
   return null
 }
 
+export function errorMessage(error: unknown, t: (key: string) => string): string {
   if (!(error instanceof Error)) return t('common.error')
   const map: Record<string, string> = {
     ANIME365_TOKEN_MISSING: 'player.tokenMissing',

@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import type { AnimeCharacter } from '@yoru/shared'
-import { Image, Lightbox, Skeleton, cn } from '@yoru/ui'
-import type { ReactNode } from 'react'
+import type { AnimeCharacter, ListStatus, WatchOrderEntry } from '@yoru/shared'
+import { Button, Image, Input, Lightbox, Segmented, Skeleton, cn } from '@yoru/ui'
+import { RiCornerDownRightLine, RiSearchLine } from '@remixicon/react'
+import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation } from 'react-router'
 import { api } from '../lib/api'
@@ -9,8 +10,10 @@ import { seasonLabel, typeLabel } from '../lib/format'
 import { keys } from '../lib/queries'
 import { AnimeCard, Rail } from './anime-cards'
 import { TLink } from './transition-link'
-import { seiyuuPath, useAnimeTitle } from '../lib/anime-title'
+import { animePath, seiyuuPath, useAnimeTitle } from '../lib/anime-title'
+import { StatusText } from '../lib/list-status'
 import type { Crumb } from './breadcrumbs'
+import { WatchOrderSkeleton } from './skeletons'
 
 function useListStatuses() {
   return useQuery({ queryKey: keys.listStatuses, queryFn: api.listStatuses, staleTime: 60_000 }).data
@@ -32,13 +35,93 @@ function Section({ title, action, className, children }: { title: string; action
   )
 }
 
-function RelatedSection({ malId }: { malId: number }) {
+const WATCH_ORDER_PREVIEW = 6
+
+export function WatchOrderSection({ malId, className }: { malId: number; className?: string }) {
+  const { t } = useTranslation()
+  const { data, isPending } = useQuery({ queryKey: keys.franchise(malId), queryFn: () => api.franchise(malId), staleTime: 60 * 60_000 })
+  const statuses = useListStatuses()
+  const [open, setOpen] = useState(false)
+  if (isPending) return <WatchOrderSkeleton />
+  if (!data) return null
+  if (data.length < 2) return <RelatedSection malId={malId} className={className} />
+  const numbers = new Map<number, number>()
+  for (const e of data) if (!e.side) numbers.set(e.anime.malId, numbers.size + 1)
+  const current = Math.max(0, data.findIndex((e) => e.anime.malId === malId))
+  const collapsible = data.length > WATCH_ORDER_PREVIEW + 2
+  const start = collapsible && !open ? Math.min(Math.max(0, current - 2), data.length - WATCH_ORDER_PREVIEW) : 0
+  const shown = collapsible && !open ? data.slice(start, start + WATCH_ORDER_PREVIEW) : data
+  const groups: WatchOrderEntry[][] = []
+  for (const entry of shown) {
+    if (entry.side && groups.length) groups[groups.length - 1]!.push(entry)
+    else groups.push([entry])
+  }
+  return (
+    <Section title={t('anime.watchOrder')} className={className}>
+      <div className={cn('gap-x-6', shown.length > 3 && 'lg:columns-2')}>
+        {groups.map((group) => (
+          <div key={group[0]!.anime.malId} className="flex break-inside-avoid flex-col gap-0.5 pb-0.5">
+            {group.map((entry) => (
+              <WatchOrderRow key={entry.anime.malId} entry={entry} number={numbers.get(entry.anime.malId)} current={entry.anime.malId === malId} status={statuses?.[entry.anime.malId]} />
+            ))}
+          </div>
+        ))}
+      </div>
+      {collapsible ? (
+        <Button variant="ghost" size="sm" className="mt-2" onClick={() => setOpen(!open)}>
+          {open ? t('anime.less') : t('anime.watchOrderAll', { count: data.length })}
+        </Button>
+      ) : null}
+    </Section>
+  )
+}
+
+function WatchOrderRow({ entry, number, current, status }: { entry: WatchOrderEntry; number?: number; current: boolean; status?: ListStatus }) {
+  const { t } = useTranslation()
+  const title = useAnimeTitle()
+  const { anime, side, relation } = entry
+  const meta = [
+    relation ? t(`anime.relation.${relation}`, { defaultValue: '' }) : null,
+    typeLabel(anime.type),
+    anime.year,
+    anime.episodes && anime.episodes > 1 ? `${anime.episodes} ${t('common.episodes')}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+  return (
+    <TLink
+      to={animePath(anime.malId, anime.title)}
+      aria-current={current ? 'page' : undefined}
+      className={cn('group flex items-center gap-3 rounded-xl py-1.5 pr-3 transition-colors', side ? 'pl-3 sm:pl-12' : 'pl-3', current ? 'bg-accent-soft' : 'hover:bg-foreground/[0.04]')}
+    >
+      {side ? (
+        <RiCornerDownRightLine className="size-4 shrink-0 text-subtle-foreground" />
+      ) : (
+        <span className={cn('grid size-7 shrink-0 place-items-center rounded-full font-mono text-xs font-semibold tabular-nums', current ? 'bg-accent text-accent-foreground' : 'bg-foreground/[0.06] text-muted-foreground')}>{number}</span>
+      )}
+      <div className={cn('shrink-0 overflow-hidden rounded-md bg-muted', side ? 'h-11 w-8' : 'h-14 w-10')}>
+        {anime.imageUrl ? <Image src={anime.imageUrl} alt="" loading="lazy" fallback className="h-full w-full object-cover" /> : null}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className={cn('truncate font-medium transition-colors', side ? 'text-[0.8125rem]' : 'text-sm', current ? 'text-accent' : 'group-hover:text-accent')}>{title(anime)}</div>
+        <div className="mt-0.5 truncate text-xs text-muted-foreground">
+          {current ? <span className="font-medium text-accent">{t('anime.watchOrderCurrent')}</span> : null}
+          {current && meta ? ' · ' : null}
+          {meta}
+        </div>
+      </div>
+      {status ? <StatusText status={status} className="hidden text-xs sm:inline-flex" /> : null}
+    </TLink>
+  )
+}
+
+function RelatedSection({ malId, className }: { malId: number; className?: string }) {
   const { t } = useTranslation()
   const { data } = useAnimeExtras(malId)
   const statuses = useListStatuses()
   if (!data?.relations.length) return null
   return (
-    <Section title={t('anime.related')}>
+    <Section title={t('anime.related')} className={className}>
       <Rail size="poster">
         {data.relations.map(({ relation, anime }) => (
           <AnimeCard
@@ -88,21 +171,53 @@ function CharacterCard({ character, from }: { character: AnimeCharacter; from?: 
   )
 }
 
+type RoleFilter = 'all' | 'main' | 'supporting'
+
 function CharactersSection({ malId }: { malId: number }) {
   const { t } = useTranslation()
   const { data } = useAnimeExtras(malId)
   const page = useQuery({ queryKey: keys.anime(malId), queryFn: () => api.anime(malId) }).data
   const title = useAnimeTitle()
   const { pathname } = useLocation()
+  const [role, setRole] = useState<RoleFilter>('all')
+  const [query, setQuery] = useState('')
   if (!data?.characters.length) return null
   const from = page ? { label: title(page.anime), to: pathname } : undefined
+  const q = query.trim().toLowerCase()
+  const shown = data.characters.filter(
+    (c) => (role === 'all' || (role === 'main' ? c.role === 'main' : c.role !== 'main')) && (!q || c.name.toLowerCase().includes(q) || Boolean(c.voiceActor?.name.toLowerCase().includes(q))),
+  )
+  const hasMain = data.characters.some((c) => c.role === 'main')
+  const hasOther = data.characters.some((c) => c.role !== 'main')
   return (
     <Section title={t('anime.characters')}>
-      <Rail>
-        {data.characters.map((c) => (
-          <CharacterCard key={c.id} character={c} from={from} />
-        ))}
-      </Rail>
+      <div className="-mt-1 mb-4 flex flex-wrap items-center gap-2">
+        {hasMain && hasOther ? (
+          <Segmented
+            size="sm"
+            value={role}
+            onChange={setRole}
+            options={[
+              { value: 'all', label: t('anime.characterFilter.all') },
+              { value: 'main', label: t('anime.characterFilter.main') },
+              { value: 'supporting', label: t('anime.characterFilter.supporting') },
+            ]}
+          />
+        ) : null}
+        <div className="relative w-full sm:w-64">
+          <RiSearchLine className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('anime.characterSearch')} className="h-9 rounded-xl pl-9" />
+        </div>
+      </div>
+      {shown.length ? (
+        <Rail>
+          {shown.map((c) => (
+            <CharacterCard key={c.id} character={c} from={from} />
+          ))}
+        </Rail>
+      ) : (
+        <p className="py-6 text-sm text-muted-foreground">{t('anime.noCharacters')}</p>
+      )}
     </Section>
   )
 }
@@ -157,7 +272,6 @@ export function ScreenshotsSection({ malId }: { malId: number }) {
 export function AnimeExtrasSections({ malId }: { malId: number }) {
   return (
     <>
-      <RelatedSection malId={malId} />
       <CharactersSection malId={malId} />
       <RecommendationsSection malId={malId} />
     </>

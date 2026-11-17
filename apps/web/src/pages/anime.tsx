@@ -23,7 +23,7 @@ import { useDocumentTitle } from '../lib/title'
 import { animePath, useAnimeTitle } from '../lib/anime-title'
 import { TLink } from '../components/transition-link'
 import { Breadcrumbs } from '../components/breadcrumbs'
-import { AnimeExtrasSections, ScreenshotsSection } from '../components/anime-extras'
+import { AnimeExtrasSections, ScreenshotsSection, WatchOrderSection } from '../components/anime-extras'
 
 const MORE_SPACE = 24
 
@@ -294,6 +294,7 @@ export function AnimePage() {
       </div>
       <Header anime={data.anime} entry={data.entry} />
       <Page>
+        <WatchOrderSection malId={data.anime.malId} className="mb-12 mt-0" />
         <ScreenshotsSection malId={data.anime.malId} />
         <h2 className="mb-4 text-xl font-semibold tracking-tight">{t('anime.streaming')}</h2>
         <WatchSection anime={data.anime} entry={data.entry} />

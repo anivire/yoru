@@ -33,7 +33,7 @@ const MEDIA = 'idMal type format status episodes season seasonYear averageScore 
 const QUERY = `query ($idMal: Int) {
   Media(idMal: $idMal, type: ANIME) {
     relations { edges { relationType node { ${MEDIA} } } }
-    characters(sort: [ROLE, RELEVANCE, ID], perPage: 18) {
+    characters(sort: [ROLE, RELEVANCE, ID], perPage: 25) {
       edges { role node { id name { full } image { large } } voiceActors(language: JAPANESE, sort: [RELEVANCE, ID]) { id name { full } image { large } } }
     }
     recommendations(sort: [RATING_DESC, ID], perPage: 18) { nodes { mediaRecommendation { ${MEDIA} } } }
@@ -120,7 +120,7 @@ export interface AniListSearch {
 export const anilist = {
   extras(malId: number): Promise<AniListExtras | null> {
     if (!sourceEnabled('anilist')) return Promise.resolve(null)
-    return cached(`anilist:extras:v2:${malId}`, 3 * DAY, async () => ({ media: await request(malId) })).then((r) => r.media)
+    return cached(`anilist:extras:v3:${malId}`, 3 * DAY, async () => ({ media: await request(malId) })).then((r) => r.media)
   },
   staff(id: number, page: number): Promise<AniListStaff | null> {
     return cached(`anilist:staff:${id}:${page}`, 3 * DAY, async () => ({ staff: (await graphql<{ Staff: AniListStaff | null }>(STAFF_QUERY, { id, page }))?.Staff ?? null })).then((r) => r.staff)

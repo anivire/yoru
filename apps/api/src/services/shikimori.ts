@@ -23,6 +23,65 @@ export interface ShikiAnime {
   released_on?: string | null
 }
 
+interface ShikiFranchise {
+  nodes: { id: number; date: number | null }[]
+  links: ShikiLink[]
+}
+
+interface ShikiLink {
+  source_id: number
+  target_id: number
+  relation: string
+}
+
+export interface ShikiFranchiseEntry {
+  anime: ShikiAnime
+  side: boolean
+  relation: string | null
+}
+
+const HIDDEN_KINDS = new Set(['music', 'pv', 'cm'])
+const MAIN_RELATIONS = new Set(['sequel', 'prequel', 'alternative_version', 'alternative_setting'])
+const PARENT_RELATIONS = new Set(['parent_story', 'full_story'])
+const RELATION_NAMES: Record<string, string> = { parent_story: 'side_story', full_story: 'side_story', alternative_version: 'alternative', alternative_setting: 'alternative' }
+
+function franchiseOrder(items: ShikiAnime[], allLinks: ShikiLink[]): ShikiFranchiseEntry[] {
+  const ids = new Set(items.map((i) => i.id))
+  const links = allLinks.filter((l) => ids.has(l.source_id) && ids.has(l.target_id))
+  const main = new Set<number>()
+  for (const l of links) {
+    if (!MAIN_RELATIONS.has(l.relation)) continue
+    main.add(l.source_id)
+    main.add(l.target_id)
+  }
+  for (const i of items) if (i.kind === 'tv') main.add(i.id)
+  if (!main.size && items[0]) main.add(items[0].id)
+  const position = new Map(items.map((i, n) => [i.id, n]))
+  const alternative = (id: number) =>
+    !links.some((l) => l.source_id === id && (l.relation === 'prequel' || l.relation === 'sequel') && position.get(l.target_id)! < position.get(id)!) &&
+    links.some((l) => l.source_id === id && l.relation.startsWith('alternative') && position.get(l.target_id)! < position.get(id)!)
+
+  const children = new Map<number, ShikiAnime[]>()
+  items.forEach((item, index) => {
+    if (main.has(item.id)) return
+    const own = links.filter((l) => l.source_id === item.id && main.has(l.target_id))
+    let parent = (own.find((l) => PARENT_RELATIONS.has(l.relation)) ?? own[0])?.target_id
+    parent ??= links.find((l) => l.target_id === item.id && main.has(l.source_id))?.source_id
+    parent ??= items.slice(0, index).findLast((i) => main.has(i.id))?.id ?? [...main][0]!
+    children.set(parent, [...(children.get(parent) ?? []), item])
+  })
+
+  return items
+    .filter((i) => main.has(i.id))
+    .flatMap((item) => [
+      { anime: item, side: false, relation: alternative(item.id) ? 'alternative' : null },
+      ...(children.get(item.id) ?? []).map((child) => {
+        const relation = links.find((l) => l.source_id === item.id && l.target_id === child.id)?.relation ?? links.find((l) => l.source_id === child.id && l.target_id === item.id)?.relation ?? null
+        return { anime: child, side: true, relation: relation ? (RELATION_NAMES[relation] ?? relation) : null }
+      }),
+    ])
+}
+
 export interface ShikiCalendarEntry {
   next_episode: number
   next_episode_at: string
@@ -143,6 +202,20 @@ export const shikimori = {
   byIds(ids: number[]): Promise<ShikiAnime[]> {
     if (!sourceEnabled('shikimori')) return disabled()
     return enqueue<ShikiAnime[]>('/animes', { ids: ids.join(','), limit: ids.length, censored: 'false' })
+  },
+
+  franchise(id: number): Promise<ShikiFranchiseEntry[]> {
+    if (!sourceEnabled('shikimori')) return disabled()
+    return cached(`shiki:franchise:v2:${id}`, 7 * 24 * HOUR, async () => {
+      const { nodes, links } = await enqueue<ShikiFranchise>(`/animes/${id}/franchise`)
+      if (nodes.length < 2) return []
+      const order = new Map(nodes.map((n) => [n.id, n.date ?? Number.MAX_SAFE_INTEGER]))
+      const ids = [...order.keys()]
+      const items: ShikiAnime[] = []
+      for (let i = 0; i < ids.length; i += 50) items.push(...(await shikimori.byIds(ids.slice(i, i + 50))))
+      const shown = items.filter((a) => !HIDDEN_KINDS.has(a.kind ?? '')).sort((a, b) => order.get(a.id)! - order.get(b.id)!)
+      return shown.length < 2 ? [] : franchiseOrder(shown, links)
+    })
   },
 
   animes(params: Record<string, string | number>): Promise<ShikiAnime[]> {

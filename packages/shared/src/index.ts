@@ -21,7 +21,7 @@ export const DATA_SOURCES = ['anime365', 'jikan', 'shikimori', 'anilist', 'kitsu
 export type DataSourceId = (typeof DATA_SOURCES)[number]
 export type MetadataSource = (typeof METADATA_SOURCES)[number]
 
-export const FEATURES = ['discover', 'screenshots', 'russianTitles', 'related', 'skip', 'updates'] as const
+export const FEATURES = ['discover', 'screenshots', 'russianTitles', 'related', 'franchise', 'skip', 'updates'] as const
 export type FeatureId = (typeof FEATURES)[number]
 
 export const FEATURE_SOURCES: Record<FeatureId, DataSourceId> = {
@@ -29,6 +29,7 @@ export const FEATURE_SOURCES: Record<FeatureId, DataSourceId> = {
   screenshots: 'shikimori',
   russianTitles: 'shikimori',
   related: 'anilist',
+  franchise: 'shikimori',
   skip: 'aniskip',
   updates: 'github',
 }
@@ -244,6 +245,12 @@ export interface SearchResult {
   pagination: Pagination
   provider: string
   features: SearchFeature[]
+}
+
+export interface WatchOrderEntry {
+  anime: AnimeSummary
+  side: boolean
+  relation: string | null
 }
 
 export interface RelatedAnime {
