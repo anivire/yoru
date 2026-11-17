@@ -17,6 +17,17 @@ const RATES = [0.75, 1, 1.25, 1.5, 2]
 const QUALITY_KEY = 'yoru:quality'
 const VOLUME_KEY = 'yoru:volume'
 const SUBS_KEY = 'yoru:subs'
+const AUTOSKIP_KEY = 'yoru:autoskip'
+const AUTOSKIP_DELAY = 4
+
+function readAutoSkip(): SkipTime['kind'][] {
+  try {
+    const value: unknown = JSON.parse(readStorage(AUTOSKIP_KEY) ?? '[]')
+    return Array.isArray(value) ? value.filter((k): k is SkipTime['kind'] => k === 'op' || k === 'ed' || k === 'recap') : []
+  } catch {
+    return []
+  }
+}
 
 export interface PlayerProps {
   sources: StreamSource[]
@@ -113,6 +124,13 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   const [drag, setDrag] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [blocked, setBlocked] = useState(false)
+  const [autoSkip, setAutoSkip] = useState(readAutoSkip)
+  const [entry, setEntry] = useState<{ key: string; from: number } | null>(null)
+  const changeAutoSkip = (kind: SkipTime['kind'], on: boolean) => {
+    const next = on ? [...new Set([...autoSkip, kind])] : autoSkip.filter((k) => k !== kind)
+    setAutoSkip(next)
+    writeStorage(AUTOSKIP_KEY, JSON.stringify(next))
+  }
   const syncRef = useRef(sync)
   const expectRef = useRef<{ playing: boolean; position: number; until: number } | null>(null)
   const syncSeekRef = useRef(0)
@@ -468,7 +486,13 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
     return () => window.removeEventListener('keydown', onKey)
   }, [toggle, seekBy, toggleFullscreen, poke, onNext, onPrev, subsOn])
 
-  const activeSkip = skips?.find((s) => time >= s.start && time < s.end - 1)
+  const segmentAt = (at: number) => skips?.find((s) => at >= s.start && at < s.end - 1)
+  const activeSkip = segmentAt(time)
+  const skipSegment = (s: SkipTime) => {
+    const v = videoRef.current
+    if (v) v.currentTime = Math.min(s.end, v.duration || s.end)
+  }
+  const autoLeft = activeSkip && autoSkip.includes(activeSkip.kind) ? Math.max(1, Math.ceil(AUTOSKIP_DELAY - (entry?.key === `${activeSkip.kind}:${activeSkip.start}` ? time - entry.from : 0))) : null
 
   const goNext = useEffectEvent(() => onEnded())
 
@@ -548,6 +572,10 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
             const v = e.currentTarget
             setTime(v.currentTime)
             if (v.buffered.length) setBuffered(v.buffered.end(v.buffered.length - 1))
+            const segment = segmentAt(v.currentTime)
+            const key = segment ? `${segment.kind}:${segment.start}` : null
+            if (entry?.key !== key) setEntry(key ? { key, from: v.currentTime } : null)
+            else if (segment && entry && autoSkip.includes(segment.kind) && v.currentTime - entry.from >= AUTOSKIP_DELAY) skipSegment(segment)
             save()
           }}
           onEnded={() => {
@@ -589,21 +617,33 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
       ) : null}
 
       {activeSkip && !error && countdown === null ? (
-        <button
-          type="button"
-          onClick={() => {
-            const v = videoRef.current
-            if (v) v.currentTime = Math.min(activeSkip.end, v.duration || activeSkip.end)
-            poke()
-          }}
-          className={cn(
-            'absolute right-3 z-10 flex h-10 cursor-pointer items-center gap-2 rounded-xl bg-white/90 px-4 text-sm font-semibold text-black shadow-2xl transition-[bottom] hover:bg-white sm:right-5',
-            controls ? 'bottom-20 sm:bottom-24' : 'bottom-5',
-          )}
-        >
-          <RiSkipForwardFill className="size-4" />
-          {t(`player.skip.${activeSkip.kind}`)}
-        </button>
+        <div className={cn('absolute right-3 z-10 flex gap-2 transition-[bottom] sm:right-5', controls ? 'bottom-20 sm:bottom-24' : 'bottom-5')}>
+          {autoLeft !== null ? (
+            <button
+              type="button"
+              onClick={() => {
+                changeAutoSkip(activeSkip.kind, false)
+                poke()
+              }}
+              className="h-10 cursor-pointer rounded-xl bg-black/60 px-4 text-sm font-medium text-white shadow-2xl hover:bg-black/75"
+            >
+              {t(`player.watch.${activeSkip.kind}`)}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => {
+              changeAutoSkip(activeSkip.kind, true)
+              skipSegment(activeSkip)
+              poke()
+            }}
+            className="flex h-10 cursor-pointer items-center gap-2 rounded-xl bg-white/90 px-4 text-sm font-semibold text-black shadow-2xl hover:bg-white"
+          >
+            <RiSkipForwardFill className="size-4" />
+            {t(`player.skip.${activeSkip.kind}`)}
+            {autoLeft !== null ? <span className="font-mono tabular-nums text-black/50">{autoLeft}</span> : null}
+          </button>
+        </div>
       ) : null}
 
       {countdown !== null ? (

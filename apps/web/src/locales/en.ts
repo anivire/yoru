@@ -589,6 +589,7 @@ export const en: Messages = {
   },
   player: {
     skip: { op: 'Skip opening', ed: 'Skip ending', recap: 'Skip recap' },
+    watch: { op: 'Watch opening', ed: 'Watch ending', recap: 'Watch recap' },
     segment: { op: 'Opening', ed: 'Ending', recap: 'Recap' },
     nextIn: 'Next episode in',
     watchNext: 'Watch now',
