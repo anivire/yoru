@@ -434,7 +434,6 @@ export const en: Messages = {
     empty: 'Schedule is unavailable',
   },
   search: {
-    people: 'People',
     moreTags: '{{count}} more',
     lessTags: 'Show less',
     title: 'Search',

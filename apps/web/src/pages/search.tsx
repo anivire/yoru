@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 import { AnimeCard, PosterGrid } from '../components/anime-cards'
 import { PosterGridSkeleton } from '../components/skeletons'
-import { UserGrid } from '../components/user-grid'
 import { Page, PageHeader } from '../components/app-shell'
 import { api } from '../lib/api'
 import { useDocumentTitle } from '../lib/title'
@@ -64,7 +63,6 @@ export function SearchPage() {
   }
 
   const genres = useQuery({ queryKey: ['genres'], queryFn: api.genres, staleTime: Infinity })
-  const people = useQuery({ queryKey: ['users', q.trim()], queryFn: () => api.searchUsers(q.trim()), enabled: q.trim().length > 1 })
   const results = useInfiniteQuery({
     queryKey: ['search', q, filters, params.get('sort')],
     queryFn: ({ pageParam }) => api.search({ q, ...filters, sort: params.get('sort') ?? undefined, page: pageParam }),
@@ -159,13 +157,6 @@ export function SearchPage() {
           </div>
         ) : null}
       </div>
-
-      {people.data?.length ? (
-        <section className="mb-10">
-          <h2 className="mb-4 text-xl font-semibold tracking-tight">{t('search.people')}</h2>
-          <UserGrid users={people.data} />
-        </section>
-      ) : null}
 
       <h2 className="mb-4 text-xl font-semibold tracking-tight">{q || filtered ? t('search.results') : t('search.seasonNow')}</h2>
 

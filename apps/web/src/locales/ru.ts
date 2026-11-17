@@ -432,7 +432,6 @@ export const ru = {
     empty: 'Расписание недоступно',
   },
   search: {
-    people: 'Люди',
     moreTags: 'Ещё {{count}}',
     lessTags: 'Свернуть',
     title: 'Поиск',
