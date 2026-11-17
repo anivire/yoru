@@ -11,7 +11,8 @@ RUN npm ci
 COPY . .
 RUN npx nx run-many -t build --projects=api,web
 ARG GIT_COMMIT=
-RUN node -p "require('./package.json').version" > VERSION \n    && (if [ -n "$GIT_COMMIT" ]; then echo "$GIT_COMMIT"; else git rev-parse HEAD 2>/dev/null || true; fi) > COMMIT
+RUN node -p "require('./package.json').version" > VERSION \
+    && (if [ -n "$GIT_COMMIT" ]; then echo "$GIT_COMMIT"; else git rev-parse HEAD 2>/dev/null || true; fi) > COMMIT
 
 FROM node:22-bookworm-slim
 WORKDIR /app
