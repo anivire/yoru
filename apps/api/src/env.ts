@@ -11,6 +11,7 @@ function int(name: string, fallback: number): number {
 }
 
 const dataDir = path.resolve(str('DATA_DIR', './data'))
+const releaseChannel = str('RELEASE_CHANNEL') === 'stable' ? ('stable' as const) : ('edge' as const)
 
 export const env = {
   production: process.env.NODE_ENV === 'production',
@@ -43,9 +44,9 @@ export const env = {
   userAgent: str('USER_AGENT', 'Yoru'),
   appVersion: str('APP_VERSION'),
   gitCommit: str('GIT_COMMIT'),
-  releaseChannel: str('RELEASE_CHANNEL') === 'stable' ? ('stable' as const) : ('edge' as const),
+  releaseChannel,
   githubRepo: str('GITHUB_REPO', 'anivire/yoru'),
-  githubBranch: str('GITHUB_BRANCH', 'master'),
+  githubBranch: str('GITHUB_BRANCH', releaseChannel === 'stable' ? 'master' : 'develop'),
   githubToken: str('GITHUB_TOKEN'),
 }
 

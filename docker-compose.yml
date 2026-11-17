@@ -4,7 +4,7 @@ services:
       context: .
       args:
         GIT_COMMIT: ${GIT_COMMIT:-}
-        RELEASE_CHANNEL: ${RELEASE_CHANNEL:-edge}
+        RELEASE_CHANNEL: ${RELEASE_CHANNEL:-stable}
     restart: unless-stopped
     ports:
       - "3000"
@@ -24,7 +24,7 @@ services:
       MAL_CLIENT_SECRET: ${MAL_CLIENT_SECRET:-}
       METADATA_SOURCE: ${METADATA_SOURCE:-jikan}
       GITHUB_REPO: ${GITHUB_REPO:-anivire/yoru}
-      GITHUB_BRANCH: ${GITHUB_BRANCH:-master}
+      GITHUB_BRANCH: ${GITHUB_BRANCH:-}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       JIKAN_URL: ${JIKAN_URL:-https://api.jikan.moe/v4}
       ANIME365_URL: ${ANIME365_URL:-}
