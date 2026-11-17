@@ -68,9 +68,9 @@ function syncTarget(playback: RoomPlayback, offset: number) {
 const COUNTDOWN_SECONDS = 5
 
 const SEGMENT_TONES: Record<SkipTime['kind'], string> = {
-  op: 'bg-amber-300/75',
-  ed: 'bg-amber-300/75',
-  recap: 'bg-sky-300/70',
+  op: 'bg-accent/50',
+  ed: 'bg-accent/50',
+  recap: 'bg-accent/30',
 }
 
 function pickSource(sources: StreamSource[]): StreamSource {
@@ -716,7 +716,6 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         >
           <div className="relative h-1 w-full overflow-hidden rounded-full bg-white/20 transition-[height] group-hover/seek:h-1.5">
             <div className="absolute inset-y-0 left-0 bg-white/30" style={{ width: `${duration ? (buffered / duration) * 100 : 0}%` }} />
-            <div className="absolute inset-y-0 left-0 bg-accent" style={{ width: `${pct}%` }} />
             {duration
               ? (skips ?? []).map((s) => (
                   <div
@@ -726,6 +725,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
                   />
                 ))
               : null}
+            <div className="absolute inset-y-0 left-0 bg-accent" style={{ width: `${pct}%` }} />
           </div>
           <div className={cn('absolute size-3 -translate-x-1/2 rounded-full bg-accent shadow zoom-layer transition-transform group-hover/seek:[--zoom:1]', drag === null ? '[--zoom:0]' : '[--zoom:1]')} style={{ left: `${pct}%` }} />
           {hover ? (
