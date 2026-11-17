@@ -16,7 +16,9 @@ RUN node -p "require('./package.json').version" > VERSION \
 
 FROM node:22-bookworm-slim
 WORKDIR /app
+ARG RELEASE_CHANNEL=edge
 ENV NODE_ENV=production \
+    RELEASE_CHANNEL=$RELEASE_CHANNEL \
     PORT=3000 \
     DATA_DIR=/data \
     WEB_DIST=/app/web \
