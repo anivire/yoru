@@ -151,7 +151,7 @@ function load(): State {
       theme,
       scheme,
       pageWidth,
-      expandSynopsis: raw.expandSynopsis !== false,
+      expandSynopsis: raw.expandSynopsis === true,
       showHero: raw.showHero !== false,
       homeSections: normalizeSections(raw.homeSections),
       hiddenNav: normalizeNav(raw.hiddenNav),
@@ -170,7 +170,7 @@ function load(): State {
       feedScope: FEED_SCOPES.includes(raw.feedScope as FeedScope) ? (raw.feedScope as FeedScope) : 'me',
     }
   } catch {
-    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: true, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], navOrder: DEFAULT_NAV_ORDER, defaultKind: 'sub', preferredAuthors: {}, navPosition: 'left', navLabels: 'always', backdrop: 'full', iosFullscreen: 'native', autoNext: true, watchedAt: 0.85, titleLanguage: 'romaji', appearanceButton: true, friendAvatars: true, feedScope: 'me' }
+    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: false, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], navOrder: DEFAULT_NAV_ORDER, defaultKind: 'sub', preferredAuthors: {}, navPosition: 'left', navLabels: 'always', backdrop: 'full', iosFullscreen: 'native', autoNext: true, watchedAt: 0.85, titleLanguage: 'romaji', appearanceButton: true, friendAvatars: true, feedScope: 'me' }
   }
 }
 
