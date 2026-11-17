@@ -80,6 +80,7 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
   const title = useAnimeTitle()
   const [params, setParams] = useSearchParams()
   const { defaultKind, preferredAuthors, setPreferredAuthors, pageWidth, autoNext, watchedAt } = useAppearance()
+  const single = anime.episodes === 1
   const side = pageWidth !== '3xl' && pageWidth !== '4xl'
   const paramEpisode = Number(params.get('episode')) || null
 
@@ -426,16 +427,18 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
           {provider?.manualMatch ? <MatchDialog malId={malId} match={match.data} defaultQuery={anime.title} /> : null}
         </div>
       </div>
-      <div className={cn('grid gap-5', side && 'desk:grid-cols-[minmax(0,1fr)_22rem]')}>
+      <div className={cn('grid gap-5', side && !single && 'desk:grid-cols-[minmax(0,1fr)_22rem]')}>
         <div ref={playerColumnRef} className="min-w-0">
           {body}
           {room ? <RoomDebug room={room} container={playerColumnRef} /> : null}
         </div>
-        <div className={cn(side && 'desk:relative')}>
-          <div className={cn('flex max-h-[26rem] flex-col', side && 'desk:absolute desk:inset-0 desk:max-h-none')}>
-            <EpisodeList episodes={list} current={episode ?? 0} loading={episodes.isPending} onSelect={goTo} />
+        {single ? null : (
+          <div className={cn(side && 'desk:relative')}>
+            <div className={cn('flex max-h-[26rem] flex-col', side && 'desk:absolute desk:inset-0 desk:max-h-none')}>
+              <EpisodeList episodes={list} current={episode ?? 0} loading={episodes.isPending} onSelect={goTo} />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </section>
   )
