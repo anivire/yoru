@@ -4,25 +4,14 @@ import { db } from '../db/client'
 import { activity, anime, listEntries, providerReleases, watchProgress } from '../db/schema'
 import { featureEnabled } from '../lib/features'
 import { cacheGet } from '../lib/http'
-import { ensureAnime, nextAiringAt, toSummary } from './anime'
+import { queueAnimeRefresh } from '../jobs/anime-backfill'
+import { nextAiringAt, toSummary } from './anime'
 import type { JikanEpisodeVideo, JikanList } from './jikan'
 import { airedEpisode } from './aired'
 import { allEntries } from './lists'
 import { cachedBanner, shikimori, warmBanners } from './shikimori'
 
 const ACTIVE = new Set(['watching', 'rewatching', 'paused', 'planning'])
-const refreshing = new Set<number>()
-
-function refreshInBackground(malIds: number[]) {
-  for (const malId of malIds.slice(0, 15)) {
-    if (refreshing.has(malId)) continue
-    refreshing.add(malId)
-    ensureAnime(malId)
-      .catch(() => undefined)
-      .finally(() => refreshing.delete(malId))
-  }
-}
-
 function cachedEpisodeImage(malId: number, episode: number): string | null {
   const page = cacheGet<JikanList<JikanEpisodeVideo>>(`jikan:episode-videos:${malId}:1`)
   const video = page?.data.find((v) => Number(/\d+/.exec(v.episode ?? '')?.[0]) === episode)
@@ -175,7 +164,7 @@ export async function homeData(userId: number): Promise<HomeData> {
     .filter((a) => byMal.get(a.malId) && ACTIVE.has(byMal.get(a.malId)!.status) && a.status !== 'finished')
     .filter((a) => !a.detailsFetchedAt || Date.now() - Date.parse(a.detailsFetchedAt) > 12 * 3_600_000)
     .map((a) => a.malId)
-  refreshInBackground(stale)
+  queueAnimeRefresh(stale, { outdated: true })
 
   return { continueWatching, upcoming: soon, watching }
 }

@@ -186,8 +186,7 @@ export async function ensureAnime(malId: number, opts: { force?: boolean } = {})
 export async function fetchFromA365(malId: number): Promise<AnimeInsert> {
   const series = await anime365.seriesByMal(malId)
   if (!series) throw new UpstreamError('anime365', 404, 'Not found on Anime365')
-  const full = await anime365.series(series.id).catch(() => series)
-  return fromA365(full, malId)
+  return fromA365(series, malId)
 }
 
 export function upsertA365Summaries(rows: A365Series[]): AnimeSummary[] {

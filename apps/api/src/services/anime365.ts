@@ -1,5 +1,5 @@
 import type { Genre, StreamKind, StreamSource } from '@yoru/shared'
-import { cached, upstream, UpstreamError } from '../lib/http'
+import { cached, sleep, upstream, UpstreamError } from '../lib/http'
 import { sourceUrl } from '../lib/sources'
 
 export interface A365Titles {
@@ -69,11 +69,24 @@ export const RELEASE_TYPES = ['subRu', 'voiceRu'] as const
 const MAIN_EPISODE_TYPES = ['tv', 'ova', 'ona', 'movie']
 const SERIES_FIELDS = 'id,myAnimeListId,anilistId,isAiring,isHentai,numberOfEpisodes,myAnimeListScore,season,year,type,typeTitle,titles,posterUrl,genres'
 const HOUR = 3_600_000
+const MIN_INTERVAL_MS = 200
+
+let nextSlot = 0
+
+async function throttle() {
+  const slot = Math.max(Date.now(), nextSlot)
+  nextSlot = slot + MIN_INTERVAL_MS
+  if (slot > Date.now()) await sleep(slot - Date.now())
+}
 
 async function api<T>(path: string, params: Record<string, string | number> = {}): Promise<T> {
   const query = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]))
   const url = `${sourceUrl('anime365')}/api${path}${query.size ? `?${query}` : ''}`
-  const res = await upstream('anime365', 'Anime365', url, { timeoutMs: 20_000 })
+  let res = await throttle().then(() => upstream('anime365', 'Anime365', url, { timeoutMs: 20_000 }))
+  if (res.status === 429) {
+    await sleep((Number(res.headers.get('Retry-After')) || 3) * 1000)
+    res = await throttle().then(() => upstream('anime365', 'Anime365', url, { timeoutMs: 20_000 }))
+  }
   if (!res.ok) throw new UpstreamError('anime365', res.status, `Anime365 HTTP ${res.status} (${path})`)
   const body = (await res.json()) as { data?: T; error?: { code?: number; message?: string } }
   if (body.error) throw new UpstreamError('anime365', body.error.code ?? 500, `Anime365: ${body.error.message ?? 'error'}`)
@@ -105,8 +118,8 @@ export function mainEpisodes(rows: A365Episode[]): A365Episode[] {
 
 export const anime365 = {
   async seriesByMal(malId: number): Promise<A365Series | null> {
-    return cached(`a365:by-mal:${malId}`, 24 * HOUR, async () => {
-      const rows = await api<A365Series[]>('/series', { myAnimeListId: malId, fields: SERIES_FIELDS })
+    return cached(`a365:by-mal:v2:${malId}`, 24 * HOUR, async () => {
+      const rows = await api<A365Series[]>('/series', { myAnimeListId: malId, fields: `${SERIES_FIELDS},descriptions` })
       return rows.find((s) => s.myAnimeListId === malId) ?? null
     })
   },
