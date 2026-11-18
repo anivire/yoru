@@ -8,6 +8,7 @@ import { type AnimeRow, toSummary, upsertAnime } from './anime'
 
 const HOUR = 3_600_000
 const MIN_INTERVAL_MS = 250
+const MAX_PER_MINUTE = 80
 
 export interface ShikiAnime {
   id: number
@@ -102,15 +103,30 @@ function disabled<T>(): Promise<T> {
 
 let queue: Promise<unknown> = Promise.resolve()
 let lastRequestAt = 0
+const recent: number[] = []
 
-async function request<T>(path: string, params: Record<string, string | number> = {}): Promise<T> {
+async function throttle() {
+  const t = Date.now()
+  while (recent.length && recent[0]! < t - 60_000) recent.shift()
+  if (recent.length >= MAX_PER_MINUTE) await sleep(recent[0]! + 60_000 - t)
   const wait = lastRequestAt + MIN_INTERVAL_MS - Date.now()
   if (wait > 0) await sleep(wait)
   lastRequestAt = Date.now()
+  recent.push(lastRequestAt)
+}
+
+async function request<T>(path: string, params: Record<string, string | number> = {}): Promise<T> {
   const query = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]))
-  const res = await upstream('shikimori', 'Shikimori', `${sourceUrl('shikimori')}/api${path}${query.size ? `?${query}` : ''}`)
-  if (!res.ok) throw new UpstreamError('shikimori', res.status, `Shikimori HTTP ${res.status} (${path})`)
-  return (await res.json()) as T
+  for (let attempt = 0; ; attempt++) {
+    await throttle()
+    const res = await upstream('shikimori', 'Shikimori', `${sourceUrl('shikimori')}/api${path}${query.size ? `?${query}` : ''}`)
+    if (res.status === 429 && attempt < 2) {
+      await sleep((Number(res.headers.get('Retry-After')) || 2) * 1000)
+      continue
+    }
+    if (!res.ok) throw new UpstreamError('shikimori', res.status, `Shikimori HTTP ${res.status} (${path})`)
+    return (await res.json()) as T
+  }
 }
 
 function enqueue<T>(path: string, params: Record<string, string | number> = {}): Promise<T> {
@@ -170,14 +186,14 @@ export function shikiSummaries(items: ShikiAnime[]): AnimeSummary[] {
   })
 }
 
-function screenshotsKey(id: number) {
-  return `shiki:screenshots:${id}`
+function galleryKey(id: number) {
+  return `shiki:gallery:${id}`
 }
 
 export function cachedBanner(id: number): string | null | undefined {
   if (!sourceEnabled('shikimori')) return null
-  const value = cacheGet<string[]>(screenshotsKey(id))
-  return value === null ? undefined : (value[0] ?? null)
+  const value = cacheGet<Screenshot[]>(galleryKey(id))
+  return value === null ? undefined : (value[0]?.full ?? null)
 }
 
 const warming = new Set<number>()
@@ -187,7 +203,7 @@ export function warmBanners(ids: number[]) {
     if (warming.has(id) || cachedBanner(id) !== undefined) continue
     warming.add(id)
     shikimori
-      .screenshots(id)
+      .gallery(id)
       .catch(() => undefined)
       .finally(() => warming.delete(id))
   }
@@ -225,17 +241,9 @@ export const shikimori = {
     return cached(`shiki:animes:${key}`, 3 * HOUR, () => enqueue<ShikiAnime[]>('/animes', query))
   },
 
-  async screenshots(id: number): Promise<string[]> {
-    if (!sourceEnabled('shikimori')) return disabled()
-    return cached(screenshotsKey(id), 7 * 24 * HOUR, async () => {
-      const rows = await enqueue<{ original?: string }[]>(`/animes/${id}/screenshots`)
-      return rows.map((r) => shikiUrl(r.original)).filter((u): u is string => Boolean(u))
-    })
-  },
-
   async gallery(id: number): Promise<Screenshot[]> {
     if (!sourceEnabled('shikimori')) return disabled()
-    return cached(`shiki:gallery:${id}`, 7 * 24 * HOUR, async () => {
+    return cached(galleryKey(id), 7 * 24 * HOUR, async () => {
       const rows = await enqueue<{ original?: string; preview?: string }[]>(`/animes/${id}/screenshots`)
       return rows
         .map((r) => ({ full: shikiUrl(r.original), thumb: shikiUrl(r.preview ?? r.original) }))
