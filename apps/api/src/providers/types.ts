@@ -28,7 +28,7 @@ interface ProviderBase {
 
 export interface MetadataProvider extends ProviderBase {
   anime(malId: number): Promise<AnimeData | null>
-  many?(malIds: number[]): Promise<AnimeData[]>
+  many?(malIds: number[], opts?: { background?: boolean }): Promise<AnimeData[]>
 }
 
 export interface SearchProvider extends ProviderBase {

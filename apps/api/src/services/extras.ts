@@ -51,7 +51,7 @@ export async function watchOrder(malId: number): Promise<WatchOrderEntry[]> {
 }
 
 export async function animeExtras(malId: number): Promise<AnimeExtras> {
-  const media = featureEnabled('related') ? await anilist.extras(malId).catch(() => null) : null
+  const media = featureEnabled('related') ? await anilist.extras(malId) : null
   if (!media) return { relations: [], characters: [], recommendations: [] }
 
   const relationEdges = media.relations.edges.filter((e) => e.node.type === 'ANIME' && e.node.idMal && e.node.idMal !== malId)

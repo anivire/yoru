@@ -2,9 +2,9 @@ import { and, isNotNull, isNull, ne, notInArray, or, sql } from 'drizzle-orm'
 import { db } from '../db/client'
 import { anime, listEntries } from '../db/schema'
 import { primaryMetadata } from '../providers/chain'
-import { ensureAnime, needsCard } from '../services/anime'
+import { ensureAnime, getAnimeRow, needsCard, upsertAnime } from '../services/anime'
 
-const BATCH = 40
+const BATCH = 50
 const INTERVAL_MS = 3 * 60_000
 const WANTED_LIMIT = 500
 
@@ -32,16 +32,28 @@ function pending(): number[] {
     .map((r) => r.malId)
 }
 
+async function refresh(ids: number[]): Promise<boolean> {
+  const primary = primaryMetadata()
+  if (primary?.many) {
+    const items = await primary.many(ids, { background: true }).catch(() => null)
+    if (!items) return false
+    for (const item of items) upsertAnime(item, { details: true, source: primary.id })
+  }
+  for (const malId of ids) {
+    wanted.delete(malId)
+    if (!needsCard(getAnimeRow(malId), primary?.id ?? null)) continue
+    const row = await ensureAnime(malId).catch(() => null)
+    if (needsCard(row ?? undefined, primary?.id ?? null)) failed.add(malId)
+  }
+  return true
+}
+
 async function run() {
   if (running) return
   running = true
   try {
     for (let ids = pending(); ids.length; ids = pending()) {
-      for (const malId of ids) {
-        wanted.delete(malId)
-        const row = await ensureAnime(malId).catch(() => null)
-        if (needsCard(row ?? undefined, primaryMetadata()?.id ?? null)) failed.add(malId)
-      }
+      if (!(await refresh(ids))) break
     }
   } catch (error) {
     console.error('[yoru] anime backfill failed', error)
