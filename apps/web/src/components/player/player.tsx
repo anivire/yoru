@@ -889,7 +889,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
           >
             <RiSkipForwardFill className="size-4" />
             {t(`player.skip.${activeSkip.kind}`)}
-            {autoLeft !== null ? <span className="font-mono tabular-nums text-black/50">{autoLeft}</span> : null}
+            {autoLeft !== null ? <span className="tabular-nums text-black/50">{autoLeft}</span> : null}
           </button>
         </div>
       ) : null}
@@ -932,7 +932,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
                 <Fragment key={s.label}>
                   <div className="flex gap-1">
                     {s.keys.map((k) => (
-                      <kbd key={k} className="min-w-7 rounded-md bg-white/15 px-1.5 py-0.5 text-center font-mono text-xs">
+                      <kbd key={k} className="min-w-7 rounded-md bg-white/15 px-1.5 py-0.5 text-center text-xs">
                         {k}
                       </kbd>
                     ))}
@@ -949,7 +949,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         <div className="absolute inset-0 z-10 grid place-items-center bg-black/70 p-4">
           <div className="flex flex-col items-center gap-3 text-center">
             <div className="text-sm text-white/70">{t('player.nextIn')}</div>
-            <div className="font-mono text-5xl font-semibold tabular-nums">{countdown}</div>
+            <div className="text-5xl font-semibold tabular-nums">{countdown}</div>
             <div className="mt-1 flex gap-2">
               <button
                 type="button"
@@ -1085,19 +1085,23 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
               style={{ left: preview ? `clamp(6rem, ${hover?.x ?? 0}px, calc(100% - 6rem))` : hover?.x }}
             >
               {preview ? <FramePreview sources={sources} time={hover?.time ?? null} /> : null}
-              <div className="rounded-md bg-black/80 px-2 py-0.5 font-mono text-xs">
+              <div className="rounded-md bg-black/80 px-2 py-0.5 text-xs tabular-nums">
                 {formatTime(hover?.time ?? 0)}
-                {hoverSegment ? <span className="ml-1.5 font-sans text-white/70">{t(`player.segment.${hoverSegment.kind}`)}</span> : null}
+                {hoverSegment ? <span className="ml-1.5 text-white/70">{t(`player.segment.${hoverSegment.kind}`)}</span> : null}
               </div>
             </div>
           ) : null}
         </div>
 
-        <div className="flex items-center gap-1">
-          {onPrev ? <ControlButton label={t('player.prev')} onClick={onPrev} icon={<RiSkipBackFill className="fill-current" />} className={touch ? 'hidden' : 'hidden sm:grid'} /> : null}
-          <ControlButton label={playing ? t('player.pause') : t('player.play')} onClick={toggle} icon={playing ? <RiPauseLargeFill /> : <RiPlayLargeFill />} className={touch ? 'hidden' : undefined} />
-          {onNext ? <ControlButton label={t('player.next')} onClick={onNext} icon={<RiSkipForwardFill className="fill-current" />} className={touch ? 'hidden' : undefined} /> : null}
-          <div className="group/vol flex items-center">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {touch ? null : (
+            <div className={PILL}>
+              {onPrev ? <ControlButton label={t('player.prev')} onClick={onPrev} icon={<RiSkipBackFill className="fill-current" />} className="hidden sm:grid" /> : null}
+              <ControlButton label={playing ? t('player.pause') : t('player.play')} onClick={toggle} icon={playing ? <RiPauseLargeFill /> : <RiPlayLargeFill />} />
+              {onNext ? <ControlButton label={t('player.next')} onClick={onNext} icon={<RiSkipForwardFill className="fill-current" />} /> : null}
+            </div>
+          )}
+          <div className={cn(PILL, 'group/vol')}>
             <ControlButton label={t('player.mute')} onClick={() => setMuted((m) => !m)} icon={<VolumeIcon />} />
             <input
               type="range"
@@ -1109,13 +1113,13 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
                 setVolume(Number(e.target.value))
                 setMuted(false)
               }}
-              className="hidden w-0 cursor-pointer accent-[var(--accent)] opacity-0 transition-all group-hover/vol:w-20 group-hover/vol:opacity-100 sm:block"
+              className="hidden w-0 cursor-pointer accent-[var(--accent)] opacity-0 transition-all group-hover/vol:mr-3 group-hover/vol:w-20 group-hover/vol:opacity-100 sm:block"
             />
           </div>
-          <span className="ml-1 whitespace-nowrap font-mono text-[0.6875rem] text-white/80 sm:ml-2 sm:text-xs">
+          <span className={cn(PILL, 'whitespace-nowrap px-3 text-[0.6875rem] tabular-nums text-white/90 sm:px-3.5 sm:text-xs')}>
             {formatTime(time)} / {formatTime(duration)}
           </span>
-          <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
+          <div className={cn(PILL, 'ml-auto')}>
             {subtitlesUrl ? (
               <ControlButton label={t('player.subtitles')} onClick={() => setSubs(!subsOn)} icon={subsOn ? <RiClosedCaptioningFill /> : <RiClosedCaptioningLine />} active={subsOn} />
             ) : null}
@@ -1177,6 +1181,8 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   )
 }
 
+const PILL = 'flex h-9 items-center rounded-full bg-black/50 px-0.5 sm:h-10'
+
 function TouchButton({ label, onClick, icon, enabled, large }: { label: string; onClick?: () => void; icon: ReactNode; enabled: boolean; large?: boolean }) {
   if (!onClick) return <span className={large ? 'size-16' : 'size-12'} />
   return (
@@ -1202,10 +1208,10 @@ function ControlButton({ label, onClick, icon, active, badge, className }: { lab
         e.stopPropagation()
         onClick()
       }}
-      className={cn('relative grid size-8 cursor-pointer place-items-center rounded-lg text-white/90 transition-colors hover:bg-white/10 sm:size-9 [&_svg]:size-4 sm:[&_svg]:size-[1.125rem]', active && 'text-accent', className)}
+      className={cn('relative grid size-8 cursor-pointer place-items-center rounded-full text-white/90 transition-colors hover:bg-white/10 sm:size-9 [&_svg]:size-4 sm:[&_svg]:size-[1.125rem]', active && 'text-accent', className)}
     >
       {icon}
-      {badge ? <span className="absolute -right-1 -top-0.5 rounded bg-accent px-1 font-mono text-[0.5625rem] font-semibold leading-3.5 text-accent-foreground">{badge}</span> : null}
+      {badge ? <span className="absolute -right-1 -top-0.5 rounded bg-accent px-1 text-[0.5625rem] font-semibold leading-3.5 text-accent-foreground">{badge}</span> : null}
     </button>
   )
 }
@@ -1225,7 +1231,7 @@ function MenuOption({ label, hint, active, onClick }: { label: string; hint?: st
     <button type="button" onClick={onClick} className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 hover:bg-white/10">
       <RiCheckFill className={cn('size-4 text-accent', !active && 'invisible')} />
       <span className="flex-1 text-left">{label}</span>
-      {hint ? <span className="font-mono text-[0.6875rem] text-white/50">{hint}</span> : null}
+      {hint ? <span className="text-[0.6875rem] text-white/50">{hint}</span> : null}
     </button>
   )
 }
