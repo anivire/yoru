@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, lt, notInArray, sql } from 'drizzle-orm'
+import { and, eq, gt, inArray, isNotNull, lt, notInArray, sql } from 'drizzle-orm'
 import { CALENDAR_SOURCES, type CalendarSource, type ReleaseSource, TRANSLATION_SOURCES } from '@yoru/shared'
 import { db, now } from '../db/client'
 import { listEntries, notifications, providerMappings, providerReleases, socialNotifications, users } from '../db/schema'
@@ -66,7 +66,18 @@ function wantsSource(chosen: string | null, provider: string, active: Set<string
   return !chosen || chosen === provider || !active.has(chosen)
 }
 
+function hasLater(release: Release): boolean {
+  return Boolean(
+    db
+      .select({ episode: providerReleases.episode })
+      .from(providerReleases)
+      .where(and(eq(providerReleases.malId, release.malId), eq(providerReleases.kind, release.kind), gt(providerReleases.episode, release.episode)))
+      .get(),
+  )
+}
+
 function notifyUsers(release: Release) {
+  if (hasLater(release)) return 0
   const pref = release.kind === 'raw' ? users.notifyAired : release.kind === 'sub' ? users.notifySub : users.notifyVoice
   const targets = db
     .select({ userId: listEntries.userId, source: users.notifySource, calendar: users.airedSource })
@@ -76,6 +87,7 @@ function notifyUsers(release: Release) {
       and(
         eq(listEntries.malId, release.malId),
         inArray(listEntries.status, [...NOTIFY_STATUSES]),
+        lt(listEntries.progress, release.episode),
         eq(pref, true),
       ),
     )
