@@ -4,7 +4,7 @@ import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 import { type AccountInfo, type AvatarCrop, type ProfileSettings, type PersonCard, type SessionInfo, type ShareInfo, confirmPasswordSchema, profileUpdateSchema, shareUpdateSchema, userSettingsSchema } from '@yoru/shared'
 import { db, now } from '../db/client'
-import { activity, animeNotes, blocks, feedEvents, imports, invites, listEntries, notifications, sessions, users, watchProgress } from '../db/schema'
+import { activity, animeNotes, blocks, continueHidden, feedEvents, imports, invites, listEntries, notifications, sessions, users, watchProgress } from '../db/schema'
 import { type AppEnv, currentSessionId, destroySession, requireAuth, toUser } from '../lib/auth'
 import { randomToken, verifyPassword } from '../lib/crypto'
 import { parseBody } from '../lib/validate'
@@ -19,7 +19,7 @@ async function confirmPassword(passwordHash: string, password: string) {
 
 function clearUserData(userId: number) {
   db.transaction((tx) => {
-    for (const table of [listEntries, watchProgress, activity, notifications, imports, animeNotes, feedEvents]) {
+    for (const table of [listEntries, watchProgress, continueHidden, activity, notifications, imports, animeNotes, feedEvents]) {
       tx.delete(table).where(eq(table.userId, userId)).run()
     }
   })

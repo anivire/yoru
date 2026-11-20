@@ -392,6 +392,7 @@ export const en: Messages = {
     awaitingText: 'Opens once subtitles or a dub appear on Anime365',
     continueHint: 'Untranslated episodes become playable once they appear on Anime365',
     awaitingTranslation: 'Awaiting translation',
+    hideContinue: 'Remove from Continue watching',
     newEpisode: 'New episode',
     activity: 'Activity',
     friends: 'Friends are watching',

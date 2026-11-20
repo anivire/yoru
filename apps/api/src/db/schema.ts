@@ -129,6 +129,12 @@ export const watchProgress = sqliteTable('watch_progress', {
   index('watch_progress_user_updated_idx').on(t.userId, t.updatedAt),
 ])
 
+export const continueHidden = sqliteTable('continue_hidden', {
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  malId: integer('mal_id').notNull(),
+  hiddenAt: text('hidden_at').notNull(),
+}, (t) => [primaryKey({ columns: [t.userId, t.malId] })])
+
 export const activity = sqliteTable('activity', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),

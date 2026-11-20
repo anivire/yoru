@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { AnimeSummary, HomeData } from '@yoru/shared'
-import { Button, EmptyState, Image } from '@yoru/ui'
+import { Button, EmptyState, Image, toast } from '@yoru/ui'
 import { RiGroupFill } from '@remixicon/react'
 import { RiCalendarScheduleFill, RiDownload2Fill, RiPlayCircleFill, RiPlayLargeFill, RiSearchFill, RiTv2Fill } from '@remixicon/react'
 import { Fragment, type ReactNode } from 'react'
@@ -12,7 +12,7 @@ import { Page, Section } from '../components/app-shell'
 import { api } from '../lib/api'
 import { useAppearance } from '../lib/appearance'
 import type { HomeSectionId } from '../lib/navigation'
-import { keys } from '../lib/queries'
+import { errorMessage, keys, optimistic } from '../lib/queries'
 import { seasonLabel, typeLabel } from '../lib/format'
 import { HeroBackdrop } from '../components/hero-backdrop'
 import { TLink } from '../components/transition-link'
@@ -104,8 +104,20 @@ function FriendsWatching() {
 
 export function HomePage() {
   const { t } = useTranslation()
+  const client = useQueryClient()
   const { data, isPending } = useQuery({ queryKey: keys.home, queryFn: api.home })
   useDocumentTitle(t('nav.home'))
+  const hide = useMutation({
+    mutationFn: api.hideContinue,
+    meta: optimistic,
+    onMutate: (malId) => {
+      client.setQueryData<HomeData>(keys.home, (home) => (home ? { ...home, continueWatching: home.continueWatching.filter((c) => c.anime.malId !== malId) } : home))
+    },
+    onError: (e) => {
+      void client.invalidateQueries({ queryKey: keys.home })
+      toast.error(errorMessage(e, t))
+    },
+  })
   const { showHero, homeSections } = useAppearance()
 
   if (isPending) return <HomeSkeleton />
@@ -121,7 +133,7 @@ export function HomePage() {
       >
         <Rail>
           {data.continueWatching.map((item) => (
-            <ContinueCard key={item.anime.malId} item={item} />
+            <ContinueCard key={item.anime.malId} item={item} onHide={() => hide.mutate(item.anime.malId)} />
           ))}
         </Rail>
       </Section>

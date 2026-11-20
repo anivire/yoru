@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray, max, ne } from 'drizzle-orm'
 import type { ContinueItem, HomeData, UpcomingItem } from '@yoru/shared'
 import { db } from '../db/client'
-import { activity, anime, listEntries, providerReleases, watchProgress } from '../db/schema'
+import { activity, anime, continueHidden, listEntries, providerReleases, watchProgress } from '../db/schema'
 import { featureEnabled } from '../lib/features'
 import { cacheGet } from '../lib/http'
 import { queueAnimeRefresh } from '../jobs/anime-backfill'
@@ -42,13 +42,21 @@ export async function homeData(userId: number): Promise<HomeData> {
     .limit(200)
     .all()
 
+  const hidden = new Map(
+    db.select({ malId: continueHidden.malId, at: continueHidden.hiddenAt }).from(continueHidden).where(eq(continueHidden.userId, userId)).all().map((r) => [r.malId, r.at]),
+  )
+  const isHidden = (malId: number, ...times: string[]) => {
+    const at = hidden.get(malId)
+    return at !== undefined && times.every((time) => time <= at)
+  }
+
   const continueWatching: ContinueItem[] = []
   const seen = new Set<number>()
   for (const { progress: p, anime: a } of progressRows) {
     if (seen.has(p.malId)) continue
     seen.add(p.malId)
     const entry = byMal.get(p.malId)
-    if (!entry || !ACTIVE.has(entry.status)) continue
+    if (!entry || !ACTIVE.has(entry.status) || isHidden(p.malId, p.updatedAt, entry.updatedAt)) continue
     const finished = p.duration > 0 && p.position / p.duration > 0.9
     let episode = finished ? p.episode + 1 : p.episode
     let position = finished ? 0 : p.position
@@ -75,7 +83,7 @@ export async function homeData(userId: number): Promise<HomeData> {
   }
 
   for (const e of entries) {
-    if (seen.has(e.malId) || (e.status !== 'watching' && e.status !== 'rewatching')) continue
+    if (seen.has(e.malId) || (e.status !== 'watching' && e.status !== 'rewatching') || isHidden(e.malId, e.updatedAt)) continue
     const episode = e.progress + 1
     const finished = e.anime.status === 'finished'
     const limit = finished ? e.anime.episodes : (airedEpisode(e.malId, e.latestEpisode) ?? e.latestEpisode ?? e.anime.episodes)

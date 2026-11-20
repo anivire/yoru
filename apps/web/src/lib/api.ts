@@ -121,6 +121,7 @@ export const api = {
     request<User>('PATCH', '/me/settings', patch),
 
   home: () => get<HomeData>('/home'),
+  hideContinue: (malId: number) => request<{ ok: true }>('DELETE', `/home/continue/${malId}`),
   activity: (tz: string) => get<ActivityData>(`/home/activity${qs({ tz })}`),
   stats: (tz: string) => get<UserStats>(`/stats${qs({ tz })}`),
   version: () => get<VersionInfo>('/version'),

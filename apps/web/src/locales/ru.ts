@@ -390,6 +390,7 @@ export const ru = {
     awaitingText: 'Откроется, когда на Anime365 появятся субтитры или озвучка',
     continueHint: 'Серии без перевода станут доступны, как только появятся на Anime365',
     awaitingTranslation: 'Ждём перевод',
+    hideContinue: 'Убрать из «Продолжить просмотр»',
     newEpisode: 'Новая серия',
     activity: 'Активность',
     friends: 'Друзья сейчас смотрят',
