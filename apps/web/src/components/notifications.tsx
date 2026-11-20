@@ -16,7 +16,7 @@ import { SOURCE_NAMES } from './source-logo'
 
 
 function useUnread() {
-  return useQuery({ queryKey: keys.notificationsUnread, queryFn: api.unreadNotifications, refetchInterval: 60_000, refetchOnWindowFocus: true }).data?.unread
+  return useQuery({ queryKey: keys.notificationsUnread, queryFn: api.unreadNotifications, refetchInterval: 60_000, refetchIntervalInBackground: true, refetchOnWindowFocus: true }).data?.unread
 }
 
 export function useNotificationSound() {
