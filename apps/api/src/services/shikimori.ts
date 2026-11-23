@@ -222,8 +222,19 @@ export const shikimori = {
 
   franchise(id: number): Promise<ShikiFranchiseEntry[]> {
     if (!sourceEnabled('shikimori')) return disabled()
-    return cached(`shiki:franchise:v3:${id}`, 7 * 24 * HOUR, async () => {
-      const { nodes, links } = await enqueue<ShikiFranchise>(`/animes/${id}/franchise`)
+    return cached(`shiki:franchise:v4:${id}`, 7 * 24 * HOUR, async () => {
+      const graph = await enqueue<ShikiFranchise>(`/animes/${id}/franchise`)
+      const links = graph.links.filter((l) => l.relation !== 'character')
+      const reached = new Set([id])
+      for (let grew = true; grew; ) {
+        grew = false
+        for (const l of links) {
+          if (reached.has(l.source_id) === reached.has(l.target_id)) continue
+          reached.add(l.source_id).add(l.target_id)
+          grew = true
+        }
+      }
+      const nodes = graph.nodes.filter((n) => reached.has(n.id))
       if (nodes.length < 2) return []
       const order = new Map(nodes.map((n) => [n.id, n.date ?? Number.MAX_SAFE_INTEGER]))
       const ids = [...order.keys()]
