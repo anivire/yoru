@@ -902,6 +902,8 @@ export const en: Messages = {
     },
     importDone: 'Import from {{name}}: {{imported}} added, {{updated}} updated, {{skipped}} skipped',
     importFailed: 'Import from {{name}} failed',
+    importStarted: 'Importing from {{name}}, this can take a couple of minutes',
+    importRunning: 'Importing…',
     lastImport: 'Last import: {{name}}, {{date}}',
     exportTitle: 'Export',
     exportHint: 'Download your lists as a file to keep a backup or move them to another service',

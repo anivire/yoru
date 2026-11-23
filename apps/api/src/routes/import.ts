@@ -17,6 +17,8 @@ function providerParam(value: string): ImportProvider {
   return value as ImportProvider
 }
 
+const running = new Map<number, { provider: ImportProvider; failed: boolean }>()
+
 function backTo(params: Record<string, string>) {
   return `${env.appUrl}/settings/import?${new URLSearchParams(params)}`
 }
@@ -24,8 +26,13 @@ function backTo(params: Record<string, string>) {
 export const importRoutes = new Hono<AppEnv>()
   .use(requireAuth)
   .get('/status', (c) => {
-    const last = db.select().from(imports).where(eq(imports.userId, c.get('user').id)).orderBy(desc(imports.createdAt)).get()
+    const userId = c.get('user').id
+    const last = db.select().from(imports).where(eq(imports.userId, userId)).orderBy(desc(imports.createdAt)).get()
+    const job = running.get(userId)
+    if (job?.failed) running.delete(userId)
     const body: ImportStatus = {
+      running: job && !job.failed ? job.provider : null,
+      failed: job?.failed ? job.provider : null,
       providers: Object.fromEntries(IMPORT_PROVIDERS.map((p) => [p, providerEnabled(p)])) as ImportStatus['providers'],
       last: last
         ? {
@@ -81,14 +88,17 @@ export const importRoutes = new Hono<AppEnv>()
     if (!code) return c.redirect(backTo({ provider, error: c.req.query('error') ?? 'denied' }))
     const saved = consumeState(provider, state)
     if (!saved || saved.userId !== c.get('user').id) return c.redirect(backTo({ provider, error: 'state' }))
-    try {
-      const items = await fetchProviderList(provider, code, saved.codeVerifier)
-      const result = applyImport(saved.userId, provider, items)
-      return c.redirect(
-        backTo({ provider, imported: String(result.imported), updated: String(result.updated), skipped: String(result.skipped) }),
-      )
-    } catch (error) {
-      console.warn(`[import:${provider}]`, (error as Error).message)
-      return c.redirect(backTo({ provider, error: 'failed' }))
-    }
+    const userId = saved.userId
+    if (running.get(userId)?.failed === false) return c.redirect(backTo({ provider, started: '1' }))
+    running.set(userId, { provider, failed: false })
+    fetchProviderList(provider, code, saved.codeVerifier)
+      .then((items) => {
+        applyImport(userId, provider, items)
+        running.delete(userId)
+      })
+      .catch((error: Error) => {
+        console.warn(`[import:${provider}]`, error.message)
+        running.set(userId, { provider, failed: true })
+      })
+    return c.redirect(backTo({ provider, started: '1' }))
   })

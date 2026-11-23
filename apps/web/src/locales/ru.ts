@@ -900,6 +900,8 @@ export const ru = {
     },
     importDone: 'Импорт из {{name}}: добавлено {{imported}}, обновлено {{updated}}, пропущено {{skipped}}',
     importFailed: 'Не удалось импортировать из {{name}}',
+    importStarted: 'Импорт из {{name}} идёт, это может занять пару минут',
+    importRunning: 'Импортируем…',
     lastImport: 'Последний импорт: {{name}}, {{date}}',
     exportTitle: 'Экспорт',
     exportHint: 'Скачайте списки файлом, чтобы сохранить копию или перенести их в другой сервис',

@@ -623,6 +623,8 @@ export interface ImportResult {
 
 export interface ImportStatus {
   providers: Record<ImportProvider, boolean>
+  running: ImportProvider | null
+  failed: ImportProvider | null
   last: (ImportResult & { createdAt: string }) | null
 }
 
