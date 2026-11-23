@@ -59,7 +59,7 @@ export function StatusBadge({ status, className }: { status: ListStatus; classNa
   const { t } = useTranslation()
   const { icon: Icon, tone } = STATUS_META[status]
   return (
-    <span className={cn('inline-flex h-5 min-w-0 max-w-full items-center gap-1 rounded-full pl-1.5 pr-2 text-[0.6875rem] font-semibold shadow-sm', TONE_SOLID[tone], className)}>
+    <span className={cn('inline-flex h-5 min-w-0 max-w-full items-center gap-1 rounded-full pl-2 pr-2 text-[0.6875rem] font-semibold shadow-sm', TONE_SOLID[tone], className)}>
       <Icon className="size-3.5 shrink-0" />
       <span className="truncate">{t(`status.${status}`)}</span>
     </span>
