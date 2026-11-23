@@ -324,16 +324,16 @@ export function FriendsOnAnime({ malId, total }: { malId: number; total: number 
   return (
     <section className="mt-10">
       <h2 className="mb-4 text-xl font-semibold tracking-tight">{t('social.friendsWatching')}</h2>
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-2">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-2">
         {entries.data.map((entry) => (
-          <TLink key={entry.user.id} to={`/u/${entry.user.username}`} className="flex items-center gap-3 rounded-xl bg-surface p-3 transition-colors hover:bg-muted">
+          <TLink key={entry.user.id} to={`/u/${entry.user.username}`} className="flex items-center gap-3 rounded-xl bg-surface py-3 pl-3 pr-4 transition-colors hover:bg-muted">
             <UserAvatar user={entry.user} className="size-10" />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold">{nameOf(entry.user)}</span>
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <StatusIcon status={entry.status} className="size-3.5" />
-                {t(`status.${entry.status}`)}
-                {entry.progress && entry.status !== 'completed' ? <span className="font-mono tabular-nums">{total ? `${entry.progress}/${total}` : entry.progress}</span> : null}
+                <span className="truncate">{t(`status.${entry.status}`)}</span>
+                {entry.progress && entry.status !== 'completed' ? <span className="shrink-0 font-mono tabular-nums">{total ? `${entry.progress}/${total}` : entry.progress}</span> : null}
               </span>
             </span>
             {entry.score ? (
