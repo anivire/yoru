@@ -348,7 +348,10 @@ function ImportTab() {
     if (!provider) return
     const name = PROVIDER_NAMES[provider] ?? provider
     if (params.get('error')) toast.error(t('settings.importFailed', { name }))
-    else if (params.get('started')) toast(t('settings.importStarted', { name }))
+    else if (params.get('started')) {
+      runningRef.current = provider
+      toast(t('settings.importStarted', { name }))
+    }
     setParams({}, { replace: true })
   }, [])
 
