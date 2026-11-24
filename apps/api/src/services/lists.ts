@@ -134,6 +134,10 @@ export function deleteEntry(userId: number, malId: number) {
 
 export function markWatched(userId: number, malId: number, episode: number, total: number | null) {
   const entry = getEntry(userId, malId)
+  if (entry?.status === 'completed') {
+    saveEntry(userId, malId, { status: 'rewatching', progress: episode }, total)
+    return
+  }
   if (entry && entry.progress >= episode && entry.status !== 'planning') return
   const status: ListStatus = entry?.status === 'rewatching' ? 'rewatching' : 'watching'
   saveEntry(userId, malId, { status, progress: Math.max(episode, entry?.progress ?? 0) }, total)
