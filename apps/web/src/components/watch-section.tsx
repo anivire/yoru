@@ -432,7 +432,9 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
       </div>
       <div className={cn('grid gap-5', side && !single && 'desk:grid-cols-[minmax(0,1fr)_22rem]')}>
         <div ref={playerColumnRef} className="min-w-0">
-          {body}
+          <div data-player-frame className="[&:fullscreen]:grid [&:fullscreen]:place-items-center [&:fullscreen]:bg-black">
+            {body}
+          </div>
           {room ? <RoomDebug room={room} container={playerColumnRef} /> : null}
         </div>
         {single ? null : (

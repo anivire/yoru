@@ -135,6 +135,10 @@ type FullscreenDocument = Document & { webkitFullscreenElement?: Element | null;
 type FullscreenElement = HTMLElement & { webkitRequestFullscreen?: () => void }
 type IosVideo = HTMLVideoElement & { webkitEnterFullscreen?: () => void }
 
+function fullscreenTarget(root: HTMLElement | null): FullscreenElement | null {
+  return (root?.closest<HTMLElement>('[data-player-frame]') ?? root) as FullscreenElement | null
+}
+
 function fullscreenElement() {
   return document.fullscreenElement ?? (document as FullscreenDocument).webkitFullscreenElement ?? null
 }
@@ -432,13 +436,14 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
 
   useEffect(() => {
     const onFs = () => {
-      const on = fullscreenElement() === rootRef.current
+      const on = Boolean(rootRef.current) && fullscreenElement() === fullscreenTarget(rootRef.current)
       setFullscreen(on)
       if (!on) {
         rotatedRef.current = false
         unlockOrientation()
       }
     }
+    onFs()
     document.addEventListener('fullscreenchange', onFs)
     document.addEventListener('webkitfullscreenchange', onFs)
     return () => {
@@ -491,7 +496,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
       else doc.webkitExitFullscreen?.()
       return
     }
-    const root = rootRef.current as FullscreenElement | null
+    const root = fullscreenTarget(rootRef.current)
     const video = videoRef.current as IosVideo | null
     const native = () => video?.webkitEnterFullscreen?.()
     const fallback = () => (IS_IOS ? setStretched(true) : native())
@@ -505,7 +510,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
     if (nativeIos) return
     const media = window.matchMedia('(orientation: landscape)')
     const onChange = () => {
-      const root = rootRef.current
+      const root = fullscreenTarget(rootRef.current)
       const video = videoRef.current
       if (!coarsePointer() || !root) return
       if (media.matches) {
@@ -720,7 +725,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
       data-player-stretched={stretched ? '' : undefined}
       className={cn(
         'group/player overflow-hidden bg-black text-white',
-        stretched ? 'fixed inset-0 z-[100] h-dvh w-screen' : 'relative aspect-video w-full',
+        stretched ? 'fixed inset-0 z-[100] h-dvh w-screen' : fullscreen ? 'relative h-full w-full' : 'relative aspect-video w-full',
         full ? 'rounded-none' : 'rounded-xl',
         !controls && 'cursor-none',
       )}
