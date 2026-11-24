@@ -1,7 +1,9 @@
+import { RiCheckFill, RiCloseFill, RiErrorWarningFill, RiInformationFill } from '@remixicon/react'
 import type { ComponentProps, ReactNode } from 'react'
 import { Toaster as Sonner } from 'sonner'
 import { cn } from '../lib/cn'
 import { Mascot, type MascotMood } from './mascot'
+import { Spinner } from './spinner'
 
 export function Skeleton({ className, ...props }: ComponentProps<'div'>) {
   return <div className={cn('animate-shimmer rounded-lg', className)} {...props} />
@@ -50,15 +52,35 @@ export function Kbd({ className, ...props }: ComponentProps<'kbd'>) {
   )
 }
 
+const OVERLAY = 'bg-popover text-foreground shadow-[0_2px_6px_-2px_rgb(0_0_0/0.12),0_18px_48px_-12px_rgb(0_0_0/0.3)] ring-1 ring-foreground/[0.06] [--field:var(--raised-field)] [--field-hover:var(--raised-field-hover)] [--muted:var(--raised-muted)]'
+
+function ToastIcon({ tone, children }: { tone: string; children: ReactNode }) {
+  return <span className={cn('grid size-7 place-items-center rounded-lg [&_svg]:size-4', tone)}>{children}</span>
+}
+
 export function Toaster() {
   return (
     <Sonner
       position="bottom-right"
+      offset={{ bottom: 'var(--overlay-bottom, 24px)', right: 24 }}
+      gap={8}
+      icons={{
+        success: <ToastIcon tone="bg-success-soft text-success"><RiCheckFill /></ToastIcon>,
+        error: <ToastIcon tone="bg-danger-soft text-danger"><RiCloseFill /></ToastIcon>,
+        warning: <ToastIcon tone="bg-warning-soft text-warning"><RiErrorWarningFill /></ToastIcon>,
+        info: <ToastIcon tone="bg-accent-soft text-accent"><RiInformationFill /></ToastIcon>,
+        loading: <ToastIcon tone="bg-foreground/[0.06] text-muted-foreground"><Spinner className="size-4" /></ToastIcon>,
+      }}
       toastOptions={{
+        unstyled: true,
         classNames: {
-          toast: '!rounded-xl !border-0 !bg-raised !text-foreground !shadow-2xl !font-sans',
-          description: '!text-muted-foreground',
-          actionButton: '!h-7 !rounded-lg !bg-accent !px-3 !text-xs !font-medium !text-accent-foreground',
+          toast: cn('flex w-[var(--width)] items-center gap-3 rounded-xl py-2.5 pl-2.5 pr-4 font-sans', OVERLAY),
+          icon: 'shrink-0 self-start',
+          content: 'flex min-w-0 flex-1 flex-col gap-0.5 py-1',
+          title: 'text-sm font-medium leading-5',
+          description: 'text-[0.8125rem] leading-[1.125rem] text-muted-foreground',
+          actionButton: 'h-7 shrink-0 cursor-pointer rounded-lg bg-accent px-3 text-xs font-medium text-accent-foreground',
+          cancelButton: 'h-7 shrink-0 cursor-pointer rounded-lg bg-field px-3 text-xs font-medium',
         },
       }}
     />
