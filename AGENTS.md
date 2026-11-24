@@ -10,7 +10,7 @@ Nx workspace with npm workspaces, Node.js 22.12+.
 |---|---|
 | `apps/api` | Hono server, Drizzle ORM on SQLite (`better-sqlite3`). `src/routes` (HTTP handlers), `src/services` (data sources and business logic), `src/jobs` (background pollers), `src/lib` (auth, http, settings, validation), `src/db/schema.ts`, migrations in `drizzle/` |
 | `apps/web` | React 19 SPA: React Router, TanStack Query, Tailwind CSS v4, i18next. `src/pages` (one file per route, wired in `src/router.tsx` and loaded lazily with `page()`, so a page does not land in the main bundle; shared pieces belong in `src/components`, not in a page another page imports), `src/components`, `src/lib` (API client, queries, appearance, sounds, helpers), `src/locales` |
-| `packages/ui` | Shared primitives (`@yoru/ui`): buttons, overlays (Radix), Segmented, StepSlider, theme, `styles.css` with design tokens and utilities |
+| `packages/ui` | `@yoru/ui`, a thin brand layer over the UI kit `@anivire/kata-ui`: re-exports the kit and adds the logo and mascot, the `yoru` theme preset and colours, `EmptyState` with a mascot `mood` and `Image` with the mascot fallback. Import UI from `@yoru/ui`, not from the kit directly |
 | `packages/shared` | Types and constants shared by API and web (`@yoru/shared`), e.g. `StreamKind`, `VersionInfo`, list statuses |
 
 The web dev server proxies `/api` to the API on port `3000`. Production is one Docker image where the API also serves the built web app.
@@ -34,7 +34,7 @@ There is no test suite. Before finishing a change, run the typecheck for every p
 - Do not add code comments. Explain decisions in the commit message or the conversation instead.
 - Match the surrounding code: Tailwind utility classes inline, `cn()` from `@yoru/ui` for conditional classes, small components in the same file as their only user.
 - Effects are for syncing with things outside React (DOM APIs, subscriptions, timers, `localStorage`, media elements). Follow [You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect): derive values during render (`useMemo` only when expensive), handle user actions in event handlers, reset state with a `key` or by comparing to the previous value during render, and fetch through TanStack Query. Do not use an effect to copy props or query data into state, to chain state updates, or to notify a parent.
-- Prefer the existing primitives in `packages/ui` (Button, Select, Segmented, StepSlider, Tooltip, Popover, DropdownMenu, Dialog, Switch) over new ones. `DropdownMenu` defaults to `modal={false}` so it does not lock page scroll.
+- Prefer the existing primitives in `packages/ui` (Button, Select, Segmented, StepSlider, Tooltip, Popover, DropdownMenu, Dialog, Switch) over new ones. `DropdownMenu` defaults to `modal={false}` so it does not lock page scroll. A new generic component, or a fix or a new variant of an existing one, goes into the UI kit [kata-ui](https://github.com/anivire/kata-ui) (`@anivire/kata-ui`), not into this repo: build it there with a showcase example, publish a new version, then bump `@anivire/kata-ui` in `packages/ui/package.json` and run `npm install`. Generic means it knows nothing about yoru's data and would make sense in another app. Only yoru-specific UI (logo, mascot, theme preset, wrappers that plug the mascot into kit components) lives in `packages/ui`; components tied to the app's data stay in `apps/web/src/components`.
 
 ## Frontend conventions
 

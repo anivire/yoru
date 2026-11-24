@@ -11,12 +11,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@remixicon/react": "^4.9.0",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "radix-ui": "^1.8.1",
-    "sonner": "^2.0.8",
-    "tailwind-merge": "^3.7.0"
+    "@anivire/kata-ui": "^0.1.1"
   },
   "peerDependencies": {
     "react": "^19.0.0",
