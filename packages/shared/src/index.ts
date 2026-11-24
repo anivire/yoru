@@ -126,6 +126,7 @@ export interface User {
   notifyVoice: boolean
   notifyPremieres: boolean
   notifyAired: boolean
+  notifySequels: boolean
   notifySource: TranslationSource | null
   premiereSource: TranslationSource | null
   airedSource: CalendarSource | null
@@ -456,7 +457,7 @@ export interface HomeData {
 
 export interface Notification {
   id: number
-  type: 'episode' | 'premiere' | 'aired'
+  type: 'episode' | 'premiere' | 'aired' | 'sequel'
   malId: number
   episode: number
   kind: StreamKind | 'raw'
@@ -719,6 +720,7 @@ export const userSettingsSchema = z.object({
   notifyVoice: z.boolean().optional(),
   notifyPremieres: z.boolean().optional(),
   notifyAired: z.boolean().optional(),
+  notifySequels: z.boolean().optional(),
   notifySource: z.enum(TRANSLATION_SOURCES).nullable().optional(),
   premiereSource: z.enum(TRANSLATION_SOURCES).nullable().optional(),
   airedSource: z.enum(CALENDAR_SOURCES).nullable().optional(),

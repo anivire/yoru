@@ -155,16 +155,18 @@ export function NotificationsPopover({ side = 'bottom', rail = false }: { side?:
                     {!n.readAt ? <StatusDot tone="accent" /> : null}
                     <span className="truncate text-sm font-medium"><AnimeTitle anime={n.titles} /></span>
                   </div>
-                  <div className="mt-0.5 text-[0.8125rem] text-muted-foreground">{n.type === 'premiere' ? t('notifications.premiere') : n.type === 'aired' ? t('notifications.aired', { episode: n.episode }) : t('notifications.released', { episode: n.episode })}</div>
+                  <div className="mt-0.5 text-[0.8125rem] text-muted-foreground">{n.type === 'sequel' ? t('notifications.sequel') : n.type === 'premiere' ? t('notifications.premiere') : n.type === 'aired' ? t('notifications.aired', { episode: n.episode }) : t('notifications.released', { episode: n.episode })}</div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                    {n.type === 'premiere' ? (
+                    {n.type === 'premiere' || n.type === 'sequel' ? (
                       <Badge size="sm" variant="accent">
-                        {t('notifications.premiereBadge')}
+                        {t(n.type === 'sequel' ? 'notifications.sequelBadge' : 'notifications.premiereBadge')}
                       </Badge>
                     ) : null}
-                    <Badge size="sm" variant={n.kind === 'raw' ? 'neutral' : n.kind === 'sub' ? 'info' : 'warning'}>
-                      {n.kind === 'raw' ? t('notifications.airedBadge') : t(`notifications.${n.kind}`)}
-                    </Badge>
+                    {n.type === 'sequel' ? null : (
+                      <Badge size="sm" variant={n.kind === 'raw' ? 'neutral' : n.kind === 'sub' ? 'info' : 'warning'}>
+                        {n.kind === 'raw' ? t('notifications.airedBadge') : t(`notifications.${n.kind}`)}
+                      </Badge>
+                    )}
                     <span className="truncate text-xs text-subtle-foreground">{[n.source ? (SOURCE_NAMES[n.source as DataSourceId] ?? n.source) : null, n.author].filter(Boolean).join(' · ')}</span>
                     <span className="ml-auto font-mono text-[0.6875rem] text-subtle-foreground">{relativeTime(n.createdAt)}</span>
                   </div>

@@ -94,6 +94,11 @@ export function NotificationsTab() {
           {user.notifyPremieres ? <SourceChoice value={user.premiereSource} available={translations} pending={sources.isPending} onChange={(premiereSource) => update.mutate({ premiereSource })} /> : null}
         </Card>
       </Block>
+      <Block title={t('settings.notifySequels')} description={t('settings.notifySequelsHint')}>
+        <Card className="py-1">
+          <SwitchRow label={t('settings.sequelsSwitch')} checked={user.notifySequels} onChange={(notifySequels) => update.mutate({ notifySequels })} />
+        </Card>
+      </Block>
       <Block title={t('settings.airedTitle')} description={t('settings.notifyAiredHint')}>
         <Card className="py-1">
           <SwitchRow label={t('settings.notifyAired')} checked={user.notifyAired} onChange={(notifyAired) => update.mutate({ notifyAired })} />

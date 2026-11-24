@@ -191,6 +191,7 @@ export const meRoutes = new Hono<AppEnv>()
   if (input.notifyVoice !== undefined) patch.notifyVoice = input.notifyVoice
   if (input.notifyPremieres !== undefined) patch.notifyPremieres = input.notifyPremieres
   if (input.notifyAired !== undefined) patch.notifyAired = input.notifyAired
+  if (input.notifySequels !== undefined) patch.notifySequels = input.notifySequels
   if (input.notifySource !== undefined) patch.notifySource = input.notifySource
   if (input.premiereSource !== undefined) patch.premiereSource = input.premiereSource
   if (input.airedSource !== undefined) patch.airedSource = input.airedSource
