@@ -173,7 +173,7 @@ export const notifications = sqliteTable('notifications', {
   malId: integer('mal_id').notNull(),
   episode: integer('episode').notNull(),
   kind: text('kind', { enum: ['sub', 'voice', 'raw'] }).notNull(),
-  type: text('type', { enum: ['episode', 'premiere', 'aired', 'sequel'] }).notNull().default('episode'),
+  type: text('type', { enum: ['episode', 'premiere', 'aired', 'sequel', 'recap'] }).notNull().default('episode'),
   provider: text('provider'),
   author: text('author'),
   createdAt: text('created_at').notNull(),

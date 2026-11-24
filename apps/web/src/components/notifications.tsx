@@ -1,11 +1,11 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { DataSourceId, Notification, SocialNotification } from '@yoru/shared'
 import { Badge, Button, Image, Mascot, Popover, PopoverContent, PopoverTrigger, Skeleton, StatusDot, cn } from '@yoru/ui'
-import { RiCheckDoubleFill, RiDeleteBin6Fill, RiNotification3Fill } from '@remixicon/react'
+import { RiCheckDoubleFill, RiDeleteBin6Fill, RiNotification3Fill, RiSparkling2Fill } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { relativeTime } from '../lib/format'
-import { keys } from '../lib/queries'
+import { keys, useUser } from '../lib/queries'
 import { cue } from '../lib/sounds'
 import { useEffect, useRef, useState } from 'react'
 import { TLink } from './transition-link'
@@ -65,6 +65,7 @@ function SocialItem({ n, onOpen }: { n: SocialNotification; onOpen: () => void }
 }
 
 export function NotificationsPopover({ side = 'bottom', rail = false }: { side?: 'top' | 'bottom' | 'left' | 'right'; rail?: boolean }) {
+  const me = useUser()
   const { t } = useTranslation()
   const client = useQueryClient()
   const [open, setOpen] = useState(false)
@@ -145,24 +146,30 @@ export function NotificationsPopover({ side = 'bottom', rail = false }: { side?:
               return (
               <TLink
                 key={n.id}
-                to={n.kind === 'raw' ? animePath(n.malId) : `${animePath(n.malId)}?episode=${n.episode}&kind=${n.kind}`}
+                to={n.type === 'recap' ? `/u/${me.username}/recap/${n.episode}` : n.kind === 'raw' ? animePath(n.malId) : `${animePath(n.malId)}?episode=${n.episode}&kind=${n.kind}`}
                 onClick={() => !n.readAt && readOne.mutate(n.id)}
                 className={cn('flex gap-3 rounded-lg px-2.5 py-2.5 transition-colors hover:bg-muted', n.readAt && 'opacity-60')}
               >
-                {n.imageUrl ? <Image src={n.imageUrl} alt="" className="h-14 w-10 shrink-0 rounded-md object-cover" loading="lazy" /> : null}
+                {n.type === 'recap' ? (
+                  <span className="grid h-14 w-10 shrink-0 place-items-center rounded-md bg-accent-soft text-accent">
+                    <RiSparkling2Fill className="size-5" />
+                  </span>
+                ) : n.imageUrl ? (
+                  <Image src={n.imageUrl} alt="" className="h-14 w-10 shrink-0 rounded-md object-cover" loading="lazy" />
+                ) : null}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     {!n.readAt ? <StatusDot tone="accent" /> : null}
-                    <span className="truncate text-sm font-medium"><AnimeTitle anime={n.titles} /></span>
+                    <span className="truncate text-sm font-medium">{n.type === 'recap' ? t('recap.titleYear', { year: n.episode }) : <AnimeTitle anime={n.titles} />}</span>
                   </div>
-                  <div className="mt-0.5 text-[0.8125rem] text-muted-foreground">{n.type === 'sequel' ? t('notifications.sequel') : n.type === 'premiere' ? t('notifications.premiere') : n.type === 'aired' ? t('notifications.aired', { episode: n.episode }) : t('notifications.released', { episode: n.episode })}</div>
+                  <div className="mt-0.5 text-[0.8125rem] text-muted-foreground">{n.type === 'recap' ? t('notifications.recap') : n.type === 'sequel' ? t('notifications.sequel') : n.type === 'premiere' ? t('notifications.premiere') : n.type === 'aired' ? t('notifications.aired', { episode: n.episode }) : t('notifications.released', { episode: n.episode })}</div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                     {n.type === 'premiere' || n.type === 'sequel' ? (
                       <Badge size="sm" variant="accent">
                         {t(n.type === 'sequel' ? 'notifications.sequelBadge' : 'notifications.premiereBadge')}
                       </Badge>
                     ) : null}
-                    {n.type === 'sequel' ? null : (
+                    {n.type === 'sequel' || n.type === 'recap' ? null : (
                       <Badge size="sm" variant={n.kind === 'raw' ? 'neutral' : n.kind === 'sub' ? 'info' : 'warning'}>
                         {n.kind === 'raw' ? t('notifications.airedBadge') : t(`notifications.${n.kind}`)}
                       </Badge>

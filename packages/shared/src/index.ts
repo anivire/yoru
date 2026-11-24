@@ -421,6 +421,40 @@ export interface StatsBucket {
   meanScore: number | null
 }
 
+export interface RecapTitle {
+  anime: AnimeSummary
+  score: number | null
+  episodes: number
+}
+
+export interface RecapData {
+  year: number
+  years: number[]
+  inProgress: boolean
+  episodes: number
+  minutes: number
+  titles: number
+  completed: number
+  months: number[]
+  top: RecapTitle[]
+  genres: { name: string; share: number }[]
+  habits: {
+    nightShare: number | null
+    morningShare: number | null
+    peakHour: number | null
+    weekday: number | null
+    marathon: { episodes: number; date: string } | null
+    streak: { days: number; end: string } | null
+  }
+  friends: { user: UserCard; match: number | null; common: number }[]
+  previous: { year: number; episodes: number; minutes: number; genre: string | null } | null
+  bookends: { first: { anime: AnimeSummary; date: string }; last: { anime: AnimeSummary; date: string } } | null
+  critic: { diff: number; count: number; find: { anime: AnimeSummary; score: number; community: number } | null } | null
+  eras: { oldest: { anime: AnimeSummary }; averageYear: number; freshShare: number } | null
+  fresh: { episodes: number; fastest: { anime: AnimeSummary; episode: number; minutes: number } } | null
+  community: { comments: number; notes: number; reactions: number; recommendations: number } | null
+}
+
 export interface UserStats {
   totals: {
     titles: number
@@ -457,7 +491,7 @@ export interface HomeData {
 
 export interface Notification {
   id: number
-  type: 'episode' | 'premiere' | 'aired' | 'sequel'
+  type: 'episode' | 'premiere' | 'aired' | 'sequel' | 'recap'
   malId: number
   episode: number
   kind: StreamKind | 'raw'

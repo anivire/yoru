@@ -1,7 +1,7 @@
-import { and, eq, gt, inArray, isNotNull, lt, notInArray, sql } from 'drizzle-orm'
+import { and, eq, gt, gte, inArray, isNotNull, lt, notInArray, sql } from 'drizzle-orm'
 import { CALENDAR_SOURCES, type CalendarSource, type ReleaseSource, TRANSLATION_SOURCES } from '@yoru/shared'
 import { db, now } from '../db/client'
-import { listEntries, notifications, providerMappings, providerReleases, socialNotifications, users } from '../db/schema'
+import { activity, listEntries, notifications, providerMappings, providerReleases, socialNotifications, users } from '../db/schema'
 import { env } from '../env'
 import { cachePurgeExpired } from '../lib/http'
 import { purgeExpiredSessions } from '../lib/auth'
@@ -14,6 +14,7 @@ import { type A365Translation, RELEASE_TYPES, anime365, seriesTitle } from '../s
 import { anilibriaLatest } from '../services/anilibria'
 import { kodikRecent } from '../services/kodik'
 import { PROVIDER } from '../services/provider'
+import { recapReady } from '../services/recap'
 import { shikiSummaries, shikimori } from '../services/shikimori'
 
 const PAGE = 100
@@ -24,6 +25,7 @@ const NOTIFY_STATUSES = ['watching', 'rewatching', 'planning'] as const
 const LATEST_LIMIT = 50
 const KODIK_LIMIT = 100
 const ANNOUNCE_CURSOR_KEY = 'announce_cursor'
+const RECAP_MIN_EPISODES = 10
 const ANNOUNCE_PENDING_KEY = 'announce_pending'
 const ANNOUNCE_WINDOW_MS = 14 * 86_400_000
 const ANNOUNCE_KINDS = ['tv', 'movie', 'ova', 'ona', 'special', 'tv_special']
@@ -332,6 +334,29 @@ async function checkAnnouncements() {
   return created
 }
 
+function recapNotifications() {
+  const year = new Date().getUTCFullYear()
+  const key = `recap_notified_${year}`
+  if (!recapReady(year) || getSetting(key)) return 0
+  const people = db
+    .select({ userId: activity.userId })
+    .from(activity)
+    .where(and(eq(activity.source, 'watch'), gte(activity.createdAt, `${year}-01-01`)))
+    .groupBy(activity.userId)
+    .having(sql`count(*) >= ${RECAP_MIN_EPISODES}`)
+    .all()
+  let created = 0
+  for (const { userId } of people) {
+    created += db
+      .insert(notifications)
+      .values({ userId, malId: 0, episode: year, kind: 'raw', type: 'recap', provider: null, author: null, createdAt: now() })
+      .onConflictDoNothing()
+      .run().changes
+  }
+  setSetting(key, now())
+  return created
+}
+
 async function announcements() {
   try {
     return await checkAnnouncements()
@@ -403,7 +428,7 @@ async function tick() {
   if (running) return
   running = true
   try {
-    const created = (await checkReleases()) + (await announcements())
+    const created = (await checkReleases()) + (await announcements()) + recapNotifications()
     if (created) console.log(`[releases] ${created} notification(s) created`)
     cachePurgeExpired()
     purgeExpiredSessions()

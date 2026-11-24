@@ -52,6 +52,7 @@ import { FavoritesDialog } from '../components/favorites-editor'
 import { ListBrowser } from './shared-list'
 import { StatsSkeleton, StatsView } from './stats'
 import { UserGrid, UserGridSkeleton } from '../components/user-grid'
+import { RecapWidget } from '../components/recap-widget'
 
 const TABS = ['overview', 'list', 'stats', 'friends'] as const
 type Tab = (typeof TABS)[number]
@@ -335,9 +336,10 @@ function ProfileStats({ username }: { username: string }) {
 function Overview({ profile }: { profile: UserProfile }) {
   const { t } = useTranslation()
   const self = profile.relation === 'self'
-  if (!self && !profile.favorites.length && !profile.canSeeActivity) return <EmptyState mood="sleepy" title={t('profile.noOverview')} />
+  if (!self && !profile.favorites.length && !profile.canSeeActivity && !profile.canSeeStats) return <EmptyState mood="sleepy" title={t('profile.noOverview')} />
   return (
     <div className="grow-empty flex flex-col gap-6">
+      {profile.canSeeStats ? <RecapWidget username={profile.user.username} /> : null}
       {profile.favorites.length || self ? (
         <section className="rounded-xl bg-surface p-4 sm:p-5">
           <div className="mb-3 flex items-center justify-between gap-3">
