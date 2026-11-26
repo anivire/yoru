@@ -1126,7 +1126,9 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
                 setVolume(Number(e.target.value))
                 setMuted(false)
               }}
-              className="hidden w-0 cursor-pointer accent-[var(--accent)] opacity-0 transition-all group-hover/vol:mr-3 group-hover/vol:w-20 group-hover/vol:opacity-100 sm:block"
+              aria-label={t('player.keys.volume')}
+              style={{ background: `linear-gradient(to right, var(--accent) ${(muted ? 0 : volume) * 100}%, rgb(255 255 255 / 0.2) 0)` }}
+              className="hidden h-1 w-0 cursor-pointer appearance-none rounded-full opacity-0 outline-none transition-all group-hover/vol:mr-3 group-hover/vol:w-20 group-hover/vol:opacity-100 sm:block [&::-moz-range-thumb]:size-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-accent [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-accent [&::-webkit-slider-thumb]:shadow"
             />
           </div>
           <span className={cn(PILL, 'whitespace-nowrap px-3 text-[0.6875rem] tabular-nums text-white/90 sm:px-3.5 sm:text-xs')}>
