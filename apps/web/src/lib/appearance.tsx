@@ -31,7 +31,7 @@ export type NavLabels = 'always' | 'hover' | 'off'
 export type BackdropShape = 'full' | 'glow'
 
 export type IosFullscreen = 'app' | 'native'
-export type SkipButton = 'brief' | 'auto'
+export type SkipButton = 'brief' | 'auto' | 'off'
 
 export const FEED_SCOPES = ['me', 'friends', 'all'] as const
 export type FeedScope = (typeof FEED_SCOPES)[number]
@@ -166,7 +166,7 @@ function load(): State {
       navLabels: raw.navLabels === 'hover' || raw.navLabels === 'off' ? raw.navLabels : 'always',
       backdrop: raw.backdrop === 'glow' ? 'glow' : 'full',
       iosFullscreen: raw.iosFullscreen === 'app' ? 'app' : 'native',
-      skipButton: raw.skipButton === 'auto' ? 'auto' : 'brief',
+      skipButton: raw.skipButton === 'auto' || raw.skipButton === 'off' ? raw.skipButton : 'brief',
       autoNext: raw.autoNext !== false,
       watchedAt: (WATCHED_THRESHOLDS as readonly number[]).includes(raw.watchedAt as number) ? (raw.watchedAt as number) : 0.85,
       titleLanguage: TITLE_LANGUAGES.includes(raw.titleLanguage as TitleLanguage) ? (raw.titleLanguage as TitleLanguage) : 'romaji',

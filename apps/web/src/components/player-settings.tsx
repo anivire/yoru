@@ -193,6 +193,7 @@ export function PlayerTab() {
               options={[
                 { value: 'brief', label: t('settings.playerPrefs.skipButtonBrief') },
                 { value: 'auto', label: t('settings.playerPrefs.skipButtonAuto') },
+                { value: 'off', label: t('settings.playerPrefs.skipButtonOff') },
               ]}
             />
           </div>

@@ -877,7 +877,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         </div>
       ) : null}
 
-      {activeSkip && !error && countdown === null ? (
+      {activeSkip && skipButton !== 'off' && !error && countdown === null ? (
         <div className={cn('absolute right-3 z-10 flex gap-2 transition-[bottom,opacity] duration-300 sm:right-5', controls ? 'bottom-20 sm:bottom-24' : 'bottom-5', !skipVisible && 'pointer-events-none opacity-0')} inert={!skipVisible}>
           {autoLeft !== null ? (
             <button
