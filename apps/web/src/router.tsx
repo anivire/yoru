@@ -110,6 +110,7 @@ export const router = createBrowserRouter([
           { path: 'changelog', lazy: page(() => import('./pages/changelog'), 'ChangelogPage') },
           { path: 'friends', lazy: page(() => import('./pages/friends'), 'FriendsPage') },
           { path: 'u/:username', lazy: page(() => import('./pages/profile'), 'ProfilePage') },
+          { path: 'u/:username/recap/:year?', lazy: page(() => import('./pages/recap'), 'RecapPage') },
           { path: 'anime/:id', lazy: page(() => import('./pages/anime'), 'AnimePage') },
           { path: 'seiyuu/:id', lazy: page(() => import('./pages/person'), 'PersonPage') },
           { path: 'settings/:tab?', lazy: page(() => import('./pages/settings'), 'SettingsPage') },

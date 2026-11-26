@@ -10,7 +10,7 @@ import {
   progressInputSchema,
 } from '@yoru/shared'
 import { db, now } from '../db/client'
-import { listEntries, watchProgress } from '../db/schema'
+import { continueHidden, listEntries, watchProgress } from '../db/schema'
 import { type AppEnv, requireAuth } from '../lib/auth'
 import { badRequest } from '../lib/http'
 import { intParam, parseBody } from '../lib/validate'
@@ -121,3 +121,11 @@ export const homeRoutes = new Hono<AppEnv>()
   .get('/', async (c) => c.json(await homeData(c.get('user').id)))
   .get('/activity', (c) => c.json(activityData(c.get('user').id, c.req.query('tz'))))
   .post('/activity/sync', (c) => c.json({ episodes: syncListActivity(c.get('user').id) }))
+  .delete('/continue/:malId', (c) => {
+    const values = { userId: c.get('user').id, malId: intParam(c, 'malId'), hiddenAt: now() }
+    db.insert(continueHidden)
+      .values(values)
+      .onConflictDoUpdate({ target: [continueHidden.userId, continueHidden.malId], set: { hiddenAt: values.hiddenAt } })
+      .run()
+    return c.json({ ok: true })
+  })

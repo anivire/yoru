@@ -39,7 +39,7 @@ import { type ReactNode, useDeferredValue, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, useSearchParams } from 'react-router'
 import { Page } from '../components/app-shell'
-import { AnimeCard } from '../components/anime-cards'
+import { AnimeCard, PosterGrid } from '../components/anime-cards'
 import { PosterGridSkeleton } from '../components/skeletons'
 import { TLink } from '../components/transition-link'
 import { UserAvatar, nameOf } from '../components/user-avatar'
@@ -52,6 +52,7 @@ import { FavoritesDialog } from '../components/favorites-editor'
 import { ListBrowser } from './shared-list'
 import { StatsSkeleton, StatsView } from './stats'
 import { UserGrid, UserGridSkeleton } from '../components/user-grid'
+import { RecapWidget } from '../components/recap-widget'
 
 const TABS = ['overview', 'list', 'stats', 'friends'] as const
 type Tab = (typeof TABS)[number]
@@ -335,11 +336,12 @@ function ProfileStats({ username }: { username: string }) {
 function Overview({ profile }: { profile: UserProfile }) {
   const { t } = useTranslation()
   const self = profile.relation === 'self'
-  if (!self && !profile.favorites.length && !profile.canSeeActivity) return <EmptyState mood="sleepy" title={t('profile.noOverview')} />
+  if (!self && !profile.favorites.length && !profile.canSeeActivity && !profile.canSeeStats) return <EmptyState mood="sleepy" title={t('profile.noOverview')} />
   return (
     <div className="grow-empty flex flex-col gap-6">
+      {profile.canSeeStats ? <RecapWidget username={profile.user.username} /> : null}
       {profile.favorites.length || self ? (
-        <section className="rounded-xl bg-surface p-4 sm:p-5">
+        <section>
           <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="text-sm font-semibold">{t('profile.favorites')}</h2>
             {self ? (
@@ -349,11 +351,11 @@ function Overview({ profile }: { profile: UserProfile }) {
             ) : null}
           </div>
           {profile.favorites.length ? (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-3 gap-y-4">
+            <PosterGrid>
               {profile.favorites.map((anime) => (
                 <AnimeCard key={anime.malId} anime={anime} />
               ))}
-            </div>
+            </PosterGrid>
           ) : (
             <p className="text-sm text-muted-foreground">{t('profile.noFavorites', { count: PROFILE_FAVORITES_MAX })}</p>
           )}

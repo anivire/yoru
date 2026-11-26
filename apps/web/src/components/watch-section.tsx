@@ -134,7 +134,10 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
   const episodes = useQuery({ queryKey: keys.episodes(malId), queryFn: () => api.episodes(malId) })
   const sourceSet = useMemo(() => new Set(sourceEpisodes?.episodes ?? []), [sourceEpisodes])
   const list = useMemo(() => (episodes.data ?? []).map((e) => ({ ...e, available: sourceSet.has(e.number) })), [episodes.data, sourceSet])
-  const episode = paramEpisode ?? (episodes.data && sourceEpisodes ? defaultEpisode(list, entry) : null)
+  const derived = episodes.data && sourceEpisodes ? defaultEpisode(list, entry) : null
+  const [pinned, setPinned] = useState<{ malId: number; episode: number } | null>(null)
+  if (!paramEpisode && derived && (pinned?.malId !== malId || !list.find((e) => e.number === pinned.episode)?.available)) setPinned({ malId, episode: derived })
+  const episode = paramEpisode ?? (pinned?.malId === malId ? pinned.episode : derived)
   const current = list.find((e) => e.number === episode)
   const available = Boolean(current?.available)
 
@@ -429,7 +432,9 @@ export function WatchSection({ anime, entry, room }: { anime: AnimeDetails; entr
       </div>
       <div className={cn('grid gap-5', side && !single && 'desk:grid-cols-[minmax(0,1fr)_22rem]')}>
         <div ref={playerColumnRef} className="min-w-0">
-          {body}
+          <div data-player-frame className="[&:fullscreen]:grid [&:fullscreen]:place-items-center [&:fullscreen]:bg-black">
+            {body}
+          </div>
           {room ? <RoomDebug room={room} container={playerColumnRef} /> : null}
         </div>
         {single ? null : (

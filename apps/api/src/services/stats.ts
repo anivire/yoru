@@ -23,7 +23,7 @@ function mean(values: number[]): number | null {
   return values.length ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100 : null
 }
 
-function validZone(zone: string | undefined): string {
+export function validZone(zone: string | undefined): string {
   if (!zone) return 'UTC'
   try {
     new Intl.DateTimeFormat('en-CA', { timeZone: zone })

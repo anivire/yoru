@@ -26,6 +26,7 @@ const SUBMIT_DELAY_MS = 240
 const MAX_POSITION_PITCH = 7
 const SLIDER_PITCH_RANGE = 10
 const AWAKE_MS = 30_000
+const WAKE_LEAD_MS = 400
 const HUM_LEVEL = 1e-4
 const DUCK = 0.35
 const DEFAULTS: SoundSettings = { enabled: false, volume: '40', theme: 'mechanical', click: 'press', interface: true, notifications: true, feedback: true }
@@ -104,6 +105,10 @@ function wake() {
   const now = performance.now()
   if (hum && now - lastWake < 1000) return
   lastWake = now
+  keepAwake()
+}
+
+function keepAwake() {
   unlock()
   const ctx = getAnalyser()?.context
   if (!ctx) return
@@ -166,7 +171,13 @@ export function useSounds(): SoundSettings {
 }
 
 export function cue(category: SoundCategory, name: CueName) {
-  if (state.enabled && state[category]) play(name)
+  if (!state.enabled || !state[category]) return
+  if (category !== 'notifications' || hum) {
+    play(name)
+    return
+  }
+  keepAwake()
+  window.setTimeout(() => play(name), WAKE_LEAD_MS)
 }
 
 export function preview(name: CueName) {

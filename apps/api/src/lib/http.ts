@@ -71,7 +71,7 @@ export function cachePurgeExpired() {
 const inflight = new Map<string, Promise<unknown>>()
 const failedAt = new Map<string, number>()
 
-export async function cached<T>(key: string, ttlMs: number, load: () => Promise<T>): Promise<T> {
+export async function cached<T>(key: string, ttlMs: number | ((value: T) => number), load: () => Promise<T>): Promise<T> {
   const row = cacheRow(key)
   if (row && row.expiresAt >= Date.now()) return JSON.parse(row.value) as T
   const stale = row ? (JSON.parse(row.value) as T) : null
@@ -80,7 +80,7 @@ export async function cached<T>(key: string, ttlMs: number, load: () => Promise<
   if (pending) return pending as Promise<T>
   const promise = load()
     .then((value) => {
-      cacheSet(key, value, ttlMs)
+      cacheSet(key, value, typeof ttlMs === 'function' ? ttlMs(value) : ttlMs)
       failedAt.delete(key)
       return value
     })

@@ -36,6 +36,7 @@ export function toUser(row: UserRow): User {
     notifyVoice: row.notifyVoice,
     notifyPremieres: row.notifyPremieres,
     notifyAired: row.notifyAired,
+    notifySequels: row.notifySequels,
     notifySource: (row.notifySource as TranslationSource | null) ?? null,
     premiereSource: (row.premiereSource as TranslationSource | null) ?? null,
     airedSource: (row.airedSource as CalendarSource | null) ?? null,

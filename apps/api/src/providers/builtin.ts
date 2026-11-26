@@ -138,7 +138,7 @@ const anilistMetadata: MetadataProvider = {
     const media = await anilist.anime(malId)
     return media ? fromAniList(media) : null
   },
-  many: async (malIds) => keyed((await anilist.many(malIds)).map(fromAniList)),
+  many: async (malIds, opts) => keyed((await anilist.many(malIds, opts)).map(fromAniList)),
 }
 
 const kitsuMetadata: MetadataProvider = {

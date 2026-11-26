@@ -12,6 +12,7 @@ import { notFound } from '../lib/http'
 import { intParam, parseBody } from '../lib/validate'
 import { bannerUrl, blockedBetween, canSee, cardColumns, friendIds, hiddenUserIds, personCards, relation, summariesFor, toCard } from '../services/social'
 import { feedPage } from '../services/feed'
+import { recap } from '../services/recap'
 import { userStats } from '../services/stats'
 import { listPage } from './list'
 
@@ -166,6 +167,13 @@ export const userRoutes = new Hono<AppEnv>()
     const owner = ownerByName(viewer.id, c.req.param('username'))
     if (restricted(viewer.id, owner) || !canSee(viewer.id, owner.id, owner.statsVisibility)) notFound('STATS_HIDDEN')
     return c.json(userStats(owner.id, c.req.query('tz')))
+  })
+  .get('/:username/recap', (c) => {
+    const viewer = c.get('user')
+    const owner = ownerByName(viewer.id, c.req.param('username'))
+    if (restricted(viewer.id, owner) || !canSee(viewer.id, owner.id, owner.statsVisibility)) notFound('STATS_HIDDEN')
+    const year = Number(c.req.query('year'))
+    return c.json(recap(owner.id, viewer.id, Number.isInteger(year) && year > 1900 ? year : null, c.req.query('tz')))
   })
   .get('/:username/feed', (c) => {
     const viewer = c.get('user')

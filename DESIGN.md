@@ -12,11 +12,11 @@ The yoru design system for coding agents. `AGENTS.md` covers how the code is org
 
 ## Tokens
 
-All tokens live in `packages/ui/src/styles.css` and are exposed as Tailwind colours (`bg-surface`, `text-muted-foreground`, …). Never use raw hex or Tailwind palette colours (`bg-zinc-800`, `text-violet-400`) for UI; the only exceptions are listed under *Fixed colours*.
+Tokens come from the UI kit `@anivire/kata-ui` (its `styles.css`, imported by `packages/ui/src/styles.css`, which only adds the `yoru` theme colours) and are exposed as Tailwind colours (`bg-surface`, `text-muted-foreground`, …). Never use raw hex or Tailwind palette colours (`bg-zinc-800`, `text-violet-400`) for UI; the only exceptions are listed under *Fixed colours*.
 
 ### Themes
 
-- `--hue`, `--tint` and `--accent-c` drive every colour. Presets are in `packages/ui/src/theme.ts` (`yoru`, `sakura`, `matcha`, `umi`, `ember`, `fuji`, `momiji`, `kohaku`, `wakaba`, `kori`, `ajisai`, `sumi`), applied as `data-theme` on `<html>`.
+- `--hue`, `--tint` and `--accent-c` drive every colour. The `yoru` preset is in `packages/ui/src/theme.ts`; the others come from the kit (`sakura`, `matcha`, `umi`, `ember`, `fuji`, `momiji`, `kohaku`, `wakaba`, `kori`, `ajisai`, `sumi`), applied as `data-theme` on `<html>`.
 - Light and dark are the `.light` / `.dark` classes. Dark is the default scheme.
 - Colours are `oklch`. To add a theme, add a preset in `theme.ts` and a `[data-theme]` block; never add per-theme overrides for single components.
 
@@ -125,6 +125,8 @@ Counts shown as coloured icons follow the same mapping: watching `RiPlayCircleFi
 Use what exists before writing something new.
 
 ### `@yoru/ui` (`packages/ui`)
+
+Generic components come from [kata-ui](https://github.com/anivire/kata-ui) (`@anivire/kata-ui`); see them with code in the showcase at https://anivire.github.io/kata-ui/. `packages/ui` adds only the yoru-specific ones (`Logo`, `LogoMark`, `Mascot`, `EmptyState` with a mascot `mood`, `Image` with the mascot fallback). New generic components and changes to existing ones are made in kata-ui, not here (see `AGENTS.md`).
 
 - `Button`: variants `accent` (main action), `secondary` (default), `ghost` (toolbar and icon buttons), `primary` (inverse), `outline`, `danger`, `link`; sizes `sm`, `md`, `lg`, `icon`, `icon-sm`. Use `loading` instead of hand-made spinners and `asChild` for links.
 - `Badge` (`outline`, `neutral`, `accent`, `success`, `warning`, `danger`, `info`, `solid`) and `StatusDot`.

@@ -10,6 +10,7 @@ export const users = sqliteTable('users', {
   notifyVoice: integer('notify_voice', { mode: 'boolean' }).notNull().default(true),
   notifyPremieres: integer('notify_premieres', { mode: 'boolean' }).notNull().default(true),
   notifyAired: integer('notify_aired', { mode: 'boolean' }).notNull().default(false),
+  notifySequels: integer('notify_sequels', { mode: 'boolean' }).notNull().default(true),
   notifySource: text('notify_source'),
   premiereSource: text('premiere_source'),
   airedSource: text('aired_source'),
@@ -129,6 +130,12 @@ export const watchProgress = sqliteTable('watch_progress', {
   index('watch_progress_user_updated_idx').on(t.userId, t.updatedAt),
 ])
 
+export const continueHidden = sqliteTable('continue_hidden', {
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  malId: integer('mal_id').notNull(),
+  hiddenAt: text('hidden_at').notNull(),
+}, (t) => [primaryKey({ columns: [t.userId, t.malId] })])
+
 export const activity = sqliteTable('activity', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
@@ -166,7 +173,7 @@ export const notifications = sqliteTable('notifications', {
   malId: integer('mal_id').notNull(),
   episode: integer('episode').notNull(),
   kind: text('kind', { enum: ['sub', 'voice', 'raw'] }).notNull(),
-  type: text('type', { enum: ['episode', 'premiere', 'aired'] }).notNull().default('episode'),
+  type: text('type', { enum: ['episode', 'premiere', 'aired', 'sequel', 'recap'] }).notNull().default('episode'),
   provider: text('provider'),
   author: text('author'),
   createdAt: text('created_at').notNull(),

@@ -82,8 +82,8 @@ export const animeRoutes = new Hono<AppEnv>()
     return c.json(await episodeList(c.get('user').id, row))
   })
   .get('/:id/banner', async (c) => {
-    const shots = featureEnabled('screenshots') ? await shikimori.screenshots(intParam(c, 'id')).catch(() => [] as string[]) : []
-    return c.json({ url: shots[0] ?? null })
+    const shots = featureEnabled('screenshots') ? await shikimori.gallery(intParam(c, 'id')).catch(() => [] as Screenshot[]) : []
+    return c.json({ url: shots[0]?.full ?? null })
   })
   .get('/:id/extras', async (c) => c.json(await animeExtras(intParam(c, 'id'))))
   .get('/:id/franchise', async (c) => c.json(await watchOrder(intParam(c, 'id'))))

@@ -115,6 +115,7 @@ function enqueue<T>(path: string): Promise<T> {
 }
 
 const HOUR = 3_600_000
+const FULL_PAGE_TTL = 7 * 24 * HOUR
 
 export const jikan = {
   anime(malId: number) {
@@ -129,12 +130,12 @@ export const jikan = {
     )
   },
   episodes(malId: number, page: number, ttl: number) {
-    return cached(`jikan:episodes:${malId}:${page}`, ttl, () =>
+    return cached(`jikan:episodes:${malId}:${page}`, (r) => (r.pagination.has_next_page ? FULL_PAGE_TTL : ttl), () =>
       enqueue<JikanList<JikanEpisode>>(`/anime/${malId}/episodes?page=${page}`),
     )
   },
   episodeVideos(malId: number, page: number, ttl: number) {
-    return cached(`jikan:episode-videos:${malId}:${page}`, ttl, () =>
+    return cached(`jikan:episode-videos:${malId}:${page}`, (r) => (r.pagination.has_next_page ? FULL_PAGE_TTL : ttl), () =>
       enqueue<JikanList<JikanEpisodeVideo>>(`/anime/${malId}/videos/episodes?page=${page}`),
     )
   },

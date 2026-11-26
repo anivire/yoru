@@ -5,7 +5,7 @@ import { RiAddCircleFill, RiArrowDownSLine, RiCloseLine, RiNotification3Fill, Ri
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
-import { AnimeCard } from '../components/anime-cards'
+import { AnimeCard, Poster } from '../components/anime-cards'
 import { Page, PageHeader } from '../components/app-shell'
 import { NoteBody } from '../components/notes'
 import { TLink } from '../components/transition-link'
@@ -14,7 +14,7 @@ import { UserAvatar, nameOf } from '../components/user-avatar'
 import { useAnimeTitle, animePath } from '../lib/anime-title'
 import { api } from '../lib/api'
 import { FEED_SCOPES, useAppearance } from '../lib/appearance'
-import { StatusIcon } from '../lib/list-status'
+import { StatusBadge, StatusIcon } from '../lib/list-status'
 import { useDocumentTitle } from '../lib/title'
 
 const COLLAPSED = 12
@@ -89,17 +89,17 @@ function buildDays(items: FeedItem[]): Day[] {
 
 function useGroupHeading() {
   const { t } = useTranslation()
-  return (group: Group): { icon: ReactNode; text: string } => {
+  return (group: Group): { icon: ReactNode; text: string; badge?: ReactNode } => {
     const first = group.items[0]!
     const many = group.items.length > 1
-    if (first.type === 'added') return { icon: <RiAddCircleFill className="text-accent" />, text: t('feed.added', { status: t(`status.${first.status}`) }) }
-    if (first.type === 'status') return { icon: <StatusIcon status={first.to} />, text: first.to === 'completed' ? t('feed.completed') : t('feed.status', { status: t(`status.${first.to}`) }) }
+    if (first.type === 'added') return { icon: <RiAddCircleFill className="text-accent" />, text: t('feed.added'), badge: <StatusBadge status={first.status} /> }
+    if (first.type === 'status') return { icon: <StatusIcon status={first.to} />, text: t('feed.status'), badge: <StatusBadge status={first.to} /> }
     if (first.type === 'score') return { icon: <StarIcon className="text-amber-500" />, text: many ? t('feed.scores') : t('feed.score', { score: first.score }) }
     if (first.type === 'episodes') {
       const text = many ? t('feed.watched') : first.from === first.to ? t('feed.episode', { episode: first.from }) : t('feed.episodes', { from: first.from, to: first.to })
       return { icon: <RiPlayCircleFill className="text-accent" />, text }
     }
-    return { icon: <RiStickyNoteFill className="text-accent" />, text: first.type === 'note' && first.note.episode ? t('feed.noteEpisode', { episode: first.note.episode }) : t('feed.note') }
+    return { icon: <RiStickyNoteFill className="text-accent" />, text: t('feed.note') }
   }
 }
 
@@ -109,15 +109,26 @@ function FeedCard({ item }: { item: FeedItem }) {
   if (item.type === 'episodes') {
     return <AnimeCard anime={item.anime} subtitle={item.from === item.to ? t('feed.episodeShort', { episode: item.from }) : t('feed.episodesShort', { from: item.from, to: item.to })} />
   }
+  if (item.type === 'status') return <AnimeCard anime={item.anime} subtitle={<span className="line-through">{t(`status.${item.from}`)}</span>} />
   return <AnimeCard anime={item.anime} />
 }
 
 function NoteEntry({ item }: { item: Extract<FeedItem, { type: 'note' }> }) {
+  const { t } = useTranslation()
   const title = useAnimeTitle()
+  const { episode } = item.note
   return (
     <div className="flex flex-col gap-2.5 rounded-xl bg-surface p-3">
-      <TLink to={animePath(item.anime.malId, item.anime.title)} className="w-fit text-sm font-medium transition-colors hover:text-accent">
-        {title(item.anime)}
+      <TLink to={animePath(item.anime.malId, item.anime.title)} className="group flex w-fit items-center gap-2.5">
+        <Poster src={item.anime.imageUrl} alt={item.anime.title} className="h-12 w-8 shrink-0 rounded-md" />
+        <span className="flex min-w-0 flex-col items-start gap-1">
+          <span className="text-sm font-semibold transition-colors group-hover:text-accent">{title(item.anime)}</span>
+          {episode ? (
+            <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">
+              {item.anime.episodes ? t('feed.noteEpisodeOf', { episode, total: item.anime.episodes }) : t('feed.episodeShort', { episode })}
+            </span>
+          ) : null}
+        </span>
       </TLink>
       <div className="rounded-lg bg-field px-3 py-2.5">
         <NoteBody note={{ ...item.note, episode: null }} />
@@ -149,8 +160,9 @@ function GroupEntry({ group, showUser, focus }: { group: Group; showUser: boolea
             {nameOf(first.user)}
           </TLink>
         ) : null}
-        {showUser ? <span className="grid size-4 place-items-center [&_svg]:size-4">{heading.icon}</span> : null}
+        {showUser && !heading.badge ? <span className="grid size-4 place-items-center [&_svg]:size-4">{heading.icon}</span> : null}
         <span className={cn('text-sm', showUser ? 'text-muted-foreground' : 'font-semibold')}>{heading.text}</span>
+        {heading.badge}
         {group.items.length > 1 ? <span className="rounded-full bg-field px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">{group.items.length}</span> : null}
         <span className="font-mono text-xs text-subtle-foreground">{time}</span>
       </div>

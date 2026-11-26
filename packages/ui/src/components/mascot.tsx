@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { cn } from '../lib/cn'
+import { cn } from '@anivire/kata-ui'
 
 export type MascotMood = 'idle' | 'happy' | 'sleepy' | 'thinking' | 'error'
 
@@ -9,7 +9,7 @@ const SQUARE = 'matrix(1.14 0 0 0.9 -4.48 3.4)'
 const MARK_BODY = 'M32 11C44.2 11 53 20 53 32V51.5C53 55.6 48.6 57.7 45.6 55L42 51.8L36.4 56.4C33.8 58.5 30.2 58.5 27.6 56.4L22 51.8L18.4 55C15.4 57.7 11 55.6 11 51.5V32C11 20 19.8 11 32 11Z'
 
 function twinkle(animated: boolean, delay = 0): CSSProperties | undefined {
-  return animated ? { animation: `yoru-twinkle 1.8s ease-in-out ${delay}s infinite` } : undefined
+  return animated ? { animation: `kata-twinkle 1.8s ease-in-out ${delay}s infinite` } : undefined
 }
 
 function Ears({ droop }: { droop: boolean }) {
@@ -34,7 +34,7 @@ function Sparkle({ x, y, r, style }: { x: number; y: number; r: number; style?: 
 function PillEyes({ dx = 0, dy = 0, height = 12, blink = false }: { dx?: number; dy?: number; height?: number; blink?: boolean }) {
   const y = 33 - height / 2 + dy
   return (
-    <g fill={INK} style={blink ? { transformOrigin: '32px 33px', animation: 'yoru-blink 5s infinite' } : undefined}>
+    <g fill={INK} style={blink ? { transformOrigin: '32px 33px', animation: 'kata-blink 5s infinite' } : undefined}>
       <rect x={20.5 + dx} y={y} width={7} height={height} rx={3.5} />
       <rect x={36.5 + dx} y={y} width={7} height={height} rx={3.5} />
     </g>
@@ -118,7 +118,7 @@ export function Mascot({
       height={`${size / 16}rem`}
       viewBox="0 0 64 64"
       className={cn('shrink-0 overflow-visible', className)}
-      style={animated && mood !== 'sleepy' ? { animation: 'yoru-bob 3.2s ease-in-out infinite' } : undefined}
+      style={animated && mood !== 'sleepy' ? { animation: 'kata-bob 3.2s ease-in-out infinite' } : undefined}
       aria-hidden
     >
       <g transform={SQUARE}>

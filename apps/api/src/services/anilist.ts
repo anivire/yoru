@@ -1,7 +1,8 @@
-import { cached, SourceOffError, upstream, UpstreamError } from '../lib/http'
+import { cached, cacheSet, sleep, SourceOffError, upstream, UpstreamError } from '../lib/http'
 import { sourceEnabled, sourceUrl } from '../lib/sources'
 
 const DAY = 86_400_000
+const MISSING_TTL = DAY / 4
 
 export interface AniListMedia {
   idMal: number | null
@@ -104,12 +105,57 @@ const SEARCH_QUERY = `query ($page: Int, $perPage: Int, $search: String, $format
   }
 }`
 
-async function graphql<T>(query: string, variables: Record<string, unknown>): Promise<T | null> {
-  if (!sourceEnabled('anilist')) throw new SourceOffError('anilist', 503, 'AniList is disabled')
-  const res = await upstream('anilist', 'AniList', sourceUrl('anilist'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query, variables }) })
-  if (res.status === 404) return null
-  if (!res.ok) throw new UpstreamError('anilist', res.status, `AniList HTTP ${res.status}`)
-  return ((await res.json()) as { data?: T }).data ?? null
+const RESERVE = 10
+const MAX_WAIT_MS = 5000
+
+let remaining = Infinity
+let seenAt = 0
+let blockedUntil = 0
+let background: Promise<unknown> = Promise.resolve()
+
+async function send<T>(query: string, variables: Record<string, unknown>, low: boolean): Promise<T | null> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const saving = low && remaining < RESERVE ? seenAt + 60_000 - Date.now() : 0
+    const wait = Math.max(blockedUntil - Date.now(), saving)
+    if (wait > 0) {
+      if (!low && wait > MAX_WAIT_MS) throw new UpstreamError('anilist', 429, 'AniList rate limit')
+      await sleep(wait)
+    }
+    const res = await upstream('anilist', 'AniList', sourceUrl('anilist'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query, variables }) })
+    const left = Number(res.headers.get('X-RateLimit-Remaining') ?? NaN)
+    if (Number.isFinite(left)) {
+      remaining = left
+      seenAt = Date.now()
+    }
+    if (res.status === 429) {
+      blockedUntil = Date.now() + (Number(res.headers.get('Retry-After')) || 60) * 1000
+      remaining = 0
+      seenAt = Date.now()
+      continue
+    }
+    if (res.status === 404) return null
+    if (!res.ok) throw new UpstreamError('anilist', res.status, `AniList HTTP ${res.status}`)
+    return ((await res.json()) as { data?: T }).data ?? null
+  }
+  throw new UpstreamError('anilist', 429, 'AniList rate limit')
+}
+
+function graphql<T>(query: string, variables: Record<string, unknown>, opts: { background?: boolean } = {}): Promise<T | null> {
+  if (!sourceEnabled('anilist')) return Promise.reject(new SourceOffError('anilist', 503, 'AniList is disabled'))
+  if (!opts.background) return send<T>(query, variables, false)
+  const run = background.then(() => send<T>(query, variables, true))
+  background = run.catch(() => undefined)
+  return run
+}
+
+function remember(malIds: number[], media: AniListFullMedia[]) {
+  const found = new Set<number>()
+  for (const m of media) {
+    if (!m.idMal) continue
+    found.add(m.idMal)
+    cacheSet(`anilist:anime:${m.idMal}`, { media: m }, DAY / 4)
+  }
+  for (const id of malIds) if (!found.has(id)) cacheSet(`anilist:anime:${id}`, { media: null }, MISSING_TTL)
 }
 
 export interface AniListSearch {
@@ -122,15 +168,17 @@ export interface AniListSearch {
 export const anilist = {
   extras(malId: number): Promise<AniListExtras | null> {
     if (!sourceEnabled('anilist')) return Promise.resolve(null)
-    return cached(`anilist:extras:v3:${malId}`, 3 * DAY, async () => ({ media: await request(malId) })).then((r) => r.media)
+    return cached(`anilist:extras:v3:${malId}`, (r) => (r.media ? 3 * DAY : MISSING_TTL), async () => ({ media: await request(malId) })).then((r) => r.media)
   },
   staff(id: number, page: number): Promise<AniListStaff | null> {
-    return cached(`anilist:staff:${id}:${page}`, 3 * DAY, async () => ({ staff: (await graphql<{ Staff: AniListStaff | null }>(STAFF_QUERY, { id, page }))?.Staff ?? null })).then((r) => r.staff)
+    return cached(`anilist:staff:${id}:${page}`, (r) => (r.staff ? 3 * DAY : MISSING_TTL), async () => ({ staff: (await graphql<{ Staff: AniListStaff | null }>(STAFF_QUERY, { id, page }))?.Staff ?? null })).then((r) => r.staff)
   },
-  async many(malIds: number[]): Promise<AniListFullMedia[]> {
+  async many(malIds: number[], opts: { background?: boolean } = {}): Promise<AniListFullMedia[]> {
     const ids = [...new Set(malIds)].slice(0, 50)
     if (!ids.length) return []
-    return (await graphql<{ Page: { media: AniListFullMedia[] } }>(MANY_QUERY, { ids }))?.Page.media ?? []
+    const media = (await graphql<{ Page: { media: AniListFullMedia[] } }>(MANY_QUERY, { ids }, opts))?.Page.media ?? []
+    remember(ids, media)
+    return media
   },
   anime(malId: number): Promise<AniListFullMedia | null> {
     return cached(`anilist:anime:${malId}`, DAY / 4, async () => ({ media: (await graphql<{ Media: AniListFullMedia | null }>(ANIME_QUERY, { idMal: malId }))?.Media ?? null })).then((r) => r.media)
@@ -146,6 +194,7 @@ export const anilist = {
     }
     return cached(`anilist:search:${JSON.stringify(variables)}`, DAY / 24, async () => {
       const data = await graphql<{ Page: { pageInfo: { hasNextPage: boolean }; media: AniListFullMedia[] } }>(SEARCH_QUERY, variables)
+      remember([], data?.Page.media ?? [])
       return { media: data?.Page.media ?? [], hasNextPage: data?.Page.pageInfo.hasNextPage ?? false }
     })
   },

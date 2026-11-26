@@ -1,7 +1,7 @@
-import { and, eq, inArray, isNotNull, lt, notInArray, sql } from 'drizzle-orm'
+import { and, eq, gt, gte, inArray, isNotNull, lt, notInArray, sql } from 'drizzle-orm'
 import { CALENDAR_SOURCES, type CalendarSource, type ReleaseSource, TRANSLATION_SOURCES } from '@yoru/shared'
 import { db, now } from '../db/client'
-import { listEntries, notifications, providerMappings, providerReleases, socialNotifications, users } from '../db/schema'
+import { activity, listEntries, notifications, providerMappings, providerReleases, socialNotifications, users } from '../db/schema'
 import { env } from '../env'
 import { cachePurgeExpired } from '../lib/http'
 import { purgeExpiredSessions } from '../lib/auth'
@@ -9,11 +9,13 @@ import { getSetting, setSetting } from '../lib/settings'
 import { featureEnabled } from '../lib/features'
 import { isActive } from '../providers/chain'
 import { ensureAnime, getAnimeRow, setLatestEpisode, upsertA365Summaries } from '../services/anime'
+import { cards } from '../services/cards'
 import { type A365Translation, RELEASE_TYPES, anime365, seriesTitle } from '../services/anime365'
 import { anilibriaLatest } from '../services/anilibria'
 import { kodikRecent } from '../services/kodik'
 import { PROVIDER } from '../services/provider'
-import { shikimori } from '../services/shikimori'
+import { recapReady } from '../services/recap'
+import { shikiSummaries, shikimori } from '../services/shikimori'
 
 const PAGE = 100
 const MAX_PAGES = 10
@@ -22,6 +24,12 @@ const MAIN_TYPES = ['tv', 'ova', 'ona', 'movie']
 const NOTIFY_STATUSES = ['watching', 'rewatching', 'planning'] as const
 const LATEST_LIMIT = 50
 const KODIK_LIMIT = 100
+const ANNOUNCE_CURSOR_KEY = 'announce_cursor'
+const RECAP_MIN_EPISODES = 10
+const ANNOUNCE_PENDING_KEY = 'announce_pending'
+const ANNOUNCE_WINDOW_MS = 14 * 86_400_000
+const ANNOUNCE_KINDS = ['tv', 'movie', 'ova', 'ona', 'special', 'tv_special']
+const SEQUEL_STATUSES = ['watching', 'rewatching', 'completed', 'paused'] as const
 
 type ReleaseKind = 'sub' | 'voice' | 'raw'
 
@@ -66,7 +74,18 @@ function wantsSource(chosen: string | null, provider: string, active: Set<string
   return !chosen || chosen === provider || !active.has(chosen)
 }
 
+function hasLater(release: Release): boolean {
+  return Boolean(
+    db
+      .select({ episode: providerReleases.episode })
+      .from(providerReleases)
+      .where(and(eq(providerReleases.malId, release.malId), eq(providerReleases.kind, release.kind), gt(providerReleases.episode, release.episode)))
+      .get(),
+  )
+}
+
 function notifyUsers(release: Release) {
+  if (hasLater(release)) return 0
   const pref = release.kind === 'raw' ? users.notifyAired : release.kind === 'sub' ? users.notifySub : users.notifyVoice
   const targets = db
     .select({ userId: listEntries.userId, source: users.notifySource, calendar: users.airedSource })
@@ -76,6 +95,7 @@ function notifyUsers(release: Release) {
       and(
         eq(listEntries.malId, release.malId),
         inArray(listEntries.status, [...NOTIFY_STATUSES]),
+        lt(listEntries.progress, release.episode),
         eq(pref, true),
       ),
     )
@@ -264,6 +284,88 @@ async function checkSchedule() {
   return created
 }
 
+function notifySequel(malId: number, franchise: number[]) {
+  const inList = db.select({ userId: listEntries.userId }).from(listEntries).where(eq(listEntries.malId, malId))
+  const targets = db
+    .selectDistinct({ userId: listEntries.userId })
+    .from(listEntries)
+    .innerJoin(users, eq(users.id, listEntries.userId))
+    .where(and(inArray(listEntries.malId, franchise), inArray(listEntries.status, [...SEQUEL_STATUSES]), eq(users.notifySequels, true), notInArray(listEntries.userId, inList)))
+    .all()
+  let created = 0
+  for (const { userId } of targets) {
+    created += db
+      .insert(notifications)
+      .values({ userId, malId, episode: 0, kind: 'raw', type: 'sequel', provider: 'shikimori', author: null, createdAt: now() })
+      .onConflictDoNothing()
+      .run().changes
+  }
+  return created
+}
+
+async function checkAnnouncements() {
+  if (!featureEnabled('franchise')) return 0
+  const rows = await shikimori.animes({ status: 'anons', order: 'id_desc', limit: 50 })
+  const cursor = Number(getSetting(ANNOUNCE_CURSOR_KEY) ?? 0)
+  const fresh = rows.filter((a) => a.id > cursor)
+  if (fresh.length) setSetting(ANNOUNCE_CURSOR_KEY, String(Math.max(...fresh.map((a) => a.id))))
+  if (!cursor) return 0
+  let pending: Record<string, number> = {}
+  try {
+    pending = JSON.parse(getSetting(ANNOUNCE_PENDING_KEY) ?? '{}') as Record<string, number>
+  } catch {}
+  for (const a of fresh) if (ANNOUNCE_KINDS.includes(a.kind ?? '')) pending[a.id] = Date.now()
+  let created = 0
+  for (const [key, seenAt] of Object.entries(pending)) {
+    const id = Number(key)
+    if (Date.now() - seenAt > ANNOUNCE_WINDOW_MS) {
+      delete pending[key]
+      continue
+    }
+    const entries = await shikimori.franchise(id).catch(() => [])
+    const self = entries.find((e) => e.anime.id === id)?.anime
+    const franchise = entries.map((e) => e.anime.id).filter((other) => other !== id)
+    if (!self || !franchise.length) continue
+    delete pending[key]
+    await cards(shikiSummaries([self])).catch(() => undefined)
+    created += notifySequel(id, franchise)
+  }
+  setSetting(ANNOUNCE_PENDING_KEY, JSON.stringify(pending))
+  return created
+}
+
+function recapNotifications() {
+  const year = new Date().getUTCFullYear()
+  const key = `recap_notified_${year}`
+  if (!recapReady(year) || getSetting(key)) return 0
+  const people = db
+    .select({ userId: activity.userId })
+    .from(activity)
+    .where(and(eq(activity.source, 'watch'), gte(activity.createdAt, `${year}-01-01`)))
+    .groupBy(activity.userId)
+    .having(sql`count(*) >= ${RECAP_MIN_EPISODES}`)
+    .all()
+  let created = 0
+  for (const { userId } of people) {
+    created += db
+      .insert(notifications)
+      .values({ userId, malId: 0, episode: year, kind: 'raw', type: 'recap', provider: null, author: null, createdAt: now() })
+      .onConflictDoNothing()
+      .run().changes
+  }
+  setSetting(key, now())
+  return created
+}
+
+async function announcements() {
+  try {
+    return await checkAnnouncements()
+  } catch (error) {
+    console.warn('[releases] announcements check failed:', (error as Error).message)
+    return 0
+  }
+}
+
 export interface ReleaseCheck {
   checkedAt: string
   error: string | null
@@ -326,7 +428,7 @@ async function tick() {
   if (running) return
   running = true
   try {
-    const created = await checkReleases()
+    const created = (await checkReleases()) + (await announcements()) + recapNotifications()
     if (created) console.log(`[releases] ${created} notification(s) created`)
     cachePurgeExpired()
     purgeExpiredSessions()

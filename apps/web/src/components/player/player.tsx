@@ -20,6 +20,7 @@ const VOLUME_KEY = 'yoru:volume'
 const SUBS_KEY = 'yoru:subs'
 const AUTOSKIP_KEY = 'yoru:autoskip'
 const AUTOSKIP_DELAY = 4
+const SKIP_VISIBLE = 5
 
 function readAutoSkip(): SkipTime['kind'][] {
   try {
@@ -135,6 +136,10 @@ type FullscreenDocument = Document & { webkitFullscreenElement?: Element | null;
 type FullscreenElement = HTMLElement & { webkitRequestFullscreen?: () => void }
 type IosVideo = HTMLVideoElement & { webkitEnterFullscreen?: () => void }
 
+function fullscreenTarget(root: HTMLElement | null): FullscreenElement | null {
+  return (root?.closest<HTMLElement>('[data-player-frame]') ?? root) as FullscreenElement | null
+}
+
 function fullscreenElement() {
   return document.fullscreenElement ?? (document as FullscreenDocument).webkitFullscreenElement ?? null
 }
@@ -162,7 +167,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   const [fullscreen, setFullscreen] = useState(false)
   const [countdown, setCountdown] = useState<number | null>(null)
   const [stretched, setStretched] = useState(false)
-  const { iosFullscreen } = useAppearance()
+  const { iosFullscreen, skipButton } = useAppearance()
   const nativeIos = IS_IOS && iosFullscreen === 'native'
   const full = fullscreen || stretched
   const [controls, setControls] = useState(true)
@@ -172,7 +177,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   const [error, setError] = useState<string | null>(null)
   const [blocked, setBlocked] = useState(false)
   const [autoSkip, setAutoSkip] = useState(readAutoSkip)
-  const [entry, setEntry] = useState<{ key: string; from: number } | null>(null)
+  const [entry, setEntry] = useState<{ key: string; from: number; at: number } | null>(null)
   const [help, setHelp] = useState(false)
   const [pip, setPip] = useState(false)
   const [seekFlash, setSeekFlash] = useState<{ side: -1 | 1; amount: number; at: number } | null>(null)
@@ -432,13 +437,14 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
 
   useEffect(() => {
     const onFs = () => {
-      const on = fullscreenElement() === rootRef.current
+      const on = Boolean(rootRef.current) && fullscreenElement() === fullscreenTarget(rootRef.current)
       setFullscreen(on)
       if (!on) {
         rotatedRef.current = false
         unlockOrientation()
       }
     }
+    onFs()
     document.addEventListener('fullscreenchange', onFs)
     document.addEventListener('webkitfullscreenchange', onFs)
     return () => {
@@ -491,7 +497,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
       else doc.webkitExitFullscreen?.()
       return
     }
-    const root = rootRef.current as FullscreenElement | null
+    const root = fullscreenTarget(rootRef.current)
     const video = videoRef.current as IosVideo | null
     const native = () => video?.webkitEnterFullscreen?.()
     const fallback = () => (IS_IOS ? setStretched(true) : native())
@@ -505,7 +511,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
     if (nativeIos) return
     const media = window.matchMedia('(orientation: landscape)')
     const onChange = () => {
-      const root = rootRef.current
+      const root = fullscreenTarget(rootRef.current)
       const video = videoRef.current
       if (!coarsePointer() || !root) return
       if (media.matches) {
@@ -689,7 +695,10 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
     const v = videoRef.current
     if (v) v.currentTime = Math.min(s.end, v.duration || s.end)
   }
-  const autoLeft = activeSkip && autoSkip.includes(activeSkip.kind) ? Math.max(1, Math.ceil(AUTOSKIP_DELAY - (entry?.key === `${activeSkip.kind}:${activeSkip.start}` ? time - entry.from : 0))) : null
+  const autoOn = (kind: SkipTime['kind']) => skipButton === 'auto' && autoSkip.includes(kind)
+  const inSkip = activeSkip && entry?.key === `${activeSkip.kind}:${activeSkip.start}` ? time - entry.from : 0
+  const autoLeft = activeSkip && autoOn(activeSkip.kind) ? Math.max(1, Math.ceil(AUTOSKIP_DELAY - inSkip)) : null
+  const skipVisible = skipButton === 'auto' || controls || inSkip < SKIP_VISIBLE
 
   const goNext = useEffectEvent(() => onEnded())
 
@@ -720,7 +729,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
       data-player-stretched={stretched ? '' : undefined}
       className={cn(
         'group/player overflow-hidden bg-black text-white',
-        stretched ? 'fixed inset-0 z-[100] h-dvh w-screen' : 'relative aspect-video w-full',
+        stretched ? 'fixed inset-0 z-[100] h-dvh w-screen' : fullscreen ? 'relative h-full w-full' : 'relative aspect-video w-full',
         full ? 'rounded-none' : 'rounded-xl',
         !controls && 'cursor-none',
       )}
@@ -822,8 +831,12 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
             if (v.buffered.length) setBuffered(v.buffered.end(v.buffered.length - 1))
             const segment = segmentAt(v.currentTime)
             const key = segment ? `${segment.kind}:${segment.start}` : null
-            if (entry?.key !== key) setEntry(key ? { key, from: v.currentTime } : null)
-            else if (segment && entry && autoSkip.includes(segment.kind) && v.currentTime - entry.from >= AUTOSKIP_DELAY) skipSegment(segment)
+            const at = v.currentTime
+            if (entry?.key !== key || (entry && Math.abs(at - entry.at) > 1.5)) setEntry(key ? { key, from: at, at } : null)
+            else if (segment && entry) {
+              setEntry({ ...entry, at })
+              if (autoOn(segment.kind) && at - entry.from >= AUTOSKIP_DELAY) skipSegment(segment)
+            }
             save()
           }}
           onEnded={() => {
@@ -864,8 +877,8 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         </div>
       ) : null}
 
-      {activeSkip && !error && countdown === null ? (
-        <div className={cn('absolute right-3 z-10 flex gap-2 transition-[bottom] sm:right-5', controls ? 'bottom-20 sm:bottom-24' : 'bottom-5')}>
+      {activeSkip && skipButton !== 'off' && !error && countdown === null ? (
+        <div className={cn('absolute right-3 z-10 flex gap-2 transition-[bottom,opacity] duration-300 sm:right-5', controls ? 'bottom-20 sm:bottom-24' : 'bottom-5', !skipVisible && 'pointer-events-none opacity-0')} inert={!skipVisible}>
           {autoLeft !== null ? (
             <button
               type="button"
@@ -881,7 +894,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
           <button
             type="button"
             onClick={() => {
-              changeAutoSkip(activeSkip.kind, true)
+              if (skipButton === 'auto') changeAutoSkip(activeSkip.kind, true)
               skipSegment(activeSkip)
               poke()
             }}
@@ -889,7 +902,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
           >
             <RiSkipForwardFill className="size-4" />
             {t(`player.skip.${activeSkip.kind}`)}
-            {autoLeft !== null ? <span className="font-mono tabular-nums text-black/50">{autoLeft}</span> : null}
+            {autoLeft !== null ? <span className="tabular-nums text-black/50">{autoLeft}</span> : null}
           </button>
         </div>
       ) : null}
@@ -932,7 +945,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
                 <Fragment key={s.label}>
                   <div className="flex gap-1">
                     {s.keys.map((k) => (
-                      <kbd key={k} className="min-w-7 rounded-md bg-white/15 px-1.5 py-0.5 text-center font-mono text-xs">
+                      <kbd key={k} className="min-w-7 rounded-md bg-white/15 px-1.5 py-0.5 text-center text-xs">
                         {k}
                       </kbd>
                     ))}
@@ -949,7 +962,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
         <div className="absolute inset-0 z-10 grid place-items-center bg-black/70 p-4">
           <div className="flex flex-col items-center gap-3 text-center">
             <div className="text-sm text-white/70">{t('player.nextIn')}</div>
-            <div className="font-mono text-5xl font-semibold tabular-nums">{countdown}</div>
+            <div className="text-5xl font-semibold tabular-nums">{countdown}</div>
             <div className="mt-1 flex gap-2">
               <button
                 type="button"
@@ -1085,19 +1098,23 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
               style={{ left: preview ? `clamp(6rem, ${hover?.x ?? 0}px, calc(100% - 6rem))` : hover?.x }}
             >
               {preview ? <FramePreview sources={sources} time={hover?.time ?? null} /> : null}
-              <div className="rounded-md bg-black/80 px-2 py-0.5 font-mono text-xs">
+              <div className="rounded-md bg-black/80 px-2 py-0.5 text-xs tabular-nums">
                 {formatTime(hover?.time ?? 0)}
-                {hoverSegment ? <span className="ml-1.5 font-sans text-white/70">{t(`player.segment.${hoverSegment.kind}`)}</span> : null}
+                {hoverSegment ? <span className="ml-1.5 text-white/70">{t(`player.segment.${hoverSegment.kind}`)}</span> : null}
               </div>
             </div>
           ) : null}
         </div>
 
-        <div className="flex items-center gap-1">
-          {onPrev ? <ControlButton label={t('player.prev')} onClick={onPrev} icon={<RiSkipBackFill className="fill-current" />} className={touch ? 'hidden' : 'hidden sm:grid'} /> : null}
-          <ControlButton label={playing ? t('player.pause') : t('player.play')} onClick={toggle} icon={playing ? <RiPauseLargeFill /> : <RiPlayLargeFill />} className={touch ? 'hidden' : undefined} />
-          {onNext ? <ControlButton label={t('player.next')} onClick={onNext} icon={<RiSkipForwardFill className="fill-current" />} className={touch ? 'hidden' : undefined} /> : null}
-          <div className="group/vol flex items-center">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {touch ? null : (
+            <div className={PILL}>
+              {onPrev ? <ControlButton label={t('player.prev')} onClick={onPrev} icon={<RiSkipBackFill className="fill-current" />} className="hidden sm:grid" /> : null}
+              <ControlButton label={playing ? t('player.pause') : t('player.play')} onClick={toggle} icon={playing ? <RiPauseLargeFill /> : <RiPlayLargeFill />} />
+              {onNext ? <ControlButton label={t('player.next')} onClick={onNext} icon={<RiSkipForwardFill className="fill-current" />} /> : null}
+            </div>
+          )}
+          <div className={cn(PILL, 'group/vol')}>
             <ControlButton label={t('player.mute')} onClick={() => setMuted((m) => !m)} icon={<VolumeIcon />} />
             <input
               type="range"
@@ -1109,20 +1126,22 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
                 setVolume(Number(e.target.value))
                 setMuted(false)
               }}
-              className="hidden w-0 cursor-pointer accent-[var(--accent)] opacity-0 transition-all group-hover/vol:w-20 group-hover/vol:opacity-100 sm:block"
+              aria-label={t('player.keys.volume')}
+              style={{ background: `linear-gradient(to right, var(--accent) ${(muted ? 0 : volume) * 100}%, rgb(255 255 255 / 0.2) 0)` }}
+              className="hidden h-1 w-0 cursor-pointer appearance-none rounded-full opacity-0 outline-none transition-all group-hover/vol:mr-3 group-hover/vol:w-20 group-hover/vol:opacity-100 sm:block [&::-moz-range-thumb]:size-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-accent [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-accent [&::-webkit-slider-thumb]:shadow"
             />
           </div>
-          <span className="ml-1 whitespace-nowrap font-mono text-[0.6875rem] text-white/80 sm:ml-2 sm:text-xs">
+          <span className={cn(PILL, 'whitespace-nowrap px-3 text-[0.6875rem] tabular-nums text-white/90 sm:px-3.5 sm:text-xs')}>
             {formatTime(time)} / {formatTime(duration)}
           </span>
-          <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
+          <div className={cn(PILL, 'ml-auto')}>
             {subtitlesUrl ? (
               <ControlButton label={t('player.subtitles')} onClick={() => setSubs(!subsOn)} icon={subsOn ? <RiClosedCaptioningFill /> : <RiClosedCaptioningLine />} active={subsOn} />
             ) : null}
             <div className="relative">
               <ControlButton label={t('player.quality')} onClick={() => setMenu(menu ? null : 'root')} icon={<RiSettings3Fill />} badge={`${source.height}p`} />
               {menu ? (
-                <div className="absolute bottom-10 right-0 max-h-44 w-56 overflow-y-auto rounded-lg bg-black/85 p-1 sm:bottom-11 sm:max-h-none sm:w-60 sm:overflow-hidden text-sm shadow-2xl backdrop-blur-xl animate-pop" onClick={(e) => e.stopPropagation()}>
+                <div className="absolute bottom-10 right-0 z-20 max-h-44 w-56 overflow-y-auto rounded-lg bg-black/85 p-1 sm:bottom-11 sm:max-h-none sm:w-60 sm:overflow-hidden text-sm shadow-2xl backdrop-blur-xl animate-pop" onClick={(e) => e.stopPropagation()}>
                   {menu === 'root' ? (
                     <>
                       <MenuRow icon={<RiSettings3Fill />} label={t('player.quality')} value={`${source.height}p`} onClick={() => setMenu('quality')} />
@@ -1177,6 +1196,8 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   )
 }
 
+const PILL = 'flex h-9 items-center rounded-full bg-black/50 px-0.5 sm:h-10'
+
 function TouchButton({ label, onClick, icon, enabled, large }: { label: string; onClick?: () => void; icon: ReactNode; enabled: boolean; large?: boolean }) {
   if (!onClick) return <span className={large ? 'size-16' : 'size-12'} />
   return (
@@ -1202,10 +1223,10 @@ function ControlButton({ label, onClick, icon, active, badge, className }: { lab
         e.stopPropagation()
         onClick()
       }}
-      className={cn('relative grid size-8 cursor-pointer place-items-center rounded-lg text-white/90 transition-colors hover:bg-white/10 sm:size-9 [&_svg]:size-4 sm:[&_svg]:size-[1.125rem]', active && 'text-accent', className)}
+      className={cn('relative grid size-8 cursor-pointer place-items-center rounded-full text-white/90 transition-colors hover:bg-white/10 sm:size-9 [&_svg]:size-4 sm:[&_svg]:size-[1.125rem]', active && 'text-accent', className)}
     >
       {icon}
-      {badge ? <span className="absolute -right-1 -top-0.5 rounded bg-accent px-1 font-mono text-[0.5625rem] font-semibold leading-3.5 text-accent-foreground">{badge}</span> : null}
+      {badge ? <span className="absolute -right-1 -top-0.5 rounded bg-accent px-1 text-[0.5625rem] font-semibold leading-3.5 text-accent-foreground">{badge}</span> : null}
     </button>
   )
 }
@@ -1225,7 +1246,7 @@ function MenuOption({ label, hint, active, onClick }: { label: string; hint?: st
     <button type="button" onClick={onClick} className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 hover:bg-white/10">
       <RiCheckFill className={cn('size-4 text-accent', !active && 'invisible')} />
       <span className="flex-1 text-left">{label}</span>
-      {hint ? <span className="font-mono text-[0.6875rem] text-white/50">{hint}</span> : null}
+      {hint ? <span className="text-[0.6875rem] text-white/50">{hint}</span> : null}
     </button>
   )
 }

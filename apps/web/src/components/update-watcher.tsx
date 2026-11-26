@@ -33,7 +33,7 @@ export function UpdateWatcher() {
       notified = true
       toast.custom(
         (id) => (
-          <div className="flex w-[min(calc(100vw-2rem),22rem)] gap-3 rounded-xl bg-raised p-4 font-sans text-foreground shadow-2xl">
+          <div className="flex min-w-0 flex-1 gap-3 py-1.5">
             <Mascot mood="happy" size={36} animated={false} />
             <div className="min-w-0 flex-1">
               <div className="text-sm font-semibold">{t('version.deployed')}</div>

@@ -339,22 +339,34 @@ function ImportTab() {
   const { t } = useTranslation()
   const [params, setParams] = useSearchParams()
   const client = useQueryClient()
-  const status = useQuery({ queryKey: ['import-status'], queryFn: api.importStatus })
+  const status = useQuery({ queryKey: ['import-status'], queryFn: api.importStatus, refetchInterval: (q) => (q.state.data?.running ? 2000 : false) })
   const isAdmin = useUser().role === 'admin'
+  const runningRef = useRef<ImportProvider | null>(null)
 
   useEffect(() => {
     const provider = params.get('provider') as ImportProvider | null
     if (!provider) return
     const name = PROVIDER_NAMES[provider] ?? provider
     if (params.get('error')) toast.error(t('settings.importFailed', { name }))
-    else
-      toast.success(
-        t('settings.importDone', { name, imported: params.get('imported') ?? 0, updated: params.get('updated') ?? 0, skipped: params.get('skipped') ?? 0 }),
-      )
-    void client.invalidateQueries({ queryKey: ['list'] })
-    void client.invalidateQueries({ queryKey: keys.home })
+    else if (params.get('started')) {
+      runningRef.current = provider
+      toast(t('settings.importStarted', { name }))
+    }
     setParams({}, { replace: true })
   }, [])
+
+  useEffect(() => {
+    const data = status.data
+    if (!data) return
+    const finished = runningRef.current
+    runningRef.current = data.running
+    if (data.failed) toast.error(t('settings.importFailed', { name: PROVIDER_NAMES[data.failed] }))
+    else if (finished && !data.running && data.last) {
+      toast.success(t('settings.importDone', { name: PROVIDER_NAMES[finished], imported: data.last.imported, updated: data.last.updated, skipped: data.last.skipped }))
+      void client.invalidateQueries({ queryKey: ['list'] })
+      void client.invalidateQueries({ queryKey: keys.home })
+    }
+  }, [status.data])
 
   const missing = IMPORT_PROVIDERS.filter((p) => status.data?.providers[p] === false)
 
@@ -405,7 +417,12 @@ function ImportTab() {
                     ) : null}
                   </div>
                 </div>
-                {enabled ? (
+                {status.data?.running === p ? (
+                  <Button variant="secondary" size="sm" disabled className="mt-auto">
+                    <Spinner />
+                    <span className="truncate">{t('settings.importRunning')}</span>
+                  </Button>
+                ) : enabled ? (
                   <Button asChild variant="secondary" size="sm" className="mt-auto">
                     <a href={api.importStartUrl(p)}>
                       <RiDownload2Fill />

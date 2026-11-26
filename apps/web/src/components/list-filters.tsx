@@ -51,21 +51,24 @@ export function ListFilterBar({
   const SortIcon = order === 'asc' ? RiSortAsc : RiSortDesc
   return (
     <>
-      <div className="relative mt-3">
-        <RiSearchFill className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
-        <Input key={resetKey} defaultValue={filters.q} onChange={(e) => set('q', e.target.value)} placeholder={t('lists.filter')} className="h-11 rounded-xl pl-10 text-[0.9375rem]" />
-        {filters.q ? (
-          <button
-            type="button"
-            onClick={() => {
-              set('q', undefined)
-              setResetKey((k) => k + 1)
-            }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-1 text-subtle-foreground hover:text-foreground"
-          >
-            <RiCloseFill className="size-4" />
-          </button>
-        ) : null}
+      <div className="mt-3 flex items-center gap-3">
+        <div className="relative min-w-0 flex-1">
+          <RiSearchFill className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
+          <Input key={resetKey} defaultValue={filters.q} onChange={(e) => set('q', e.target.value)} placeholder={t('lists.filter')} className="h-11 rounded-xl pl-10 text-[0.9375rem]" />
+          {filters.q ? (
+            <button
+              type="button"
+              onClick={() => {
+                set('q', undefined)
+                setResetKey((k) => k + 1)
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-1 text-subtle-foreground hover:text-foreground"
+            >
+              <RiCloseFill className="size-4" />
+            </button>
+          ) : null}
+        </div>
+        {children}
       </div>
       <div className="mb-6 mt-3 flex flex-wrap items-center gap-3">
         <Select
@@ -83,7 +86,7 @@ export function ListFilterBar({
           options={[{ value: ANY, label: `${t('lists.year')}: ${t('common.any')}` }, ...years.map((y) => ({ value: String(y), label: String(y) }))]}
         />
         <Select
-          className="h-11 min-w-48 max-w-72 flex-1 basis-0 rounded-xl px-3.5"
+          className="h-11 min-w-36 max-w-72 flex-1 basis-0 rounded-xl px-3.5"
           icon={<SortIcon />}
           value={filters.sort}
           onValueChange={(v) => set('sort', v === 'score' ? undefined : v, ['order'])}
@@ -104,7 +107,6 @@ export function ListFilterBar({
             <SortIcon />
           </Button>
         </Tooltip>
-        {children}
       </div>
     </>
   )
