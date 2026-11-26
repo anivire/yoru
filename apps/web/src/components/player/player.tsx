@@ -1141,7 +1141,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
             <div className="relative">
               <ControlButton label={t('player.quality')} onClick={() => setMenu(menu ? null : 'root')} icon={<RiSettings3Fill />} badge={`${source.height}p`} />
               {menu ? (
-                <div className="absolute bottom-10 right-0 max-h-44 w-56 overflow-y-auto rounded-lg bg-black/85 p-1 sm:bottom-11 sm:max-h-none sm:w-60 sm:overflow-hidden text-sm shadow-2xl backdrop-blur-xl animate-pop" onClick={(e) => e.stopPropagation()}>
+                <div className="absolute bottom-10 right-0 z-20 max-h-44 w-56 overflow-y-auto rounded-lg bg-black/85 p-1 sm:bottom-11 sm:max-h-none sm:w-60 sm:overflow-hidden text-sm shadow-2xl backdrop-blur-xl animate-pop" onClick={(e) => e.stopPropagation()}>
                   {menu === 'root' ? (
                     <>
                       <MenuRow icon={<RiSettings3Fill />} label={t('player.quality')} value={`${source.height}p`} onClick={() => setMenu('quality')} />
