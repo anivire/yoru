@@ -791,6 +791,7 @@ export const en: Messages = {
       reaction: '{{name}} reacted {{emoji}} to your post',
       room_invite: '{{name}} invites you to watch together',
       invite_accepted: '{{name}} joined with your invite',
+      release: 'yoru has been updated to {{version}}. See what is new',
     },
     premiereBadge: 'Premiere',
     sequelBadge: 'Announced',

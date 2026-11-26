@@ -789,6 +789,7 @@ export const ru = {
       reaction: '{{name}} реагирует {{emoji}} на вашу запись',
       room_invite: '{{name}} зовёт смотреть вместе',
       invite_accepted: '{{name}} присоединяется по вашему приглашению',
+      release: 'yoru обновился до версии {{version}}. Посмотрите, что нового',
     },
     premiereBadge: 'Премьера',
     sequelBadge: 'Анонс',

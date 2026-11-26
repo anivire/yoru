@@ -9,6 +9,7 @@ import { startAnimeBackfill } from './jobs/anime-backfill'
 import { startRussianTitles } from './jobs/russian-titles'
 import { startReleaseWatcher } from './jobs/release-watcher'
 import { backfillAllFeeds } from './services/feed'
+import { announceVersion } from './services/version'
 import { loadExtensions } from './extensions/manager'
 import { hashPassword, randomToken } from './lib/crypto'
 
@@ -31,6 +32,7 @@ async function bootstrapAdmin() {
 runMigrations()
 loadExtensions()
 await bootstrapAdmin()
+announceVersion()
 startReleaseWatcher()
 startAnimeBackfill()
 startRussianTitles()
