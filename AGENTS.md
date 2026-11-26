@@ -78,7 +78,7 @@ There is no test suite. Before finishing a change, run the typecheck for every p
 
 ## Releases
 
-Work happens on the `develop` branch; `master` only gets releases and hotfixes. There are two channels. **Edge** is `develop`: the owner's Dokploy site builds it with `RELEASE_CHANNEL=edge` and is what they test; no Docker image is published for it. A **stable** release is a `vX.Y.Z` tag on `master`: `.github/workflows/docker.yml` publishes the image as `latest`, `X.Y.Z` and `X.Y`, and `.github/workflows/release.yml` creates a GitHub Release. An instance knows its channel from `RELEASE_CHANNEL` (builds from the repository default to `stable`): stable instances compare their version with the latest GitHub Release, edge instances compare their commit with `develop` (`GITHUB_BRANCH` defaults to `master` on stable and `develop` on edge). The in-app changelog groups commits by `chore: release X.Y.Z` commits and shows the commits after the last one as the next version on edge only.
+Work happens on the `develop` branch; `master` only gets releases and hotfixes. There are two channels. **Edge** is `develop`: the owner's Dokploy site builds it with `RELEASE_CHANNEL=edge` and is what they test; no Docker image is published for it. A **stable** release is a `vX.Y.Z` tag on `master`, and `master` only changes through pull requests. `.github/workflows/pr-check.yml` runs on every pull request into `master`: it fails when the version in `package.json` is already tagged, then typechecks and builds. On every push to `master`, `.github/workflows/release.yml` reads the version from `package.json`; when that tag does not exist yet it creates it as an annotated tag whose message is the merged pull request's description (lines starting with 🤖 are dropped), calls `.github/workflows/docker.yml` to publish the image as `latest`, `X.Y.Z` and `X.Y`, and creates a GitHub Release. A tag pushed by the workflow does not trigger other workflows, which is why the image is built through `workflow_call`; `docker.yml` can still be run by hand on a tag. An instance knows its channel from `RELEASE_CHANNEL` (builds from the repository default to `stable`): stable instances compare their version with the latest GitHub Release, edge instances compare their commit with `develop` (`GITHUB_BRANCH` defaults to `master` on stable and `develop` on edge). The in-app changelog groups commits by `chore: release X.Y.Z` commits and shows the commits after the last one as the next version on edge only.
 
 Unless told otherwise, finish each batch of changes like this:
 
@@ -90,11 +90,11 @@ Unless told otherwise, finish each batch of changes like this:
 When the owner asks for a release:
 
 1. Pick the version from the commits since the last `v*` tag: patch for fixes and small tweaks, minor for features or new dependencies, major only on request.
-2. On `develop`, bump every workspace: `npm version X.Y.Z --no-git-tag-version --workspaces --include-workspace-root`, and commit it as `chore: release X.Y.Z`. Then bring it to `master` without a merge commit: `git checkout master && git merge --ff-only develop`.
-3. Create an annotated tag whose message is two or three sentences about the highlights, written for people using the app: `git tag -a vX.Y.Z -m "…"`. `.github/workflows/release.yml` puts it on top of the release notes and lists the `feat`, `perf`, `style` and `fix` commits under it (`.github/scripts/release-notes.mjs`).
-4. Push all three: `git push origin master develop vX.Y.Z`, then switch back to `develop`.
+2. On `develop`, bump every workspace: `npm version X.Y.Z --no-git-tag-version --workspaces --include-workspace-root`, commit it as `chore: release X.Y.Z` and push `develop`.
+3. Open a pull request from `develop` into `master` titled `Release X.Y.Z`. Its description is two or three sentences about the highlights, written for people using the app: it becomes the tag message, which `.github/scripts/release-notes.mjs` puts on top of the release notes above the `feat`, `perf`, `style` and `fix` commits. Do not create tags by hand.
+4. The owner merges it with a merge commit (not squash or rebase: squash loses the commits for the changelog, rebase rewrites them so `develop` and `master` diverge). The tag, image and GitHub Release follow automatically.
 
-A hotfix for a release goes on `master`: commit the fix, release it as a patch the same way (bump, commit, tag, push), then merge `master` back into `develop`.
+A hotfix for a release starts from `master` on a `hotfix/<name>` branch: commit the fix, bump the patch version, open a pull request into `master` the same way, and after it is merged merge `master` back into `develop`.
 
 The repository `docker-compose.yml` builds from source because the Dokploy and Coolify guides deploy from the repository; the README quick start downloads `docs/deploy/docker-compose.yml`, which uses the published `latest` image.
 

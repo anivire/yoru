@@ -1,8 +1,11 @@
 name: Docker image
 
 on:
-  push:
-    tags: ['v*.*.*']
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
   workflow_dispatch:
 
 concurrency:
@@ -37,8 +40,8 @@ jobs:
           images: ${{ env.IMAGE }}
           flavor: latest=true
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{version}},value=${{ inputs.version && format('v{0}', inputs.version) || '' }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.version && format('v{0}', inputs.version) || '' }}
           labels: |
             org.opencontainers.image.title=yoru
             org.opencontainers.image.description=A self-hosted anime tracker and player for you and the people you invite
