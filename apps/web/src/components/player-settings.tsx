@@ -43,7 +43,7 @@ function SortableAuthor({ author, index, onRemove }: { author: string; index: nu
 
 export function PlayerTab() {
   const { t } = useTranslation()
-  const { defaultKind, setDefaultKind, preferredAuthors, setPreferredAuthors, iosFullscreen, setIosFullscreen, autoNext, setAutoNext, watchedAt, setWatchedAt } = useAppearance()
+  const { defaultKind, setDefaultKind, preferredAuthors, setPreferredAuthors, iosFullscreen, setIosFullscreen, skipButton, setSkipButton, autoNext, setAutoNext, watchedAt, setWatchedAt } = useAppearance()
   const [draft, setDraft] = useState('')
   const [picked, setPicked] = useState<FavoriteGroup>(defaultKind)
   const groups: FavoriteGroup[] = preferredAuthors.any?.length ? [...STREAM_KINDS, 'any'] : [...STREAM_KINDS]
@@ -178,6 +178,22 @@ export function PlayerTab() {
                 value: String(ratio),
                 label: ratio === 1 ? t('settings.playerPrefs.watchedAtEnd') : `${Math.round(ratio * 100)}%`,
               }))}
+            />
+          </div>
+          <div className="flex flex-col gap-3 px-5 py-3">
+            <span>
+              <span className="block text-sm">{t('settings.playerPrefs.skipButton')}</span>
+              <span className="block text-[0.8125rem] text-muted-foreground">{t('settings.playerPrefs.skipButtonHint')}</span>
+            </span>
+            <Segmented
+              size="sm"
+              className="self-start"
+              value={skipButton}
+              onChange={setSkipButton}
+              options={[
+                { value: 'brief', label: t('settings.playerPrefs.skipButtonBrief') },
+                { value: 'auto', label: t('settings.playerPrefs.skipButtonAuto') },
+              ]}
             />
           </div>
           {IS_IOS ? (

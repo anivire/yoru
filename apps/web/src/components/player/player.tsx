@@ -20,6 +20,7 @@ const VOLUME_KEY = 'yoru:volume'
 const SUBS_KEY = 'yoru:subs'
 const AUTOSKIP_KEY = 'yoru:autoskip'
 const AUTOSKIP_DELAY = 4
+const SKIP_VISIBLE = 5
 
 function readAutoSkip(): SkipTime['kind'][] {
   try {
@@ -166,7 +167,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   const [fullscreen, setFullscreen] = useState(false)
   const [countdown, setCountdown] = useState<number | null>(null)
   const [stretched, setStretched] = useState(false)
-  const { iosFullscreen } = useAppearance()
+  const { iosFullscreen, skipButton } = useAppearance()
   const nativeIos = IS_IOS && iosFullscreen === 'native'
   const full = fullscreen || stretched
   const [controls, setControls] = useState(true)
@@ -176,7 +177,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
   const [error, setError] = useState<string | null>(null)
   const [blocked, setBlocked] = useState(false)
   const [autoSkip, setAutoSkip] = useState(readAutoSkip)
-  const [entry, setEntry] = useState<{ key: string; from: number } | null>(null)
+  const [entry, setEntry] = useState<{ key: string; from: number; at: number } | null>(null)
   const [help, setHelp] = useState(false)
   const [pip, setPip] = useState(false)
   const [seekFlash, setSeekFlash] = useState<{ side: -1 | 1; amount: number; at: number } | null>(null)
@@ -694,7 +695,10 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
     const v = videoRef.current
     if (v) v.currentTime = Math.min(s.end, v.duration || s.end)
   }
-  const autoLeft = activeSkip && autoSkip.includes(activeSkip.kind) ? Math.max(1, Math.ceil(AUTOSKIP_DELAY - (entry?.key === `${activeSkip.kind}:${activeSkip.start}` ? time - entry.from : 0))) : null
+  const autoOn = (kind: SkipTime['kind']) => skipButton === 'auto' && autoSkip.includes(kind)
+  const inSkip = activeSkip && entry?.key === `${activeSkip.kind}:${activeSkip.start}` ? time - entry.from : 0
+  const autoLeft = activeSkip && autoOn(activeSkip.kind) ? Math.max(1, Math.ceil(AUTOSKIP_DELAY - inSkip)) : null
+  const skipVisible = skipButton === 'auto' || controls || inSkip < SKIP_VISIBLE
 
   const goNext = useEffectEvent(() => onEnded())
 
@@ -827,8 +831,12 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
             if (v.buffered.length) setBuffered(v.buffered.end(v.buffered.length - 1))
             const segment = segmentAt(v.currentTime)
             const key = segment ? `${segment.kind}:${segment.start}` : null
-            if (entry?.key !== key) setEntry(key ? { key, from: v.currentTime } : null)
-            else if (segment && entry && autoSkip.includes(segment.kind) && v.currentTime - entry.from >= AUTOSKIP_DELAY) skipSegment(segment)
+            const at = v.currentTime
+            if (entry?.key !== key || (entry && Math.abs(at - entry.at) > 1.5)) setEntry(key ? { key, from: at, at } : null)
+            else if (segment && entry) {
+              setEntry({ ...entry, at })
+              if (autoOn(segment.kind) && at - entry.from >= AUTOSKIP_DELAY) skipSegment(segment)
+            }
             save()
           }}
           onEnded={() => {
@@ -870,7 +878,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
       ) : null}
 
       {activeSkip && !error && countdown === null ? (
-        <div className={cn('absolute right-3 z-10 flex gap-2 transition-[bottom] sm:right-5', controls ? 'bottom-20 sm:bottom-24' : 'bottom-5')}>
+        <div className={cn('absolute right-3 z-10 flex gap-2 transition-[bottom,opacity] duration-300 sm:right-5', controls ? 'bottom-20 sm:bottom-24' : 'bottom-5', !skipVisible && 'pointer-events-none opacity-0')} inert={!skipVisible}>
           {autoLeft !== null ? (
             <button
               type="button"
@@ -886,7 +894,7 @@ export function Player({ sources, subtitlesUrl, startAt, title, subtitle, autoPl
           <button
             type="button"
             onClick={() => {
-              changeAutoSkip(activeSkip.kind, true)
+              if (skipButton === 'auto') changeAutoSkip(activeSkip.kind, true)
               skipSegment(activeSkip)
               poke()
             }}

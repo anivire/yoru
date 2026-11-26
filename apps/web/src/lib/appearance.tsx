@@ -31,6 +31,7 @@ export type NavLabels = 'always' | 'hover' | 'off'
 export type BackdropShape = 'full' | 'glow'
 
 export type IosFullscreen = 'app' | 'native'
+export type SkipButton = 'brief' | 'auto'
 
 export const FEED_SCOPES = ['me', 'friends', 'all'] as const
 export type FeedScope = (typeof FEED_SCOPES)[number]
@@ -57,6 +58,7 @@ interface State {
   navLabels: NavLabels
   backdrop: BackdropShape
   iosFullscreen: IosFullscreen
+  skipButton: SkipButton
   autoNext: boolean
   watchedAt: number
   titleLanguage: TitleLanguage
@@ -107,6 +109,7 @@ interface Appearance extends State {
   setNavLabels: (labels: NavLabels) => void
   setBackdrop: (shape: BackdropShape) => void
   setIosFullscreen: (mode: IosFullscreen) => void
+  setSkipButton: (mode: SkipButton) => void
   setAutoNext: (enabled: boolean) => void
   setWatchedAt: (ratio: number) => void
   setTitleLanguage: (language: TitleLanguage) => void
@@ -135,6 +138,7 @@ function load(): State {
       navLabels?: string
       backdrop?: string
       iosFullscreen?: string
+      skipButton?: string
       autoNext?: boolean
       watchedAt?: number
       titleLanguage?: string
@@ -162,6 +166,7 @@ function load(): State {
       navLabels: raw.navLabels === 'hover' || raw.navLabels === 'off' ? raw.navLabels : 'always',
       backdrop: raw.backdrop === 'glow' ? 'glow' : 'full',
       iosFullscreen: raw.iosFullscreen === 'app' ? 'app' : 'native',
+      skipButton: raw.skipButton === 'auto' ? 'auto' : 'brief',
       autoNext: raw.autoNext !== false,
       watchedAt: (WATCHED_THRESHOLDS as readonly number[]).includes(raw.watchedAt as number) ? (raw.watchedAt as number) : 0.85,
       titleLanguage: TITLE_LANGUAGES.includes(raw.titleLanguage as TitleLanguage) ? (raw.titleLanguage as TitleLanguage) : 'romaji',
@@ -170,7 +175,7 @@ function load(): State {
       feedScope: FEED_SCOPES.includes(raw.feedScope as FeedScope) ? (raw.feedScope as FeedScope) : 'me',
     }
   } catch {
-    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: false, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], navOrder: DEFAULT_NAV_ORDER, defaultKind: 'sub', preferredAuthors: {}, navPosition: 'left', navLabels: 'always', backdrop: 'full', iosFullscreen: 'native', autoNext: true, watchedAt: 0.85, titleLanguage: 'romaji', appearanceButton: true, friendAvatars: true, feedScope: 'me' }
+    return { theme: DEFAULT_THEME, scheme: DEFAULT_SCHEME, pageWidth: DEFAULT_WIDTH, expandSynopsis: false, showHero: true, homeSections: DEFAULT_SECTIONS, hiddenNav: [], navOrder: DEFAULT_NAV_ORDER, defaultKind: 'sub', preferredAuthors: {}, navPosition: 'left', navLabels: 'always', backdrop: 'full', iosFullscreen: 'native', skipButton: 'brief', autoNext: true, watchedAt: 0.85, titleLanguage: 'romaji', appearanceButton: true, friendAvatars: true, feedScope: 'me' }
   }
 }
 
@@ -283,6 +288,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
         setNavLabels: (navLabels) => setState((s) => ({ ...s, navLabels })),
         setBackdrop: (backdrop) => setState((s) => ({ ...s, backdrop })),
         setIosFullscreen: (iosFullscreen) => setState((s) => ({ ...s, iosFullscreen })),
+        setSkipButton: (skipButton) => setState((s) => ({ ...s, skipButton })),
         setAutoNext: (autoNext) => setState((s) => ({ ...s, autoNext })),
         setWatchedAt: (watchedAt) => setState((s) => ({ ...s, watchedAt })),
         setTitleLanguage: (titleLanguage) => setState((s) => ({ ...s, titleLanguage })),
