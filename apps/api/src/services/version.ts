@@ -2,6 +2,9 @@ import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import type { ChangeType, Changelog, ChangelogEntry, VersionInfo } from '@yoru/shared'
+import { db, now } from '../db/client'
+import { settings, socialNotifications, users } from '../db/schema'
+import { eq } from 'drizzle-orm'
 import { env } from '../env'
 import { cached, SourceOffError, upstreamJson } from '../lib/http'
 import { featureEnabled } from '../lib/features'
@@ -184,4 +187,21 @@ export async function versionInfo(withUpdates: boolean): Promise<VersionInfo> {
     updateAvailable: Boolean(latest && current.commit && latest.commit !== current.commit && (info?.behindBy ?? 1) > 0),
     compareUrl: latest && current.commit ? `${repoUrl}/compare/${current.commit}...${latest.commit}` : null,
   }
+}
+
+const ANNOUNCED_KEY = 'announced_version'
+
+export function announceVersion() {
+  const { version } = current
+  if (!version) return
+  db.transaction(
+    (tx) => {
+      if (tx.select({ value: settings.value }).from(settings).where(eq(settings.key, ANNOUNCED_KEY)).get()?.value === version) return
+      const at = now()
+      const rows = tx.select({ id: users.id }).from(users).all().map((u) => ({ userId: u.id, actorId: u.id, type: 'release' as const, text: version, createdAt: at }))
+      if (rows.length) tx.insert(socialNotifications).values(rows).run()
+      tx.insert(settings).values({ key: ANNOUNCED_KEY, value: version }).onConflictDoUpdate({ target: settings.key, set: { value: version } }).run()
+    },
+    { behavior: 'immediate' },
+  )
 }

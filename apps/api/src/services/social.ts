@@ -78,7 +78,7 @@ const NOTIFY_FLAGS = {
   invite_accepted: users.notifyFriends,
 } as const
 
-export function notify(input: { userId: number; actorId: number; type: (typeof socialNotifications.$inferInsert)['type']; malId?: number | null; refId?: number | null; text?: string | null }) {
+export function notify(input: { userId: number; actorId: number; type: keyof typeof NOTIFY_FLAGS; malId?: number | null; refId?: number | null; text?: string | null }) {
   if (input.userId === input.actorId || blockedBetween(input.userId, input.actorId)) return
   const wanted = db.select({ on: NOTIFY_FLAGS[input.type] }).from(users).where(eq(users.id, input.userId)).get()
   if (!wanted?.on) return

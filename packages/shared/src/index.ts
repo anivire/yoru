@@ -504,7 +504,7 @@ export interface Notification {
   readAt: string | null
 }
 
-export type SocialNotificationType = 'friend_request' | 'friend_accepted' | 'recommendation' | 'comment' | 'reaction' | 'room_invite' | 'invite_accepted'
+export type SocialNotificationType = 'friend_request' | 'friend_accepted' | 'recommendation' | 'comment' | 'reaction' | 'room_invite' | 'invite_accepted' | 'release'
 
 export interface SocialNotification {
   id: number

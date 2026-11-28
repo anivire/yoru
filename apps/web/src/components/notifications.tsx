@@ -30,6 +30,7 @@ export function useNotificationSound() {
 }
 
 function socialLink(n: SocialNotification) {
+  if (n.type === 'release') return '/changelog'
   if (n.type === 'friend_request') return '/friends'
   if (n.type === 'friend_accepted' || n.type === 'invite_accepted') return `/u/${n.actor.username}`
   if (n.type === 'recommendation' && n.malId) return animePath(n.malId)
@@ -45,18 +46,18 @@ function SocialItem({ n, onOpen }: { n: SocialNotification; onOpen: () => void }
   const name = nameOf(n.actor)
   return (
     <TLink to={socialLink(n)} onClick={onOpen} className={cn('flex gap-3 rounded-lg px-2.5 py-2.5 transition-colors hover:bg-muted', n.readAt && 'opacity-60')}>
-      <UserAvatar user={n.actor} className="size-10" />
+      {n.type === 'release' ? <Mascot mood="happy" size={40} animated={false} /> : <UserAvatar user={n.actor} className="size-10" />}
       <div className="min-w-0 flex-1">
         <div className="flex items-start gap-2">
           {!n.readAt ? <StatusDot tone="accent" className="mt-1.5" /> : null}
-          <span className="text-sm">{t(`notifications.social.${n.type}`, { name, emoji: n.text ?? '' })}</span>
+          <span className="text-sm">{t(`notifications.social.${n.type}`, { name, emoji: n.text ?? '', version: n.text ?? '' })}</span>
         </div>
         {n.titles ? (
           <div className="mt-0.5 truncate text-[0.8125rem] font-medium text-muted-foreground">
             <AnimeTitle anime={n.titles} />
           </div>
         ) : null}
-        {n.type !== 'reaction' && n.type !== 'room_invite' && n.text ? <p className="mt-1 line-clamp-2 text-[0.8125rem] text-muted-foreground">{n.text}</p> : null}
+        {n.type !== 'reaction' && n.type !== 'room_invite' && n.type !== 'release' && n.text ? <p className="mt-1 line-clamp-2 text-[0.8125rem] text-muted-foreground">{n.text}</p> : null}
         <div className="mt-1 font-mono text-[0.6875rem] text-subtle-foreground">{relativeTime(n.createdAt)}</div>
       </div>
       {n.imageUrl ? <Image src={n.imageUrl} alt="" className="h-14 w-10 shrink-0 rounded-md object-cover" loading="lazy" /> : null}

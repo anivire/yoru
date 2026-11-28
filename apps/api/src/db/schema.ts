@@ -274,7 +274,7 @@ export const socialNotifications = sqliteTable('social_notifications', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   actorId: integer('actor_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  type: text('type', { enum: ['friend_request', 'friend_accepted', 'recommendation', 'comment', 'reaction', 'room_invite', 'invite_accepted'] }).notNull(),
+  type: text('type', { enum: ['friend_request', 'friend_accepted', 'recommendation', 'comment', 'reaction', 'room_invite', 'invite_accepted', 'release'] }).notNull(),
   malId: integer('mal_id'),
   refId: integer('ref_id'),
   text: text('text'),
