@@ -11,7 +11,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@anivire/kata-ui": "^0.1.1"
+    "@anivire/kata-ui": "^0.1.2"
   },
   "peerDependencies": {
     "react": "^19.0.0",
