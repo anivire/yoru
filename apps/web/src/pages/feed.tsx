@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import type { FeedItem, FeedPage as FeedPageData, ListStatus } from '@yoru/shared'
-import { Badge, Button, EmptyState, Segmented, Skeleton, StarIcon, cn } from '@yoru/ui'
+import { Badge, Button, EmptyState, Segmented, Skeleton, StarIcon, Tooltip, cn } from '@yoru/ui'
 import { RiAddCircleFill, RiArrowDownSLine, RiArrowRightLine, RiCloseLine, RiHistoryFill, RiNotification3Fill, RiPlayCircleFill, RiStickyNoteFill } from '@remixicon/react'
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -141,10 +141,12 @@ function FeedCard({ change, time }: { change: Change; time?: string }) {
         {to ? (
           <span className="flex min-w-0 items-center gap-1">
             {previous ? (
-              <span className="inline-flex shrink-0 items-center gap-0.5" title={t(`status.${previous}`)} aria-label={t(`status.${previous}`)}>
-                <StatusIcon status={previous} className="size-3.5" />
-                <RiArrowRightLine className="size-3.5 text-subtle-foreground" />
-              </span>
+              <Tooltip content={t(`status.${previous}`)}>
+                <span className="inline-flex shrink-0 items-center gap-0.5" aria-label={t(`status.${previous}`)}>
+                  <StatusIcon status={previous} className="size-3.5" />
+                  <RiArrowRightLine className="size-3.5 text-subtle-foreground" />
+                </span>
+              </Tooltip>
             ) : null}
             <StatusText status={to} className="font-semibold" />
           </span>
