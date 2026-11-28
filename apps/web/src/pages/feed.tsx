@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import type { FeedItem, FeedPage as FeedPageData, ListStatus } from '@yoru/shared'
-import { Button, EmptyState, Segmented, Skeleton, StarIcon, cn } from '@yoru/ui'
-import { RiAddCircleFill, RiArrowDownSLine, RiCloseLine, RiHistoryFill, RiNotification3Fill, RiPlayCircleFill, RiStickyNoteFill } from '@remixicon/react'
+import { Badge, Button, EmptyState, Segmented, Skeleton, StarIcon, cn } from '@yoru/ui'
+import { RiAddCircleFill, RiArrowDownSLine, RiArrowRightLine, RiCloseLine, RiHistoryFill, RiNotification3Fill, RiPlayCircleFill, RiStickyNoteFill } from '@remixicon/react'
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
@@ -14,11 +14,10 @@ import { UserAvatar, nameOf } from '../components/user-avatar'
 import { useAnimeTitle, animePath } from '../lib/anime-title'
 import { api } from '../lib/api'
 import { FEED_SCOPES, useAppearance } from '../lib/appearance'
-import { StatusBadge, StatusIcon } from '../lib/list-status'
+import { StatusBadge, StatusIcon, StatusText } from '../lib/list-status'
 import { useDocumentTitle } from '../lib/title'
 
 const COLLAPSED = 12
-const MERGE_WINDOW_MS = 60 * 60_000
 
 interface Group {
   key: string
@@ -49,6 +48,7 @@ function groupKey(item: FeedItem) {
 
 interface Change {
   id: number
+  at: string
   anime: FeedItem['anime']
   episodes?: { from: number; to: number }
   from?: ListStatus | null
@@ -62,7 +62,7 @@ function changesOf(items: FeedItem[]): Change[] {
     if (item.type === 'note') continue
     let change = byAnime.get(item.anime.malId)
     if (!change) {
-      change = { id: item.id, anime: item.anime }
+      change = { id: item.id, at: item.createdAt, anime: item.anime }
       byAnime.set(item.anime.malId, change)
     }
     if (item.type === 'episodes') change.episodes = change.episodes ? { from: Math.min(change.episodes.from, item.from), to: Math.max(change.episodes.to, item.to) } : { from: item.from, to: item.to }
@@ -107,16 +107,7 @@ function buildDays(items: FeedItem[]): Day[] {
     if (absorb(day, item)) continue
     day.count++
     const key = groupKey(item)
-    const time = date.getTime()
-    let target: Group | undefined
-    for (let i = day.groups.length - 1; i >= 0; i--) {
-      const group = day.groups[i]!
-      if (Date.parse(group.items.at(-1)!.createdAt) - time > MERGE_WINDOW_MS) break
-      if (group.key === key) {
-        target = group
-        break
-      }
-    }
+    const target = day.groups.find((group) => group.key === key)
     if (target) target.items.push(item)
     else day.groups.push({ key, items: [item] })
   }
@@ -140,29 +131,46 @@ function useGroupHeading() {
   }
 }
 
-function FeedCard({ change }: { change: Change }) {
+function FeedCard({ change, time }: { change: Change; time?: string }) {
   const { t } = useTranslation()
   const { episodes, from, to, score } = change
   const previous = from && from !== to ? from : null
-  const subtitle =
-    episodes || previous ? (
-      <>
-        {episodes ? (
-          <span className="inline-flex items-center gap-1 font-semibold text-accent">
-            <RiPlayCircleFill className="size-3.5 shrink-0" />
-            {episodes.from === episodes.to ? t('feed.episodeShort', { episode: episodes.from }) : t('feed.episodesShort', { from: episodes.from, to: episodes.to })}
+  const detail =
+    episodes || to ? (
+      <span className="flex flex-col gap-0.5">
+        {to ? (
+          <span className="flex min-w-0 items-center gap-1">
+            {previous ? (
+              <span className="inline-flex shrink-0 items-center gap-0.5" title={t(`status.${previous}`)} aria-label={t(`status.${previous}`)}>
+                <StatusIcon status={previous} className="size-3.5" />
+                <RiArrowRightLine className="size-3.5 text-subtle-foreground" />
+              </span>
+            ) : null}
+            <StatusText status={to} className="font-semibold" />
           </span>
         ) : null}
-        {episodes && previous ? ' ' : null}
-        {previous ? <span className="line-through">{t(`status.${previous}`)}</span> : null}
-      </>
-    ) : score && !to ? (
+        {episodes ? (
+          <span className="flex min-w-0 items-center gap-1 font-semibold text-accent">
+            <RiPlayCircleFill className="size-3.5 shrink-0" />
+            <span className="truncate">{episodes.from === episodes.to ? t('feed.episodeShort', { episode: episodes.from }) : t('feed.episodesShort', { from: episodes.from, to: episodes.to })}</span>
+          </span>
+        ) : null}
+      </span>
+    ) : score ? (
       <span className="inline-flex items-center gap-1 font-semibold text-amber-500">
         <StarIcon className="size-3.5 shrink-0" />
         {t('feed.score', { score })}
       </span>
     ) : undefined
-  return <AnimeCard anime={change.anime} userScore={score} coloredScore={Boolean(score)} subtitle={subtitle} ribbon={to ? <StatusBadge status={to} className="h-6 px-2.5 text-xs" /> : undefined} />
+  return (
+    <AnimeCard
+      anime={change.anime}
+      userScore={score}
+      coloredScore={Boolean(score)}
+      subtitle={detail}
+      tag={time ? <Badge size="sm" variant="solid" className="bg-black/65 font-mono text-white">{time}</Badge> : undefined}
+    />
+  )
 }
 
 function NoteEntry({ item }: { item: Extract<FeedItem, { type: 'note' }> }) {
@@ -228,7 +236,7 @@ function GroupEntry({ group, showUser, focus }: { group: Group; showUser: boolea
         <>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-3 gap-y-4">
             {shown.map((change) => (
-              <FeedCard key={change.id} change={change} />
+              <FeedCard key={change.id} change={change} time={changes.length > 1 ? format.format(new Date(change.at)) : undefined} />
             ))}
           </div>
           {changes.length > COLLAPSED ? (

@@ -102,7 +102,7 @@ export function AnimeCard({
   progress,
   status,
   badge,
-  ribbon,
+  tag,
   subtitle,
   rewatches,
   userScore,
@@ -113,7 +113,7 @@ export function AnimeCard({
   progress?: number
   status?: ListStatus
   badge?: ReactNode
-  ribbon?: ReactNode
+  tag?: ReactNode
   subtitle?: ReactNode
   rewatches?: number
   userScore?: number | null
@@ -158,8 +158,7 @@ export function AnimeCard({
           ) : null}
           {details ? <div className="line-clamp-2 text-[0.6875rem] leading-snug text-white/80">{details}</div> : null}
         </div>
-        {friends.length ? <FriendStack users={friends} className={cn('absolute left-2.5 transition-opacity duration-150 group-hover:opacity-0', ribbon ? 'bottom-11' : withProgress ? 'bottom-7' : 'bottom-2.5')} /> : null}
-        {ribbon ? <div className="absolute inset-x-2.5 bottom-2.5 flex transition-opacity duration-150 group-hover:opacity-0">{ribbon}</div> : null}
+        {friends.length ? <FriendStack users={friends} className={cn('absolute left-2.5 transition-opacity duration-150 group-hover:opacity-0', withProgress ? 'bottom-7' : 'bottom-2.5')} /> : null}
         {progress !== undefined && total && progress < total ? (
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2.5 pb-2.5 pt-6 transition-opacity duration-150 group-hover:opacity-0">
             <div className="h-1.5 overflow-hidden rounded-full bg-white/25">
@@ -169,13 +168,14 @@ export function AnimeCard({
         ) : null}
         <div className="absolute inset-x-2 top-2.5 flex items-start justify-between gap-1">
           <div className="flex flex-wrap gap-1">
-            {rewatches ? (
+            {tag}
+            {tag ? null : rewatches ? (
               <Badge size="sm" variant="solid" className="gap-1 bg-black/65 text-white tabular-nums" title={t('anime.rewatchedTimes', { count: rewatches })}>
                 <RiRepeatFill className="size-3" />
                 {rewatches}
               </Badge>
             ) : null}
-            {anime.airing ? (
+            {anime.airing && !tag ? (
               <Badge size="sm" variant="solid" className="bg-black/65 text-white">
                 <span className="size-1.5 rounded-full bg-success" />
                 {t('airing.airing')}
@@ -212,7 +212,7 @@ export function AnimeCard({
       </CardLink>
       {href ? null : (
         <div className="pointer-events-none absolute inset-x-0 top-0 aspect-[2/3]">
-          <QuickEdit malId={anime.malId} className={cn('pointer-events-auto absolute bottom-2.5 right-2.5', ribbon ? '[@media(hover:none)]:bottom-11' : '[@media(hover:none)]:bottom-6')} />
+          <QuickEdit malId={anime.malId} className="pointer-events-auto absolute bottom-2.5 right-2.5 [@media(hover:none)]:bottom-6" />
         </div>
       )}
     </div>
