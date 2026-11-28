@@ -103,6 +103,7 @@ export function AnimeCard({
   status,
   badge,
   tag,
+  ribbon,
   subtitle,
   rewatches,
   userScore,
@@ -114,6 +115,7 @@ export function AnimeCard({
   status?: ListStatus
   badge?: ReactNode
   tag?: ReactNode
+  ribbon?: ReactNode
   subtitle?: ReactNode
   rewatches?: number
   userScore?: number | null
@@ -158,7 +160,8 @@ export function AnimeCard({
           ) : null}
           {details ? <div className="line-clamp-2 text-[0.6875rem] leading-snug text-white/80">{details}</div> : null}
         </div>
-        {friends.length ? <FriendStack users={friends} className={cn('absolute left-2.5 transition-opacity duration-150 group-hover:opacity-0', withProgress ? 'bottom-7' : 'bottom-2.5')} /> : null}
+        {ribbon ? <div className="absolute bottom-2.5 left-2.5 right-2.5 flex flex-wrap items-end gap-1 transition-opacity duration-150 group-hover:opacity-0 [@media(hover:none)]:right-11">{ribbon}</div> : null}
+        {friends.length && !ribbon ? <FriendStack users={friends} className={cn('absolute left-2.5 transition-opacity duration-150 group-hover:opacity-0', withProgress ? 'bottom-7' : 'bottom-2.5')} /> : null}
         {progress !== undefined && total && progress < total ? (
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2.5 pb-2.5 pt-6 transition-opacity duration-150 group-hover:opacity-0">
             <div className="h-1.5 overflow-hidden rounded-full bg-white/25">

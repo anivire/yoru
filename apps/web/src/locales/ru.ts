@@ -273,6 +273,7 @@ export const ru = {
     watched: 'Просмотренные серии',
     episodeShort: 'Серия {{episode}}',
     episodesShort: 'Серии {{from}}–{{to}}',
+    ofTotal: 'из {{total}}',
     showAll: 'Показать все ({{count}})',
     collapse: 'Свернуть',
     collapseDay: 'Свернуть день',

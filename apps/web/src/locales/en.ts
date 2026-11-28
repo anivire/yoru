@@ -275,6 +275,7 @@ export const en: Messages = {
     watched: 'Watched episodes',
     episodeShort: 'Episode {{episode}}',
     episodesShort: 'Episodes {{from}}–{{to}}',
+    ofTotal: 'of {{total}}',
     showAll: 'Show all ({{count}})',
     collapse: 'Collapse',
     collapseDay: 'Collapse day',

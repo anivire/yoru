@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import type { FeedItem, FeedPage as FeedPageData, ListStatus } from '@yoru/shared'
-import { Badge, Button, EmptyState, Segmented, Skeleton, StarIcon, Tooltip, cn } from '@yoru/ui'
-import { RiAddCircleFill, RiArrowDownSLine, RiArrowRightLine, RiCloseLine, RiHistoryFill, RiNotification3Fill, RiPlayCircleFill, RiStickyNoteFill } from '@remixicon/react'
+import { Badge, Button, EmptyState, Segmented, Skeleton, StarIcon, cn } from '@yoru/ui'
+import { RiAddCircleFill, RiArrowDownSLine, RiCloseLine, RiHistoryFill, RiNotification3Fill, RiPlayCircleFill, RiStickyNoteFill } from '@remixicon/react'
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
@@ -14,7 +14,7 @@ import { UserAvatar, nameOf } from '../components/user-avatar'
 import { useAnimeTitle, animePath } from '../lib/anime-title'
 import { api } from '../lib/api'
 import { FEED_SCOPES, useAppearance } from '../lib/appearance'
-import { StatusBadge, StatusIcon, StatusText } from '../lib/list-status'
+import { StatusBadge, StatusIcon } from '../lib/list-status'
 import { useDocumentTitle } from '../lib/title'
 
 const COLLAPSED = 12
@@ -51,7 +51,6 @@ interface Change {
   at: string
   anime: FeedItem['anime']
   episodes?: { from: number; to: number }
-  from?: ListStatus | null
   to?: ListStatus
   score?: number
 }
@@ -67,14 +66,8 @@ function changesOf(items: FeedItem[]): Change[] {
     }
     if (item.type === 'episodes') change.episodes = change.episodes ? { from: Math.min(change.episodes.from, item.from), to: Math.max(change.episodes.to, item.to) } : { from: item.from, to: item.to }
     if (item.type === 'score') change.score ??= item.score
-    if (item.type === 'status') {
-      change.to ??= item.to
-      change.from = item.from
-    }
-    if (item.type === 'added') {
-      change.to ??= item.status
-      change.from = null
-    }
+    if (item.type === 'status') change.to ??= item.to
+    if (item.type === 'added') change.to ??= item.status
   }
   return [...byAnime.values()]
 }
@@ -133,45 +126,53 @@ function useGroupHeading() {
 
 function FeedCard({ change, time }: { change: Change; time?: string }) {
   const { t } = useTranslation()
-  const { episodes, from, to, score } = change
-  const previous = from && from !== to ? from : null
-  const detail =
-    episodes || to ? (
-      <span className="flex flex-col gap-0.5">
-        {to ? (
-          <span className="flex min-w-0 items-center gap-1">
-            {previous ? (
-              <Tooltip content={t(`status.${previous}`)}>
-                <span className="inline-flex shrink-0 items-center gap-0.5" aria-label={t(`status.${previous}`)}>
-                  <StatusIcon status={previous} className="size-3.5" />
-                  <RiArrowRightLine className="size-3.5 text-subtle-foreground" />
-                </span>
-              </Tooltip>
-            ) : null}
-            <StatusText status={to} className="font-semibold" />
-          </span>
-        ) : null}
-        {episodes ? (
-          <span className="flex min-w-0 items-center gap-1 font-semibold text-accent">
-            <RiPlayCircleFill className="size-3.5 shrink-0" />
-            <span className="truncate">{episodes.from === episodes.to ? t('feed.episodeShort', { episode: episodes.from }) : t('feed.episodesShort', { from: episodes.from, to: episodes.to })}</span>
-          </span>
-        ) : null}
-      </span>
-    ) : score ? (
-      <span className="inline-flex items-center gap-1 font-semibold text-amber-500">
-        <StarIcon className="size-3.5 shrink-0" />
-        {t('feed.score', { score })}
-      </span>
-    ) : undefined
+  const { episodes, to, score } = change
+  const total = change.anime.episodes
+  const detail = episodes ? (
+    <>
+      <span className="font-semibold text-accent">{episodes.from === episodes.to ? t('feed.episodeShort', { episode: episodes.from }) : t('feed.episodesShort', { from: episodes.from, to: episodes.to })}</span>
+      {total ? ` ${t('feed.ofTotal', { total })}` : null}
+    </>
+  ) : score ? (
+    <span className="inline-flex items-center gap-1 font-semibold text-amber-500">
+      <StarIcon className="size-3.5 shrink-0" />
+      {t('feed.score', { score })}
+    </span>
+  ) : undefined
+  const ribbon = to ? <StatusBadge status={to} className="h-6 px-2" /> : undefined
   return (
-    <AnimeCard
-      anime={change.anime}
-      userScore={score}
-      coloredScore={Boolean(score)}
-      subtitle={detail}
-      tag={time ? <Badge size="sm" variant="solid" className="bg-black/65 font-mono text-white">{time}</Badge> : undefined}
-    />
+    <div className="flex flex-col gap-1.5">
+      <AnimeCard
+        anime={change.anime}
+        userScore={score}
+        coloredScore={Boolean(score)}
+        subtitle={detail}
+        ribbon={ribbon}
+        tag={time ? <Badge size="sm" variant="solid" className="bg-black/65 font-mono text-white">{time}</Badge> : undefined}
+      />
+      {episodes ? <EpisodeBar from={episodes.from} to={episodes.to} total={total} /> : null}
+    </div>
+  )
+}
+
+const MAX_CELLS = 12
+const WINDOW_CELLS = 10
+
+function EpisodeBar({ from, to, total }: { from: number; to: number; total: number | null }) {
+  const count = Math.max(total ?? 0, to)
+  const size = count > MAX_CELLS ? WINDOW_CELLS : count
+  const start = Math.min(Math.max(to - size + 1, 1), count - size + 1)
+  const rest = count - (start + size - 1)
+  return (
+    <div className="mx-0.5 flex items-center gap-1.5">
+      <div className="flex flex-1 gap-0.5">
+        {Array.from({ length: size }, (_, i) => {
+          const episode = start + i
+          return <div key={episode} className={cn('h-1 flex-1 rounded-full', episode < from ? 'bg-accent/35' : episode <= to ? 'bg-accent' : 'bg-field')} />
+        })}
+      </div>
+      {rest > 0 ? <span className="text-[0.6875rem] font-medium leading-none tabular-nums text-muted-foreground">+{rest}</span> : null}
+    </div>
   )
 }
 
