@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import type { FeedItem, FeedPage as FeedPageData } from '@yoru/shared'
+import type { FeedItem, FeedPage as FeedPageData, ListStatus } from '@yoru/shared'
 import { Button, EmptyState, Segmented, Skeleton, StarIcon, cn } from '@yoru/ui'
-import { RiAddCircleFill, RiArrowDownSLine, RiCloseLine, RiNotification3Fill, RiPlayCircleFill, RiStickyNoteFill } from '@remixicon/react'
+import { RiAddCircleFill, RiArrowDownSLine, RiCloseLine, RiHistoryFill, RiNotification3Fill, RiPlayCircleFill, RiStickyNoteFill } from '@remixicon/react'
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
@@ -36,11 +36,47 @@ function dayKey(date: Date) {
   return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
 }
 
-function groupKey(item: FeedItem) {
+function kindKey(item: FeedItem) {
   if (item.type === 'added') return `${item.user.id}:added:${item.status}`
   if (item.type === 'status') return `${item.user.id}:status:${item.to}`
   if (item.type === 'note') return `${item.user.id}:note:${item.id}`
   return `${item.user.id}:${item.type}`
+}
+
+function groupKey(item: FeedItem) {
+  return item.type === 'note' ? kindKey(item) : `${item.user.id}:activity`
+}
+
+interface Change {
+  id: number
+  anime: FeedItem['anime']
+  episodes?: { from: number; to: number }
+  from?: ListStatus | null
+  to?: ListStatus
+  score?: number
+}
+
+function changesOf(items: FeedItem[]): Change[] {
+  const byAnime = new Map<number, Change>()
+  for (const item of items) {
+    if (item.type === 'note') continue
+    let change = byAnime.get(item.anime.malId)
+    if (!change) {
+      change = { id: item.id, anime: item.anime }
+      byAnime.set(item.anime.malId, change)
+    }
+    if (item.type === 'episodes') change.episodes = change.episodes ? { from: Math.min(change.episodes.from, item.from), to: Math.max(change.episodes.to, item.to) } : { from: item.from, to: item.to }
+    if (item.type === 'score') change.score ??= item.score
+    if (item.type === 'status') {
+      change.to ??= item.to
+      change.from = item.from
+    }
+    if (item.type === 'added') {
+      change.to ??= item.status
+      change.from = null
+    }
+  }
+  return [...byAnime.values()]
 }
 
 function absorb(day: Day, item: FeedItem): boolean {
@@ -89,9 +125,10 @@ function buildDays(items: FeedItem[]): Day[] {
 
 function useGroupHeading() {
   const { t } = useTranslation()
-  return (group: Group): { icon: ReactNode; text: string; badge?: ReactNode } => {
+  return (group: Group, titles: number): { icon: ReactNode; text: string; badge?: ReactNode } => {
     const first = group.items[0]!
     const many = group.items.length > 1
+    if (group.items.some((item) => kindKey(item) !== kindKey(first))) return { icon: <RiHistoryFill className="text-accent" />, text: t('feed.mixed', { count: titles }) }
     if (first.type === 'added') return { icon: <RiAddCircleFill className="text-accent" />, text: t('feed.added'), badge: <StatusBadge status={first.status} /> }
     if (first.type === 'status') return { icon: <StatusIcon status={first.to} />, text: t('feed.status'), badge: <StatusBadge status={first.to} /> }
     if (first.type === 'score') return { icon: <StarIcon className="text-amber-500" />, text: many ? t('feed.scores') : t('feed.score', { score: first.score }) }
@@ -103,14 +140,29 @@ function useGroupHeading() {
   }
 }
 
-function FeedCard({ item }: { item: FeedItem }) {
+function FeedCard({ change }: { change: Change }) {
   const { t } = useTranslation()
-  if (item.type === 'score') return <AnimeCard anime={item.anime} userScore={item.score} coloredScore />
-  if (item.type === 'episodes') {
-    return <AnimeCard anime={item.anime} subtitle={item.from === item.to ? t('feed.episodeShort', { episode: item.from }) : t('feed.episodesShort', { from: item.from, to: item.to })} />
-  }
-  if (item.type === 'status') return <AnimeCard anime={item.anime} subtitle={<span className="line-through">{t(`status.${item.from}`)}</span>} />
-  return <AnimeCard anime={item.anime} />
+  const { episodes, from, to, score } = change
+  const previous = from && from !== to ? from : null
+  const subtitle =
+    episodes || previous ? (
+      <>
+        {episodes ? (
+          <span className="inline-flex items-center gap-1 font-semibold text-accent">
+            <RiPlayCircleFill className="size-3.5 shrink-0" />
+            {episodes.from === episodes.to ? t('feed.episodeShort', { episode: episodes.from }) : t('feed.episodesShort', { from: episodes.from, to: episodes.to })}
+          </span>
+        ) : null}
+        {episodes && previous ? ' ' : null}
+        {previous ? <span className="line-through">{t(`status.${previous}`)}</span> : null}
+      </>
+    ) : score && !to ? (
+      <span className="inline-flex items-center gap-1 font-semibold text-amber-500">
+        <StarIcon className="size-3.5 shrink-0" />
+        {t('feed.score', { score })}
+      </span>
+    ) : undefined
+  return <AnimeCard anime={change.anime} userScore={score} coloredScore={Boolean(score)} subtitle={subtitle} ribbon={to ? <StatusBadge status={to} className="h-6 px-2.5 text-xs" /> : undefined} />
 }
 
 function NoteEntry({ item }: { item: Extract<FeedItem, { type: 'note' }> }) {
@@ -139,12 +191,16 @@ function NoteEntry({ item }: { item: Extract<FeedItem, { type: 'note' }> }) {
 
 function GroupEntry({ group, showUser, focus }: { group: Group; showUser: boolean; focus?: { comment: number | null } }) {
   const { t, i18n } = useTranslation()
-  const heading = useGroupHeading()(group)
+  const changes = changesOf(group.items)
+  const heading = useGroupHeading()(group, changes.length)
   const [open, setOpen] = useState(false)
   const first = group.items[0]!
   const [thread, setThread] = useState(first.comments > 0 || Boolean(focus?.comment))
-  const time = new Intl.DateTimeFormat(i18n.language, { ...(focus ? { day: 'numeric', month: 'long' } : {}), hour: '2-digit', minute: '2-digit' }).format(new Date(first.createdAt))
-  const shown = open ? group.items : group.items.slice(0, COLLAPSED)
+  const format = new Intl.DateTimeFormat(i18n.language, { ...(focus ? { day: 'numeric', month: 'long' } : {}), hour: '2-digit', minute: '2-digit' })
+  const latest = format.format(new Date(first.createdAt))
+  const earliest = format.format(new Date(group.items.at(-1)!.createdAt))
+  const time = earliest === latest ? latest : `${earliest} – ${latest}`
+  const shown = open ? changes : changes.slice(0, COLLAPSED)
   return (
     <li className="relative pb-7 pl-11 last:pb-0">
       {showUser ? (
@@ -163,7 +219,7 @@ function GroupEntry({ group, showUser, focus }: { group: Group; showUser: boolea
         {showUser && !heading.badge ? <span className="grid size-4 place-items-center [&_svg]:size-4">{heading.icon}</span> : null}
         <span className={cn('text-sm', showUser ? 'text-muted-foreground' : 'font-semibold')}>{heading.text}</span>
         {heading.badge}
-        {group.items.length > 1 ? <span className="rounded-full bg-field px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">{group.items.length}</span> : null}
+        {changes.length > 1 ? <span className="rounded-full bg-field px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">{changes.length}</span> : null}
         <span className="font-mono text-xs text-subtle-foreground">{time}</span>
       </div>
       {first.type === 'note' ? (
@@ -171,13 +227,13 @@ function GroupEntry({ group, showUser, focus }: { group: Group; showUser: boolea
       ) : (
         <>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-3 gap-y-4">
-            {shown.map((item) => (
-              <FeedCard key={item.id} item={item} />
+            {shown.map((change) => (
+              <FeedCard key={change.id} change={change} />
             ))}
           </div>
-          {group.items.length > COLLAPSED ? (
+          {changes.length > COLLAPSED ? (
             <Button size="sm" variant="secondary" className="mt-3" onClick={() => setOpen(!open)}>
-              {open ? t('feed.collapse') : t('feed.showAll', { count: group.items.length })}
+              {open ? t('feed.collapse') : t('feed.showAll', { count: changes.length })}
             </Button>
           ) : null}
         </>
